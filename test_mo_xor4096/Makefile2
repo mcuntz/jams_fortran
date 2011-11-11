@@ -1,0 +1,18 @@
+# -*- Makefile -*-
+
+SHELL = /bin/bash
+
+VPATH = $(SRCPATH)
+
+.SUFFIXES: .f90 .o
+
+all: $(PROG)
+
+$(PROG): $(OBJS)
+	$(LD) $(LDFLAGS) -o $(PROG) $(OBJS) $(LIBS)
+
+$(OBJPATH)/%.o: %.f90
+	$(F90) $(DEFINES) $(INCLUDES) $(F90FLAGS) -c $< -o $@
+
+# All dependencies create by perl script makedeps.pl
+include make.deps
