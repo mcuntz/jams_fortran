@@ -1,0 +1,19 @@
+
+This is the FORTRAN library of the
+
+Department Computational Hydrosystems
+Helmholtz Centre for Environmental Research - UFZ
+Permoserstr. 15
+04318 Leipzig
+Germany
+
+The library is maintained with a subversion system at:
+https://svn.ufz.de/chs-svn/FORTRAN_chs_lib/
+
+The documentation of the library is maintained as a wiki at
+https://svn.ufz.de/chs-svn/FORTRAN_chs_lib/
+
+The above wiki will be printed to a PDF file from time to time, which is provided in WIKI.pdf.
+Be aware that the current PDF is not always up to date.
+
+Created 11.11.2011 by Juliane Mai and Matthias Cuntz

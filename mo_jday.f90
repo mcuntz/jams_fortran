@@ -22,7 +22,7 @@
 !=============================================================================
 !
 !**************************************************************************
-MODULE Julian_Day_Convertor
+MODULE mo_jday
  use mo_kind
  implicit none
  !
@@ -197,4 +197,4 @@ MODULE Julian_Day_Convertor
      !
    end function NDAYS
    !
-END MODULE Julian_Day_Convertor
+ END MODULE Mo_jday
