@@ -1,5 +1,18 @@
 module mo_xor4096
 
+  !****************************************************************************************
+  !         The original version of this source code  (without multiple streams, optional
+  !         arguments and gaussian distributed RN) is under GNU General Public Licence
+  !              xorgens.c
+  !         Copyright (C) 2004 R. P. Brent.                                       
+  !         This program is free software; you can redistribute it and/or         
+  !         modify it under the terms of the GNU General Public License,       
+  !         version 2, June 1991, as published by the Free Software Foundation.   
+  !         For details see http://www.gnu.org/copyleft/gpl.html .                
+  !
+  !         Author: Richard P. Brent (random@rpbrent.co.uk)
+  !****************************************************************************************
+
   ! Written  Juliane Mai, Nov 2011
 
   use mo_kind, only: i4, i8, SP, DP
@@ -32,7 +45,8 @@ CONTAINS
   !         Generates a uniform distributed random number based on xor4096 algorithm proposed by 
   !         Brent et.al (2006).
   !         ****************************************************************************************
-  !         The original version of this source code is under GNU General Public Licence
+  !         The original version of this source code (without multiple streams and 
+  !         optional arguments) is under GNU General Public Licence
   !              xorgens.c
   !         Copyright (C) 2004 R. P. Brent.                                       
   !         This program is free software; you can redistribute it and/or         
@@ -56,30 +70,34 @@ CONTAINS
   !  
   !         If one initialize the generator with an array of seeds, one initializes n independent 
   !         streams of random numbers.
+  !         Lets assume that the streams with seed 1_sp is 10, 20, 30 ...
+  !                                                2_sp is 40, 50, 60 ...
+  !                                                3_sp is 70, 80, 90 ...
   !         What you get is:
   !         1st call
-  !             call xor( (/ 1_SP, 2_SP, 3_SP /), RN )   --> e.g. 10, 20, 30
+  !             call xor( (/ 1_SP, 2_SP, 3_SP /), RN )   --> RN = (/ 10, 40, 70 /)
   !         2nd call
-  !             call xor( (/ 0_SP, 0_SP, 0_SP /), RN )   --> e.g. 20, 10, 50
+  !             call xor( (/ 0_SP, 0_SP, 0_SP /), RN )   --> RN = (/ 20, 50, 80 /)
   !         3rd call
-  !             call xor( (/ 0_SP, 0_SP, 0_SP /), RN )   --> e.g. 30, 70, 10
+  !             call xor( (/ 0_SP, 0_SP, 0_SP /), RN )   --> RN = (/ 30, 60, 90 /)
   !
   !         Since after every initialization one looses the old stream of random numbers,
-  !         it might be necessary to switch between different streams. Therefore, one needs all
+  !         it might be necessary to switch between different streams. Therefore, one needs ALL
   !         of the three optional arguments.
   !         What you get is:
   !         1st call of 1st stream
-  !                                   call xor( 1_SP, RN, opt1_1, opt2_1, opt3_1 )   --> e.g. 10
+  !                                   call xor( 1_SP, RN, opt1_1, opt2_1, opt3_1 )   RN = 10
   !         2nd call of 1st stream
-  !                                   call xor( 0_SP, RN, opt1_1, opt2_1, opt3_1 )   --> e.g. 20
+  !                                   call xor( 0_SP, RN, opt1_1, opt2_1, opt3_1 )   RN = 20
   !         1st call of 2nd stream
-  !                                   call xor( 2_SP, RN, opt1_2, opt2_2, opt3_2 )   --> e.g. 20
+  !                                   call xor( 2_SP, RN, opt1_2, opt2_2, opt3_2 )   RN = 40
   !         3rd call of 1st stream
-  !                                   call xor( 0_SP, RN, opt1_1, opt2_1, opt3_1 )   --> e.g. 30
+  !                                   call xor( 0_SP, RN, opt1_1, opt2_1, opt3_1 )   RN = 30
   !         Note: If you would have called 4 times without optional arguments, 
-  !               you would have get 10 in the 4th call.
+  !               you would have get 50 in the 4th call.
 
   !     CALLING SEQUENCE
+  !         call xor4096(seed, rn) or
   !         call xor4096(seed, rn, i, w, x)
   
   !     INDENT(IN)
@@ -1011,63 +1029,145 @@ CONTAINS
 
 !******************************************************************************************
 
+  ! ------------------------------------------------------------------
 
+  !     NAME
+  !         xor4096g
+
+  !     PURPOSE
+  !         Generates a gaussian distributed random number. First, a uniform distributed random 
+  !         number based on xor4096 algorithm is generated. Second, this number is transformed
+  !         using the Polar method of Box-Mueller-transform to calculate the gaussian distributed
+  !         numbers.
   !
-  ! ******************************************************************************************
-  ! CALL XOR4096G (SEED,RN)
-  ! ******************************************************************************************
-  !      generates GAUSSIAN distributed Random Numbers
-  !      seed is (scalar or vector) and (Single Integer or Double Integer)
-  !      RN   is (scalar or vector) and (Single Real or Double Real)
+  !         ****************************************************************************************
+  !         The original version of this source code (without multiple streams, 
+  !         optional arguments and gaussian distributed RN) is under GNU General Public Licence
+  !              xorgens.c
+  !         Copyright (C) 2004 R. P. Brent.                                       
+  !         This program is free software; you can redistribute it and/or         
+  !         modify it under the terms of the GNU General Public License,       
+  !         version 2, June 1991, as published by the Free Software Foundation.   
+  !         For details see http://www.gnu.org/copyleft/gpl.html .                
   !
-  !      NOTE:
-  !             Every XOR4096 has to be called once with a non-zero seed for initialization and
-  !             afterwards every time with Seed = 0 to guarantee that the random numbers are
-  !             from the same stream.
-  !             If several independent streams are necessary use VECTOR versions
-  !             to initialize several streams at once.
-  ! INTERFACE for subroutines:
-  !     xor4096g_0d  ... 1 single precision real RN gaussian distributed N~[0,1] with one seed
-  !     xor4096g_1d  ... N single precision real RN gaussian distributed N~[0,1] with n seeds
-  !     xor4096gd_0d ... 1 double precision real RN gaussian distributed N~[0,1] with one seed
-  !     xor4096gd_1d ... N double precision real RN gaussian distributed N~[0,1] with n seeds
+  !         Author: Richard P. Brent (random@rpbrent.co.uk)
+  !         ****************************************************************************************
+  !
+  !         The generator has to be called once with a non-zero seed value which initializes a new 
+  !         random number stream. The subsequent calls are with seed=0 which returns the following 
+  !         numbers within the beforehand initialized stream. Since the random numbers are based on 
+  !         the initial seed, the precison of the seed (sp/dp) determines the precision of the 
+  !         returned random number (sp/dp).
+  !
+  !         The returned values are gaussian distributed with mean 0 and variance 1.
+  !  
+  !         The polar method of the Box-Mueller transform transforms two uniform distributed
+  !         random numbers u1 and u2 into two gaussian distributed random numbers x1 and x2.
+  !         First, two uniform numbers a1, a2 distributed between (-1,1) are calculated:
+  !                      a1 = 2u1 - 1
+  !                      a2 = 2u2 - 1
+  !         Second, q = a1^2 + a2^2 is calculated. If (q = 0) or (q > 1) one has to generate 
+  !         a new x1 and x2, since a divison by q is needed afterwards and q needs to be distributed
+  !         within the unit circle.
+  !         Third,
+  !                      p = Sqrt( -2 LN(q) / q )
+  !         is calculated.
+  !         The numbers z1 and z2 with
+  !                      z1 = a1 * p
+  !                      z2 = a2 * p
+  !         are then gaussian distributed with mean 0 and variance 1.
+
+  !     CALLING SEQUENCE
+  !         call xor4096g(seed, rn) or
+  !         call xor4096g(seed, rn, i, w, x, Flag, y)
+  
+  !     INDENT(IN)
+  !         integer(i4/i8) :: seed/seed(:)     value or 1D-array with non-zero seeds for 
+  !                                            initialization or zero for subsequent calls
+
+  !     INDENT(INOUT)
+  !             none
+
+  !     INDENT(OUT)
+  !         real(sp/dp)   :: RN/RN(size(seed))       
+  !                                            gaussian distributed random number with
+  !                                            interval:
+  !                                                sp: RN ~ N(0.0_sp, 1.0_sp) 
+  !                                                dp: RN ~ N(0.0_dp, 1.0_dp)                                                       
+
+  !     INDENT(IN), OPTIONAL
+  !         none
+
+  !     INDENT(INOUT), OPTIONAL
+  !         integer(i4/i8), dimension(size(seed))              :: i
+  !         integer(i4/i8), dimension(size(seed))              :: w
+  !         integer(i4/i8), dimension(size(seed),0:127/0:63)   :: x
+  !         integer(i4/i8), dimension(size(seed))              :: Flag
+  !         real(sp/dp),    dimension(size(seed))              :: y
+  !         
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         In case of optional arguments all five (i,w,x,Flag,y) have to be given.
+  !         If random numbers are in single precision (sp), one needs a seed, i, w, x, Flag in (i4)
+  !         and y in (sp).
+  !         If random numbers are in double precision (dp), one needs a seed, i, w, x, Flag in (i8)
+  !         and y in (dp).
+  !         The size of optional x array depends on precision.
+
+  !     EXAMPLE
+  !         seed = (/ 1_SP, 100_SP, 2_SP /)
+  !         call xor4096g(seed,RN)
+  !         print*, RN --> (/ 0.1, 0.05, 0.3 /)
+  !
+  !         seed = (/ 0_SP, 0_SP, 0_SP /)
+  !         call xor4096(seed,RN)
+  !         print*, RN --> (/ 0.2, 0.9, 0.4 /)
+  !         -> see also example in test_mo_xor4096 directory
+
+  !     LITERATURE
+  !         Brent RP - Some long-period random number generators using shifts and xors, 2010
+  !         Brent RP - From Mersenne Primes to Rndom Number Generators, 2006
+  !         L'Ecuyer P & Simard R - ACM: TestU01: A C Library for Empirical Testing of 
+  !                   Random Number Generators, 2007
+  !         http://en.wikipedia.org/wiki/Marsaglia_polar_method
+  !         http://de.wikipedia.org/wiki/Polar-Methode
+
+  !     HISTORY
+  !         Written,  Juliane Mai, Nov 2011
+  !
 
 subroutine xor4096gf_0d(seed,SingleRealRN,iIn,wIn,xIn,FlagIn,y2In)
 
     implicit none
 
     integer(i4),                intent(in)        :: seed
-    real(SP),                    intent(out)       :: SingleRealRN
+    real(SP),                    intent(out)      :: SingleRealRN
     integer(i4), optional,      intent(inout)     :: iin
     integer(i4), optional,      intent(inout)     :: win
     integer(i4), optional,      intent(inout)     :: xin(0:127)
     integer(i4), optional,      intent(inout)     :: FlagIn
-    real(SP),     optional,      intent(inout)     :: y2In
+    real(SP),     optional,      intent(inout)    :: y2In
 
     integer(i4)        :: wlen, r, s, a, b, c, d
     integer(i4), save  :: w
     integer(i4), save  :: x(0:127)                 ! x(0) ... x(r-1)
-    integer(i4)        :: weyl = 1640531527_i4    !Z'61C88647'       ! Hexadecimal notation
+    integer(i4)        :: weyl = 1640531527_i4    
     integer(i4)        :: t,v
     integer(i4), save  :: i = -1                   ! i<0 indicates first call
     integer(i4)        :: k
-    real(SP)            :: t24 = 1.0_SP/16777216.0_SP     ! = 0.5^24 = 1/2^24
+    real(SP)           :: t24 = 1.0_SP/16777216.0_SP     ! = 0.5^24 = 1/2^24
 
     real(SP)            :: rn1, rn2               ! uniform random numbers
     real(SP)            :: x1,x2,y1,ww            ! for Box-Mueller transform
-    integer(i4),save   :: Flag = 1               ! if Flag = 1 return y1 else return y2
+    integer(i4),save    :: Flag = 1               ! if Flag = 1 return y1 else return y2
     real(SP),save       :: y2
 
     ! produces a 24bit Integer Random Number (0...16777216) and
     ! scales it afterwards to (0.0,1.0)
-
-    ! SEED = 400
-    !xor4096gf = -0.712919831275940
-    !xor4096gf = -0.891133427619934
-    !xor4096gf =  0.449485123157501
-    !xor4096gf =  0.488143056631088
-    !xor4096gf = -0.329735398292542
-
+    ! transform using polar-method
 
     if ( present(iin) .and. seed .eq. 0 )    i    = iin
     if ( present(win) .and. seed .eq. 0 )    w    = win
@@ -1176,11 +1276,9 @@ subroutine xor4096gf_0d(seed,SingleRealRN,iIn,wIn,xIn,FlagIn,y2In)
 
     If (Flag .eq. 1) then
         Flag = 2
-        !print '(A14,1X,F10.7,A9,B32.32)', 'xor4096gf_0d = ',y1,'   (bin) ',y1
         SingleRealRN = y1
     else
         Flag = 1
-        !print '(A14,1X,F10.7,A9,B32.32)', 'xor4096gf_0d = ',y2,'   (bin) ',y1
         SingleRealRN = y2
     end if
 
@@ -1199,25 +1297,25 @@ subroutine xor4096gf_1d(seed,SingleRealRN,iin,win,xin,FlagIn,y2In)
     implicit none
 
     integer(i4), dimension(:),                          intent(in)        :: seed
-    real(SP),     dimension(size(seed)),                 intent(out)       :: SingleRealRN
+    real(SP),    dimension(size(seed)),                 intent(out)       :: SingleRealRN
     integer(i4), dimension(size(seed)),       optional, intent(inout)     :: iin
     integer(i4), dimension(size(seed)),       optional, intent(inout)     :: win
     integer(i4), dimension(size(seed),0:127), optional, intent(inout)     :: xin
     integer(i4), dimension(size(seed)),       optional, intent(inout)     :: FlagIn
-    real(SP),     dimension(size(seed)),       optional, intent(inout)     :: y2In
+    real(SP),    dimension(size(seed)),       optional, intent(inout)     :: y2In
 
     integer(i4)                         :: m
     integer(i4)                         :: wlen, r, s, a, b, c, d
-    integer(i4)                         :: weyl =  1640531527_i4              !Z'61C88647' = Hexadecimal notation
+    integer(i4)                         :: weyl =  1640531527_i4        
     integer(i4)                         :: k, j
-    real(SP)                             :: t24 = 1.0_SP/16777216.0_SP      ! = 0.5^24 = 1/2^24
+    real(SP)                            :: t24 = 1.0_SP/16777216.0_SP      ! = 0.5^24 = 1/2^24
     integer(i4), dimension(size(seed))  :: t,v
     integer(i4), dimension(:,:), allocatable, save  :: x                   ! x(0) ... x(r-1)
     integer(i4), dimension(:),   allocatable, save  :: i,w                 ! i<0 indicates first call
 
-    real(SP),     dimension(size(seed))              :: rn1, rn2     ! uniform random numbers
-    real(SP),     dimension(size(seed))              :: x1,x2,y1,ww  ! for Box-Mueller transform
-    real(SP),     dimension(:), allocatable, save    :: y2
+    real(SP),    dimension(size(seed))              :: rn1, rn2     ! uniform random numbers
+    real(SP),    dimension(size(seed))              :: x1,x2,y1,ww  ! for Box-Mueller transform
+    real(SP),    dimension(:), allocatable, save    :: y2
     integer(i4), dimension(:), allocatable, save    :: Flag         ! if Flag = 1 return y1 else return y2
 
     m= size(seed)
@@ -1230,14 +1328,7 @@ subroutine xor4096gf_1d(seed,SingleRealRN,iin,win,xin,FlagIn,y2In)
 
     ! produces a 24bit Integer Random Number (0...16777216) and
     ! scales it afterwards to (0.0,1.0)
-
-    ! SEED = 400
-    !xor4096gf = -0.712919831275940
-    !xor4096gf = -0.891133427619934
-    !xor4096gf =  0.449485123157501
-    !xor4096gf =  0.488143056631088
-    !xor4096gf = -0.329735398292542
-
+    ! transform using polar-method
 
     wlen = 32
     r = 128
@@ -1360,14 +1451,11 @@ subroutine xor4096gf_1d(seed,SingleRealRN,iin,win,xin,FlagIn,y2In)
 
 
     Do j=1,m
-        !print '(A13,I6,A4)', 'xor4096gf_1d(',i(1)-5+Flag,') = '
         If (Flag(j) .eq. 1) then
             Flag(j) = 2
-            !print '(A11,I4,A4,F10.7,A9,B32.32)', '   stream #',j,'  = ',y1(j),'   (bin) ',y1(j)
             SingleRealRN(j) = y1(j)
         else
             Flag(j) = 1
-            !print '(A11,I4,A4,F10.7,A9,B32.32)', '   stream #',j,'  = ',y2(j),'   (bin) ',y2(j)
             SingleRealRN(j) = y2(j)
         end if
     end Do
@@ -1387,12 +1475,12 @@ subroutine xor4096gd_0d(seed,DoubleRealRN,iin,win,xin,FlagIn,y2In)
     implicit none
 
     integer(i8),                intent(in)        :: seed
-    real(DP),                    intent(out)       :: DoubleRealRN
+    real(DP),                   intent(out)       :: DoubleRealRN
     integer(i8), optional,      intent(inout)     :: iin
     integer(i8), optional,      intent(inout)     :: win
     integer(i8), optional,      intent(inout)     :: xin(0:63)
     integer(i8), optional,      intent(inout)     :: FlagIn
-    real(DP),     optional,      intent(inout)     :: y2In
+    real(DP),    optional,      intent(inout)     :: y2In
 
     integer(i8)        :: wlen, r, s, a, b, c, d
 
@@ -1408,25 +1496,17 @@ subroutine xor4096gd_0d(seed,DoubleRealRN,iin,win,xin,FlagIn,y2In)
     real(DP)            :: rn1, rn2                 ! uniform random numbers
     real(DP)            :: x1,x2,y1,ww              ! for Box-Mueller transform
     real(DP), save      :: y2
-    integer(i8),save   :: Flag = 1_i8             ! if Flag = 1 return y1 else return y2
+    integer(i8), save   :: Flag = 1_i8             ! if Flag = 1 return y1 else return y2
 
     ! produces a 53bit Integer Random Number (0...9 007 199 254 740 992) and
     ! scales it afterwards to (0.0,1.0)
-
-    !Flag = 1_i8
+    ! transform using polar-method
 
     if ( present(iin) .and. seed .eq. 0_i8 )    i    = iin
     if ( present(win) .and. seed .eq. 0_i8 )    w    = win
     if ( present(xin) .and. seed .eq. 0_i8 )    x    = xin
     if ( present(Flagin) .and. seed .eq. 0_i8 ) Flag = Flagin
     if ( present(y2in) .and. seed .eq. 0_i8 )   y2   = y2in
-
-    ! SEED = 400
-    !xor4096gd = -0.034398645363107
-    !xor4096gd =  1.870749670146693
-    !xor4096gd = -1.673243084001851
-    !xor4096gd =  0.071335181927899
-    !xor4096gd = -0.824476113514766
 
     wlen = 64
     r = 64
@@ -1526,11 +1606,9 @@ subroutine xor4096gd_0d(seed,DoubleRealRN,iin,win,xin,FlagIn,y2In)
 
     If (Flag .eq. 1) then
         Flag = 2
-        !print '(A14,1X,F18.15,A9,B64.64)', 'xor4096gd_0d = ',y1
         DoubleRealRN = y1
     else
         Flag = 1
-        !print '(A14,1X,F18.15,A9,B64.64)', 'xor4096gd_0d = ',y2
         DoubleRealRN = y2
     end if
 
@@ -1549,29 +1627,30 @@ subroutine xor4096gd_1d(seed,DoubleRealRN,iin,win,xin,FlagIn,y2In)
     implicit none
 
     integer(i8), dimension(:),                          intent(in)        :: seed
-    real(DP),     dimension(size(seed)),                 intent(out)       :: DoubleRealRN
+    real(DP),    dimension(size(seed)),                 intent(out)       :: DoubleRealRN
     integer(i8), dimension(size(seed)),       optional, intent(inout)     :: iin
     integer(i8), dimension(size(seed)),       optional, intent(inout)     :: win
     integer(i8), dimension(size(seed),0:63),  optional, intent(inout)     :: xin
     integer(i8), dimension(size(seed)),       optional, intent(inout)     :: FlagIn
-    real(DP),     dimension(size(seed)),       optional, intent(inout)     :: y2In
+    real(DP),    dimension(size(seed)),       optional, intent(inout)     :: y2In
 
     integer(i4)                         :: m
     integer(i8)                         :: wlen, r, s, a, b, c, d
     integer(i8)                         :: weyl =  7046029254386353131_i8              !Z'61C88647' = Hexadecimal notation
     integer(i8)                         :: k, j
-    real(DP)                             :: t53 = 1.0_DP/9007199254740992.0_DP      ! = 0.5^24 = 1/2^24
+    real(DP)                            :: t53 = 1.0_DP/9007199254740992.0_DP      ! = 0.5^24 = 1/2^24
     integer(i8), dimension(size(seed))  :: t,v
     integer(i8), dimension(:,:), allocatable, save  :: x                   ! x(0) ... x(r-1)
     integer(i8), dimension(:),   allocatable, save  :: i,w                   ! i<0 indicates first call
 
-    real(DP),     dimension(size(seed))              :: rn1, rn2     ! uniform random numbers
-    real(DP),     dimension(size(seed))              :: x1,x2,y1,ww  ! for Box-Mueller transform
-    real(DP),     dimension(:),   allocatable, save  :: y2
+    real(DP),    dimension(size(seed))              :: rn1, rn2     ! uniform random numbers
+    real(DP),    dimension(size(seed))              :: x1,x2,y1,ww  ! for Box-Mueller transform
+    real(DP),    dimension(:),   allocatable, save  :: y2
     integer(i8), dimension(:),   allocatable, save  :: Flag         ! if Flag = 1 return y1 else return y2
 
     ! produces a 53bit Integer Random Number (0...9 007 199 254 740 992) and
     ! scales it afterwards to (0.0,1.0)
+    ! transform using polar-method
 
     m= size(seed)
 
@@ -1580,13 +1659,6 @@ subroutine xor4096gd_1d(seed,DoubleRealRN,iin,win,xin,FlagIn,y2In)
     if ( present(xin) .and. (Any(seed .eq. 0)) )    x    = xin
     if ( present(Flagin) .and. (Any(seed .eq. 0)) ) Flag = Flagin
     if ( present(y2in) .and. (Any(seed .eq. 0)) )   y2   = y2in
-
-    ! SEED = 400
-    !xor4096gd = -0.034398645363107
-    !xor4096gd =  1.870749670146693
-    !xor4096gd = -1.673243084001851
-    !xor4096gd =  0.071335181927899
-    !xor4096gd = -0.824476113514766
 
     wlen = 64
     r = 64
@@ -1697,7 +1769,6 @@ subroutine xor4096gd_1d(seed,DoubleRealRN,iin,win,xin,FlagIn,y2In)
                 x1(j) = 2.0_DP * rn1(j) -1.0_DP
                 x2(j) = 2.0_DP * rn2(j) -1.0_DP
                 ww(j) = x1(j)*x1(j) + x2(j)*x2(j)
-                !print*, 'ww = ',ww(j)
             end do ! end of polar method
 
             ww(j) = Sqrt( (-2.0_DP * Log(ww(j))) / ww(j))
@@ -1709,14 +1780,11 @@ subroutine xor4096gd_1d(seed,DoubleRealRN,iin,win,xin,FlagIn,y2In)
 
 
     Do j=1,m
-        !print '(A13,I6,A4)', 'xor4096gf_1d(',i(1)-5+Flag,') = '
         If (Flag(j) .eq. 1) then
             Flag(j) = 2
-            !print '(A11,I4,A4,F18.15,A9,B64.64)', '   stream #',j,'  = ',y1(j),'   (bin) ',y1(j)
             DoubleRealRN(j) = y1(j)
         else
             Flag(j) = 1
-            !print '(A11,I4,A4,F18.15,A9,B64.64)', '   stream #',j,'  = ',y2(j),'   (bin) ',y2(j)
             DoubleRealRN(j) = y2(j)
         end if
     End do
