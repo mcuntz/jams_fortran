@@ -62,9 +62,9 @@ CONTAINS
   !     PURPOSE
   !         Calculates the average value of a vector, i.e. the first moment of a series of numbers:
   !             mean = sum(x)/n
-  !         If an optinal mask is given, the mean is only over those locations that correspond to true values in the mask:
-  !             mean = sum(x, mask)/count(mask)
-  !         x can be single or double precision. The mean will have the same numerical precision.
+  !
+  !         If an optinal mask is given, the mean is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
   !         out = mean(vec, mask=mask)
