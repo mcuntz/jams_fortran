@@ -17,7 +17,7 @@ MODULE mo_moment
 
   ! Written Nov 2011, Matthias Cuntz
 
-  USE mo_kind, ONLY: i4, sp, dp, lgt
+  USE mo_kind, ONLY: i4, sp, dp
 
   IMPLICIT NONE
 
@@ -110,7 +110,7 @@ CONTAINS
   !         real(sp/dp) :: absdev     mean absolute deviations from average
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(dat).
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -136,7 +136,7 @@ CONTAINS
   !         Written,  Matthias Cuntz, Nov 2011
 
   FUNCTION absdev_dp(dat, mask)
-    ! sum(abs(x-mean(x)))/n
+
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:),           INTENT(IN)  :: dat
@@ -146,7 +146,7 @@ CONTAINS
     REAL(dp) :: n
 
     REAL(dp) :: ave
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL, DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error absdev_dp: size(mask) /= size(dat)'
@@ -167,7 +167,7 @@ CONTAINS
 
 
   FUNCTION absdev_sp(dat, mask)
-    ! sum(abs(x-mean(x)))/n
+
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:),           INTENT(IN)  :: dat
@@ -177,7 +177,7 @@ CONTAINS
     REAL(sp) :: n
 
     REAL(sp) :: ave
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL, DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error absdev_sp: size(mask) /= size(dat)'
@@ -221,7 +221,7 @@ CONTAINS
   !         real(sp/dp) :: average    average of all elements in dat
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(dat).
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -250,12 +250,12 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(dp),     DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL(lgt), DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                          :: average_dp
+    REAL(dp), DIMENSION(:),           INTENT(IN)  :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(dp)                                      :: average_dp
 
     REAL(dp) :: n
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL, DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error average_dp: size(mask) /= size(dat)'
@@ -277,12 +277,12 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(sp),     DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL(lgt), DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                          :: average_sp
+    REAL(sp), DIMENSION(:),           INTENT(IN)  :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(sp)                                      :: average_sp
 
     REAL(sp) :: n
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL, DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error average_sp: size(mask) /= size(dat)'
@@ -326,7 +326,7 @@ CONTAINS
   !         real(sp/dp) :: central_moment    r-th central moment of elements in dat
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(dat).
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -359,11 +359,15 @@ CONTAINS
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(dp)                                         :: central_moment_dp
 
-    REAL(dp) :: n, mx
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    REAL(dp)                    :: n, mx
+    LOGICAL, DIMENSION(size(x)) :: maske
 
-    if (r<=1) then
+    if (r<0) then
        central_moment_dp = 0.0_dp
+       return
+    endif
+    if (r==0) then
+       central_moment_dp = 1.0_dp
        return
     endif
 
@@ -395,10 +399,14 @@ CONTAINS
     REAL(sp)                                         :: central_moment_sp
 
     REAL(sp) :: n, mx
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    LOGICAL, DIMENSION(size(x)) :: maske
 
-    if (r<=1) then
+    if (r<0) then
        central_moment_sp = 0.0_sp
+       return
+    endif
+    if (r==0) then
+       central_moment_sp = 1.0_sp
        return
     endif
 
@@ -445,7 +453,7 @@ CONTAINS
   !         real(sp/dp) :: central_moment_var    sampling variance of r-th central moment of elements in dat
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(dat).
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -480,7 +488,7 @@ CONTAINS
     REAL(dp)                                         :: central_moment_var_dp
 
     REAL(dp) :: n, rr, u2r, ur, urm1, urp1, u2
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    LOGICAL, DIMENSION(size(x)) :: maske
 
     if (r<=1) then
        central_moment_var_dp = 0.0_dp
@@ -518,7 +526,7 @@ CONTAINS
     REAL(sp)                                         :: central_moment_var_sp
 
     REAL(sp) :: n, rr, u2r, ur, urm1, urp1, u2
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    LOGICAL, DIMENSION(size(x)) :: maske
 
     if (r<=1) then
        central_moment_var_sp = 0.0_sp
@@ -571,7 +579,7 @@ CONTAINS
   !         real(sp/dp) :: correlation    correlation between x and y
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(x).
+  !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -609,7 +617,7 @@ CONTAINS
     INTEGER(i4) :: n
     REAL(dp)    :: mx, my, mxy
     REAL(dp)    :: sx, sy, covar
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    LOGICAL, DIMENSION(size(x)) :: maske
 
     if (size(x) /= size(y)) stop 'Error correlation_dp: size(x) /= size(y)'
     if (present(mask)) then
@@ -647,7 +655,7 @@ CONTAINS
     INTEGER(i4) :: n
     REAL(sp)    :: mx, my, mxy
     REAL(sp)    :: sx, sy, covar
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    LOGICAL, DIMENSION(size(x)) :: maske
 
     if (size(x) /= size(y)) stop 'Error correlation_sp: size(x) /= size(y)'
     if (present(mask)) then
@@ -698,7 +706,7 @@ CONTAINS
   !         real(sp/dp) :: covariance    covariance between x and y
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(x).
+  !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -736,7 +744,7 @@ CONTAINS
     INTEGER(i4) :: n
     REAL(dp)    :: mx, my, mxy
     REAL(dp)    :: sx, sy
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    LOGICAL, DIMENSION(size(x)) :: maske
 
     if (size(x) /= size(y)) stop 'Error covariance_dp: size(x) /= size(y)'
     if (present(mask)) then
@@ -772,7 +780,7 @@ CONTAINS
     INTEGER(i4) :: n
     REAL(sp)    :: mx, my, mxy
     REAL(sp)    :: sx, sy
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    LOGICAL, DIMENSION(size(x)) :: maske
 
     if (size(x) /= size(y)) stop 'Error covariance_sp: size(x) /= size(y)'
     if (present(mask)) then
@@ -821,7 +829,7 @@ CONTAINS
   !         real(sp/dp) :: kurtosis    kurtosis of all elements in dat
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(dat).
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -858,7 +866,7 @@ CONTAINS
 
     REAL(dp) :: ep, ave, var
     REAL(dp), DIMENSION(size(dat)) :: p, s
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL,  DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error kurtosis_dp: size(mask) /= size(dat)'
@@ -899,7 +907,7 @@ CONTAINS
 
     REAL(sp) :: ep, ave, var
     REAL(sp), DIMENSION(size(dat)) :: p, s
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL,  DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error kurtosis_sp: size(mask) /= size(dat)'
@@ -952,7 +960,7 @@ CONTAINS
   !         real(sp/dp) :: mean       average of all elements in dat
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(dat).
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -981,13 +989,13 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(dp),     DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL(lgt), DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                          :: mean_dp
+    REAL(dp), DIMENSION(:),           INTENT(IN)  :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(dp)                                      :: mean_dp
 
     REAL(dp) :: n
 
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL, DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error mean_dp: size(mask) /= size(dat)'
@@ -1009,13 +1017,13 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(sp),     DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL(lgt), DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                          :: mean_sp
+    REAL(sp), DIMENSION(:),           INTENT(IN)  :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(sp)                                      :: mean_sp
 
     REAL(sp) :: n
 
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL, DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error mean_sp: size(mask) /= size(dat)'
@@ -1061,7 +1069,7 @@ CONTAINS
   !         real(sp/dp) :: mixed_central_moment    r,s-th mixed central moment between x and y
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(x).
+  !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -1097,8 +1105,9 @@ CONTAINS
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(dp)                                         :: mixed_central_moment_dp
 
-    REAL(dp) :: n, mx, my
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    REAL(dp)                     :: n, mx, my
+    REAL(dp), DIMENSION(size(x)) :: xx, yy
+    LOGICAL,  DIMENSION(size(x)) :: maske
 
     if (r<0 .or. s<0) then
        mixed_central_moment_dp = 0.0_dp
@@ -1120,7 +1129,17 @@ CONTAINS
     mx = sum(x, mask=maske) / n
     my = sum(y, mask=maske) / n
     ! Mixed central moment
-    mixed_central_moment_dp = sum((x-mx)**r * (y-my)**s, mask=maske) / n
+    if (r>0) then
+       xx = (x-mx)**r
+    else
+       xx = 1._dp
+    endif
+    if (s>0) then
+       yy = (y-my)**s
+    else
+       yy = 1._dp
+    endif
+    mixed_central_moment_dp = sum(xx*yy, mask=maske) / n
 
   END FUNCTION mixed_central_moment_dp
 
@@ -1136,8 +1155,9 @@ CONTAINS
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(sp)                                         :: mixed_central_moment_sp
 
-    REAL(sp) :: n, mx, my
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    REAL(sp)                     :: n, mx, my
+    REAL(sp), DIMENSION(size(x)) :: xx, yy
+    LOGICAL,  DIMENSION(size(x)) :: maske
 
     if (r<0 .or. s<0) then
        mixed_central_moment_sp = 0.0_sp
@@ -1159,7 +1179,17 @@ CONTAINS
     mx = sum(x, mask=maske) / n
     my = sum(y, mask=maske) / n
     ! Mixed central moment
-    mixed_central_moment_sp = sum((x-mx)**r * (y-my)**s, mask=maske) / n
+    if (r>0) then
+       xx = (x-mx)**r
+    else
+       xx = 1._sp
+    endif
+    if (s>0) then
+       yy = (y-my)**s
+    else
+       yy = 1._sp
+    endif
+    mixed_central_moment_sp = sum(xx*yy, mask=maske) / n
 
   END FUNCTION mixed_central_moment_sp
 
@@ -1192,7 +1222,7 @@ CONTAINS
   !         real(sp/dp) :: mixed_central_moment_var    sampling variance of r,s-th mixed central moment between x and y
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(x).
+  !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -1231,7 +1261,7 @@ CONTAINS
 
     REAL(dp) :: u2r2s, urs, urm1s, u20, urp1s, ursm1, u02, ursp1, u11
     REAL(dp) :: n, rr, ss
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    LOGICAL, DIMENSION(size(x)) :: maske
 
     if (size(x) /= size(y)) stop 'Error mixed_central_moment_var_dp: size(x) /= size(y)'
     if (present(mask)) then
@@ -1277,7 +1307,7 @@ CONTAINS
 
     REAL(sp) :: u2r2s, urs, urm1s, u20, urp1s, ursm1, u02, ursp1, u11
     REAL(sp) :: n, rr, ss
-    LOGICAL(lgt), DIMENSION(size(x)) :: maske
+    LOGICAL, DIMENSION(size(x)) :: maske
 
     if (size(x) /= size(y)) stop 'Error mixed_central_moment_var_sp: size(x) /= size(y)'
     if (present(mask)) then
@@ -1342,7 +1372,7 @@ CONTAINS
   !         None
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(dat).
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -1391,7 +1421,7 @@ CONTAINS
 
     REAL(dp) :: ep, ave, var
     REAL(dp), DIMENSION(size(dat)) :: p, s
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL,  DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error moment_dp: size(mask) /= size(dat)'
@@ -1461,7 +1491,7 @@ CONTAINS
 
     REAL(sp) :: ep, ave, var
     REAL(sp), DIMENSION(size(dat)) :: p, s
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL,  DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error moment_sp: size(mask) /= size(dat)'
@@ -1537,7 +1567,7 @@ CONTAINS
   !         real(sp/dp) :: stddev     sample standard deviation of all elements in dat
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(dat).
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -1576,7 +1606,7 @@ CONTAINS
 
     REAL(dp) :: ep, ave, var
     REAL(dp), DIMENSION(size(dat)) :: p, s
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL,  DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error stddev_dp: size(mask) /= size(dat)'
@@ -1613,7 +1643,7 @@ CONTAINS
 
     REAL(sp) :: ep, ave, var
     REAL(sp), DIMENSION(size(dat)) :: p, s
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL,  DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error stddev_sp: size(mask) /= size(dat)'
@@ -1662,7 +1692,7 @@ CONTAINS
   !         real(sp/dp) :: skewness    skewness of all elements in dat
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(dat).
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -1699,7 +1729,7 @@ CONTAINS
 
     REAL(dp) :: ep, ave, var, stddev
     REAL(dp), DIMENSION(size(dat)) :: p, s
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL,  DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error skewness_dp: size(mask) /= size(dat)'
@@ -1741,7 +1771,7 @@ CONTAINS
 
     REAL(sp) :: ep, ave, var, stddev
     REAL(sp), DIMENSION(size(dat)) :: p, s
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL,  DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error skewness_sp: size(mask) /= size(dat)'
@@ -1795,7 +1825,7 @@ CONTAINS
   !         real(sp/dp) :: variance    sample variance of all elements in dat
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(dat).
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -1834,7 +1864,7 @@ CONTAINS
 
     REAL(dp) :: ep, ave, var
     REAL(dp), DIMENSION(size(dat)) :: p, s
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL,  DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error variance_dp: size(mask) /= size(dat)'
@@ -1870,7 +1900,7 @@ CONTAINS
 
     REAL(sp) :: ep, ave, var
     REAL(sp), DIMENSION(size(dat)) :: p, s
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL,  DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error variance_sp: size(mask) /= size(dat)'

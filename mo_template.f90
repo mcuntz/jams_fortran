@@ -28,7 +28,7 @@ MODULE mo_template
   !                          Nov 2011 - add public
 
   ! Always use the number precisions of mo_kind
-  USE mo_kind, ONLY: i4, sp, dp, lgt
+  USE mo_kind, ONLY: i4, sp, dp
 
   ! Of course
   IMPLICIT NONE
@@ -83,7 +83,7 @@ CONTAINS
   !         real(sp/dp) :: mean       average of all elements in dat
 
   !     INDENT(IN), OPTIONAL
-  !         logical(lpt) :: mask(:)   1D-array of logical values with size(vec).
+  !         logical :: mask(:)        1D-array of logical values with size(vec).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
@@ -116,13 +116,13 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(dp),     DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL(lgt), DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                          :: mean_dp
+    REAL(dp), DIMENSION(:),           INTENT(IN)  :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(dp)                                      :: mean_dp
 
     REAL(dp) :: n
 
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL, DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error mean_dp: size(mask) /= size(dat)'
@@ -144,13 +144,13 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(sp),     DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL(lgt), DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                          :: mean_sp
+    REAL(sp), DIMENSION(:),           INTENT(IN)  :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(sp)                                      :: mean_sp
 
     REAL(sp) :: n
 
-    LOGICAL(lgt), DIMENSION(size(dat)) :: maske
+    LOGICAL, DIMENSION(size(dat)) :: maske
 
     if (present(mask)) then
        if (size(mask) /= size(dat)) stop 'Error mean_sp: size(mask) /= size(dat)'
