@@ -8,38 +8,39 @@ PROGRAM main
   REAL(dp), DIMENSION(10) :: dat
   REAL(sp), DIMENSION(10) :: sat
   
+  LOGICAL :: isgood
+  
   Write(*,*) ''
   Write(*,*) 'Test mo_template.f90'
 
   ! Double precision
-  Write(*,*) ''
-  Write(*,*) '  Test double precision'
-
-  ! Test the parameters
-  Write(*,'(A,f17.15)') '     PI_dp is (target=3.141592653589793): ', PI_dp
-
-  ! Test the function mean
   dat = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
-  Write(*,'(A,10f5.1)') '     dat is: ', dat
-  Write(*,'(A,f5.2)') '     Mean of dat (target=5.5):                ', mean(dat)
-  ! Test the mask
-  Write(*,'(A,f5.2)') '     Mean of dat without last (target=5.0):   ', mean(dat(1:9))
-  Write(*,'(A,f5.2)') '     Mean of dat with 10 masked (target=5.0): ', mean(dat, mask=(dat /= 10.))
-  
+  isgood = .true.
+  isgood = isgood .and. (anint(10._dp*mean(dat)) == 55._dp)
+  isgood = isgood .and. (anint(10._dp*mean(dat(1:9))) == 50._dp)
+  isgood = isgood .and. (anint(10._dp*mean(dat, mask=(dat /= 10.))) == 50._dp)
 
-  ! Single precision
-  Write(*,*) ''
-  Write(*,*) '  Test single precision'
+  isgood = isgood .and. (anint(1e15_dp*PI_dp) == 3141592653589793._dp)
 
-  ! Test the parameters
-  Write(*,'(A,f8.6)') '     PI_sp is (target=3.141593): ', PI_sp
+  if (isgood) then
+     write(*,*) 'Double precision o.k.'
+  else
+     write(*,*) 'Double precision failed'
+  endif
 
-  ! Test the function mean
+  ! Double precision
   sat = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
-  Write(*,'(A,10f5.1)') '     sat is: ', sat
-  Write(*,'(A,f5.2)') '     Mean of sat (target=5.5):                ', mean(sat)
-  ! Test the mask
-  Write(*,'(A,f5.2)') '     Mean of sat without last (target=5.0):   ', mean(sat(1:9))
-  Write(*,'(A,f5.2)') '     Mean of sat with 10 masked (target=5.0): ', mean(sat, mask=(sat /= 10.))
+  isgood = .true.
+  isgood = isgood .and. (anint(10._sp*mean(sat)) == 55._sp)
+  isgood = isgood .and. (anint(10._sp*mean(sat(1:9))) == 50._sp)
+  isgood = isgood .and. (anint(10._sp*mean(sat, mask=(sat /= 10.))) == 50._sp)
+
+  isgood = isgood .and. (anint(1e6_sp*PI_sp) == 3141593._dp)
+
+  if (isgood) then
+     write(*,*) 'Single precision o.k.'
+  else
+     write(*,*) 'Single precision failed'
+  endif
 
 END PROGRAM main
