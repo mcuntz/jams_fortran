@@ -18,6 +18,10 @@ MODULE mo_template
   !       * break comment lines at column 130 at most as well.
   !     - Sort routines alphabetically in the file and in the public definitions.
   !     - The modules should be tested with at least two different compilers (of different vendors)
+  !     - Use a subdirectory test_mo_xxx for testing where you simply link your modules:
+  !       This means you do on the command prompt in the test directory:
+  !         ln -s ../mo_kind.f90
+  !         ln -s ../mo_xxx.f90
 
   ! Written  Matthias Cuntz, Nov 2011
   ! Modified Matthias Cuntz, Nov 2011 - add private
