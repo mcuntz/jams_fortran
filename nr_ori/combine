@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -e
+
+for i in $(ls *.f90) ; do
+    sed 's/nrtype;/nrtype
+          /' ${i} | \
+    sed 's/nrtype/mo_nrtype/' | \
+    sed 's/nrutil/mo_nrutil/' | \
+    > ${i}.tmp
+    \mv ${i}.tmp ${i}
+done
+
+spfiles=$(grep -Ein '\(SP\)' *.f90 | cut -f1 -d':' | uniq)
+mkdir spfiles
+mv ${spfile} spfiles
+
