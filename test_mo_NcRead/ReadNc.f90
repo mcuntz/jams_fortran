@@ -5,17 +5,17 @@
 ! author: Stephan Thober
 !
 ! created: 04.11.2011
-! last update: 04.11.2011
+! last update: 21.11.2011
 !
 ! ------------------------------------------------------------------------------
 program ReadNc
 !
-use mo_kind,        only: sp, dp
-use mo_netcdf_read, only: Get_netcdf_Var
+use mo_kind,   only: sp, dp
+use mo_NcRead, only: Get_NcVar
 !
 real(sp), dimension(:,:,:,:), allocatable :: data
-character(256)                          :: Filename
-character(256)                          :: Varname
+character(256)                            :: Filename
+character(256)                            :: Varname
 !
 Filename = './pr_1961-2000.nc'
 !
