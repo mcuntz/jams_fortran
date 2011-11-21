@@ -22,7 +22,7 @@ Filename = './pr_1961-2000.nc'
 ! Variable name can be retrieved by a "ncdump -h <filename>"
 Varname  = 'pr'
 !
-call Get_netcdf_Var(Filename,Varname, data)
+call Get_NcVar(Filename,Varname, data)
 !
 write(*,*) 'sum of data: ', sum(data)
 ! The sum of the data should be 0.1174308 in single precision
