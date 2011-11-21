@@ -4,12 +4,6 @@ module mo_NcRead
   
   ! Please make sure you include the netcdf4 library in your makefile in order to use this module
 
-
-!  AUTHOR:  Stephan Thober UFZ 2011                                           *
-!                                                                             *
-!  UPDATES:                                                                   *
-!           created  Thober     04.11.2011                                    *
-
   ! numerical precision
   use mo_kind, only: i4, sp, dp
   !
@@ -22,7 +16,7 @@ module mo_NcRead
   !
   private
   !
-  public :: Get_NcVar
+  public :: Get_NcVar ! get the data of a Variable in a nc file
   !
   interface Get_NcVar
      module procedure Get_NcVar_3d_sp, Get_NcVar_3d_dp, Get_NcVar_2d_sp, &
