@@ -17,7 +17,7 @@ real(sp), dimension(:,:,:,:), allocatable :: data
 character(256)                            :: Filename
 character(256)                            :: Varname
 !
-Filename = './pr_1961-2000.nc'
+Filename = 'test_mo_NcRead/pr_1961-2000.nc'
 !
 ! Variable name can be retrieved by a "ncdump -h <filename>"
 Varname  = 'pr'
