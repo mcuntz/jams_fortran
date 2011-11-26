@@ -1,5 +1,5 @@
 SUBROUTINE atimes_sp(x,r,itrnsp)
-  USE mo_kind
+  USE mo_kind, only: sp, i4
   USE mo_nrutil, ONLY : assert_eq
   use mo_nr, ONLY : sprsax,sprstx
   USE xlinbcg_data_sp
@@ -17,7 +17,7 @@ END SUBROUTINE atimes_sp
 
 
 SUBROUTINE atimes_dp(x,r,itrnsp)
-  USE mo_kind
+  USE mo_kind, only: dp, i4
   USE mo_nrutil, ONLY : assert_eq
   use mo_nr, ONLY : sprsax,sprstx
   USE xlinbcg_data_dp

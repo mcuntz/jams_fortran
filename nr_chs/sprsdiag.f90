@@ -1,5 +1,5 @@
 SUBROUTINE sprsdiag_sp(sa,b)
-  USE mo_kind
+  USE mo_kind, only: sp, i4, lgt, sprs2_sp
   USE mo_nrutil, ONLY : array_copy,assert_eq
   IMPLICIT NONE
   TYPE(sprs2_sp), INTENT(IN) :: sa
@@ -20,7 +20,7 @@ SUBROUTINE sprsdiag_sp(sa,b)
 END SUBROUTINE sprsdiag_sp
 
 SUBROUTINE sprsdiag_dp(sa,b)
-  USE mo_kind
+  USE mo_kind, only: dp, i4, lgt, sprs2_dp
   USE mo_nrutil, ONLY : array_copy,assert_eq
   IMPLICIT NONE
   TYPE(sprs2_dp), INTENT(IN) :: sa

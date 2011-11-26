@@ -1,5 +1,5 @@
 SUBROUTINE gaussj_sp(a,b)
-  USE mo_kind
+  USE mo_kind, only: sp, i4, lgt
   USE mo_nrutil, ONLY : assert_eq,nrerror,outerand,outerprod,swap
   IMPLICIT NONE
   REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: a,b
@@ -46,7 +46,7 @@ END SUBROUTINE gaussj_sp
 
 
 SUBROUTINE gaussj_dp(a,b)
-  USE mo_kind
+  USE mo_kind, only: dp, i4, lgt
   USE mo_nrutil, ONLY : assert_eq,nrerror,outerand,outerprod,swap
   IMPLICIT NONE
   REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: a,b

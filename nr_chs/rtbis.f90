@@ -1,5 +1,5 @@
 FUNCTION rtbis_s(func,x1,x2,xacc)
-  USE mo_kind
+  USE mo_kind, only: sp, i4
   USE mo_nrutil, ONLY : nrerror
   IMPLICIT NONE
   REAL(SP), INTENT(IN) :: x1,x2,xacc
@@ -36,7 +36,7 @@ FUNCTION rtbis_s(func,x1,x2,xacc)
 END FUNCTION rtbis_s
 
 FUNCTION rtbis_d(func,x1,x2,xacc)
-  USE mo_kind
+  USE mo_kind, only: dp, i4
   USE mo_nrutil, ONLY : nrerror
   IMPLICIT NONE
   REAL(DP), INTENT(IN) :: x1,x2,xacc

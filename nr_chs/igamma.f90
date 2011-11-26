@@ -1,5 +1,5 @@
 FUNCTION igamma_s(a,x)
-  USE mo_kind
+  USE mo_kind, only: sp
   USE mo_nrutil, ONLY : assert
   use mo_nr, ONLY : gcf,gser
   IMPLICIT NONE
@@ -17,7 +17,7 @@ END FUNCTION igamma_s
 
 
 FUNCTION igamma_v(a,x)
-  USE mo_kind
+  USE mo_kind, only: sp, i4, lgt
   USE mo_nrutil, ONLY : assert, assert_eq
   use mo_nr, ONLY : gcf,gser
   IMPLICIT NONE
@@ -36,7 +36,7 @@ END FUNCTION igamma_v
 
 
 FUNCTION digamma_s(a,x)
-  USE mo_kind
+  USE mo_kind, only: dp
   USE mo_nrutil, ONLY : assert
   use mo_nr, ONLY : gcf,gser
   IMPLICIT NONE
@@ -54,7 +54,7 @@ END FUNCTION digamma_s
 
 
 FUNCTION digamma_v(a,x)
-  USE mo_kind
+  USE mo_kind, only: dp, i4, lgt
   USE mo_nrutil, ONLY : assert, assert_eq
   use mo_nr, ONLY : gcf, gser
   IMPLICIT NONE

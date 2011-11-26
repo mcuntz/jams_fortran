@@ -1,5 +1,5 @@
 FUNCTION gser_s(a,x,gln)
-  USE mo_kind
+  USE mo_kind, only: sp, i4
   USE mo_nrutil, ONLY : nrerror
   use mo_nr, ONLY : gammln
   IMPLICIT NONE
@@ -34,7 +34,7 @@ END FUNCTION gser_s
 
 
 FUNCTION gser_v(a,x,gln)
-  USE mo_kind
+  USE mo_kind, only: sp, i4, lgt
   USE mo_nrutil, ONLY : assert_eq,nrerror
   use mo_nr, ONLY : gammln
   IMPLICIT NONE
@@ -75,7 +75,7 @@ END FUNCTION gser_v
 
 
 FUNCTION dgser_s(a,x,gln)
-  USE mo_kind
+  USE mo_kind, only: dp, i4
   USE mo_nrutil, ONLY : nrerror
   use mo_nr, ONLY : gammln
   IMPLICIT NONE
@@ -110,7 +110,7 @@ END FUNCTION dgser_s
 
 
 FUNCTION dgser_v(a,x,gln)
-  USE mo_kind
+  USE mo_kind, only: dp, i4, lgt
   USE mo_nrutil, ONLY : assert_eq,nrerror
   use mo_nr, ONLY : gammln
   IMPLICIT NONE

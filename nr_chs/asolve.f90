@@ -1,5 +1,5 @@
 SUBROUTINE asolve_sp(b,x,itrnsp)
-  USE mo_kind
+  USE mo_kind, only: sp, i4
   USE mo_nrutil, ONLY : assert_eq,nrerror
   use mo_nr, ONLY : sprsdiag
   USE xlinbcg_data_sp
@@ -15,7 +15,7 @@ END SUBROUTINE asolve_sp
 
 
 SUBROUTINE asolve_dp(b,x,itrnsp)
-  USE mo_kind
+  USE mo_kind, only: dp, i4
   USE mo_nrutil, ONLY : assert_eq,nrerror
   use mo_nr, ONLY : sprsdiag
   USE xlinbcg_data_dp

@@ -1,5 +1,5 @@
 SUBROUTINE tridag_ser(a,b,c,r,u)
-  USE mo_kind
+  USE mo_kind, only: sp, i4
   USE mo_nrutil, ONLY : assert_eq,nrerror
   IMPLICIT NONE
   REAL(SP), DIMENSION(:), INTENT(IN) :: a,b,c,r
@@ -24,7 +24,7 @@ SUBROUTINE tridag_ser(a,b,c,r,u)
 END SUBROUTINE tridag_ser
 
 RECURSIVE SUBROUTINE tridag_par(a,b,c,r,u)
-  USE mo_kind
+  USE mo_kind, only: sp, i4
   USE mo_nrutil, ONLY : assert_eq,nrerror
   use mo_nr, ONLY : tridag_ser
   IMPLICIT NONE
@@ -64,7 +64,7 @@ END SUBROUTINE tridag_par
 
 
 SUBROUTINE dtridag_ser(a,b,c,r,u)
-  USE mo_kind
+  USE mo_kind, only: dp, i4
   USE mo_nrutil, ONLY : assert_eq,nrerror
   IMPLICIT NONE
   REAL(DP), DIMENSION(:), INTENT(IN) :: a,b,c,r
@@ -90,7 +90,7 @@ END SUBROUTINE dtridag_ser
 
 
 RECURSIVE SUBROUTINE dtridag_par(a,b,c,r,u)
-  USE mo_kind
+  USE mo_kind, only: dp, i4
   USE mo_nrutil, ONLY : assert_eq,nrerror
   use mo_nr, ONLY : dtridag_ser
   IMPLICIT NONE

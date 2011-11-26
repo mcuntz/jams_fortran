@@ -1,5 +1,5 @@
 SUBROUTINE sprsax_sp(sa,x,b)
-  USE mo_kind
+  USE mo_kind, only: sp, i4, sprs2_sp
   USE mo_nrutil, ONLY : assert_eq,scatter_add
   IMPLICIT NONE
   TYPE(sprs2_sp), INTENT(IN) :: sa
@@ -12,7 +12,7 @@ SUBROUTINE sprsax_sp(sa,x,b)
 END SUBROUTINE sprsax_sp
 
 SUBROUTINE sprsax_dp(sa,x,b)
-  USE mo_kind
+  USE mo_kind, only: dp, i4, sprs2_dp
   USE mo_nrutil, ONLY : assert_eq,scatter_add
   IMPLICIT NONE
   TYPE(sprs2_dp), INTENT(IN) :: sa

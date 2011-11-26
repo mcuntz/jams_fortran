@@ -1,5 +1,5 @@
 FUNCTION gammln_s(xx)
-  USE mo_kind
+  USE mo_kind, only: sp, dp
   USE mo_nrutil, ONLY : arth,assert
   IMPLICIT NONE
   REAL(SP), INTENT(IN) :: xx
@@ -20,7 +20,7 @@ END FUNCTION gammln_s
 
 
 FUNCTION gammln_v(xx)
-  USE mo_kind
+  USE mo_kind, only: sp, dp, i4
   USE mo_nrutil, ONLY: assert
   IMPLICIT NONE
   INTEGER(I4) :: i
@@ -58,7 +58,7 @@ FUNCTION dgammln_s(z)
   !              1 Creswick Street, Brighton, Vic. 3187, Australia
   !  e-mail: amiller @ bigpond.net.au
   !  Latest revision - 14 October 1996
-  USE mo_kind
+  USE mo_kind, only: dp
   USE mo_nrutil, ONLY : assert
   IMPLICIT NONE
   REAL(DP), INTENT(IN) :: z
@@ -101,7 +101,7 @@ FUNCTION dgammln_v(z)
   !              1 Creswick Street, Brighton, Vic. 3187, Australia
   !  e-mail: amiller @ bigpond.net.au
   !  Latest revision - 14 October 1996
-  USE mo_kind
+  USE mo_kind, only: dp
   USE mo_nrutil, ONLY : assert
   IMPLICIT NONE
   REAL(DP), DIMENSION(:), INTENT(IN) :: z

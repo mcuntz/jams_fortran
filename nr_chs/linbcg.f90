@@ -1,5 +1,5 @@
 SUBROUTINE linbcg_sp(b,x,itol,tol,itmax,iter,err)
-  USE mo_kind
+  USE mo_kind, only: sp, i4
   USE mo_nrutil, ONLY : assert_eq, nrerror
   use mo_nr, ONLY : atimes, asolve, snrm
   IMPLICIT NONE
@@ -9,7 +9,7 @@ SUBROUTINE linbcg_sp(b,x,itol,tol,itmax,iter,err)
   REAL(SP), INTENT(IN) :: tol
   INTEGER(I4), INTENT(OUT) :: iter
   REAL(SP), INTENT(OUT) :: err
-  REAL(SP), PARAMETER :: EPS=1.0e-9_dp
+  REAL(SP), PARAMETER :: EPS=1.0e-9_sp
   INTEGER(I4) :: n
   REAL(SP) :: ak,akden,bk,bkden,bknum,bnrm,dxnrm,xnrm,zm1nrm,znrm
   REAL(SP), DIMENSION(size(b)) :: p,pp,r,rr,z,zz
@@ -87,7 +87,7 @@ END SUBROUTINE linbcg_sp
 
 
 SUBROUTINE linbcg_dp(b,x,itol,tol,itmax,iter,err)
-  USE mo_kind
+  USE mo_kind, only: dp, i4
   USE mo_nrutil, ONLY : assert_eq, nrerror
   use mo_nr, ONLY : atimes, asolve, snrm
   IMPLICIT NONE

@@ -1,5 +1,5 @@
 FUNCTION gammq_s(a,x,gln)
-  USE mo_kind
+  USE mo_kind, only: sp
   USE mo_nrutil, ONLY : assert
   use mo_nr, ONLY : gcf,gser
   IMPLICIT NONE
@@ -24,7 +24,7 @@ END FUNCTION gammq_s
 
 
 FUNCTION gammq_v(a,x,gln)
-  USE mo_kind
+  USE mo_kind, only: sp, i4, lgt
   USE mo_nrutil, ONLY : assert, assert_eq, nrerror
   use mo_nr, ONLY : gcf,gser
   IMPLICIT NONE
@@ -48,7 +48,7 @@ END FUNCTION gammq_v
 
 
 FUNCTION dgammq_s(a,x,gln)
-  USE mo_kind
+  USE mo_kind, only: dp
   USE mo_nrutil, ONLY : assert
   use mo_nr, ONLY : gcf,gser
   IMPLICIT NONE
@@ -73,7 +73,7 @@ END FUNCTION dgammq_s
 
 
 FUNCTION dgammq_v(a,x,gln)
-  USE mo_kind
+  USE mo_kind, only: dp, i4, lgt
   USE mo_nrutil, ONLY : assert, assert_eq, nrerror
   use mo_nr, ONLY : gcf, gser
   IMPLICIT NONE

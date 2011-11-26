@@ -1,5 +1,5 @@
 SUBROUTINE sprsin_sp(a,thresh,sa)
-  USE mo_kind
+  USE mo_kind, only: sp, i4, lgt, sprs2_sp
   USE mo_nrutil, ONLY : arth,assert_eq
   IMPLICIT NONE
   REAL(SP), DIMENSION(:,:), INTENT(IN) :: a
@@ -19,7 +19,7 @@ SUBROUTINE sprsin_sp(a,thresh,sa)
 END SUBROUTINE sprsin_sp
 
 SUBROUTINE sprsin_dp(a,thresh,sa)
-  USE mo_kind
+  USE mo_kind, only: dp, i4, lgt, sprs2_dp
   USE mo_nrutil, ONLY : arth,assert_eq
   IMPLICIT NONE
   REAL(DP), DIMENSION(:,:), INTENT(IN) :: a

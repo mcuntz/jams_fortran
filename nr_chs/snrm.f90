@@ -1,5 +1,5 @@
 FUNCTION snrm_sp(sx,itol)
-  USE mo_kind
+  USE mo_kind, only: sp, i4
   IMPLICIT NONE
   REAL(SP), DIMENSION(:), INTENT(IN) :: sx
   INTEGER(I4), INTENT(IN) :: itol
@@ -13,7 +13,7 @@ END FUNCTION snrm_sp
 
 
 FUNCTION snrm_dp(sx,itol)
-  USE mo_kind
+  USE mo_kind, only: dp, i4
   IMPLICIT NONE
   REAL(DP), DIMENSION(:), INTENT(IN) :: sx
   INTEGER(I4), INTENT(IN) :: itol
