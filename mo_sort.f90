@@ -501,7 +501,9 @@ CONTAINS
           do j=l+1, r
              indext = sort_index_i4(j)
              a = iarr(indext)
-             do i=j-1, 1, -1
+             ! Corrected from Numerical Recipes Forum
+             ! do i=j-1, 1, -1
+             do i=j-1, l, -1
                 if (iarr(sort_index_i4(i)) <= a) exit
                 sort_index_i4(i+1) = sort_index_i4(i)
              end do
