@@ -1,0 +1,5 @@
+Number_of_Dimensions: 3
+lon 28
+lat 36
+time 2
+

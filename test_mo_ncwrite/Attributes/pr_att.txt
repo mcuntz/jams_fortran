@@ -1,0 +1,14 @@
+xtype= NF90_FLOAT 
+nLvls= 1
+nSubs= 1
+nDims= 3
+dimTypes= 1 2 3 0 0 
+Number_of_Attributes: 2
+name= units
+xType= NF90_CHAR
+nValues= 1
+values= m
+name= long_name
+xtype= NF90_CHAR
+nValues= 1
+values= "x-coordinate in cartesian coordinates GK4"
