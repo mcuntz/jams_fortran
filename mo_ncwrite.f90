@@ -1,28 +1,38 @@
-module mo_NCinter
-
-  ! This module provides routines for writing data in a nc file using the netcdf4 library.
-
-  ! Please make sure you include the netcdf4 library in your makefile in order to use this module
-  ! see this webpage for netcdf documentation:
-  ! http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
-
-  ! numerical precision
-  use mo_kind, only: i4, sp, dp 
-  
-  ! functions and constants of netcdf4 library
-  use netcdf, only: NF90_FLOAT, NF90_CHAR, NF90_UNLIMITED, NF90_CLOBBER, NF90_INT, nf90_def_var, &
-                    nf90_put_att, nf90_enddef, nf90_create, nf90_def_dim, nf90_put_var, nf90_close, &
-                    nf90_noerr, nf90_strerror
+!******************************************************************************
+!  NetCDF_Interface v1                                                        *
+!  PURPOSE:                                                                   *
+!           This subroutines read / writes outputs in netCDF format           *
+!           To become the standard input/output of mHM                        *
+!                                                                             *
+!  GRID     lon-lat-lvl grid                                                  *
+!           time                                                              *
+!                                                                             *
+!  AUTHOR:  Luis Samaniego UFZ 2011                                           *
+!                                                                             *
+!  UPDATES:                                                                   *
+!           created  Sa     22.01.2011     main structure v1                  *
+!           update   Sa     24.02.2011     attribute rot. coordinate          *
+!-----------------------------------------------------------------------------*
+!  ACKNOWLEDGMENT                                                             *
+!  VERSION: NetCDF-3.6.1 F90 interface to NetCDF                              *
+!           http://www.unidata.ucar.edu/software/netcdf/                      *
+!           CVF6.*        --Compaq Visual Fortran compiler version 6.*        *
+!           IVF9.*, 10.*  --Intel  Visual Fortran compiler version 9.*, 10.*  *
+!           netcdf90 compiled by:   YAN Haoming  <wfllib@gmail.com>           *
+!                                   http://www.whigg.ac.cn/yanhm/fortran.htm  *
+!  REQUIREMENTS AND SUGESTIONS                                                *
+!           Matthias Cuntz UFZ                                                *
+!******************************************************************************
+module mo_ncWrite
+  use mo_kind, only: i4, sp, dp
+  use netcdf,  only: nf90_create, nf90_def_dim, NF90_UNLIMITED, nf90_def_var, &
+                     NF90_CHAR, nf90_put_att, NF90_INT, NF90_INT, NF90_GLOBAL, &
+                     nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, &
+                     NF90_close, nf90_noerr, nf90_strerror, NF90_CLOBBER
+  ! netCDF configuration for mHM
+  ! see: http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
   !
   private
-  !
-  public :: set_NcVar     ! set the variables and attributes which shall be written in the file
-  public :: create_netcdf ! write the variables and attributes in the file
-  public :: Write_Static  ! write the actual data in the file statically ( at once )
-  public :: Write_Dynamic ! write the actual data in the file dynamically ( one record after the other )
-  public :: close_netcdf  ! close the netcdf file
-  !
-  ! Definition of PRIVATE Variables ------------------------------------------------------------------------
   !
   ! definition of parameters
   integer(i4), parameter                    :: nMaxDim = 5         ! nr. max dimensions
@@ -32,8 +42,6 @@ module mo_NCinter
   integer(i4), parameter                    :: nAttDim = 2         ! dim array of attribute values
   !
   ! definition of variables
-  integer(i4)                               :: nVars               ! nr. variables
-  integer(i4)                               :: nDims               ! nr. dimensions 
   integer(i4)                               :: nLats               ! latitude  => nRows
   integer(i4)                               :: nLons               ! longitude => nCols
   integer(i4)                               :: nLvls               ! nr. levels
@@ -44,7 +52,7 @@ module mo_NCinter
     character (len=maxLen)                  :: name                ! attribute name
     integer(i4)                             :: xType               ! attribute of the values
     integer(i4)                             :: nValues             ! number of attributes       
-    character (len=maxLen)                  :: values               ! numbers or "characters" separed by spaces
+    character (len=maxLen)                  :: values              ! numbers or "characters" separed by spaces
   end type attribute
   !
   type variable
@@ -58,236 +66,58 @@ module mo_NCinter
      integer(i4), dimension(nMaxDim)        :: dimIds              ! passing var. dimensions
      integer(i4), dimension(nMaxDim)        :: dimTypes            ! type of dimensions
      integer(i4)                            :: nAtt                ! nr. attributes     
-     type(attribute), dimension(:), allocatable    :: att                 ! var. attributes   
+     type(attribute), dimension(nMaxAtt)    :: att                 ! var. attributes   
      integer(i4), dimension(nMaxDim)        :: start               ! starting indices for netCDF
      integer(i4), dimension(nMaxDim)        :: count               ! counter          for netCDF
+     logical                                :: wFlag               ! write flag
+     integer(i4), dimension(:      ), pointer :: G1_i              ! array pointing model variables
+     integer(i4), dimension(:,:    ), pointer :: G2_i              ! array pointing model variables
+     integer(i4), dimension(:,:,:  ), pointer :: G3_i              ! array pointing model variables
+     integer(i4), dimension(:,:,:,:), pointer :: G4_i              ! array pointing model variables
+     real(sp), dimension(:    ), pointer    :: G1_f                ! array pointing model variables
+     real(sp), dimension(:,:    ), pointer  :: G2_f                ! array pointing model variables
+     real(sp), dimension(:,:,:  ), pointer  :: G3_f                ! array pointing model variables
+     real(sp), dimension(:,:,:,:), pointer  :: G4_f                ! array pointing model variables
+     real(dp), dimension(:      ), pointer  :: G1_d                ! array pointing model variables
+     real(dp), dimension(:,:    ), pointer  :: G2_d                ! array pointing model variables
+     real(dp), dimension(:,:,:  ), pointer  :: G3_d                ! array pointing model variables
+     real(dp), dimension(:,:,:,:), pointer  :: G4_d                ! array pointing model variables
   end type variable
-  type(variable), dimension(:), allocatable :: V                   ! variable list
-  !
-  !type(attribute), dimension(nGAtt)         :: globalAtt           ! global attributes for netCDF
   !
   type dims
      character (len=maxLen)                 :: name                ! dim. name
      integer(i4)                            :: len                 ! dim. lenght, undefined time => NF90_UNLIMITED
      integer(i4)                            :: dimId               ! dim. Id
   end type dims
-  type (dims), dimension(:), allocatable    :: Dnc                 ! dimesions netCDF e.g. lon, lat, level, time
   !
-  interface Write_Static
-     module procedure Write_Static_i_2d, write_Static_i_3d, write_static_i_4d, &
-                      Write_Static_s_2d, write_Static_s_3d, write_static_s_4d, &
-                      Write_Static_d_2d, Write_Static_d_3d, Write_Static_d_4d
-  end interface Write_Static
+  ! input/output  
+  character(256)                            :: fName_netCDF_In     ! File Name in
+  character(256)                            :: fName_netCDF_Out    ! File Name out
   !
-  interface Write_Dynamic
-     module procedure Write_Dynamic_i_0d, Write_Dynamic_i_1d, Write_Dynamic_i_2d, &
-                      write_Dynamic_i_3d, write_Dynamic_i_4d
-     module procedure Write_Dynamic_s_0d, Write_Dynamic_s_1d, Write_Dynamic_s_2d, &
-                      write_Dynamic_s_3d, write_Dynamic_s_4d
-     module procedure Write_Dynamic_d_0d, Write_Dynamic_d_1d, Write_Dynamic_d_2d, &
-                      write_Dynamic_d_3d, write_Dynamic_d_4d
-  end interface Write_Dynamic
+  ! public variables -----------------------------------------------------------------
+  integer(i4),public                                :: nVars   ! nr. variables
+  integer(i4),public                                :: nDims   ! nr. dimensions 
+  type (dims), public, dimension(:), allocatable    :: Dnc     ! dimesions list 
+  type(variable),public,  dimension(:), allocatable :: V       ! variable list
+  type(attribute), public, dimension(nGAtt)         :: gatt    ! global attributes for netCDF
   !
-  contains
-!******************************************************************************
+  ! public routine -------------------------------------------------------------------
+  public :: create_netCDF        ! create the nc file with variables and their attributes
+  public :: write_static_netcdf  ! write static data in the file
+  public :: write_dynamic_netcdf ! write dynamically (one record after the other) in the file
+  public :: close_netcdf         ! save and close the netcdf file
+  !
+contains
 
-!    NAME
-!        set_NcVar
-
-!    PURPOSE
-!        This subroutine reads the attributes of the dimensions and variables
-!        and stores these in the private data structure of this module. The
-!        variables have to be specified in the variable VarList. Furthermore
-!        the Path of the folder, where the files with the attributes are
-!        written, have to be specified.
-
-!    CALLING SEQUENCE
-!        call set_NcVar(VariableList, AttributePath)
-
-!    INTENT(IN)
-!        character(256), dimension(:) :: VariableList      List of the variable names
-
-!    INTENT(IN)
-!        character(256)               :: AttributePath     Path of the attribute files
-
-!    RESTRICTIONS
-!        Can read attributes which are written in files in the <AttributePath>.
-!        The following files have to be given:
-!          - dim.txt
-!                This file contains the dimensions to be written. It has to be of
-!                the following form.
-!             >>>Number_of_Dimensions: 3
-!                <dim1_name> <dim1_len>
-!                <dim2_name> <dim2_len>
-!                ...
-!                <dimn_name> <dimn_len>
-!                <<<EOF
-!                The dimension names as well as the dimension lengths do not contain
-!                any spaces.
-!          For each dimension and each variable a file containing the attributes has to 
-!          be specified. These have to look like this:
-!          - <name>_att.txt
-!                <name> can be either Variable name or dimension name. These files have to
-!                be written like this
-!             >>>xtype= (NF90_FLOAT or NF90_INT or NF90_CHAR)
-!                nLvls= 1
-!                nSubs= 1
-!                nDims= 3
-!                dimTypes= 1 2 3 0 0 
-!                Number_of_Attributes: <Att_Number>
-!                name= <Att_name>
-!                xType= (NF90_FLOAT or NF90_INT or NF90_CHAR
-!                nValues= 1
-!                values= m
-!                name= long_name
-!xtype= NF90_CHAR
-!nValues= 1
-!values= "x-coordinate in cartesian coordinates GK4"   
-
-!    LITERATURE
-!        http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
-
-!    HISTORY
-!        Written,  Luis Samaniego, Feb 2011
-!        Modified, Stephan Thober, Nov 2011 - restructured
-!
-!******************************************************************************
-subroutine set_NcVar(VarList, AttPath)
-  !
-  implicit none
-  !
-  ! input variables
-  character(256), dimension(:), intent(in)     :: VarList   ! List of  Variable names
-  character(256),               intent(in)     :: AttPath
-  !
-  ! local variables  
-  character(256)                               :: dummy, dummy2
-  character(256)                               :: filename
-  integer(i4)                                  :: i, j
-  integer(i4)                                  :: nDims
-  !
-  ! read dimensions
-  open (unit = 110, file=trim(AttPath)//"dim.txt", status="old", &
-                                    action="read")
-  !
-  read(110,*) dummy, nDims
-  !
-  allocate(Dnc(ndims))
-  !
-  do i = 1, ndims
-     !
-     read(110,*) Dnc(i)%name, Dnc(i)%len
-     if (Dnc(i)%len == -1) Dnc(i)%len = NF90_UNLIMITED
-     !
-  end do
-  !
-  close(110)
-  !
-  ! read and set all Attributes
-  allocate ( V(size(Dnc,1)+size(VarList,1)))
-  !
-  ! 1st read dimension attributes
-  Dimloop: do i = 1, size(Dnc,1)
-     !
-     V(i)%name = trim(Dnc(i)%name)
-     write(filename,*) trim(AttPath)//trim(V(i)%name)//'_att.txt'
-     open(unit = 120, file = filename, status = "old", &
-                                       action = "read" )
-     !
-     read(120,*) dummy, dummy2
-     select case (trim(dummy2))
-        case ('NF90_FLOAT')
-           V(i)%xType = NF90_FLOAT
-        case ('NF90_CHAR')
-           V(i)%xType = NF90_CHAR
-     end select
-     read(120,*) dummy, V(i)%nLvls
-     read(120,*) dummy, V(i)%nSubs
-     read(120,*) dummy, V(i)%nDims
-     read(120,*) dummy, V(i)%dimTypes
-     !
-     read(120,*) dummy, V(i)%natt
-     allocate(V(i)%att(V(i)%natt))
-     !
-     ! read attributes of ith Variable
-     do j = 1, V(i)%natt
-        !
-        read(120,*) dummy, V(i)%att(j)%name
-        read(120,*) dummy, dummy2
-        select case (trim(dummy2))
-        case ('NF90_FLOAT')
-           V(i)%att(j)%xType = NF90_FLOAT
-        case ('NF90_CHAR')
-           V(i)%att(j)%xType = NF90_CHAR
-        end select
-        read(120,*) dummy, V(i)%att(j)%nValues
-        read(120,*) dummy, V(i)%att(j)%values
-        !
-     end do
-     !
-     close(120)
-     !
-     V(i)%nLvls       =  0
-     V(i)%nSubs       =  0
-     V(i)%nDims       =  1
-     V(i)%dimTypes    =  (/i,0,0,0,0/)
-     !
-  end do Dimloop
-  !
-  ! 2nd read variable attributes
-  VarLoop: do i = size(Dnc,1) + 1, size(V,1)
-     !
-     ! get Attributes and properties of variable from file
-     V(i)%name = trim(Varlist(i-size(Dnc,1)))
-     write(filename,*) trim(AttPath)//trim(V(i)%name)//'_att.txt'
-     open(unit = 120, file = filename, status = "old", &
-                                       action = "read" )
-     !
-     read(120,*) dummy, dummy2
-     select case (trim(dummy2))
-        case ('NF90_FLOAT')
-           V(i)%xType = NF90_FLOAT
-        case ('NF90_CHAR')
-           V(i)%xType = NF90_CHAR
-     end select
-     read(120,*) dummy, V(i)%nLvls
-     read(120,*) dummy, V(i)%nSubs
-     read(120,*) dummy, V(i)%nDims
-     read(120,*) dummy, V(i)%dimTypes
-     !
-     read(120,*) dummy, V(i)%natt
-     allocate(V(i)%att(V(i)%natt))
-     !
-     ! read attributes of ith Variable
-     do j = 1, V(i)%natt
-        !
-        read(120,*) dummy, V(i)%att(j)%name
-        read(120,*) dummy, dummy2
-        select case (trim(dummy2))
-        case ('NF90_FLOAT')
-           V(i)%att(j)%xType = NF90_FLOAT
-        case ('NF90_CHAR')
-           V(i)%att(j)%xType = NF90_CHAR
-        end select
-        read(120,*) dummy, V(i)%att(j)%nValues
-        read(120,*) dummy, V(i)%att(j)%values
-        !
-     end do
-     !
-     close(120)
-     !
-  end do VarLoop
-  !
-end subroutine  set_NcVar
 !******************************************************************************
 !  CREATE netCDF                                                              *
 !******************************************************************************
-subroutine create_netCDF(fname, ncid)
+subroutine create_netCDF(Filename,ncid)
   !
   implicit none
   !
   ! netcdf related variables
-  character(len=maxLen), intent(in)          :: fname
+  character(len=maxLen), intent(in)          :: Filename
   integer(i4), intent(out)                   :: ncid
   integer(i4)                                :: i, j, k
   integer(i4), dimension (nAttDim)           :: att_INT  
@@ -295,18 +125,16 @@ subroutine create_netCDF(fname, ncid)
   character(len=maxLen), dimension (nAttDim) :: att_CHAR
   !
   ! 1  Create netCDF dataset: enter define mode     ->  get ncId  
-  call check( nf90_create ( trim(fname), NF90_CLOBBER, ncId ))
+  call check( nf90_create ( trim(Filename), NF90_CLOBBER, ncId ))
   !
   ! 2  Define dimensions                                 -> get dimId
-  do i=1, size(Dnc,1)
+  do i=1, nDims
     call check( nf90_def_dim ( ncId, Dnc(i)%name , Dnc(i)%len, Dnc(i)%dimId ))
   end do
   !
   ! 3 Define dimids array, which is used to pass the dimids of the dimensions of
   ! the netCDF variables
-  nVars = size(V,1)
   do i = 1, nVars
-     print*, 'ndims',V(i)%nDims,'name',trim(V(i)%name)
     V(i)%unlimited = .false.
     V(i)%dimids  = 0
     V(i)%start   = 1
@@ -322,12 +150,11 @@ subroutine create_netCDF(fname, ncid)
          V(i)%count(k)  = Dnc( V(i)%dimTypes(k) )%len
       end do
     end if
-    print*, V(i)%dimids
   end do
   !
-  ! 4 Define the netCDF variables and attributes                            -> get varId
-  print*, 'set attributes...'
+  ! 4 Define the netCDF variables and atributes                            -> get varId
   do i=1, nVars
+    if ( .not. V(i)%wFlag ) cycle
     call check( nf90_def_var ( ncId, V(i)%name, V(i)%xtype, V(i)%dimids(1:V(i)%nDims), V(i)%varId ))
     do k = 1, V(i)%nAtt
       select case ( V(i)%att(k)%xType )
@@ -347,7 +174,7 @@ subroutine create_netCDF(fname, ncid)
   !
   ! 5 Global attributes
   do k = 1, nGAtt
-!    call check( nf90_put_att ( ncId, NF90_GLOBAL, globalAtt(k)%name, globalAtt(k)%values ))
+    call check( nf90_put_att ( ncId, NF90_GLOBAL, Gatt(k)%name, Gatt(k)%values ))
   end do
   !
   ! 6 end definitions: leave define mode
@@ -357,492 +184,133 @@ subroutine create_netCDF(fname, ncid)
 end subroutine create_netCDF
 
 !******************************************************************************
-!  WRITE STATIC                                                               *
+!  WRITE netCDF                                                               *
 !                                                                             *
 !  NOTES: 1) netCDF file must be on *** data mode ***                         *
 !         2) any numeric data type is allowed but NOT character               *
-!         3) writes the whole array                                           *
 !                                                                             *
 !******************************************************************************
-subroutine write_static_i_2d(ncId, i, data)
+subroutine write_static_netCDF(ncId)
   !
   implicit none
   !
   ! netcdf related variables
-  integer(i4), intent(in)                :: ncId
-  integer(i4), intent(in)                :: i    ! ~ Var(i)
-  integer(i4), dimension(:,:),intent(in) :: data
+  integer(i4), intent(in)           :: ncId
+  integer(i4)                       :: i
  
   ! NOTES: 1) netCDF file must be on *** data mode ***
   !
   ! write all static variables
-  if ( V(i)%unlimited     ) stop 'ERROR*** This Variable is unlimited!!!'
-  print *, "Var. ", trim(V(i)%name) ," is  static"
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data ))
-  !
-end subroutine write_static_i_2d
-!
-subroutine write_static_i_3d(ncId, i, data)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4), intent(in)                  :: ncId
-  integer(i4), intent(in)                  :: i    ! ~ Var(i)
-  integer(i4), dimension(:,:,:),intent(in) :: data
- 
-  ! NOTES: 1) netCDF file must be on *** data mode ***
-  !
-  ! write all static variables
-  if ( V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  print *, "Var. ", trim(V(i)%name) ," is  static"
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data ))
-  !
-end subroutine write_static_i_3d
-!
-subroutine write_static_i_4d(ncId, i, data)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4), intent(in)                     :: ncId
-  integer(i4), intent(in)                     :: i    ! ~ Var(i)
-  integer(i4), dimension(:,:,:,:), intent(in) :: data
- 
-  ! NOTES: 1) netCDF file must be on *** data mode ***
-  !
-  ! write all static variables
-  if ( V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  print *, "Var. ", trim(V(i)%name) ," is  static"
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data ))
-  !
-end subroutine write_static_i_4d
-!
-subroutine write_static_s_2d(ncId, i, data)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4), intent(in)             :: ncId
-  integer(i4), intent(in)             :: i    ! ~ Var(i)
-  real(sp), dimension(:,:),intent(in) :: data
- 
-  ! NOTES: 1) netCDF file must be on *** data mode ***
-  !
-  ! write all static variables
-  if ( V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  print *, "Var. ", trim(V(i)%name) ," is  static"
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data ))
-  !
-end subroutine write_static_s_2d
-!
-subroutine write_static_s_3d(ncId, i, data)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4), intent(in)               :: ncId
-  integer(i4), intent(in)               :: i    ! ~ Var(i)
-  real(sp), dimension(:,:,:),intent(in) :: data
- 
-  ! NOTES: 1) netCDF file must be on *** data mode ***
-  !
-  ! write all static variables
-  if ( V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  print *, "Var. ", trim(V(i)%name) ," is  static"
-  print*,size(data,1), size(data,2), size(data,3)
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data ))
-  !
-end subroutine write_static_s_3d
-!
-subroutine write_static_s_4d(ncId, i, data)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4), intent(in)                  :: ncId
-  integer(i4), intent(in)                  :: i    ! ~ Var(i)
-  real(sp), dimension(:,:,:,:), intent(in) :: data
- 
-  ! NOTES: 1) netCDF file must be on *** data mode ***
-  !
-  ! write all static variables
-  if ( V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  print *, "Var. ", trim(V(i)%name) ," is  static"
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data ))
-  !
-end subroutine write_static_s_4d
-!
-subroutine write_static_d_2d(ncId, i, data)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4), intent(in)             :: ncId
-  integer(i4), intent(in)             :: i    ! ~ Var(i)
-  real(dp), dimension(:,:),intent(in) :: data
- 
-  ! NOTES: 1) netCDF file must be on *** data mode ***
-  !
-  ! write all static variables
-  if ( V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  print *, "Var. ", trim(V(i)%name) ," is  static"
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data ))
-  !
-end subroutine write_static_d_2d
-!
-subroutine write_static_d_3d(ncId, i, data)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4), intent(in)               :: ncId
-  integer(i4), intent(in)               :: i    ! ~ Var(i)
-  real(dp), dimension(:,:,:),intent(in) :: data
- 
-  ! NOTES: 1) netCDF file must be on *** data mode ***
-  !
-  ! write all static variables
-  if ( V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  print *, "Var. ", trim(V(i)%name) ," is  static"
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data ))
-  !
-end subroutine write_static_d_3d
-!
-subroutine write_static_d_4d(ncId, i, data)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4), intent(in)                  :: ncId
-  integer(i4), intent(in)                  :: i    ! ~ Var(i)
-  real(dp), dimension(:,:,:,:), intent(in) :: data
- 
-  ! NOTES: 1) netCDF file must be on *** data mode ***
-  !
-  ! write all static variables
-  if ( V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  print *, "Var. ", trim(V(i)%name) ," is  static"
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data ))
-  !
-end subroutine write_static_d_4d
+  do i = 1, nVars
+    if ( V(i)%unlimited     ) cycle
+    if ( .not. V(i)%wFlag   ) cycle
+    print *, "Var. ", trim(V(i)%name) ," is  static"
+    select case (V(i)%xtype)
+      case (NF90_INT)
+        select case (V(i)%nDims)
+          case (1)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_i ))
+          case (2)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_i ))
+          case (3)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_i ))
+          case (4)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_i ))
+        end select
+      case (NF90_FLOAT)
+        select case (V(i)%nDims)
+          case (1)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_f ))
+          case (2)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_f ))
+          case (3)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_f ))
+          case (4)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_f ))
+        end select
+      case (NF90_DOUBLE)
+        select case (V(i)%nDims)
+          case (1)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_d ))
+          case (2)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_d ))
+          case (3)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_d ))
+          case (4)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_d ))
+         end select
+      end select
+  end do
+
+end subroutine write_static_netCDF
+
 !******************************************************************************
 !  WRITE netCDF                                                               *
 !                                                                             *
 !  NOTES: 1) netCDF file must be on *** data mode ***                         *
 !         2) any numeric data type is allowed but NOT character               *
-!         3) writes only one specified record                                 *
 !                                                                             *
 !******************************************************************************
-subroutine write_dynamic_i_0d(ncId, i, data, irec)
+subroutine write_dynamic_netCDF(ncId, irec)
   !
   implicit none
   !
   ! netcdf related variables
   integer(i4), intent(in)           :: ncId
-  integer(i4), intent(in)           :: i
   integer(i4), intent(in), optional :: iRec
-  integer(i4), intent(in)           :: data
+  integer(i4)                       :: i
+  ! NOTES: 1) netCDF file must be on *** data mode ***
+  !        2) start and end of the data chuck is controled by
+  !           V(:)%start and  V(:)%count
   !
   ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start )) 
-  !
-end subroutine write_dynamic_i_0d
-!
-subroutine write_dynamic_i_1d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),               intent(in)           :: ncId
-  integer(i4),               intent(in)           :: i
-  integer(i4),               intent(in), optional :: iRec
-  integer(i4), dimension(:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_i_1d
-!
-subroutine write_dynamic_i_2d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),                 intent(in)           :: ncId
-  integer(i4),                 intent(in)           :: i
-  integer(i4),                 intent(in), optional :: iRec
-  integer(i4), dimension(:,:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_i_2d
-!
-subroutine write_dynamic_i_3d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),                   intent(in)           :: ncId
-  integer(i4),                   intent(in)           :: i
-  integer(i4),                   intent(in), optional :: iRec
-  integer(i4), dimension(:,:,:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_i_3d
-!
-subroutine write_dynamic_i_4d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),                     intent(in)           :: ncId
-  integer(i4),                     intent(in)           :: i
-  integer(i4),                     intent(in), optional :: iRec
-  integer(i4), dimension(:,:,:,:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_i_4d
-!
-subroutine write_dynamic_s_0d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4), intent(in)           :: ncId
-  integer(i4), intent(in)           :: i
-  integer(i4), intent(in), optional :: iRec
-  real(sp),    intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start )) 
-  !
-end subroutine write_dynamic_s_0d
-!
-subroutine write_dynamic_s_1d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),            intent(in)           :: ncId
-  integer(i4),            intent(in)           :: i
-  integer(i4),            intent(in), optional :: iRec
-  real(sp), dimension(:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_s_1d
-!
-subroutine write_dynamic_s_2d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),              intent(in)           :: ncId
-  integer(i4),              intent(in)           :: i
-  integer(i4),              intent(in), optional :: iRec
-  real(sp), dimension(:,:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_s_2d
-!
-subroutine write_dynamic_s_3d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),                intent(in)           :: ncId
-  integer(i4),                intent(in)           :: i
-  integer(i4),                intent(in), optional :: iRec
-  real(sp), dimension(:,:,:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_s_3d
-!
-subroutine write_dynamic_s_4d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),                  intent(in)           :: ncId
-  integer(i4),                  intent(in)           :: i
-  integer(i4),                  intent(in), optional :: iRec
-  real(sp), dimension(:,:,:,:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_s_4d
-!
-subroutine write_dynamic_d_0d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4), intent(in)           :: ncId
-  integer(i4), intent(in)           :: i
-  integer(i4), intent(in), optional :: iRec
-  real(dp),    intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start )) 
-  !
-end subroutine write_dynamic_d_0d
-!
-subroutine write_dynamic_d_1d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),            intent(in)           :: ncId
-  integer(i4),            intent(in)           :: i
-  integer(i4),            intent(in), optional :: iRec
-  real(dp), dimension(:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_d_1d
-!
-subroutine write_dynamic_d_2d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),              intent(in)           :: ncId
-  integer(i4),              intent(in)           :: i
-  integer(i4),              intent(in), optional :: iRec
-  real(dp), dimension(:,:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_d_2d
-!
-subroutine write_dynamic_d_3d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),                intent(in)           :: ncId
-  integer(i4),                intent(in)           :: i
-  integer(i4),                intent(in), optional :: iRec
-  real(dp), dimension(:,:,:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_d_3d
-!
-subroutine write_dynamic_d_4d(ncId, i, data, irec)
-  !
-  implicit none
-  !
-  ! netcdf related variables
-  integer(i4),                  intent(in)           :: ncId
-  integer(i4),                  intent(in)           :: i
-  integer(i4),                  intent(in), optional :: iRec
-  real(dp), dimension(:,:,:,:), intent(in)           :: data
-  !
-  ! set values for variables (one scalar or grid at a time)
-  if ( .not. V(i)%unlimited     ) stop 'ERROR*** This Variable is not unlimited!!!'
-  !
-  if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-  V(i)%start ( V(i)%nDims ) = iRec
-  !
-  call check( nf90_put_var ( ncId,  V(i)%varId, data, V(i)%start, V(i)%count ))
-  !
-end subroutine write_dynamic_d_4d
-!
+  do i = 1, nVars
+    if ( .not. V(i)%unlimited     ) cycle
+    if ( .not. V(i)%wFlag   ) cycle
+    if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
+    V(i)%start ( V(i)%nDims ) = iRec
+    select case (V(i)%xtype)
+      case (NF90_INT)
+        select case (V(i)%nDims-1)
+          case (0)
+             
+            call check( nf90_put_var ( ncId,  V(i)%varId, iRec, V(i)%start )) 
+          case (1)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_i, V(i)%start, V(i)%count ))
+          case (2)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_i, V(i)%start, V(i)%count ))
+          case (3)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_i, V(i)%start, V(i)%count ))
+          case (4)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_i, V(i)%start, V(i)%count ))
+        end select
+      case (NF90_FLOAT)
+        select case (V(i)%nDims-1)
+          case (1)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_f, V(i)%start, V(i)%count ))
+          case (2)         
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_f, V(i)%start, V(i)%count ))
+          case (3)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_f, V(i)%start, V(i)%count ))
+          case (4)
+            call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_f, V(i)%start, V(i)%count ))
+         end select
+       case (NF90_DOUBLE)
+         select case (V(i)%nDims-1)
+           case (1)
+             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_d, V(i)%start, V(i)%count ))
+           case (2)
+             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_d, V(i)%start, V(i)%count ))
+           case (3)
+             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_d, V(i)%start, V(i)%count ))
+           case (4)
+             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_d, V(i)%start, V(i)%count ))
+         end select
+    end select
+  end do
+      
+end subroutine write_dynamic_netCDF
+
 !******************************************************************************
 !  CLOSE netCDF                                                               *
 !******************************************************************************
@@ -872,6 +340,5 @@ subroutine check(status)
   end if
 end subroutine check  
 !
-end module mo_NCinter
-
+end module mo_ncWrite
 

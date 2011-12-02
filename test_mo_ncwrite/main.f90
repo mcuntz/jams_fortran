@@ -1,6 +1,7 @@
+
 ! ------------------------------------------------------------------------------
 !
-! Test Program for reading nc files using the netcdf4 library.
+! Test Program for writing nc files using the netcdf4 library.
 !
 ! author: Stephan Thober
 !
@@ -12,30 +13,47 @@ program ReadNc
 !
 use mo_kind,    only: i4, sp, dp
 use mo_NcRead,  only: Get_NcVar
-use mo_NcInter, only: set_NcVar, create_netcdf, close_netcdf, write_static
+use mo_setnc,   only: setnc
+use mo_NcWrite, only: create_netcdf, close_netcdf, write_static_netcdf, write_dynamic_netcdf
+use mo_mainvar, only: lat, lon, data, t
 !
-real(sp), dimension(:,:,:), allocatable :: data
-integer(i4)                               :: ncid
-character(256)                            :: Filename
-character(256), dimension(1)              :: Varname
+integer(i4)                             :: ncid
+character(256)                          :: Filename
+character(256)                          :: Varname
 !
 Filename = 'pr_1961-2000.nc'
 !
-! Variable name can be retrieved by a "ncdump -h <filename>"
+! read all variables -------------------------------------------------
 Varname  = 'pr'
+call Get_NcVar(Filename,Varname, data)
 !
-call Get_NcVar(Filename,Varname(1), data)
+! read lat and lon
+Varname = 'lat'
+call Get_NcVar(Filename, Varname, lat)
 !
-write(*,*) 'sum of data: ', sum(data)
-! The sum of the data should be 0.1174308 in single precision
+Varname = 'lon'
+call Get_NcVar(Filename, Varname, lon)
 !
-Filename= 'Attributes/'
+Varname = 'time'
+call Get_NcVar(Filename, Varname, t)
 !
-call set_NcVar(VarName, Filename)
+! WRITE nc file -------------------------------------------------------
 Filename = 'Test.nc'
+!
+! 1st set netcdf structure V
+call setnc
+!
+! 2nd create actual netcdf file
 call create_netcdf(Filename, ncid)
 print*, ncid
-call write_static(ncid,4,data)
+!
+! 3rd write static Variable
+call write_static_netcdf(ncid)
+!
+! 4th write dynamic Variables, 1st record
+call write_dynamic_netcdf(ncid,1)
+!
+! last close netcdf files
 call close_netcdf(ncid)
 !
 end program ReadNc
