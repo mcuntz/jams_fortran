@@ -528,11 +528,16 @@ MODULE mo_nr
      END FUNCTION chint
   END INTERFACE
   INTERFACE
-     SUBROUTINE choldc(a,p)
+     SUBROUTINE choldc_sp(a,p)
        USE mo_kind
        REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: a
        REAL(SP), DIMENSION(:), INTENT(OUT) :: p
-     END SUBROUTINE choldc
+     END SUBROUTINE choldc_sp
+     SUBROUTINE choldc_dp(a,p)
+       USE mo_kind
+       REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: a
+       REAL(DP), DIMENSION(:), INTENT(OUT) :: p
+     END SUBROUTINE choldc_dp
   END INTERFACE
   INTERFACE
      SUBROUTINE cholsl(a,p,b,x)
