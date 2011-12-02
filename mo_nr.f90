@@ -527,7 +527,7 @@ MODULE mo_nr
        REAL(SP), DIMENSION(size(c)) :: chint
      END FUNCTION chint
   END INTERFACE
-  INTERFACE
+  INTERFACE choldc
      SUBROUTINE choldc_sp(a,p)
        USE mo_kind
        REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: a
