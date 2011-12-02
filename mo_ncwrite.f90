@@ -1,12 +1,28 @@
 module mo_NCinter
-  !
+
+  ! This module provides routines for writing data in a nc file using the netcdf4 library.
+
+  ! Please make sure you include the netcdf4 library in your makefile in order to use this module
+  ! see this webpage for netcdf documentation:
+  ! http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
+
+  ! numerical precision
   use mo_kind, only: i4, sp, dp 
-  use netcdf
+  
+  ! functions and constants of netcdf4 library
+  use netcdf, only: NF90_FLOAT, NF90_CHAR, NF90_UNLIMITED, NF90_CLOBBER, NF90_INT, nf90_def_var, &
+                    nf90_put_att, nf90_enddef, nf90_create, nf90_def_dim, nf90_put_var, nf90_close, &
+                    nf90_noerr, nf90_strerror
   !
   private
   !
-  ! netCDF configuration for mHM
-  ! see: http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
+  public :: set_NcVar     ! set the variables and attributes which shall be written in the file
+  public :: create_netcdf ! write the variables and attributes in the file
+  public :: Write_Static  ! write the actual data in the file statically ( at once )
+  public :: Write_Dynamic ! write the actual data in the file dynamically ( one record after the other )
+  public :: close_netcdf  ! close the netcdf file
+  !
+  ! Definition of PRIVATE Variables ------------------------------------------------------------------------
   !
   ! definition of parameters
   integer(i4), parameter                    :: nMaxDim = 5         ! nr. max dimensions
@@ -56,13 +72,6 @@ module mo_NCinter
      integer(i4)                            :: dimId               ! dim. Id
   end type dims
   type (dims), dimension(:), allocatable    :: Dnc                 ! dimesions netCDF e.g. lon, lat, level, time
-  ! real(sp), dimension(:), allocatable, target      :: yCoor        ! lats
-  ! real(sp), dimension(:), allocatable, target      :: xCoor        ! lons
-  ! real(sp), dimension(:,:), allocatable, target    :: rxCoor        ! tranformed (rotated) coordinates
-  ! real(sp), dimension(:,:), allocatable, target    :: ryCoor        ! tranformed (rotated) coordinates
-  
-  !
-  public :: set_NcVar, Write_Static, Write_Dynamic, close_netcdf, create_netcdf
   !
   interface Write_Static
      module procedure Write_Static_i_2d, write_Static_i_3d, write_static_i_4d, &
@@ -81,12 +90,66 @@ module mo_NCinter
   !
   contains
 !******************************************************************************
-!  SETTING netCDF
-!
-! This subroutine reads the attributes of the dimensions and variables given
-! in VarList and stores all this information in the Variable V.
-!
-! authors: Stephan Thober & Luis Samaniego
+
+!    NAME
+!        set_NcVar
+
+!    PURPOSE
+!        This subroutine reads the attributes of the dimensions and variables
+!        and stores these in the private data structure of this module. The
+!        variables have to be specified in the variable VarList. Furthermore
+!        the Path of the folder, where the files with the attributes are
+!        written, have to be specified.
+
+!    CALLING SEQUENCE
+!        call set_NcVar(VariableList, AttributePath)
+
+!    INTENT(IN)
+!        character(256), dimension(:) :: VariableList      List of the variable names
+
+!    INTENT(IN)
+!        character(256)               :: AttributePath     Path of the attribute files
+
+!    RESTRICTIONS
+!        Can read attributes which are written in files in the <AttributePath>.
+!        The following files have to be given:
+!          - dim.txt
+!                This file contains the dimensions to be written. It has to be of
+!                the following form.
+!             >>>Number_of_Dimensions: 3
+!                <dim1_name> <dim1_len>
+!                <dim2_name> <dim2_len>
+!                ...
+!                <dimn_name> <dimn_len>
+!                <<<EOF
+!                The dimension names as well as the dimension lengths do not contain
+!                any spaces.
+!          For each dimension and each variable a file containing the attributes has to 
+!          be specified. These have to look like this:
+!          - <name>_att.txt
+!                <name> can be either Variable name or dimension name. These files have to
+!                be written like this
+!             >>>xtype= (NF90_FLOAT or NF90_INT or NF90_CHAR)
+!                nLvls= 1
+!                nSubs= 1
+!                nDims= 3
+!                dimTypes= 1 2 3 0 0 
+!                Number_of_Attributes: <Att_Number>
+!                name= <Att_name>
+!                xType= (NF90_FLOAT or NF90_INT or NF90_CHAR
+!                nValues= 1
+!                values= m
+!                name= long_name
+!xtype= NF90_CHAR
+!nValues= 1
+!values= "x-coordinate in cartesian coordinates GK4"   
+
+!    LITERATURE
+!        http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
+
+!    HISTORY
+!        Written,  Luis Samaniego, Feb 2011
+!        Modified, Stephan Thober, Nov 2011 - restructured
 !
 !******************************************************************************
 subroutine set_NcVar(VarList, AttPath)

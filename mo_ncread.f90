@@ -19,8 +19,8 @@ module mo_NcRead
   public :: Get_NcVar ! get the data of a Variable in a nc file
   !
   interface Get_NcVar
-     module procedure Get_NcVar_3d_sp, Get_NcVar_3d_dp, Get_NcVar_2d_sp, &
-                      Get_NcVar_2d_dp, Get_NcVar_4d_sp, Get_NcVar_4d_dp
+     module procedure Get_NcVar_3d_sp, Get_NcVar_3d_dp, Get_NcVar_2d_sp, Get_NcVar_1d_sp, &
+                      Get_NcVar_2d_dp, Get_NcVar_4d_sp, Get_NcVar_4d_dp, Get_NcVar_1d_dp
   end interface
   !
 contains
@@ -146,7 +146,90 @@ contains
     if ( status /= 0) stop 'ERROR*** nc file could not be closed!'
     !
   end subroutine Get_NcVar_4d_dp
-
+  ! ------------------------------------------------------------------------------
+  ! SUBROUTINE GET_NCVAR
+  ! ------------------------------------------------------------------------------
+  subroutine Get_NcVar_1d_sp(Filename, VarName, Data)
+    !
+    implicit none
+    !
+    character(256), intent(in)                :: Filename
+    character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    integer(i4)                               :: varid     ! id of variable to be read
+    integer(i4)                               :: vartype   ! type of variable
+    integer(i4), dimension(2)                 :: dl        ! length of dimensions
+    real(sp), dimension(:), allocatable, &
+         intent(inout) :: Data      ! array where values should be stored
+    !
+    ! further Variables
+    integer(i4) :: ncid   ! id of input stream
+    integer(i4) :: status ! status of read stream
+    !
+    if (allocated(data)) stop 'ERROR*** data is already allocated. subroutine Get_Ncvar'
+    !
+    ! Open NetCDF filename
+    status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
+    if ( status /= 0) stop 'ERROR*** nc file could not be opened!'
+    !
+    ! Inquire file and check if VarName exists in the dataset
+    ! Get also the id and the length of the dimensions
+    call get_Info(Varname,ncid,varid,dl,vartype)
+    !
+    ! check variable type ( 5 equals float type )
+    if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
+    !
+    ! get values
+    allocate(data(dl(1)))
+    status = nf90_get_var(ncid, varid, data)
+    if ( status /= 0) stop 'ERROR*** data could not be read!'
+    !
+    ! close File
+    status = nf90_close(ncid)
+    if ( status /= 0) stop 'ERROR*** nc file could not be closed!'
+    !
+  end subroutine Get_NcVar_1d_sp
+  ! ------------------------------------------------------------------------------
+  ! SUBROUTINE GET_NCVAR
+  ! ------------------------------------------------------------------------------
+  subroutine Get_NcVar_1d_dp(Filename, VarName, Data)
+    !
+    implicit none
+    !
+    character(256), intent(in)                :: Filename
+    character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    integer(i4)                               :: varid     ! id of variable to be read
+    integer(i4)                               :: vartype   ! type of variable
+    integer(i4), dimension(2)                 :: dl        ! length of dimensions
+    real(dp), dimension(:), allocatable, &
+         intent(inout) :: Data      ! array where values should be stored
+    !
+    ! further Variables
+    integer(i4) :: ncid   ! id of input stream
+    integer(i4) :: status ! status of read stream
+    !
+    if (allocated(data)) stop 'ERROR*** data is already allocated. subroutine Get_Ncvar'
+    !
+    ! Open NetCDF filename
+    status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
+    if ( status /= 0) stop 'ERROR*** nc file could not be opened!'
+    !
+    ! Inquire file and check if VarName exists in the dataset
+    ! Get also the id and the length of the dimensions
+    call get_Info(Varname,ncid,varid,dl,vartype)
+    !
+    ! check variable type ( 5 equals float type )
+    if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
+    !
+    ! get values
+    allocate(data(dl(1)))
+    status = nf90_get_var(ncid, varid, data)
+    if ( status /= 0) stop 'ERROR*** data could not be read!'
+    !
+    ! close File
+    status = nf90_close(ncid)
+    if ( status /= 0) stop 'ERROR*** nc file could not be closed!'
+    !
+  end subroutine Get_NcVar_1d_dp
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
