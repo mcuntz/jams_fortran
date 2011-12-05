@@ -23,9 +23,16 @@
 !
 !**************************************************************************
 MODULE mo_jday
- use mo_kind
- implicit none
  !
+  use mo_kind, only: i4
+  !
+  implicit none
+  !
+  private
+  !
+  public :: NDYIN ! calculates day, month and year of a given julian day
+  public :: NDAYS ! calculates julian day of a given day, month and year
+  !
  CONTAINS
    !
    !**************************************************************************
