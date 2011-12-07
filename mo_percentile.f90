@@ -18,6 +18,7 @@ MODULE mo_percentile
   PUBLIC :: ksmallest       ! Returns the kth smallest value in an array (median if k=N/2)
   PUBLIC :: median          ! Returns the median
   PUBLIC :: percentile      ! Returns the percent smallest value in an array (median if k=50)
+  PUBLIC :: empqua          ! Returns the empirical quantiles of an array
 
   ! Public
   INTERFACE ksmallest
@@ -29,6 +30,9 @@ MODULE mo_percentile
   INTERFACE percentile
      MODULE PROCEDURE percentile_sp, percentile_dp
   END INTERFACE percentile
+  INTERFACE EmpQua
+     MODULE PROCEDURE empqua_dp, empqua_sp
+  END INTERFACE EmpQua
 
   ! Private
   INTERFACE swap
@@ -63,24 +67,24 @@ CONTAINS
   !     CALLING SEQUENCE
   !         out = ksmallest(vec,k,mask=mask)
   
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: out        k-th smallest value in input array
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         integer(i4) :: k          index of sorted array
   !         logical     :: mask(:)    1D-array of logical values with size(vec).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -246,23 +250,23 @@ CONTAINS
   !     CALLING SEQUENCE
   !         out = median(vec,mask=mask)
   
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: out        median of values in input array
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)    1D-array of logical values with size(vec).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -361,24 +365,24 @@ CONTAINS
   !     CALLING SEQUENCE
   !         out = percentile(vec,k,mask=mask)
   
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
   !         real(sp/dp) :: k          Percentage of percentile
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
-  !         real(sp/dp) :: out        median of values in input array
+  !     INTENT(OUT)
+  !         real(sp/dp) :: out        k-th percentile of values in input array
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)    1D-array of logical values with size(vec).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -458,6 +462,135 @@ CONTAINS
     deallocate(arr)
 
   END FUNCTION percentile_sp
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         EmpQua
+
+  !     PURPOSE
+  !         Returns the empirical quantiles/percentiles of an array.
+  !
+  !         If an optinal mask is given, values only on those locations that correspond
+  !         to true values in the mask are used.
+
+  !     CALLING SEQUENCE
+  !         call EmpQua(vec,k,Qua,mask=mask)
+  
+  !     INTENT(IN)
+  !         real(sp/dp) :: vec(:)     1D-array with input numbers
+  !         real(sp/dp) :: k(:)       Percentage of percentiles
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         real(sp/dp) :: Qua(:)     k-th percentiles of values in input array
+
+  !     INTENT(IN), OPTIONAL
+  !         logical     :: mask(:)    1D-array of logical values with size(vec).
+  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
+  !         ! Returns (/ 5, 9/)
+  !         call EmpQua(vec,(/50.,95./),Out)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written, Stephan Thober, Dec 2011
+
+  subroutine EmpQua_dp(arrin,k,Qua,mask)
+
+    IMPLICIT NONE
+
+    REAL(dp),    DIMENSION(:),           INTENT(IN) :: arrin
+    REAL(dp),    Dimension(:),           INTENT(IN) :: k
+    REAL(dp),    Dimension(:),           INTENT(OUT):: Qua
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+
+    INTEGER(i4) :: n, nn
+    REAL(dp), DIMENSION(:), ALLOCATABLE :: arr
+
+    if (present(mask)) then
+       n = count(mask)
+       allocate(arr(n))
+       arr = pack(arrin,mask)
+    else
+       n = size(arrin)
+       allocate(arr(n))
+       arr = arrin
+    endif
+
+    ! check consistency
+    if (size(k) > size(arr)) stop 'ERROR*** more Quantiles than data. subroutine EmpQua'
+
+    if (size(k) /= size(Qua)) stop 'ERROR*** size mismatch. subroutine EmpQua'
+
+    if (n < 2) stop 'EmpQua: n < 2'
+    
+    do n = 1, size(k)
+       !
+       nn     = floor(k(n)/100._dp*real(size(arr),dp),kind=i4)
+       Qua(n) = ksmallest(arr,nn)
+       !
+    end do
+
+    deallocate(arr)
+
+  END subroutine EmpQua_dp
+
+  subroutine EmpQua_sp(arrin,k,Qua,mask)
+
+    IMPLICIT NONE
+
+    REAL(sp),    DIMENSION(:),           INTENT(IN) :: arrin
+    REAL(sp),    Dimension(:),           INTENT(IN) :: k
+    REAL(sp),    Dimension(:),           INTENT(OUT):: Qua
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+
+    INTEGER(i4) :: n, nn
+    REAL(sp), DIMENSION(:), ALLOCATABLE :: arr
+
+    if (present(mask)) then
+       n = count(mask)
+       allocate(arr(n))
+       arr = pack(arrin,mask)
+    else
+       n = size(arrin)
+       allocate(arr(n))
+       arr = arrin
+    endif
+
+    ! check consistency
+    if (size(k) > size(arr)) stop 'ERROR*** more Quantiles than data. subroutine EmpQua'
+
+    if (size(k) /= size(Qua)) stop 'ERROR*** size mismatch. subroutine EmpQua'
+
+    if (n < 2) stop 'EmpQua: n < 2'
+    
+    do n = 1, size(k)
+       !
+       nn     = floor(k(n)/100._sp*real(size(arr),sp),kind=i4)
+       Qua(n) = ksmallest(arr,nn)
+       !
+    end do
+
+    deallocate(arr)
+
+  END subroutine EmpQua_sp
 
   ! ------------------------------------------------------------------
 

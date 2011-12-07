@@ -1705,14 +1705,20 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:), INTENT(INOUT) :: b
      END SUBROUTINE lubksb
   END INTERFACE
-  INTERFACE
-     SUBROUTINE ludcmp(a,indx,d)
+  INTERFACE ludcmp
+     SUBROUTINE ludcmp_sp(a,indx,d)
        USE mo_kind
        REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: a
        INTEGER(I4), DIMENSION(:), INTENT(OUT) :: indx
        REAL(SP), INTENT(OUT) :: d
-     END SUBROUTINE ludcmp
-  END INTERFACE
+     END SUBROUTINE ludcmp_sp
+     SUBROUTINE ludcmp_dp(a,indx,d)
+       USE mo_kind
+       REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: a
+       INTEGER(I4), DIMENSION(:), INTENT(OUT) :: indx
+       REAL(DP), INTENT(OUT) :: d
+     END SUBROUTINE ludcmp_dp
+  END INTERFACE ludcmp
   INTERFACE
      SUBROUTINE machar(ibeta,it,irnd,ngrd,machep,negep,iexp,minexp,&
           maxexp,eps,epsneg,xmin,xmax)
