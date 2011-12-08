@@ -7,7 +7,8 @@ MODULE mo_percentile
   !       Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
   !       Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
 
-  ! Written March 2011, Matthias Cuntz
+  ! Written  Mar 2011, Matthias Cuntz
+  ! Modified Dec 2011, Stephan Thober - EmpQua
 
   USE mo_kind, ONLY: i4, sp, dp, spc, dpc
 
@@ -594,6 +595,11 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+  ! From numerical recipes documentation
+  ! Swaps the corresponding elements of a and b. If mask is present, performs 
+  ! the swap only where mask is true. (Following code is the unmasked case. 
+  ! For speed at runtime, the masked case is implemented by overloading, not 
+  ! by testing for the optional argument.) 
   SUBROUTINE swap_i4(a,b)
     INTEGER(i4), INTENT(INOUT) :: a,b
     INTEGER(i4) :: dum

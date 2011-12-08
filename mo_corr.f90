@@ -17,31 +17,27 @@ MODULE mo_corr
 
   PRIVATE
 
-  PUBLIC :: autocoeffk        ! coeff_k so that autocorrelation = coeff_k/coeff_0
-  PUBLIC :: autocorrelation   ! Autocorrelation coefficient at lag k = autocoeffk(k)/autocoeffk(0)
-  PUBLIC :: corr              ! Correlation with possible highpass filtering: covariance=correlation(1)/n
-  PUBLIC :: covariance        ! Covariance between two arrays = crosscoeffk(0)
-  PUBLIC :: crosscoeffk       ! coeff_k so that crosscorrelation = coeff_k/coeff_0, crosscoeffk(0) = covariance
-  PUBLIC :: crosscorrelation  ! Crosscorrelation coefficient at lag k = crosscoeffk(k)/crosscoeffk(0)
+  PUBLIC :: autocoeffk   ! coeff_k so that autocorr = coeff_k/coeff_0
+  PUBLIC :: autocorr     ! Autocorrelation coefficient at lag k = autocoeffk(k)/autocoeffk(0)
+  PUBLIC :: corr         ! Correlation (function) with possible highpass filtering: covariance=correlation(1)/n
+  PUBLIC :: crosscoeffk  ! coeff_k so that crosscorr = coeff_k/coeff_0, crosscoeffk(0) = covariance
+  PUBLIC :: crosscorr    ! Crosscorrelation coefficient at lag k = crosscoeffk(k)/crosscoeffk(0)
 
   INTERFACE autocoeffk
      MODULE PROCEDURE autocoeffk_sp, autocoeffk_dp
   END INTERFACE autocoeffk
-  INTERFACE autocorrelation
-     MODULE PROCEDURE autocorrelation_sp, autocorrelation_dp
-  END INTERFACE autocorrelation
+  INTERFACE autocorr
+     MODULE PROCEDURE autocorr_sp, autocorr_dp
+  END INTERFACE autocorr
   INTERFACE corr
      MODULE PROCEDURE corr_sp, corr_dp
   END INTERFACE corr
-  INTERFACE covariance
-     MODULE PROCEDURE covariance_sp, covariance_dp
-  END INTERFACE covariance
   INTERFACE crosscoeffk
      MODULE PROCEDURE crosscoeffk_sp, crosscoeffk_dp
   END INTERFACE crosscoeffk
-  INTERFACE crosscorrelation
-     MODULE PROCEDURE crosscorrelation_sp, crosscorrelation_dp
-  END INTERFACE crosscorrelation
+  INTERFACE crosscorr
+     MODULE PROCEDURE crosscorr_sp, crosscorr_dp
+  END INTERFACE crosscorr
 
   ! Private routines, mostly from numerical recipes
   INTERFACE arth
@@ -67,9 +63,6 @@ MODULE mo_corr
           masked_swap_spc, masked_swap_1d_spc, masked_swap_2d_spc, &
           masked_swap_dpc, masked_swap_1d_dpc, masked_swap_2d_dpc
   END INTERFACE swap
-  INTERFACE window
-     MODULE PROCEDURE window_sp, window_dp
-  END INTERFACE window
   !INTERFACE zroots_unity
   !   MODULE PROCEDURE zroots_unity_sp, zroots_unity_dp
   !END INTERFACE zroots_unity
@@ -82,7 +75,11 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  ! Return an arithmetic progression as an array.
+  ! From numerical recipes documentation
+  ! Returns an array of length n containing an arithmetic progression whose 
+  ! first value is first and whose increment is increment. If first and 
+  ! increment have rank greater than zero, returns an array of one larger rank, 
+  ! with the last subscript having size n and indexing the progressions.
   FUNCTION arth_sp(first,increment,n)
 
     IMPLICIT NONE
@@ -186,7 +183,6 @@ CONTAINS
 
   !     NAME
   !         autocoeffk
-  FUNCTION autocoeffk_dp(x, k, mask)
 
   !     PURPOSE
   !         Coefficient at lag k so that autocorrelation coefficient at lag k
@@ -207,7 +203,7 @@ CONTAINS
   !         None
 
   !     INDENT(OUT)
-  !         real(sp/dp) :: ak          coefficient so that ak/autocoeffk(x,0) is the autocorrelation at lag k
+  !         real(sp/dp) :: ak          coefficient so that ak/autocoeffk(x,0) is the autocorrelation coefficient at lag k
 
   !     INDENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(vec).
@@ -223,21 +219,20 @@ CONTAINS
   !         None
 
   !     EXAMPLE
-  !         ! Fill masked values of vector w with interpolated values
-  !         w = interpol(pack(w,wmaske), pack(date,wmaske), date)
+  !         ! Variance = autocoeffk(0)
+  !         var = autocoeffk(x,0)
   !         -> see also example in test directory
 
   !     LITERATURE
   !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
   !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
   !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
-  !       IDL routine interpol.pro Copyright (C) 1982-2004, Research Systems, Inc.
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Nov 2011
 
   FUNCTION autocoeffk_dp(x, k, mask)
-    ! Coeff_k so that autocorrelation = coeff_k/coeff_0
+
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:),           INTENT(IN)  :: x
@@ -256,7 +251,7 @@ CONTAINS
 
 
   FUNCTION autocoeffk_sp(x, k, mask)
-    ! Coeff_k so that autocorrelation = coeff_k/coeff_0
+
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:),           INTENT(IN)  :: x
@@ -275,46 +270,159 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION autocorrelation_dp(x, k, mask)
-    ! Autocorrelation coefficient at lak k
+  !     NAME
+  !         autocorr
+
+  !     PURPOSE
+  !         Element at lag k of autocorrelation function
+  !             autocorr(x,k) = autocoeffk(x,k)/autocoeffk(x,0).
+  !
+  !         If an optinal mask is given, the calculations are only over those locations that correspond
+  !         to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         ak = autocorr(x, k, mask=mask)
+  
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)        Time series
+  !         integer(i4) :: k           Lag for autocorrelation
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: ak          Coefficient of autocorrelation function at lag k
+
+  !     INDENT(IN), OPTIONAL
+  !         logical     :: mask(:)     1D-array of logical values with size(vec).
+  !                                    If present, only those locations in vec corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! Last autocorrelation element
+  !         acorr = autocorr(x,size(x)/2)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
+  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
+  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+
+  FUNCTION autocorr_dp(x, k, mask)
+
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:),           INTENT(IN)  :: x
     INTEGER(i4),                      INTENT(IN)  :: k
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: autocorrelation_dp
+    REAL(dp)                                      :: autocorr_dp
 
     if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocorrelation_dp: size(mask) /= size(x)'
-       autocorrelation_dp = crosscoeffk(x, x, k, mask) / crosscoeffk(x, x, 0, mask)
+       if (size(mask) /= size(x)) stop 'Error autocorr_dp: size(mask) /= size(x)'
+       autocorr_dp = crosscoeffk(x, x, k, mask) / crosscoeffk(x, x, 0, mask)
     else
-       autocorrelation_dp = crosscoeffk(x, x, k) / crosscoeffk(x, x, 0)
+       autocorr_dp = crosscoeffk(x, x, k) / crosscoeffk(x, x, 0)
     endif
 
-  END FUNCTION autocorrelation_dp
+  END FUNCTION autocorr_dp
 
 
-  FUNCTION autocorrelation_sp(x, k, mask)
-    ! Autocorrelation coefficient at lak k
+  FUNCTION autocorr_sp(x, k, mask)
+
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:),           INTENT(IN)  :: x
     INTEGER(i4),                      INTENT(IN)  :: k
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: autocorrelation_sp
+    REAL(sp)                                      :: autocorr_sp
 
     if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocorrelation_sp: size(mask) /= size(x)'
-       autocorrelation_sp = crosscoeffk(x, x, k, mask) / crosscoeffk(x, x, 0, mask)
+       if (size(mask) /= size(x)) stop 'Error autocorr_sp: size(mask) /= size(x)'
+       autocorr_sp = crosscoeffk(x, x, k, mask) / crosscoeffk(x, x, 0, mask)
     else
-       autocorrelation_sp = crosscoeffk(x, x, k) / crosscoeffk(x, x, 0)
+       autocorr_sp = crosscoeffk(x, x, k) / crosscoeffk(x, x, 0)
     endif
 
-  END FUNCTION autocorrelation_sp
+  END FUNCTION autocorr_sp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION corr_dp(data1,data2,nadjust,nhigh,nwin,lowpass)
+  !     NAME
+  !         corr
+
+  !     PURPOSE
+  !         Computes the correlation of two real data sets data1 and data2 of length N (includ- 
+  !         ing any user-supplied zero padding) with Fast Fourier Transform (FFT). N must be an integer
+  !         power of 2 for the FFT routine. Corr takes only the elements up to the last power of 2 and
+  !         returns the number of elements used in nadjust.
+  !         The answer is returned as the function corr, an array of length N (nadjust).
+  !         The answer is stored in wrap-around order, i.e., correlations at increasingly negative lags
+  !         are in corr(N) on down to corr(N/2+1), while correlations at increasingly positive lags are
+  !         in correl(1) (zero lag) on up to correl(N/2). Sign convention of this routine: if data1 lags
+  !         data2, i.e., is shifted to the right of it, then correl will show a peak at positive lags.
+  !
+  !         Optional high-pass filtering of the time series in Fourier space is implemented.
+  !
+  !         Note covariance(x,y) = corr(x,y)/n
+
+  !     CALLING SEQUENCE
+  !         cfunc = corr(data1,data2,nadjust=nadjust,nhigh=nhigh,nwin=nwin)
+  
+  !     INDENT(IN)
+  !         real(sp/dp) :: data1(:)             1st time series
+  !         real(sp/dp) :: data2(:)             2nd time series
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: corr(size(data1))    Correlation function between data1 and data2 in wrap-around order
+
+  !     INDENT(IN), OPTIONAL
+  !         integer(i4) :: nhigh                If >0 then nhigh upper frequencies are filtered. nwin then defines
+  !                                             the used window function for filtering. (default: 0)
+  !         integer(i4) :: nwin                 Window function for highpass filtering (default: 1)
+  !                                             0: no filtering
+  !                                             1: ideal highpass, i.e. cut out the nhigh upper frequencies
+  !                                             2: linear interpolation of 0 to 1 from highest to highest-nhigh
+  !                                                frequency; similar Bartlett window
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         integer(i4) :: nadjust              Actual used number of elements.
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! Covariance function: covariance(x,y) = corr(x,y)/n
+  !         wT = corr(w, T, nadjust=nwT)
+  !         wT(1:nwT) = wT(1:nwT) / real(nwT,dp)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
+  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
+  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+
+  FUNCTION corr_dp(data1,data2,nadjust,nhigh,nwin)
 
     IMPLICIT NONE
 
@@ -322,14 +430,12 @@ CONTAINS
     INTEGER(i4),                          OPTIONAL, INTENT(OUT) :: nadjust
     INTEGER(i4),                          OPTIONAL, INTENT(IN)  :: nhigh
     INTEGER(i4),                          OPTIONAL, INTENT(IN)  :: nwin
-    REAL(dp),     DIMENSION(size(data1)), OPTIONAL, INTENT(OUT) :: lowpass ! get filtered frequency contributions
     REAL(dp),     DIMENSION(size(data1))                        :: corr_dp
 
     REAL(dp),     DIMENSION(:), ALLOCATABLE :: dat1, dat2, corrout
     COMPLEX(dpc), DIMENSION(:), ALLOCATABLE :: cdat1, cdat2
-    COMPLEX(dpc), DIMENSION(:), ALLOCATABLE :: cdat3, cdat4
-    REAL(dp),     DIMENSION(:), ALLOCATABLE :: win1, win2
-    !COMPLEX(dpc), DIMENSION(:), ALLOCATABLE :: cwin1, cwin2
+    REAL(dp),     DIMENSION(:), ALLOCATABLE :: win1
+    !COMPLEX(dpc), DIMENSION(:), ALLOCATABLE :: cwin1
     INTEGER(i4) :: i, n, no2, iwin, ihigh
     REAL(dp)    :: no2_1, ihigh1
 
@@ -396,18 +502,6 @@ CONTAINS
        end select
        !cwin1 = cmplx(win1, win1, kind=dpc)
        ! low pass
-       if (present(lowpass)) then
-          allocate(cdat3(no2))
-          allocate(cdat4(no2))
-          allocate(win2(no2))
-          !allocate(cwin2(no2))
-          win2 = 1.0_dp - win1
-          !cwin2 = cmplx(win2, win2, kind=dpc)
-          !cdat3(1:no2) = cdat1(1:no2)*cwin2(1:no2)
-          !cdat4(1:no2) = cdat2(1:no2)*cwin2(1:no2)
-          cdat3(1:no2) = cdat1(1:no2) * win2(1:no2)
-          cdat4(1:no2) = cdat2(1:no2) * win2(1:no2)
-       endif
        ! cdat1(1:no2) = cdat1(1:no2)*cwin1(1:no2)
        ! cdat2(1:no2) = cdat2(1:no2)*cwin1(1:no2)
        cdat1(1:no2) = cdat1(1:no2) * win1(1:no2)
@@ -418,23 +512,10 @@ CONTAINS
     cdat1(1)  = cmplx(real(cdat1(1))*real(cdat2(1))*no2_1, &
          aimag(cdat1(1))*aimag(cdat2(1))*no2_1, kind=dpc)
     cdat1(2:) = cdat1(2:)*conjg(cdat2(2:))*no2_1
-    if (ihigh > 0 .and. present(lowpass)) then
-       cdat3(1)  = cmplx(real(cdat3(1))*real(cdat4(1))*no2_1, &
-            aimag(cdat3(1))*aimag(cdat4(1))*no2_1, kind=dpc)
-       cdat3(2:) = cdat3(2:)*conjg(cdat4(2:))*no2_1
-    endif
 
     ! IFFT
     call realft(corrout,-1,cdat1)
     corr_dp(1:n) = corrout(1:n)
-    if (ihigh > 0 .and. present(lowpass)) then
-       call realft(corrout,-1,cdat3)
-       lowpass(1:n) = corrout(1:n)
-       deallocate(cdat3)
-       deallocate(cdat4)
-       deallocate(win2)
-       !deallocate(cwin2)
-    endif
 
     deallocate(dat1)
     deallocate(dat2)
@@ -449,7 +530,7 @@ CONTAINS
   END FUNCTION corr_dp
 
 
-  FUNCTION corr_sp(data1,data2,nadjust,nhigh,nwin,lowpass)
+  FUNCTION corr_sp(data1,data2,nadjust,nhigh,nwin)
 
     IMPLICIT NONE
 
@@ -457,14 +538,12 @@ CONTAINS
     INTEGER(i4),                          OPTIONAL, INTENT(OUT) :: nadjust
     INTEGER(i4),                          OPTIONAL, INTENT(IN)  :: nhigh
     INTEGER(i4),                          OPTIONAL, INTENT(IN)  :: nwin
-    REAL(sp),     DIMENSION(size(data1)), OPTIONAL, INTENT(OUT) :: lowpass ! get filtered frequency contributions
     REAL(sp),     DIMENSION(size(data1))                        :: corr_sp
 
     REAL(sp),     DIMENSION(:), ALLOCATABLE :: dat1, dat2, corrout
     COMPLEX(spc), DIMENSION(:), ALLOCATABLE :: cdat1, cdat2
-    COMPLEX(spc), DIMENSION(:), ALLOCATABLE :: cdat3, cdat4
-    REAL(sp),     DIMENSION(:), ALLOCATABLE :: win1, win2
-    !COMPLEX(spc), DIMENSION(:), ALLOCATABLE :: cwin1, cwin2
+    REAL(sp),     DIMENSION(:), ALLOCATABLE :: win1
+    !COMPLEX(spc), DIMENSION(:), ALLOCATABLE :: cwin1
     INTEGER(i4) :: i, n, no2, iwin, ihigh
     REAL(sp)    :: no2_1, ihigh1
 
@@ -531,18 +610,6 @@ CONTAINS
        end select
        !cwin1 = cmplx(win1, win1, kind=spc)
        ! low pass
-       if (present(lowpass)) then
-          allocate(cdat3(no2))
-          allocate(cdat4(no2))
-          allocate(win2(no2))
-          !allocate(cwin2(no2))
-          win2 = 1.0_sp - win1
-          !cwin2 = cmplx(win2, win2, kind=spc)
-          !cdat3(1:no2) = cdat1(1:no2)*cwin2(1:no2)
-          !cdat4(1:no2) = cdat2(1:no2)*cwin2(1:no2)
-          cdat3(1:no2) = cdat1(1:no2) * win2(1:no2)
-          cdat4(1:no2) = cdat2(1:no2) * win2(1:no2)
-       endif
        ! cdat1(1:no2) = cdat1(1:no2)*cwin1(1:no2)
        ! cdat2(1:no2) = cdat2(1:no2)*cwin1(1:no2)
        cdat1(1:no2) = cdat1(1:no2) * win1(1:no2)
@@ -553,23 +620,10 @@ CONTAINS
     cdat1(1)  = cmplx(real(cdat1(1))*real(cdat2(1))*no2_1, &
          aimag(cdat1(1))*aimag(cdat2(1))*no2_1, kind=spc)
     cdat1(2:) = cdat1(2:)*conjg(cdat2(2:))*no2_1
-    if (ihigh > 0 .and. present(lowpass)) then
-       cdat3(1)  = cmplx(real(cdat3(1))*real(cdat4(1))*no2_1, &
-            aimag(cdat3(1))*aimag(cdat4(1))*no2_1, kind=spc)
-       cdat3(2:) = cdat3(2:)*conjg(cdat4(2:))*no2_1
-    endif
 
     ! IFFT
     call realft(corrout,-1,cdat1)
     corr_sp(1:n) = corrout(1:n)
-    if (ihigh > 0 .and. present(lowpass)) then
-       call realft(corrout,-1,cdat3)
-       lowpass(1:n) = corrout(1:n)
-       deallocate(cdat3)
-       deallocate(cdat4)
-       deallocate(win2)
-       !deallocate(cwin2)
-    endif
 
     deallocate(dat1)
     deallocate(dat2)
@@ -582,51 +636,63 @@ CONTAINS
     endif
 
   END FUNCTION corr_sp
-  ! ------------------------------------------------------------------
-
-  FUNCTION covariance_dp(x, y, mask)
-    ! Covariance between x and y
-    IMPLICIT NONE
-
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: x
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: y
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: covariance_dp
-
-    if (size(x) /= size(y)) stop 'Error covariance_dp: size(x) /= size(y)'
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error covariance_dp: size(mask) /= size(x)'
-       covariance_dp = crosscoeffk(x, y, 0, mask)
-    else
-       covariance_dp = crosscoeffk(x, y, 0)
-    endif
-
-  END FUNCTION covariance_dp
-
-
-  FUNCTION covariance_sp(x, y, mask)
-    ! Covariance between x and y
-    IMPLICIT NONE
-
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: x
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: y
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: covariance_sp
-
-    if (size(x) /= size(y)) stop 'Error covariance_sp: size(x) /= size(y)'
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error covariance_sp: size(mask) /= size(x)'
-       covariance_sp = crosscoeffk(x, y, 0, mask)
-    else
-       covariance_sp = crosscoeffk(x, y, 0)
-    endif
-
-  END FUNCTION covariance_sp
 
   ! ------------------------------------------------------------------
+
+  !     NAME
+  !         crosscoeffk
+
+  !     PURPOSE
+  !         Coefficient at lag k so that crosscorrelation coefficient at lag k
+  !         is crosscoeffk(x,y,k)/crosscoeffk(x,y,0).
+  !         -> crosscoeffk(x,y,0) = covariance(x,y)
+  !
+  !         If an optinal mask is given, the calculations are only over those locations that correspond
+  !         to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         ck = crosscoeffk(x, y, k, mask=mask)
+  
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)        1st time series
+  !         real(sp/dp) :: y(:)        2nd time series
+  !         integer(i4) :: k           Lag for crosscorrelation
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: ck          coefficient so that ck/crosscoeffk(x,0) is the crosscorrelation coefficient at lag k
+
+  !     INDENT(IN), OPTIONAL
+  !         logical     :: mask(:)     1D-array of logical values with size(vec).
+  !                                    If present, only those locations in vec corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! covariance = crosscoeffk(0)
+  !         cov = crosscoeffk(x,y,0)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
+  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
+  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
 
   FUNCTION crosscoeffk_dp(x, y, k, mask)
-    ! Coeff_k so that crosscorrelation = coeff_k/coeff_0
+
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:),           INTENT(IN)  :: x
@@ -670,7 +736,7 @@ CONTAINS
 
 
   FUNCTION crosscoeffk_sp(x, y, k, mask)
-    ! Coeff_k so that crosscorrelation = coeff_k/coeff_0
+
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:),           INTENT(IN)  :: x
@@ -714,47 +780,105 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION crosscorrelation_dp(x, y, k, mask)
-    ! Crosscorrelation coefficient at lak k
+  !     NAME
+  !         crosscorr
+
+  !     PURPOSE
+  !         Element at lag k of crosscorrelation function
+  !             crosscorr(x,y,k) = crosscoeffk(x,y,k)/crosscoeffk(x,y,0).
+  !
+  !         If an optinal mask is given, the calculations are only over those locations that correspond
+  !         to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         ck = crosscorr(x, y, k, mask=mask)
+  
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)        1st time series
+  !         real(sp/dp) :: y(:)        2nd time series
+  !         integer(i4) :: k           Lag for crosscorrelation
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: ck          Coefficient of crosscorrelation function at lag k
+
+  !     INDENT(IN), OPTIONAL
+  !         logical     :: mask(:)     1D-array of logical values with size(vec).
+  !                                    If present, only those locations in vec corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! Last crosscorrelation element
+  !         ccorr = crosscorr(x,y,size(x)/2)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
+  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
+  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+
+  FUNCTION crosscorr_dp(x, y, k, mask)
+
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:),           INTENT(IN)  :: x
     REAL(dp), DIMENSION(:),           INTENT(IN)  :: y
     INTEGER(i4),                      INTENT(IN)  :: k
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: crosscorrelation_dp
+    REAL(dp)                                      :: crosscorr_dp
 
-    if (size(x) /= size(y)) stop 'Error crosscorrelation_dp: size(x) /= size(y)'
+    if (size(x) /= size(y)) stop 'Error crosscorr_dp: size(x) /= size(y)'
     if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error crosscorrelation_dp: size(mask) /= size(x)'
-       crosscorrelation_dp = crosscoeffk(x, y, k, mask) / crosscoeffk(x, y, 0, mask)
+       if (size(mask) /= size(x)) stop 'Error crosscorr_dp: size(mask) /= size(x)'
+       crosscorr_dp = crosscoeffk(x, y, k, mask) / crosscoeffk(x, y, 0, mask)
     else
-       crosscorrelation_dp = crosscoeffk(x, y, k) / crosscoeffk(x, y, 0)
+       crosscorr_dp = crosscoeffk(x, y, k) / crosscoeffk(x, y, 0)
     endif
 
-  END FUNCTION crosscorrelation_dp
+  END FUNCTION crosscorr_dp
 
-  FUNCTION crosscorrelation_sp(x, y, k, mask)
-    ! Crosscorrelation coefficient at lak k
+  FUNCTION crosscorr_sp(x, y, k, mask)
+
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:),           INTENT(IN)  :: x
     REAL(sp), DIMENSION(:),           INTENT(IN)  :: y
     INTEGER(i4),                      INTENT(IN)  :: k
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: crosscorrelation_sp
+    REAL(sp)                                      :: crosscorr_sp
 
-    if (size(x) /= size(y)) stop 'Error crosscorrelation_sp: size(x) /= size(y)'
+    if (size(x) /= size(y)) stop 'Error crosscorr_sp: size(x) /= size(y)'
     if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error crosscorrelation_sp: size(mask) /= size(x)'
-       crosscorrelation_sp = crosscoeffk(x, y, k, mask) / crosscoeffk(x, y, 0, mask)
+       if (size(mask) /= size(x)) stop 'Error crosscorr_sp: size(mask) /= size(x)'
+       crosscorr_sp = crosscoeffk(x, y, k, mask) / crosscoeffk(x, y, 0, mask)
     else
-       crosscorrelation_sp = crosscoeffk(x, y, k) / crosscoeffk(x, y, 0)
+       crosscorr_sp = crosscoeffk(x, y, k) / crosscoeffk(x, y, 0)
     endif
 
-  END FUNCTION crosscorrelation_sp
+  END FUNCTION crosscorr_sp
 
   ! ------------------------------------------------------------------
+
+  ! From numerical recipes documentation
+  ! Replaces a complex array data by its discrete Fourier transform, if isign is input as 1; 
+  ! or replaces data by its inverse discrete Fourier transform times the size of data, if isign 
+  ! is input as -1. The size of data must be an integer power of 2. Parallelismis achieved 
+  ! by internally reshaping the input array to two dimensions. (Use this version if fourrow is 
+  ! faster than fourcol on your machine.)
 
   SUBROUTINE four1_sp(data,isign)
 
@@ -826,6 +950,12 @@ CONTAINS
   END SUBROUTINE four1_dp
 
   ! ------------------------------------------------------------------
+
+  ! From numerical recipes documentation
+  ! Replaces each row (constant first index) of data(1:M,1:N) by its discrete Fourier trans-
+  ! form (transform on second index), if isign is input as 1; or replaces each row of data
+  ! by N times its inverse discrete Fourier transform, if isign is input as -1. N must be an
+  ! integer power of 2. Parallelism is M-fold on the first index of data.
 
   SUBROUTINE fourrow_sp(data,isign)
 
@@ -928,6 +1058,16 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+  ! From numerical recipes documentation
+  ! When isign=1, calculates the Fourier transform of a set of N real-valued data points, 
+  ! input in the array data. If the optional argument zdata is not present, the data are replaced 
+  ! by the positive frequency half of its complex Fourier transform. There al-valued first and 
+  ! last components of the complex transform are returned as elements data(1) and data(2), 
+  ! respectively. If the complex array zdata of lengthN/2 ispresent, data is unchanged and 
+  ! the transform is returned in zdata. N must be a power of 2. If isign=-1, this routine 
+  ! calculates the inverse transform of a complex data array if it is the transform of real data. 
+  ! (Result in this case must be multiplied by 2/N.) The data can be supplied either in data, 
+  ! with zdata absent, or inzdata. 
   SUBROUTINE realft_dp(data,isign,zdata)
 
     IMPLICIT NONE
@@ -1049,6 +1189,11 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+  ! From numerical recipes documentation 
+  ! Swaps the corresponding elements of a and b. If mask is present, performs 
+  ! the swap only where mask is true. (Following code is the unmasked case. 
+  ! For speed at runtime, the masked case is implemented by overloading, not 
+  ! by testing for the optional argument.) 
   SUBROUTINE swap_i4(a,b)
     INTEGER(i4), INTENT(INOUT) :: a,b
     INTEGER(i4) :: dum
@@ -1275,55 +1420,9 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION window_dp(j, facm, facp, nn_window)
-    ! High-pass, low-pass filter function in Fourier
-    IMPLICIT NONE
-
-    INTEGER(i4), DIMENSION(:), INTENT(IN) :: j
-    REAL(dp),                  INTENT(IN) :: facm
-    REAL(dp),                  INTENT(IN) :: facp
-    INTEGER(i4),               INTENT(IN) :: nn_window
-    REAL(dp),    DIMENSION(size(j))       :: window_dp
-
-    select case(nn_window)
-    case(1)
-       window_dp(j) = (1.0_dp-abs(((j-1)-facm)*facp)) ! Bartlett
-    case(2)
-       window_dp(j) = 1.0_dp                          ! 
-    case(3)
-       window_dp(j) = (1.0_dp-(((j-1)-facm)*facp)**2) ! Welch
-    case default
-       stop 'Unimplemented window_dp function'
-    end select
-
-  END FUNCTION window_dp
-
-
-  FUNCTION window_sp(j, facm, facp, nn_window)
-    ! High-pass, low-pass filter function in Fourier
-    IMPLICIT NONE
-
-    INTEGER(i4), DIMENSION(:), INTENT(IN) :: j
-    REAL(sp),                  INTENT(IN) :: facm
-    REAL(sp),                  INTENT(IN) :: facp
-    INTEGER(i4),               INTENT(IN) :: nn_window
-    REAL(sp),    DIMENSION(size(j))       :: window_sp
-
-    select case(nn_window)
-    case(1)
-       window_sp(j) = (1.0_sp-abs(((j-1)-facm)*facp)) ! Bartlett
-    case(2)
-       window_sp(j) = 1.0_sp                          ! 
-    case(3)
-       window_sp(j) = (1.0_sp-(((j-1)-facm)*facp)**2) ! Welch
-    case default
-       stop 'Unimplemented window_sp function'
-    end select
-
-  END FUNCTION window_sp
-
-  ! ------------------------------------------------------------------
-
+  ! From numerical recipes documentation 
+  ! Returns a complex array containing nn consecutive powers of the nth 
+  ! complex root of unity.
   FUNCTION zroots_unity_dp(n,nn)
 
     INTEGER(i4), INTENT(IN)     :: n,nn

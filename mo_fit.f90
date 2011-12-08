@@ -378,7 +378,11 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  ! Return a geometrical progression as an array.
+  ! From numerical recipes documentation
+  ! Returns an array of length n containing a geometric progression whose first 
+  ! value is first and whose multiplier is factor. If first and factor 
+  ! have rank greater than zero, returns an array of one larger rank, with the 
+  ! last subscript having size n and indexing the progression.
   FUNCTION geop_dp(first,factor,n)
 
     REAL(dp),    INTENT(IN)   :: first,factor
@@ -764,6 +768,8 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+  ! From numerical recipes documentation
+  ! Returns a matrix that is the outer product of two vectors. 
   ! a*b with size(a)/=size(b)
   FUNCTION outerprod_dp(a,b)
 
@@ -1755,9 +1761,11 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  ! Vector length
+  ! From numerical recipes documentation
+  ! Returns the length of a vector v in L2 norm, that is,the square root of the sum 
+  ! of the squares of the components. (For complex types, t should be between the vector and its complex conjugate.)
   FUNCTION vabs_dp(v)
-    ! vector length
+
     REAL(dp), DIMENSION(:), INTENT(IN) :: v
     REAL(dp)                           :: vabs_dp
 
@@ -1767,7 +1775,7 @@ CONTAINS
 
 
   FUNCTION vabs_sp(v)
-    ! vector length
+
     REAL(sp), DIMENSION(:), INTENT(IN) :: v
     REAL(sp)                           :: vabs_sp
 

@@ -166,6 +166,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+  ! From numerical recipes documentation
   ! Given an array xx(1:N), and given a value x, returns a value j such that x is between 
   !  xx(j) and xx(j+1). xx must be monotonic, either increasing or decreasing. j=0 or 
   ! j=N is returned to indicate that x is out of range.

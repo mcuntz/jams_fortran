@@ -45,6 +45,9 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+  ! From numerical recipes documentation
+  ! Swap or don''t swap integer arguments, depending on the ordering of their corresponding
+  ! elements in an array arr.
   SUBROUTINE icomp_xchg_i4(arr, i, j)
 
     IMPLICIT NONE
