@@ -23,7 +23,7 @@ MODULE mo_interpol
      MODULE PROCEDURE interpol_sp, interpol_dp
   END INTERFACE interpol
 
-  ! Private function
+  ! Private function, from numerical recipes
   INTERFACE locate
      MODULE PROCEDURE locate_0d_sp, locate_1d_sp, locate_0d_dp, locate_1d_dp
   END INTERFACE locate

@@ -61,7 +61,7 @@ MODULE mo_fit
      MODULE PROCEDURE svdvar_sp, svdvar_dp
   END INTERFACE svdvar
 
-  ! Private interfaces
+  ! Private interfaces, mostly from numerical recipes
   INTERFACE geop
      MODULE PROCEDURE geop_dp, geop_i4, geop_sp, geop_v_dp, geop_v_sp
   END INTERFACE geop

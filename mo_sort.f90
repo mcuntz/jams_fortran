@@ -34,7 +34,7 @@ MODULE mo_sort
      MODULE PROCEDURE sort_index_i4, sort_index_sp, sort_index_dp
   END INTERFACE sort_index
 
-  ! Local routine for indeces exchange
+  ! Local routine for indeces exchange, from numerical recipes
   INTERFACE icomp_xchg
      MODULE PROCEDURE icomp_xchg_i4, icomp_xchg_sp, icomp_xchg_dp
   END INTERFACE icomp_xchg

@@ -34,7 +34,7 @@ MODULE mo_percentile
      MODULE PROCEDURE empqua_dp, empqua_sp
   END INTERFACE EmpQua
 
-  ! Private
+  ! Private interface, from numerical recipes
   INTERFACE swap
      MODULE PROCEDURE swap_i4, &
           swap_sp, swap_1d_sp, &
