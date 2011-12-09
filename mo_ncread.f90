@@ -16,15 +16,70 @@ module mo_NcRead
   !
   private
   !
+  public :: Get_NcDim ! get the dimensions of a Variable
   public :: Get_NcVar ! get the data of a Variable in a nc file
   !
   interface Get_NcVar
      module procedure Get_NcVar_3d_sp, Get_NcVar_3d_dp, Get_NcVar_2d_sp, Get_NcVar_1d_sp, &
-                      Get_NcVar_2d_dp, Get_NcVar_4d_sp, Get_NcVar_4d_dp, Get_NcVar_1d_dp
+                      Get_NcVar_2d_dp, Get_NcVar_4d_sp, Get_NcVar_4d_dp, Get_NcVar_1d_dp, &
+                      Get_NcVar_5d_dp, Get_NcVar_5d_sp
   end interface
   !
 contains
   !
+  ! ------------------------------------------------------------------------------
+  ! 
+  ! NAME
+  !     Get_NcDim
+  !
+  ! PURPOSE
+  !     gets the dimensions of variable in a netcdf file
+  !
+  ! CALLING SEQUENCE
+  !     dim = Get_NcDim(File, Var)
+  !
+  ! INTENT(IN)
+  !     character(len=*) :: File - Filename of netcdf file
+  !
+  ! INTENT(IN)
+  !     character(len=*) :: Var - Variable name exactly as specified in the file
+  !
+  ! INTENT(OUT)
+  !     integer(i4), dimension(5) :: dim - dimension length, 1 if dimension dont exist
+  !
+  ! LITERATURE
+  !     http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
+  !
+  ! HISTORY
+  !     Written, Stephan Thober, Dec 2011
+  !
+  function Get_NcDim(Filename, Variable)
+    !
+    implicit none
+    !
+    character(len=*), intent(in) :: Filename
+    character(len=*), intent(in) :: Variable
+    !
+    integer(i4), dimension(5)    :: Get_NcDim
+    !
+    integer(i4)                               :: ncid    ! id of input stream
+    integer(i4)                               :: status  ! status of read stream
+    integer(i4)                               :: varid   ! id of variable to be read
+    integer(i4)                               :: vartype ! type of variable
+    !
+    ! Open NetCDF filename
+    status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
+    if ( status /= 0) stop 'ERROR*** nc file could not be opened!'
+    !
+    ! Inquire file and check if VarName exists in the dataset
+    ! Get also the id and the length of the dimensions
+    call get_Info(Variable,ncid,varid,vartype, Get_NcDim)
+    !
+    ! close File
+    status = nf90_close(ncid)
+    if ( status /= 0) stop 'ERROR*** nc file could not be closed!'
+    !
+  end function Get_NcDim
   ! ------------------------------------------------------------------------------
 
   !    NAME
@@ -39,7 +94,7 @@ contains
   !        lengths of the array will be filled with ones.
 
   !    CALLING SEQUENCE
-  !        call Get_NcVar(File, Variable_Name, array)
+  !        call Get_NcVar(File, Variable_Name, array, start=jdate,count=Nvalues)
 
   !    INTENT(IN)
   !        character(256) :: File                                         Name of the nc file
@@ -49,6 +104,12 @@ contains
   
   !    INTENT(INOUT)
   !        real(sp/dp), dimension(:,:[,:[,:]]), allocatable :: array      array where data will be read
+  
+  !    INTENT(IN), OPTIONAL
+  !        integer(i4), dimension(:) :: jdate ! len is the number of dimensions of array, starting indeces of first value to read, default is One, see example 
+  
+  !    INTENT(IN), OPTIONAL
+  !        integer(i4), dimension(:) :: count ! same size as jdate, specifies how many values in each dimension is going to be read
   
   !    RESTRICTIONS
   !        Output array is a floating point of 2-4 dimensions.
@@ -66,21 +127,46 @@ contains
   !        Modified, Stephan Thober, Nov 2011 - added comments
 
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_4d_sp(Filename, VarName, Data)
+  subroutine Get_NcVar_4d_sp(Filename, VarName, Data, start, count)
     !
     implicit none
     !
     character(256), intent(in)                :: Filename
     character(256), intent(in)                :: VarName ! Variable name
-    integer(i4)                               :: ncid    ! id of input stream
-    integer(i4)                               :: status  ! status of read stream
-    integer(i4)                               :: varid   ! id of variable to be read
-    integer(i4)                               :: vartype ! type of variable
-    integer(i4), dimension(4)                 :: dl      ! length of dimensions
-    real(sp), dimension(:,:,:,:), allocatable, &
-         intent(inout) :: Data    ! array where values should be stored
+    integer(i4), dimension(4), optional, intent(in)     :: start
+    integer(i4), dimension(4), optional, intent(in)     :: count
+    integer(i4), dimension(4)                  :: Rstart
+    integer(i4), dimension(4)                  :: Rcount
+    integer(i4)                                :: ncid    ! id of input stream
+    integer(i4)                                :: status  ! status of read stream
+    integer(i4)                                :: varid   ! id of variable to be read
+    integer(i4)                                :: vartype ! type of variable
+    real(sp), dimension(:,:,:,:),intent(inout) :: Data    ! array where values should be stored
     !
-    if (allocated(data)) stop 'ERROR*** data is already allocated. subroutine Get_Ncvar'
+    Rstart = 1
+    Rcount = shape(Data)
+    !
+    if (present(start)) then
+       !
+       if (size(start) /= 4 ) stop 'ERROR*** size of start does not equal 3. GetNcVar'
+       !
+       Rstart = start
+       !
+    end if
+    !
+    if (present(count)) then
+       !
+       if (size(count) /= 4) stop 'ERROR*** size of count does not equal 3. GetNcVar'
+       !
+       Rcount = count
+       !
+       if ( size(data,1) /= Rcount(1) .or. &
+            size(data,2) /= Rcount(2) .or. &
+            size(data,3) /= Rcount(3) .or. &
+            size(data,4) /= Rcount(4) ) stop 'ERROR*** size mismatch. Get_NcVar'
+
+       !
+    end if
     !
     ! Open NetCDF filename
     status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
@@ -88,13 +174,12 @@ contains
     !
     ! Inquire file and check if VarName exists in the dataset
     ! Get also the id and the length of the dimensions
-    call get_Info(Varname,ncid,varid,dl,vartype)
+    call get_Info(Varname,ncid,varid,vartype)
     !
     ! check variable type ( 5 equals single precision )
     if ( vartype /= 5 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values by varid
-    allocate(data(dl(1),dl(2),dl(3),dl(4)))
     status = nf90_get_var(ncid, varid, data)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
@@ -107,23 +192,48 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_4d_dp(Filename, VarName, Data)
+  subroutine Get_NcVar_4d_dp(Filename, VarName, Data, start, count)
     !
     implicit none
     !
     character(256), intent(in)                :: Filename
     character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    integer(i4), dimension(4), optional, intent(in)     :: start
+    integer(i4), dimension(4), optional, intent(in)     :: count
+    integer(i4), dimension(4)                 :: Rstart
+    integer(i4), dimension(4)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    integer(i4), dimension(4)                 :: dl        ! length of dimensions
-    real(dp), dimension(:,:,:,:), allocatable, &
-         intent(inout) :: Data      ! array where values should be stored
+    real(dp), dimension(:,:,:,:), intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
-    if (allocated(data)) stop 'ERROR*** data is already allocated. subroutine Get_Ncvar'
+    Rstart = 1
+    Rcount = shape(Data)
+    !
+    if (present(start)) then
+       !
+       if (size(start) /= 4 ) stop 'ERROR*** size of start does not equal 3. GetNcVar'
+       !
+       Rstart = start
+       !
+    end if
+    !
+    if (present(count)) then
+       !
+       if (size(count) /= 4) stop 'ERROR*** size of count does not equal 3. GetNcVar'
+       !
+       Rcount = count
+       !
+       if ( size(data,1) /= Rcount(1) .or. &
+            size(data,2) /= Rcount(2) .or. &
+            size(data,3) /= Rcount(3) .or. &
+            size(data,4) /= Rcount(4) ) stop 'ERROR*** size mismatch. Get_NcVar'
+
+       !
+    end if
     !
     ! Open NetCDF filename
     status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
@@ -131,14 +241,13 @@ contains
     !
     ! Inquire file and check if VarName exists in the dataset
     ! Get also the id and the length of the dimensions
-    call get_Info(Varname,ncid,varid,dl,vartype)
+    call get_Info(Varname,ncid,varid,vartype)
     !
     ! check variable type ( 5 equals float type )
     if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    allocate(data(dl(1),dl(2),dl(3),dl(4)))
-    status = nf90_get_var(ncid, varid, data)
+    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -149,23 +258,41 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_1d_sp(Filename, VarName, Data)
+  subroutine Get_NcVar_1d_sp(Filename, VarName, Data, start, count)
     !
     implicit none
     !
     character(256), intent(in)                :: Filename
     character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    integer(i4), dimension(1), optional, intent(in)     :: start
+    integer(i4), dimension(1), optional, intent(in)     :: count
+    integer(i4), dimension(1)                 :: Rstart
+    integer(i4), dimension(1)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    integer(i4), dimension(2)                 :: dl        ! length of dimensions
-    real(sp), dimension(:), allocatable, &
-         intent(inout) :: Data      ! array where values should be stored
+    real(sp), dimension(:), intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
-    if (allocated(data)) stop 'ERROR*** data is already allocated. subroutine Get_Ncvar'
+    Rstart = 1
+    Rcount = shape(Data)
+    !
+    if (present(start)) then
+       !
+       Rstart = start
+       !
+    end if
+    !
+    if (present(count)) then
+       !
+       Rcount = count
+       !
+       if ( size(data,1) /= Rcount(1) ) stop 'ERROR*** size mismatch. Get_NcVar'
+
+       !
+    end if
     !
     ! Open NetCDF filename
     status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
@@ -173,14 +300,13 @@ contains
     !
     ! Inquire file and check if VarName exists in the dataset
     ! Get also the id and the length of the dimensions
-    call get_Info(Varname,ncid,varid,dl,vartype)
+    call get_Info(Varname,ncid,varid,vartype)
     !
     ! check variable type ( 5 equals float type )
     if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    allocate(data(dl(1)))
-    status = nf90_get_var(ncid, varid, data)
+    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -191,23 +317,40 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_1d_dp(Filename, VarName, Data)
+  subroutine Get_NcVar_1d_dp(Filename, VarName, Data, start, count)
     !
     implicit none
     !
-    character(256), intent(in)                :: Filename
-    character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
-    integer(i4)                               :: varid     ! id of variable to be read
-    integer(i4)                               :: vartype   ! type of variable
-    integer(i4), dimension(2)                 :: dl        ! length of dimensions
-    real(dp), dimension(:), allocatable, &
-         intent(inout) :: Data      ! array where values should be stored
+    character(256), intent(in)            :: Filename
+    character(256), intent(in)            :: VarName   ! Variable name == Longname in netcdf dataset
+    integer(i4), dimension(1), optional, intent(in)     :: start
+    integer(i4), dimension(1), optional, intent(in)     :: count
+    integer(i4), dimension(1)             :: Rstart
+    integer(i4), dimension(1)             :: Rcount
+    integer(i4)                           :: varid     ! id of variable to be read
+    integer(i4)                           :: vartype   ! type of variable
+    real(dp), dimension(:), intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
-    if (allocated(data)) stop 'ERROR*** data is already allocated. subroutine Get_Ncvar'
+    Rstart = 1
+    Rcount = shape(Data)
+    !
+    if (present(start)) then
+       !
+       Rstart = start
+       !
+    end if
+    !
+    if (present(count)) then
+       !
+       Rcount = count
+       !
+       if ( size(data,1) /= Rcount(1) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       !
+    end if
     !
     ! Open NetCDF filename
     status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
@@ -215,14 +358,13 @@ contains
     !
     ! Inquire file and check if VarName exists in the dataset
     ! Get also the id and the length of the dimensions
-    call get_Info(Varname,ncid,varid,dl,vartype)
+    call get_Info(Varname,ncid,varid,vartype)
     !
     ! check variable type ( 5 equals float type )
     if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    allocate(data(dl(1)))
-    status = nf90_get_var(ncid, varid, data)
+    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -233,23 +375,45 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_2d_dp(Filename, VarName, Data)
+  subroutine Get_NcVar_2d_dp(Filename, VarName, Data, start, count)
     !
     implicit none
     !
     character(256), intent(in)                :: Filename
     character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    integer(i4), dimension(:), optional, intent(in)     :: start
+    integer(i4), dimension(:), optional, intent(in)     :: count
+    integer(i4), dimension(2)                 :: Rstart
+    integer(i4), dimension(2)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    integer(i4), dimension(2)                 :: dl        ! length of dimensions
-    real(dp), dimension(:,:), allocatable, &
-         intent(inout) :: Data      ! array where values should be stored
+    real(dp), dimension(:,:),   intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
-    if (allocated(data)) stop 'ERROR*** data is already allocated. subroutine Get_Ncvar'
+    Rstart = 1
+    Rcount = shape(data)
+    !
+    if (present(start)) then
+       !
+       if (size(start) /= 2 ) stop 'ERROR*** size of start does not equal 3. GetNcVar'
+       !
+       Rstart = start
+       !
+    end if
+    !
+    if (present(count)) then
+       !
+       if (size(count) /= 2 ) stop 'ERROR*** size of count does not equal 3. GetNcVar'
+       !
+       Rcount = count
+       !
+       if ( size(data,1) /= Rcount(1) .or. &
+            size(data,2) /= Rcount(2) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       !
+    end if
     !
     ! Open NetCDF filename
     status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
@@ -257,14 +421,13 @@ contains
     !
     ! Inquire file and check if VarName exists in the dataset
     ! Get also the id and the length of the dimensions
-    call get_Info(Varname,ncid,varid,dl,vartype)
+    call get_Info(Varname,ncid,varid,vartype)
     !
     ! check variable type ( 5 equals float type )
     if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    allocate(data(dl(1),dl(2)))
-    status = nf90_get_var(ncid, varid, data)
+    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -276,23 +439,45 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_2d_sp(Filename, VarName, Data)
+  subroutine Get_NcVar_2d_sp(Filename, VarName, Data, start, count)
     !
     implicit none
     !
     character(256), intent(in)                :: Filename
     character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    integer(i4), dimension(:), optional, intent(in)     :: start
+    integer(i4), dimension(:), optional, intent(in)     :: count
+    integer(i4), dimension(2)                 :: Rstart
+    integer(i4), dimension(2)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    integer(i4), dimension(2)                 :: dl        ! length of dimensions
-    real(sp), dimension(:,:), allocatable, &
-         intent(inout) :: Data      ! array where values should be stored
+    real(sp), dimension(:,:),   intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
-    if (allocated(data)) stop 'ERROR*** data is already allocated. subroutine Get_Ncvar'
+    Rstart = 1
+    Rcount = shape(data)
+    !
+    if (present(start)) then
+       !
+       if (size(start) /= 2 ) stop 'ERROR*** size of start does not equal 3. GetNcVar'
+       !
+       Rstart = start
+       !
+    end if
+    !
+    if (present(count)) then
+       !
+       if (size(count) /= 2) stop 'ERROR*** size of count does not equal 3. GetNcVar'
+       !
+       Rcount = count
+       !
+       if ( size(data,1) /= Rcount(1) .or. &
+            size(data,2) /= Rcount(2) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       !
+    end if
     !
     ! Open NetCDF filename
     status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
@@ -300,14 +485,13 @@ contains
     !
     ! Inquire file and check if VarName exists in the dataset
     ! Get also the id and the length of the dimensions
-    call get_Info(Varname,ncid,varid,dl,vartype)
+    call get_Info(Varname,ncid,varid,vartype)
     !
     ! check variable type ( 5 equals float type )
     if ( vartype /= 5 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    allocate(data(dl(1),dl(2)))
-    status = nf90_get_var(ncid, varid, data)
+    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -319,23 +503,46 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_3d_dp(Filename, VarName, Data)
+  subroutine Get_NcVar_3d_dp(Filename, VarName, Data, start, count)
     !
     implicit none
     !
     character(256), intent(in)                :: Filename
     character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    integer(i4), dimension(:), optional, intent(in)     :: start
+    integer(i4), dimension(:), optional, intent(in)     :: count
+    integer(i4), dimension(3)                 :: Rstart
+    integer(i4), dimension(3)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    integer(i4), dimension(3)                 :: dl        ! length of dimensions
-    real(dp), dimension(:,:,:), allocatable, &
-         intent(inout) :: Data      ! array where values should be stored
+    real(dp), dimension(:,:,:), intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
-    if (allocated(data)) stop 'ERROR*** data is already allocated. subroutine Get_Ncvar'
+    Rstart = 1
+    Rcount = shape(Data)
+    !
+    if (present(start)) then
+       !
+       if (size(start) /= 3 ) stop 'ERROR*** size of start does not equal 3. GetNcVar'
+       !
+       Rstart = start
+       !
+    end if
+    !
+    if (present(count)) then
+       !
+       if (size(count) /= 3) stop 'ERROR*** size of count does not equal 3. GetNcVar'
+       !
+       Rcount = count
+       !
+       if ( size(data,1) /= Rcount(1) .or. &
+            size(data,2) /= Rcount(2) .or. &
+            size(data,3) /= Rcount(3) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       !
+    end if
     !
     ! Open NetCDF filename
     status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
@@ -343,14 +550,13 @@ contains
     !
     ! Inquire file and check if VarName exists in the dataset
     ! Get also the id and the length of the dimensions
-    call get_Info(Varname,ncid,varid,dl,vartype)
+    call get_Info(Varname,ncid,varid,vartype)
     !
     ! check variable type ( 5 equals float type )
     if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    allocate(data(dl(1),dl(2),dl(3)))
-    status = nf90_get_var(ncid, varid, data)
+    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -362,23 +568,46 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_3d_sp(Filename, VarName, Data)
+  subroutine Get_NcVar_3d_sp(Filename, VarName, Data, start, count)
     !
     implicit none
     !
     character(256), intent(in)                :: Filename
     character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    integer(i4), dimension(:), optional, intent(in)     :: start
+    integer(i4), dimension(:), optional, intent(in)     :: count
+    integer(i4), dimension(3)                 :: Rstart
+    integer(i4), dimension(3)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    integer(i4), dimension(3)                 :: dl        ! length of dimensions
-    real(sp), dimension(:,:,:), allocatable, &
-         intent(inout) :: Data      ! array where values should be stored
+    real(sp), dimension(:,:,:), intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
-    if (allocated(data)) stop 'ERROR*** data is already allocated. subroutine Get_Ncvar'
+    Rstart = 1
+    Rcount = shape(data)
+    !
+    if (present(start)) then
+       !
+       if (size(start) /= 3 ) stop 'ERROR*** size of start does not equal 3. GetNcVar'
+       !
+       Rstart = start
+       !
+    end if
+    !
+    if (present(count)) then
+       !
+       if (size(count) /= 3) stop 'ERROR*** size of count does not equal 3. GetNcVar'
+       !
+       Rcount = count
+       !
+       if ( size(data,1) /= Rcount(1) .or. &
+            size(data,2) /= Rcount(2) .or. &
+            size(data,3) /= Rcount(3) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       !
+    end if
     !
     ! Open NetCDF filename
     status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
@@ -386,14 +615,12 @@ contains
     !
     ! Inquire file and check if VarName exists in the dataset
     ! Get also the id and the length of the dimensions
-    call get_Info(Varname,ncid,varid,dl,vartype)
+    call get_Info(Varname,ncid,varid,vartype)
     !
     ! check variable type ( 5 equals float type )
     if ( vartype /= 5 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
-    ! get values
-    allocate(data(dl(1),dl(2),dl(3)))
-    status = nf90_get_var(ncid, varid, data)
+    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -401,7 +628,139 @@ contains
     if ( status /= 0) stop 'ERROR*** nc file could not be closed!'
     !
   end subroutine Get_NcVar_3d_sp
+  ! ----------------------------------------------------------------------------
+  ! SUBROUTINE GET_NCVAR_4D_SP
+  ! ----------------------------------------------------------------------------
+  subroutine Get_NcVar_5d_sp(Filename, VarName, Data, start, count)
+    !
+    implicit none
+    !
+    character(256), intent(in)                :: Filename
+    character(256), intent(in)                :: VarName ! Variable name
+    integer(i4), dimension(5), optional, intent(in)     :: start
+    integer(i4), dimension(5), optional, intent(in)     :: count
+    integer(i4), dimension(5)                  :: Rstart
+    integer(i4), dimension(5)                  :: Rcount
+    integer(i4)                                :: ncid    ! id of input stream
+    integer(i4)                                :: status  ! status of read stream
+    integer(i4)                                :: varid   ! id of variable to be read
+    integer(i4)                                :: vartype ! type of variable
+    real(sp), dimension(:,:,:,:,:),intent(inout) :: Data    ! array where values should be stored
+    !
+    Rstart = 1
+    Rcount = shape(Data)
+    !
+    if (present(start)) then
+       !
+       if (size(start) /= 5 ) stop 'ERROR*** size of start does not equal 3. GetNcVar'
+       !
+       Rstart = start
+       !
+    end if
+    !
+    if (present(count)) then
+       !
+       if (size(count) /= 5) stop 'ERROR*** size of count does not equal 3. GetNcVar'
+       !
+       Rcount = count
+       !
+       if ( size(data,1) /= Rcount(1) .or. &
+            size(data,2) /= Rcount(2) .or. &
+            size(data,3) /= Rcount(3) .or. &
+            size(data,4) /= Rcount(4) .or. &
+            size(data,5) /= Rcount(5) ) stop 'ERROR*** size mismatch. Get_NcVar'
 
+       !
+    end if
+    !
+    ! Open NetCDF filename
+    status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
+    if ( status /= 0) stop 'ERROR*** nc file could not be opened!'
+    !
+    ! Inquire file and check if VarName exists in the dataset
+    ! Get also the id and the length of the dimensions
+    call get_Info(Varname,ncid,varid,vartype)
+    !
+    ! check variable type ( 5 equals single precision )
+    if ( vartype /= 5 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
+    !
+    ! get values by varid
+    status = nf90_get_var(ncid, varid, data)
+    if ( status /= 0) stop 'ERROR*** data could not be read!'
+    !
+    ! close File
+    status = nf90_close(ncid)
+    if ( status /= 0) stop 'ERROR*** nc file could not be closed!'
+    !
+  end subroutine Get_NcVar_5d_sp
+
+  ! ------------------------------------------------------------------------------
+  ! SUBROUTINE GET_NCVAR
+  ! ------------------------------------------------------------------------------
+  subroutine Get_NcVar_5d_dp(Filename, VarName, Data, start, count)
+    !
+    implicit none
+    !
+    character(256), intent(in)                :: Filename
+    character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    integer(i4), dimension(5), optional, intent(in)     :: start
+    integer(i4), dimension(5), optional, intent(in)     :: count
+    integer(i4), dimension(5)                 :: Rstart
+    integer(i4), dimension(5)                 :: Rcount
+    integer(i4)                               :: varid     ! id of variable to be read
+    integer(i4)                               :: vartype   ! type of variable
+    real(dp), dimension(:,:,:,:,:), intent(inout) :: Data      ! array where values should be stored
+    !
+    ! further Variables
+    integer(i4) :: ncid   ! id of input stream
+    integer(i4) :: status ! status of read stream
+    !
+    Rstart = 1
+    Rcount = shape(Data)
+    !
+    if (present(start)) then
+       !
+       if (size(start) /= 5 ) stop 'ERROR*** size of start does not equal 3. GetNcVar'
+       !
+       Rstart = start
+       !
+    end if
+    !
+    if (present(count)) then
+       !
+       if (size(count) /= 5) stop 'ERROR*** size of count does not equal 3. GetNcVar'
+       !
+       Rcount = count
+       !
+       if ( size(data,1) /= Rcount(1) .or. &
+            size(data,2) /= Rcount(2) .or. &
+            size(data,3) /= Rcount(3) .or. &
+            size(data,4) /= Rcount(4) .or. &
+            size(data,5) /= Rcount(5) ) stop 'ERROR*** size mismatch. Get_NcVar'
+
+       !
+    end if
+    !
+    ! Open NetCDF filename
+    status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
+    if ( status /= 0) stop 'ERROR*** nc file could not be opened!'
+    !
+    ! Inquire file and check if VarName exists in the dataset
+    ! Get also the id and the length of the dimensions
+    call get_Info(Varname,ncid,varid,vartype)
+    !
+    ! check variable type ( 5 equals float type )
+    if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
+    !
+    ! get values
+    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
+    if ( status /= 0) stop 'ERROR*** data could not be read!'
+    !
+    ! close File
+    status = nf90_close(ncid)
+    if ( status /= 0) stop 'ERROR*** nc file could not be closed!'
+    !
+  end subroutine Get_NcVar_5d_dp
   ! ------------------------------------------------------------------------------
   !
   ! SUBROUTINE GET_INFO
@@ -416,15 +775,16 @@ contains
   ! for detailed information.
   !
   ! ------------------------------------------------------------------------------
-  subroutine get_Info(Varname, ncid, varid, dl, kind)
+  subroutine get_Info(Varname, ncid, varid, kind,dl)
     !
     implicit none
     !
     character(256),            intent(in)     :: Varname
     integer(i4),               intent(in)     :: ncid 
-    integer(i4), dimension(:), intent(inout)  :: dl
     integer(i4),               intent(out)    :: varid   ! variable id of data to be read
     integer(i4),               intent(out)    :: kind    ! type of the variable
+    integer(i4), dimension(:), &
+                     optional, intent(inout)  :: dl
     !
     integer(i4)                               :: nVars   ! Number of Variables
     integer(i4), dimension(:), allocatable    :: varids  ! Ids of all variables
@@ -465,29 +825,33 @@ contains
     ! check whether variable name was found in the file
     if ( .not. flag ) stop 'ERROR*** Varname does not exist in file. subroutine get_Info'
     !
-    ! check consistency of dimensions
-    if ( NumDims > size(dl) ) &
-         stop 'ERROR*** Dimension size of Variable is greater than dims of array. subroutine get_Info'
-    !
-    ! if the data has less dimensions than the array, fill the dimension with ones
-    if ( size(dl) > NumDims ) dl(NumDims+1:size(dl)) = 1
-    !
     ! get the dimension ids ant the type of this variable
     allocate(DimId(NumDims))
     status = nf90_inquire_variable(ncid, varids(n), name, xtype=kind, dimids=DimId)
     if ( status /= 0 ) stop 'ERROR*** Could NOT inquire Ids of Dimensions'
     !
-    ! go through dimension ids and get the dimesnion length
-    dimloop: do n = 1, NumDims
+    if ( present(dl) ) then
        !
-       status = nf90_inquire_dimension(ncid, DimId(n), name, dl(n))
-       if ( status /= 0 ) stop 'ERROR*** Could NOT inquire Length of Dimension'
+       ! check consistency of dimensions
+       if ( NumDims > size(dl) ) &
+            stop 'ERROR*** Dimension size of Variable is greater than dims of array. subroutine get_Info'
        !
-       write(form,'(a12,I03.3,a1)'), "(a10,i1,a4,a", len(trim(name)), ")"
-       write(*,form) 'Dimension ',n,' is ', trim(name)
-       write(*,'(a14,i5.5)') 'The Length is ',dl(n)
+       ! if the data has less dimensions than the array, fill the dimension with ones
+       if ( size(dl) > NumDims ) dl(NumDims+1:size(dl)) = 1
        !
-    end do dimloop
+       ! go through dimension ids and get the dimesnion length
+       dimloop: do n = 1, NumDims
+          !
+          status = nf90_inquire_dimension(ncid, DimId(n), name, dl(n))
+          if ( status /= 0 ) stop 'ERROR*** Could NOT inquire Length of Dimension'
+          !
+          write(form,'(a12,I03.3,a1)'), "(a10,i1,a4,a", len(trim(name)), ")"
+          write(*,form) 'Dimension ',n,' is ', trim(name)
+          write(*,'(a14,i5.5)') 'The Length is ',dl(n)
+          !
+       end do dimloop
+       !
+    end if
     !
   end subroutine get_Info
   !
