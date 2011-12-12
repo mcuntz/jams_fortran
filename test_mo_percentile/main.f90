@@ -18,11 +18,11 @@ PROGRAM main
   ! Double precision
   isgood = .true.
   dat = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
-  call empqua(dat,(/50._dp,95._dp/),dqua)
   isgood = isgood .and. (median(dat) == 5.5_dp)
   isgood = isgood .and. (median(dat,mask=(dat /= 10._dp)) == 5._dp)
   isgood = isgood .and. (ksmallest(dat,4) == 4._dp)
   isgood = isgood .and. (percentile(dat,95._dp) == 9._dp)
+  call empqua(dat,(/50._dp,95._dp/),dqua)
   isgood = isgood .and. (dqua(1) == 5._dp)
   isgood = isgood .and. (dqua(2) == 9._dp)
 
@@ -35,11 +35,11 @@ PROGRAM main
   ! Single precision
   isgood = .true.
   sat = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
-  call empqua(sat,(/50._sp,95._sp/),squa)
   isgood = isgood .and. (median(sat) == 5.5_sp)
   isgood = isgood .and. (median(sat,mask=(sat /= 10._sp)) == 5._sp)
   isgood = isgood .and. (ksmallest(sat,4) == 4._sp)
   isgood = isgood .and. (percentile(sat,95._sp) == 9._sp)
+  call empqua(sat,(/50._sp,95._sp/),squa)
   isgood = isgood .and. (squa(1) == 5._sp)
   isgood = isgood .and. (squa(2) == 9._sp)
 
