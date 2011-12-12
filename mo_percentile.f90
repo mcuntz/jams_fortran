@@ -7,8 +7,7 @@ MODULE mo_percentile
   !       Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
   !       Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
 
-  ! Written  Mar 2011, Matthias Cuntz
-  ! Modified Dec 2011, Stephan Thober - EmpQua
+  ! Written March 2011, Matthias Cuntz
 
   USE mo_kind, ONLY: i4, sp, dp, spc, dpc
 
@@ -19,7 +18,6 @@ MODULE mo_percentile
   PUBLIC :: ksmallest       ! Returns the kth smallest value in an array (median if k=N/2)
   PUBLIC :: median          ! Returns the median
   PUBLIC :: percentile      ! Returns the percent smallest value in an array (median if k=50)
-  PUBLIC :: empqua          ! Returns the empirical quantiles of an array
 
   ! Public
   INTERFACE ksmallest
@@ -30,12 +28,10 @@ MODULE mo_percentile
   END INTERFACE median
   INTERFACE percentile
      MODULE PROCEDURE percentile_sp, percentile_dp
+     MODULE PROCEDURE percentile_1d_sp, percentile_1d_dp
   END INTERFACE percentile
-  INTERFACE EmpQua
-     MODULE PROCEDURE empqua_dp, empqua_sp
-  END INTERFACE EmpQua
 
-  ! Private interface, from numerical recipes
+  ! Private
   INTERFACE swap
      MODULE PROCEDURE swap_i4, &
           swap_sp, swap_1d_sp, &
@@ -368,13 +364,14 @@ CONTAINS
   
   !     INTENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
-  !         real(sp/dp) :: k          Percentage of percentile
+  !         real(sp/dp) :: k[(:)]     Percentage of percentile, can be 1 dimensional 
 
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         real(sp/dp) :: out        k-th percentile of values in input array
+  !         real(sp/dp) :: out[(:)]   k-th percentile of values in input array, can be 
+  !                                   1 dimensional corresponding to k
 
   !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)    1D-array of logical values with size(vec).
@@ -400,6 +397,7 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Mar 2011
+  !         Modified, Stephan Thober, Dec 2011 - added 1 dimensional version
 
   FUNCTION percentile_dp(arrin,k,mask)
 
@@ -464,63 +462,15 @@ CONTAINS
 
   END FUNCTION percentile_sp
 
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         EmpQua
-
-  !     PURPOSE
-  !         Returns the empirical quantiles/percentiles of an array.
-  !
-  !         If an optinal mask is given, values only on those locations that correspond
-  !         to true values in the mask are used.
-
-  !     CALLING SEQUENCE
-  !         call EmpQua(vec,k,Qua,mask=mask)
-  
-  !     INTENT(IN)
-  !         real(sp/dp) :: vec(:)     1D-array with input numbers
-  !         real(sp/dp) :: k(:)       Percentage of percentiles
-
-  !     INTENT(INOUT)
-  !         None
-
-  !     INTENT(OUT)
-  !         real(sp/dp) :: Qua(:)     k-th percentiles of values in input array
-
-  !     INTENT(IN), OPTIONAL
-  !         logical     :: mask(:)    1D-array of logical values with size(vec).
-  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
-
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-
-  !     INTENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
-  !         ! Returns (/ 5, 9/)
-  !         call EmpQua(vec,(/50.,95./),Out)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         None
-
-  !     HISTORY
-  !         Written, Stephan Thober, Dec 2011
-
-  subroutine EmpQua_dp(arrin,k,Qua,mask)
+  function percentile_1d_dp(arrin,k,mask)
 
     IMPLICIT NONE
 
     REAL(dp),    DIMENSION(:),           INTENT(IN) :: arrin
     REAL(dp),    Dimension(:),           INTENT(IN) :: k
-    REAL(dp),    Dimension(:),           INTENT(OUT):: Qua
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+
+    REAL(dp),    Dimension(size(k))                 :: percentile_1d_dp
 
     INTEGER(i4) :: n, nn
     REAL(dp), DIMENSION(:), ALLOCATABLE :: arr
@@ -538,29 +488,28 @@ CONTAINS
     ! check consistency
     if (size(k) > size(arr)) stop 'ERROR*** more Quantiles than data. subroutine EmpQua'
 
-    if (size(k) /= size(Qua)) stop 'ERROR*** size mismatch. subroutine EmpQua'
-
     if (n < 2) stop 'EmpQua: n < 2'
     
     do n = 1, size(k)
        !
        nn     = floor(k(n)/100._dp*real(size(arr),dp),kind=i4)
-       Qua(n) = ksmallest(arr,nn)
+       percentile_1d_dp(n) = ksmallest(arr,nn)
        !
     end do
 
     deallocate(arr)
 
-  END subroutine EmpQua_dp
+  END function percentile_1d_dp
 
-  subroutine EmpQua_sp(arrin,k,Qua,mask)
+  function percentile_1d_sp(arrin,k,mask)
 
     IMPLICIT NONE
 
     REAL(sp),    DIMENSION(:),           INTENT(IN) :: arrin
     REAL(sp),    Dimension(:),           INTENT(IN) :: k
-    REAL(sp),    Dimension(:),           INTENT(OUT):: Qua
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+
+    REAL(sp),    Dimension(size(k))                 :: percentile_1d_sp
 
     INTEGER(i4) :: n, nn
     REAL(sp), DIMENSION(:), ALLOCATABLE :: arr
@@ -578,28 +527,21 @@ CONTAINS
     ! check consistency
     if (size(k) > size(arr)) stop 'ERROR*** more Quantiles than data. subroutine EmpQua'
 
-    if (size(k) /= size(Qua)) stop 'ERROR*** size mismatch. subroutine EmpQua'
-
     if (n < 2) stop 'EmpQua: n < 2'
     
     do n = 1, size(k)
        !
        nn     = floor(k(n)/100._sp*real(size(arr),sp),kind=i4)
-       Qua(n) = ksmallest(arr,nn)
+       percentile_1d_sp(n) = ksmallest(arr,nn)
        !
     end do
 
     deallocate(arr)
 
-  END subroutine EmpQua_sp
+  END function percentile_1d_sp
 
   ! ------------------------------------------------------------------
 
-  ! From numerical recipes documentation
-  ! Swaps the corresponding elements of a and b. If mask is present, performs 
-  ! the swap only where mask is true. (Following code is the unmasked case. 
-  ! For speed at runtime, the masked case is implemented by overloading, not 
-  ! by testing for the optional argument.) 
   SUBROUTINE swap_i4(a,b)
     INTEGER(i4), INTENT(INOUT) :: a,b
     INTEGER(i4) :: dum
