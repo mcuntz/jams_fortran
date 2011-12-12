@@ -16,6 +16,7 @@ MODULE mo_moment
   !           Experiments in Fluids 22, 129—136, 1996
 
   ! Written Nov 2011, Matthias Cuntz
+  !         Modified, MC, Dec 2011 - mod. correlation, covariance
 
   USE mo_kind, ONLY: i4, sp, dp
 
@@ -604,6 +605,7 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Nov 2011
+  !         Modified, MC, Dec 2011 - covariance as <(x-<x>)(y-<y>)> instead of <xy>-<x><y>
 
   FUNCTION correlation_dp(x, y, mask)
 
@@ -615,7 +617,7 @@ CONTAINS
     REAL(dp)                                      :: correlation_dp
 
     INTEGER(i4) :: n
-    REAL(dp)    :: mx, my, mxy
+    REAL(dp)    :: mx, my
     REAL(dp)    :: sx, sy, covar
     LOGICAL, DIMENSION(size(x)) :: maske
 
@@ -633,10 +635,7 @@ CONTAINS
     ! Mean and Stddev of x and y
     call moment(x, mx, stddev=sx, mask=maske)
     call moment(y, my, stddev=sy, mask=maske)
-    ! mean of x*y
-    mxy = mean(x*y, mask=maske)
-    ! covariance
-    covar = mxy - mx*my
+    covar = sum((x-mx)*(y-my), mask=maske) / n
     ! correlation
     correlation_dp  = covar / (sx*sy)
 
@@ -653,7 +652,7 @@ CONTAINS
     REAL(sp)                                      :: correlation_sp
 
     INTEGER(i4) :: n
-    REAL(sp)    :: mx, my, mxy
+    REAL(sp)    :: mx, my
     REAL(sp)    :: sx, sy, covar
     LOGICAL, DIMENSION(size(x)) :: maske
 
@@ -671,10 +670,7 @@ CONTAINS
     ! Mean and Stddev of x and y
     call moment(x, mx, stddev=sx, mask=maske)
     call moment(y, my, stddev=sy, mask=maske)
-    ! mean of x*y
-    mxy = mean(x*y, mask=maske)
-    ! covariance
-    covar = mxy - mx*my
+    covar = sum((x-mx)*(y-my), mask=maske) / n
     ! correlation
     correlation_sp  = covar / (sx*sy)
 
@@ -731,6 +727,7 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Nov 2011
+  !         Modified, MC, Dec 2011 - covariance as <(x-<x>)(y-<y>)> instead of <xy>-<x><y>
 
   FUNCTION covariance_dp(x, y, mask)
 
@@ -742,8 +739,7 @@ CONTAINS
     REAL(dp)                                      :: covariance_dp
 
     INTEGER(i4) :: n
-    REAL(dp)    :: mx, my, mxy
-    REAL(dp)    :: sx, sy
+    REAL(dp)    :: mx, my
     LOGICAL, DIMENSION(size(x)) :: maske
 
     if (size(x) /= size(y)) stop 'Error covariance_dp: size(x) /= size(y)'
@@ -757,13 +753,10 @@ CONTAINS
     endif
     if (n <= (1.0_dp+tiny(1.0_dp))) stop 'covariance_dp: n must be at least 2'
 
-    ! Mean and Stddev of x and y
-    call moment(x, mx, stddev=sx, mask=maske)
-    call moment(y, my, stddev=sy, mask=maske)
-    ! mean of x*y
-    mxy = mean(x*y, mask=maske)
-    ! covariance
-    covariance_dp = mxy - mx*my
+    ! Mean of x and y
+    mx = mean(x, mask=maske)
+    my = mean(y, mask=maske)
+    covariance_dp = sum((x-mx)*(y-my), mask=maske) / n
 
   END FUNCTION covariance_dp
 
@@ -778,8 +771,7 @@ CONTAINS
     REAL(sp)                                      :: covariance_sp
 
     INTEGER(i4) :: n
-    REAL(sp)    :: mx, my, mxy
-    REAL(sp)    :: sx, sy
+    REAL(sp)    :: mx, my
     LOGICAL, DIMENSION(size(x)) :: maske
 
     if (size(x) /= size(y)) stop 'Error covariance_sp: size(x) /= size(y)'
@@ -793,13 +785,10 @@ CONTAINS
     endif
     if (n <= (1.0_sp+tiny(1.0_sp))) stop 'covariance_sp: n must be at least 2'
 
-    ! Mean and Stddev of x and y
-    call moment(x, mx, stddev=sx, mask=maske)
-    call moment(y, my, stddev=sy, mask=maske)
-    ! mean of x*y
-    mxy = mean(x*y, mask=maske)
-    ! covariance
-    covariance_sp = mxy - mx*my
+    ! Mean of x and y
+    mx = mean(x, mask=maske)
+    my = mean(y, mask=maske)
+    covariance_sp = sum((x-mx)*(y-my), mask=maske) / n
 
   END FUNCTION covariance_sp
 

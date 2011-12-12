@@ -19,7 +19,7 @@ MODULE mo_corr
 
   PUBLIC :: autocoeffk   ! coeff_k so that autocorr = coeff_k/coeff_0
   PUBLIC :: autocorr     ! Autocorrelation coefficient at lag k = autocoeffk(k)/autocoeffk(0)
-  PUBLIC :: corr         ! Correlation (function) with possible highpass filtering: covariance=correlation(1)/n
+  PUBLIC :: corr         ! Correlation (function) with optional highpass filtering: covariance=correlation(1)/n
   PUBLIC :: crosscoeffk  ! coeff_k so that crosscorr = coeff_k/coeff_0, crosscoeffk(0) = covariance
   PUBLIC :: crosscorr    ! Crosscorrelation coefficient at lag k = crosscoeffk(k)/crosscoeffk(0)
 
