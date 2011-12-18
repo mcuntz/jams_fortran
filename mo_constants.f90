@@ -4,7 +4,7 @@ MODULE mo_constants
   !
   !  Written Nov 2011, Matthias Cuntz
 
-  USE mo_kind, ONLY: i4, sp, dp
+  USE mo_kind, ONLY: sp, dp
 
   IMPLICIT NONE
 
@@ -39,5 +39,11 @@ MODULE mo_constants
   REAL(SP), PARAMETER :: SQRT2   = 1.41421356237309504880168872420969807856967_sp
   REAL(DP), PARAMETER :: EULER_D = 0.5772156649015328606065120900824024310422_dp
   REAL(SP), PARAMETER :: EULER   = 0.5772156649015328606065120900824024310422_sp
-  
+
+  ! file units
+  INTEGER, PARAMETER :: nin  = 5   ! standard input stream
+  INTEGER, PARAMETER :: nout = 6   ! standard output stream 
+  INTEGER, PARAMETER :: nerr = 0   ! error output stream
+  INTEGER, PARAMETER :: nnml = 100 ! namelist unit
+
 END MODULE mo_constants

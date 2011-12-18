@@ -1,0 +1,18 @@
+!         -*- Mode: F90 -*-        !
+
+! Comments in namelist files are as in Fortran
+
+! Namelist #1
+&name1
+   i1 = 1
+/
+
+! Namelist #2
+&name2
+   i2 = 1
+/
+
+! Namelist #3
+&name3
+   i3 = 1 ! also behind vars
+/

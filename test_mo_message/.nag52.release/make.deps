@@ -1,0 +1,7 @@
+# -*- Makefile -*- 
+# Generated automatically by makedeps.pl
+ 
+/Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_message/.nag52.release/main.o: /Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_message/.nag52.release/mo_message.o
+/Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_message/.nag52.release/mo_constants.o: /Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_message/.nag52.release/mo_kind.o
+/Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_message/.nag52.release/mo_kind.o:
+/Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_message/.nag52.release/mo_message.o: /Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_message/.nag52.release/mo_constants.o
