@@ -1,7 +1,0 @@
-# -*- Makefile -*- 
-# Generated automatically by makedeps.pl
- 
-/Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_julian/.gnu42.release/main.o: /Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_julian/.gnu42.release/mo_julian.o \
-	/Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_julian/.gnu42.release/mo_kind.o
-/Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_julian/.gnu42.release/mo_julian.o: /Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_julian/.gnu42.release/mo_kind.o
-/Users/matthias/program/chs-svn/FORTRAN_chs_lib/./test_mo_julian/.gnu42.release/mo_kind.o:
