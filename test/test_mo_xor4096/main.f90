@@ -27,7 +27,7 @@ program RNG
 
     integer(i4)                    :: NumberOfStreams = 3
 
-    integer(i8)                    :: i,j,k
+    integer(i8)                    :: i,j
     
     ! Needed for optional versions: Single
     integer(i4)                    :: SingleIin_D0, SingleWin_D0

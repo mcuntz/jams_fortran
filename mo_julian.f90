@@ -72,8 +72,6 @@ CONTAINS
 
   SUBROUTINE caldat(julian,dd,mm,yy)
 
-    use mo_kind, only: i4
-
     IMPLICIT NONE
 
     INTEGER(i4), INTENT(IN)  :: julian
@@ -154,8 +152,6 @@ CONTAINS
 
   FUNCTION julday(dd,mm,yy)
 
-    use mo_kind,   only: i4, sp
-    
     IMPLICIT NONE
 
     INTEGER(i4), INTENT(IN) :: dd, mm, yy
@@ -230,8 +226,6 @@ CONTAINS
   !         Written,  Matthias Cuntz, Dec 2011
 
   FUNCTION ndays(dd,mm,yy)
-
-    use mo_kind,   only: i4
     
     IMPLICIT NONE
 
@@ -294,8 +288,6 @@ CONTAINS
 
   SUBROUTINE ndyin(julian,dd,mm,yy)
 
-    use mo_kind,   only: i4
-    
     IMPLICIT NONE
 
     INTEGER(i4), INTENT(IN)  :: julian

@@ -5,7 +5,7 @@ PROGRAM main
   
   IMPLICIT NONE
   
-  INTEGER(i4) :: dd, mm, yy, julian
+  INTEGER(i4) :: dd, mm, yy
   
   LOGICAL :: isgood
   

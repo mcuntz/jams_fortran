@@ -1,6 +1,6 @@
 PROGRAM main
   
-  USE mo_kind,   ONLY: i4, dp, sp
+  USE mo_kind,   ONLY: dp, sp
   USE mo_corr,   ONLY: autocoeffk, autocorr, corr, crosscoeffk, crosscorr
   USE mo_moment, ONLY: mean, variance, covariance
 
@@ -24,6 +24,7 @@ PROGRAM main
        isgood =.false.
   if (abs(autocorr(dat2,0) - 1.0_dp) > epsilon(1.0_dp)) isgood =.false.
   if (abs(covariance(dat1,dat2) - crosscoeffk(dat1,dat2,0))> epsilon(1.0_dp)) isgood =.false.
+  if (abs(autocorr(dat1,10) - crosscorr(dat1,dat1,10))> epsilon(1.0_dp)) isgood =.false.
   ! Covariance function: covariance(x,y) = corr(x,y)/n
   call random_number(dat1)
   dat2 = dat1 + sin(dat1)
@@ -44,6 +45,7 @@ PROGRAM main
        isgood =.false.
   if (abs(autocorr(sat2,0) - 1.0_sp) > epsilon(1.0_sp)) isgood =.false.
   if (abs(covariance(sat1,sat2) - crosscoeffk(sat1,sat2,0))> epsilon(1.0_sp)) isgood =.false.
+  if (abs(autocorr(sat1,10) - crosscorr(sat1,sat1,10))> epsilon(1.0_sp)) isgood =.false.
   ! Covariance function: covariance(x,y) = corr(x,y)/n
   call random_number(sat1)
   sat2 = sat1 + sin(sat1)
