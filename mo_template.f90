@@ -1,19 +1,58 @@
-MODULE mo_julian
+MODULE mo_template
 
-  ! This module provides Julian day conversion routines
+  ! This module is a template for the UFZ CHS Fortran library.
 
-  ! Written  Matthias Cuntz, Dec 2011
+  ! The module provides an example procedures and demonstrates the agreed coding standard:
+  !     - Use mo_kind, only: i4, sp, dp, lgt, etc.
+  !     - Always make procedures for single and double precision (sp, dp), i.e. include interface to module procedures.
+  !     - Include optional mask argument, if possible.
+  !     - Make the module private by default.
+  !     - Make routines available explicitly, i.e. public.
+  !     - Break lines at column 130 at most.
+  !     - Do not use tabs in files.
+  !     - Give 1-line descriptions after the public definition.
+  !     - Documentation:
+  !       * document before the individual routines;
+  !       * do one documentation per interface, i.e. no separate docu for sp and dp;
+  !       * follow the documentation structure before the function mean_sp in mo_template.f90;
+  !       * break comment lines at column 130 at most as well.
+  !     - Sort routines alphabetically in the file and in the public definitions.
+  !     - The modules should be tested with at least two different compilers (of different vendors)
+  !     - Use a subdirectory test_mo_xxx for testing where you simply link your modules:
+  !       This means you do on the command prompt in the test directory:
+  !         ln -s ../mo_kind.f90
+  !         ln -s ../mo_xxx.f90
 
-  USE mo_kind, ONLY: i4, sp
+  ! Written  Matthias Cuntz, Nov 2011
+  ! Modified Matthias Cuntz, Nov 2011 - add private
+  !                          Nov 2011 - add public
 
+  ! Always use the number precisions of mo_kind
+  USE mo_kind, ONLY: i4, sp, dp
+
+  ! Of course
   IMPLICIT NONE
 
+  ! Make everything private by default
   PRIVATE
 
-  PUBLIC :: caldat          ! Day , month and year from Julian day
-  PUBLIC :: julday          ! Julian day from day, month and year
-  PUBLIC :: ndays           ! IMSL Julian day from day, month and year
-  PUBLIC :: ndyin           ! Day, month and year from IMSL Julian day
+  ! Explicitly make public only the routines, parameters, etc. that shall be provided
+  ! Sort alphabetically and give 1-line descriptions
+  PUBLIC :: mean            ! 1st moment of an array, i.e. the mean
+  PUBLIC :: PI_dp           ! Constant Pi in double precision
+  PUBLIC :: PI_sp           ! Constant Pi in single precision
+
+  ! Interfaces for single and double precision routines; sort alphabetically
+  INTERFACE mean
+     MODULE PROCEDURE mean_sp, mean_dp
+  END INTERFACE mean
+
+  ! Public parameters
+  REAL(dp), PARAMETER :: PI_dp = 3.141592653589793238462643383279502884197_dp
+  REAL(sp), PARAMETER :: PI_sp = 3.141592653589793238462643383279502884197_sp
+
+  ! Private global parameters (not used, only for demonstration)
+  INTEGER(i4), PARAMETER :: iTest=1
 
   ! ------------------------------------------------------------------
 
@@ -22,29 +61,30 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         caldat
+  !         mean
 
   !     PURPOSE
-  !         Inverse of the function julday. Here julian is input as a Julian Day Number,
-  !         and the routine outputs mm, id, and iyyy as the month, day, and year on which the specified
-  !         Julian Day started at noon.
+  !         Calculates the average value of a vector, i.e. the first moment of a series of numbers:
+  !             mean = sum(x)/n
+  !
+  !         If an optinal mask is given, the mean is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         call caldat(julian,dd,mm,yy)
+  !         out = mean(vec, mask=mask)
   
   !     INDENT(IN)
-  !         integer(i4) :: julian     Input Julian day
+  !         real(sp/dp) :: vec(:)     1D-array with input numbers
 
   !     INDENT(INOUT)
   !         None
 
   !     INDENT(OUT)
-  !         integer(i4) :: dd         Day in month of Julian day
-  !         integer(i4) :: mm         Month in year of Julian day
-  !         integer(i4) :: yy         Year of Julian day
+  !         real(sp/dp) :: mean       average of all elements in dat
 
   !     INDENT(IN), OPTIONAL
-  !         None
+  !         logical :: mask(:)        1D-array of logical values with size(vec).
+  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
   !     INDENT(INOUT), OPTIONAL
   !         None
@@ -53,129 +93,79 @@ CONTAINS
   !         None
 
   !     RESTRICTIONS
-  !         None
+  !         Input values must be floating points.
 
   !     EXAMPLE
-  !         ! 2415021 is 01.01.1990
-  !         call caldat(2415021,dd,mm,yy)
+  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
+  !         m   = mean(vec, mask=(vec >= 0.))
   !         -> see also example in test directory
 
   !     LITERATURE
+  !         Sokal RR & Rohlf FJ - Biometry: the principle and practice of statistics in biological research,
+  !             Freeman & Co., ISBN 0-7167-2411-1
   !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
   !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
   !             Cambridge University Press, UK, 1996
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified caldat from Numerical recipies
+  !         Written,  Matthias Cuntz, Nov 2011
+  !         Modified, Matthias Cuntz, Nov 2011 - include mask
+  !                   Matthias Cuntz, Nov 2011 - test size(mask) == size(dat)
 
-  SUBROUTINE caldat(julian,id,mm,iyyy)
-
-    use mo_kind, only: i4, sp
+  FUNCTION mean_dp(dat, mask)
 
     IMPLICIT NONE
 
-    INTEGER(i4), INTENT(IN) :: julian
-    INTEGER(i4), INTENT(OUT) :: id, mm, iyyy
+    REAL(dp), DIMENSION(:),           INTENT(IN)  :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(dp)                                      :: mean_dp
 
-    INTEGER(i4) :: ja, jalpha, jb, jc, jd, je
-    INTEGER(i4), PARAMETER :: IGREG = 2299161_i4
+    REAL(dp) :: n
 
-    if (julian >= IGREG) then
-       jalpha=int(((julian-1867216_i4)-0.25_sp)/36524.25_sp)
-       ja=julian+1+jalpha-int(0.25_sp*jalpha)
+    LOGICAL, DIMENSION(size(dat)) :: maske
+
+    if (present(mask)) then
+       if (size(mask) /= size(dat)) stop 'Error mean_dp: size(mask) /= size(dat)'
+       maske = mask
+       n = real(count(maske),dp)
     else
-       ja=julian
-    end if
-    jb=ja+1524_i4
-    jc=int(6680.0_sp+((jb-2439870_i4)-122.1_sp)/365.25_sp)
-    jd=365*jc+int(0.25_sp*jc)
-    je=int((jb-jd)/30.6001_sp)
-    id=jb-jd-int(30.6001_sp*je)
-    mm=je-1
-    if (mm > 12) mm=mm-12
-    iyyy=jc-4715_i4
-    if (mm > 2) iyyy=iyyy-1
-    if (iyyy <= 0) iyyy=iyyy-1
+       maske(:) = .true.
+       n = real(size(dat),dp)
+    endif
+    if (n <= (1.0_dp+tiny(1.0_dp))) stop 'mean_dp: n must be at least 2'
 
-  END SUBROUTINE caldat
+    ! Mean
+    mean_dp  = sum(dat(:), mask=maske)/n
 
-  ! ------------------------------------------------------------------
+  END FUNCTION mean_dp
 
-  !     NAME
-  !         caldat
-
-  !     PURPOSE
-  !         Inverse of the function julday. Here julian is input as a Julian Day Number,
-  !         and the routine outputs mm, id, and iyyy as the month, day, and year on which the specified
-  !         Julian Day started at noon.
-
-  !     CALLING SEQUENCE
-  !         call caldat(julian,dd,mm,yy)
   
-  !     INDENT(IN)
-  !         integer(i4) :: julian     Input Julian day
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         integer(i4) :: dd         Day in month of Julian day
-  !         integer(i4) :: mm         Month in year of Julian day
-  !         integer(i4) :: yy         Year of Julian day
-
-  !     INDENT(IN), OPTIONAL
-  !         None
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         ! 2415021 is 01.01.1990
-  !         call caldat(2415021,dd,mm,yy)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified caldat from Numerical recipies
-
-  FUNCTION julday(mm,id,iyyy)
-
-    use mo_kind,   only: i4, sp
-    use mo_nrutil, ONLY: nrerror
+  FUNCTION mean_sp(dat, mask)
 
     IMPLICIT NONE
 
-    INTEGER(i4), INTENT(IN) :: mm,id,iyyy
-    INTEGER(i4) :: julday
-    INTEGER(i4), PARAMETER :: IGREG=15+31*(10+12*1582)
-    INTEGER(i4) :: ja,jm,jy
+    REAL(sp), DIMENSION(:),           INTENT(IN)  :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(sp)                                      :: mean_sp
 
-    jy=iyyy
-    if (jy == 0) call nrerror('julday: there is no year zero')
-    if (jy < 0) jy=jy+1
-    if (mm > 2) then
-       jm=mm+1
+    REAL(sp) :: n
+
+    LOGICAL, DIMENSION(size(dat)) :: maske
+
+    if (present(mask)) then
+       if (size(mask) /= size(dat)) stop 'Error mean_sp: size(mask) /= size(dat)'
+       maske = mask
+       n = real(count(maske),sp)
     else
-       jy=jy-1
-       jm=mm+13
-    end if
-    julday=int(365.25_sp*jy)+int(30.6001_sp*jm)+id+1720995_i4
-    if (id+31*(mm+12*iyyy) >= IGREG) then
-       ja=int(0.01_sp*jy)
-       julday=julday+2-ja+int(0.25_sp*ja)
-    end if
+       maske(:) = .true.
+       n = real(size(dat),sp)
+    endif
+    if (n <= (1.0_sp+tiny(1.0_sp))) stop 'mean_sp: n must be at least 2'
 
-END FUNCTION julday
+    ! Mean
+    mean_sp  = sum(dat(:), mask=maske)/n
+
+  END FUNCTION mean_sp
 
   ! ------------------------------------------------------------------
 
