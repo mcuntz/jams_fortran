@@ -29,7 +29,7 @@ PROGRAM main
   isgood = isgood .and. (anint(10._dp*skewness(dat1)) == 00._dp)
   isgood = isgood .and. (anint(10._dp*kurtosis(dat1)) == -16._dp)
   isgood = isgood .and. (anint(10._dp*absdev(dat1)) == 25._dp)
-  isgood = isgood .and. (anint(10._dp*central_moment(dat1,2)) == 82._dp)
+  isgood = isgood .and. (anint(100._dp*central_moment(dat1,2)) == 825._dp)
   isgood = isgood .and. (anint(10._dp*central_moment_var(dat1,2)) == 53._dp)
   ! Test the mask
   isgood = isgood .and. (anint(10._dp*mean(dat1(1:9))) == 50._dp)
@@ -92,7 +92,7 @@ PROGRAM main
   isgood = isgood .and. (anint(10._sp*skewness(sat1)) == 00._sp)
   isgood = isgood .and. (anint(10._sp*kurtosis(sat1)) == -16._sp)
   isgood = isgood .and. (anint(10._sp*absdev(sat1)) == 25._sp)
-  isgood = isgood .and. (anint(10._sp*central_moment(sat1,2)) == 83._sp)
+  isgood = isgood .and. (anint(100._sp*central_moment(sat1,2)) == 825._sp)
   isgood = isgood .and. (anint(10._sp*central_moment_var(sat1,2)) == 53._sp)
   ! Test the mask
   isgood = isgood .and. (anint(10._sp*mean(sat1(1:9))) == 50._sp)

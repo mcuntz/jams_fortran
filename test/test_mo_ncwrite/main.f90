@@ -20,8 +20,10 @@ use mo_mainvar, only: lat, lon, data, t
 integer(i4)                             :: ncid
 character(256)                          :: Filename
 character(256)                          :: Varname
+LOGICAL :: isgood
+real(sp), dimension(:,:,:), allocatable, target :: data1
 !
-Filename = 'pr_1961-2000.nc'
+Filename = 'test/test_mo_ncwrite/pr_1961-2000.nc'
 !
 ! read all variables -------------------------------------------------
 Varname  = 'pr'
@@ -55,5 +57,19 @@ call write_dynamic_netcdf(ncid,1)
 !
 ! last close netcdf files
 call close_netcdf(ncid)
+!
+! Check
+isgood = .true.
+Filename = 'Test.nc'
+Varname  = 'pr'
+allocate(data1(size(data,1),size(data,2),size(data,3)))
+call Get_NcVar(Filename,Varname,data1)
+if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+print*, data(10,10,10), data1(10,10,10)
+if (isgood) then
+   write(*,*) 'mo_ncwrite o.k.'
+else
+   write(*,*) 'mo_ncwrite failed!'
+endif
 !
 end program ReadNc

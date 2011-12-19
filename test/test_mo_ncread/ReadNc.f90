@@ -19,7 +19,7 @@ character(256)                            :: Varname
 integer(i4), dimension(5)                 :: dl
 LOGICAL :: isgood
 !
-Filename = 'test_mo_ncread/pr_1961-2000.nc'
+Filename = 'test/test_mo_ncread/pr_1961-2000.nc'
 !
 ! Variable name can be retrieved by a "ncdump -h <filename>"
 Varname  = 'pr'
@@ -33,7 +33,7 @@ call Get_NcVar(Filename,Varname, data)
 ! The sum of the data should be 0.1174308 in single precision
 !write(*,*) 'sum of data: ', sum(data)
 isgood = .true.
-isgood = isgood .and. (anint(1e7_dp*sum(data)) == 1174308._dp)
+isgood = isgood .and. (anint(1e7_sp*sum(data)) == 1174308._sp)
 if (isgood) then
    write(*,*) 'mo_ncread o.k.'
 else

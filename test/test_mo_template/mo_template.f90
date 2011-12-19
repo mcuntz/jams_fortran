@@ -1,1 +1,1 @@
-../mo_template.f90
+../../mo_template.f90
