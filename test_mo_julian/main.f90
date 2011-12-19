@@ -19,9 +19,9 @@ PROGRAM main
   if (ndays(01,01,1900) /= 0) isgood = .false.
   call ndyin(0, dd, mm, yy)
   if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 1900)) isgood = .false.
-  if (ndays(1,1,0000) /= -2415021) isgood = .false.
+  if (ndays(1,1,-4713) /= -2415021) isgood = .false.
   call ndyin(-2415021, dd, mm, yy)
-  if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 0)) isgood = .false.
+  if ((dd /= 1) .or. (mm /= 1) .or. (yy /= -4713)) isgood = .false.
 
   if (isgood) then
      write(*,*) 'mo_julian o.k.'

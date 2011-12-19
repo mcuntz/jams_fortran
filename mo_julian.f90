@@ -29,6 +29,8 @@ CONTAINS
   !         and the routine outputs id, mm, and yy as the day, month, and year on which the specified 
   !         Julian Day started at noon.
 
+  !         The zeroth Julian Day is 01.01.-4713, i.e. the 1st January 4713 BC.
+
   !     CALLING SEQUENCE
   !         call caldat(Julday, dd, mm, yy)
   
@@ -109,6 +111,8 @@ CONTAINS
   !         date specified by month mm, day dd, and year yy, all integer variables. Positive year
   !         signifies A.D.; negative, B.C. Remember that the year after 1 B.C. was 1 A.D.
 
+  !         The zeroth Julian Day is 01.01.-4713, i.e. the 1st January 4713 BC.
+
   !     CALLING SEQUENCE
   !         julian = julday(dd, mm, yy)
   
@@ -168,7 +172,8 @@ CONTAINS
        jy=jy-1
        jm=mm+13
     end if
-    julday=int(365.25_sp*jy)+int(30.6001_sp*jm)+dd+1720995_i4
+    !Bug julday=int(365.25_sp*jy)+int(30.6001_sp*jm)+dd+1720995_i4
+    julday=365*jy+int(0.25*jy+2000.)+int(30.6001*jm)+dd+1718995_i4
     if (dd+31*(mm+12*yy) >= IGREG) then
        ja=int(0.01_sp*jy)
        julday=julday+2-ja+int(0.25_sp*ja)
