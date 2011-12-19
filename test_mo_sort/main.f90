@@ -25,9 +25,9 @@ PROGRAM main
   if (any(abs(dat1-dat2(ii)) > 0._dp)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'Double precision o.k.'
+     write(*,*) 'mo_sort double precision o.k.'
   else
-     write(*,*) 'Double precision failed'
+     write(*,*) 'mo_sort double precision failed!'
   endif
 
   ! Single precision
@@ -41,9 +41,9 @@ PROGRAM main
   if (any(abs(sat1-sat2(ii)) > 0._sp)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'Single precision o.k.'
+     write(*,*) 'mo_sort single precision o.k.'
   else
-     write(*,*) 'Single precision failed'
+     write(*,*) 'mo_sort single precision failed!'
   endif
 
 END PROGRAM main

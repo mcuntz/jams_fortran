@@ -17,8 +17,9 @@ real(sp), dimension(:,:,:), allocatable :: data
 character(256)                            :: Filename
 character(256)                            :: Varname
 integer(i4), dimension(5)                 :: dl
+LOGICAL :: isgood
 !
-Filename = './pr_1961-2000.nc'
+Filename = 'test_mo_ncread/pr_1961-2000.nc'
 !
 ! Variable name can be retrieved by a "ncdump -h <filename>"
 Varname  = 'pr'
@@ -29,8 +30,15 @@ allocate(data(dl(1),dl(2),dl(3)))
 !
 call Get_NcVar(Filename,Varname, data)
 !
-write(*,*) 'sum of data: ', sum(data)
 ! The sum of the data should be 0.1174308 in single precision
+!write(*,*) 'sum of data: ', sum(data)
+isgood = .true.
+isgood = isgood .and. (anint(1e7_dp*sum(data)) == 1174308._dp)
+if (isgood) then
+   write(*,*) 'mo_ncread o.k.'
+else
+   write(*,*) 'mo_ncread failed!'
+endif
 !
 deallocate(data)
 !

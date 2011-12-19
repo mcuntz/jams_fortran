@@ -31,9 +31,9 @@ PROGRAM main
   if (abs(dc(1)/real(nout,dp) - covariance(dat1,dat2)) > 0.01_dp) isgood =.false.
 
   if (isgood) then
-     write(*,*) 'Double precision o.k.'
+     write(*,*) 'mo_corr double precision o.k.'
   else
-     write(*,*) 'Double precision failed'
+     write(*,*) 'mo_corr double precision failed!'
   endif
 
   ! Single precision
@@ -51,9 +51,9 @@ PROGRAM main
   if (abs(sc(1)/real(nout,sp) - covariance(sat1,sat2)) > 0.01_sp) isgood =.false.
 
   if (isgood) then
-     write(*,*) 'Single precision o.k.'
+     write(*,*) 'mo_corr single precision o.k.'
   else
-     write(*,*) 'Single precision failed'
+     write(*,*) 'mo_corr single precision failed!'
   endif
 
 END PROGRAM main

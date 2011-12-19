@@ -96,7 +96,9 @@ CONTAINS
     INTEGER              :: iout
     CHARACTER(len=32000) :: out
     CHARACTER(len=3)     :: iadv
-
+#ifdef GFORTRAN
+    CHARACTER(len=32000) :: nold
+#endif
 
     if (present(uni)) then
        iout = uni
@@ -112,6 +114,38 @@ CONTAINS
 
     out = ''
     ! start from back so that trim does not remove user desired blanks
+#ifdef GFORTRAN
+    ! GFORTRAN has problems with concatenation operator //
+    ! It is also weird in write:
+    !    write(out,'(A,A)') t10, trim(out)
+    ! writes t10 twice into out.
+    nold = out
+    if (present(t10)) write(out,'(A,A)') t10, trim(nold)
+    nold = out
+    if (present(t09)) write(out,'(A,A)') t09, trim(nold)
+    nold = out
+    if (present(t08)) write(out,'(A,A)') t08, trim(nold)
+    nold = out
+    if (present(t07)) write(out,'(A,A)') t07, trim(nold)
+    nold = out
+    if (present(t06)) write(out,'(A,A)') t06, trim(nold)
+    nold = out
+    if (present(t05)) write(out,'(A,A)') t05, trim(nold)
+    nold = out
+    if (present(t04)) write(out,'(A,A)') t04, trim(nold)
+    nold = out
+    if (present(t03)) write(out,'(A,A)') t03, trim(nold)
+    nold = out
+    if (present(t02)) write(out,'(A,A)') t02, trim(nold)
+    nold = out
+    if (present(t01)) write(out,'(A,A)') t01, trim(nold)
+    ! output at least one space otherwise some compilers get confused on Mac (empty assembler statement)
+    if ((lle(trim(out),'') .and. lge(trim(out),''))) then
+       nold = out
+       write(out,'(A,A)') trim(nold), ' '
+    endif
+    write(iout,'(a)',advance=iadv) trim(out)
+#else
     if (present(t10)) out = t10//trim(out)
     if (present(t09)) out = t09//trim(out)
     if (present(t08)) out = t08//trim(out)
@@ -122,9 +156,13 @@ CONTAINS
     if (present(t03)) out = t03//trim(out)
     if (present(t02)) out = t02//trim(out)
     if (present(t01)) out = t01//trim(out)
-
     ! output at least one space otherwise some compilers get confused on Mac (empty assembler statement)
-    write(iout,'(a)',advance=iadv) trim(out)//' '
+    if ((lle(trim(out),'') .and. lge(trim(out),''))) then
+       write(iout,'(a)',advance=iadv) trim(out)//' '
+    else
+       write(iout,'(a)',advance=iadv) trim(out)
+    endif
+#endif
 
   END SUBROUTINE message
 

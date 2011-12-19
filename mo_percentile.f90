@@ -27,7 +27,7 @@ MODULE mo_percentile
      MODULE PROCEDURE median_sp, median_dp
   END INTERFACE median
   INTERFACE percentile
-     MODULE PROCEDURE percentile_sp, percentile_dp
+     MODULE PROCEDURE percentile_0d_sp, percentile_0d_dp
      MODULE PROCEDURE percentile_1d_sp, percentile_1d_dp
   END INTERFACE percentile
 
@@ -370,8 +370,8 @@ CONTAINS
   !         None
 
   !     INTENT(OUT)
-  !         real(sp/dp) :: out[(:)]   k-th percentile of values in input array, can be 
-  !                                   1 dimensional corresponding to k
+  !         real(sp/dp) :: out[(size(k))]   k-th percentile of values in input array, can be 
+  !                                         1 dimensional corresponding to k
 
   !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)    1D-array of logical values with size(vec).
@@ -390,6 +390,8 @@ CONTAINS
   !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
   !         ! Returns 9
   !         out = percentile(vec,95.)
+  !         ! Returns (9,8)
+  !         out = percentile(vec,(/95.,80./))
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -399,14 +401,14 @@ CONTAINS
   !         Written,  Matthias Cuntz, Mar 2011
   !         Modified, Stephan Thober, Dec 2011 - added 1 dimensional version
 
-  FUNCTION percentile_dp(arrin,k,mask)
+  FUNCTION percentile_0d_dp(arrin,k,mask)
 
     IMPLICIT NONE
 
     REAL(dp),    DIMENSION(:),           INTENT(IN) :: arrin
     REAL(dp),                            INTENT(IN) :: k
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
-    REAL(dp)                                        :: percentile_dp
+    REAL(dp)                                        :: percentile_0d_dp
 
     INTEGER(i4) :: n, nn
     REAL(dp), DIMENSION(:), ALLOCATABLE :: arr
@@ -421,24 +423,24 @@ CONTAINS
        arr = arrin
     endif
 
-    if (n < 2) stop 'percentile_dp: n < 2'
+    if (n < 2) stop 'percentile_0d_dp: n < 2'
     
     nn = floor(k/100._dp*real(n,dp),kind=i4)
-    percentile_dp = ksmallest(arr,nn)
+    percentile_0d_dp = ksmallest(arr,nn)
 
     deallocate(arr)
 
-  END FUNCTION percentile_dp
+  END FUNCTION percentile_0d_dp
 
 
-  FUNCTION percentile_sp(arrin,k,mask)
+  FUNCTION percentile_0d_sp(arrin,k,mask)
 
     IMPLICIT NONE
 
     REAL(sp),    DIMENSION(:),           INTENT(IN) :: arrin
     REAL(sp),                            INTENT(IN) :: k
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
-    REAL(sp)                                        :: percentile_sp
+    REAL(sp)                                        :: percentile_0d_sp
 
     INTEGER(i4) :: n, nn
     REAL(sp), DIMENSION(:), ALLOCATABLE :: arr
@@ -453,14 +455,14 @@ CONTAINS
        arr = arrin
     endif
 
-    if (n < 2) stop 'percentile_sp: n < 2'
+    if (n < 2) stop 'percentile_0d_sp: n < 2'
     
     nn = floor(k/100._sp*real(n,sp),kind=i4)
-    percentile_sp = ksmallest(arr,nn)
+    percentile_0d_sp = ksmallest(arr,nn)
 
     deallocate(arr)
 
-  END FUNCTION percentile_sp
+  END FUNCTION percentile_0d_sp
 
   function percentile_1d_dp(arrin,k,mask)
 
@@ -486,15 +488,12 @@ CONTAINS
     endif
 
     ! check consistency
-    if (size(k) > size(arr)) stop 'ERROR*** more Quantiles than data. subroutine EmpQua'
-
-    if (n < 2) stop 'EmpQua: n < 2'
+    !if (size(k) > size(arr)) stop 'percentile_1d_dp: more Quantiles than data: size(k) > size(arr)'
+    if (n < 2) stop 'percentile_1d_dp: n < 2'
     
     do n = 1, size(k)
-       !
-       nn     = floor(k(n)/100._dp*real(size(arr),dp),kind=i4)
+       nn = floor(k(n)/100._dp*real(size(arr),dp),kind=i4)
        percentile_1d_dp(n) = ksmallest(arr,nn)
-       !
     end do
 
     deallocate(arr)
@@ -525,15 +524,12 @@ CONTAINS
     endif
 
     ! check consistency
-    if (size(k) > size(arr)) stop 'ERROR*** more Quantiles than data. subroutine EmpQua'
-
-    if (n < 2) stop 'EmpQua: n < 2'
+    !if (size(k) > size(arr)) stop 'percentile_1d_sp: more Quantiles than data: size(k) > size(arr)'
+    if (n < 2) stop 'percentile_1d_sp: n < 2'
     
     do n = 1, size(k)
-       !
-       nn     = floor(k(n)/100._sp*real(size(arr),sp),kind=i4)
+       nn = floor(k(n)/100._sp*real(size(arr),sp),kind=i4)
        percentile_1d_sp(n) = ksmallest(arr,nn)
-       !
     end do
 
     deallocate(arr)

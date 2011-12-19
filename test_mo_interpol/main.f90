@@ -26,9 +26,9 @@ PROGRAM main
   if (any(abs(dsoll-dyout) > 0._dp)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'Double precision o.k.'
+     write(*,*) 'mo_interpol double precision o.k.'
   else
-     write(*,*) 'Double precision failed'
+     write(*,*) 'mo_interpol double precision failed.'
   endif
 
   ! Single precision
@@ -43,9 +43,9 @@ PROGRAM main
   if (any(abs(ssoll-syout) > 0._sp)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'Single precision o.k.'
+     write(*,*) 'mo_interpol single precision o.k.'
   else
-     write(*,*) 'Single precision failed'
+     write(*,*) 'mo_interpol single precision failed!'
   endif
 
 END PROGRAM main

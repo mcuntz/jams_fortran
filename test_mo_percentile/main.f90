@@ -1,7 +1,7 @@
 PROGRAM main
   
   USE mo_kind,        ONLY: dp, sp
-  USE mo_percentile,  ONLY: ksmallest, median, percentile, empqua
+  USE mo_percentile,  ONLY: ksmallest, median, percentile
   
   IMPLICIT NONE
   
@@ -22,14 +22,14 @@ PROGRAM main
   isgood = isgood .and. (median(dat,mask=(dat /= 10._dp)) == 5._dp)
   isgood = isgood .and. (ksmallest(dat,4) == 4._dp)
   isgood = isgood .and. (percentile(dat,95._dp) == 9._dp)
-  call empqua(dat,(/50._dp,95._dp/),dqua)
+  dqua = percentile(dat,(/50._dp,95._dp/))
   isgood = isgood .and. (dqua(1) == 5._dp)
   isgood = isgood .and. (dqua(2) == 9._dp)
 
   if (isgood) then
-     write(*,*) 'Double precision o.k.'
+     write(*,*) 'mo_percentile double precision o.k.'
   else
-     write(*,*) 'Double precision failed'
+     write(*,*) 'mo_percentile double precision failed!'
   endif
 
   ! Single precision
@@ -39,14 +39,14 @@ PROGRAM main
   isgood = isgood .and. (median(sat,mask=(sat /= 10._sp)) == 5._sp)
   isgood = isgood .and. (ksmallest(sat,4) == 4._sp)
   isgood = isgood .and. (percentile(sat,95._sp) == 9._sp)
-  call empqua(sat,(/50._sp,95._sp/),squa)
+  squa = percentile(sat,(/50._sp,95._sp/))
   isgood = isgood .and. (squa(1) == 5._sp)
   isgood = isgood .and. (squa(2) == 9._sp)
 
   if (isgood) then
-     write(*,*) 'Single precision o.k.'
+     write(*,*) 'mo_percentile single precision o.k.'
   else
-     write(*,*) 'Single precision failed'
+     write(*,*) 'mo_percentile single precision failed!'
   endif
 
 END PROGRAM main

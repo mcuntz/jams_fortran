@@ -43,9 +43,9 @@ PROGRAM main
   if (any(mask .neqv. sollmask)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'Double precision o.k.'
+     write(*,*) 'mo_mad double precision o.k.'
   else
-     write(*,*) 'Double precision failed'
+     write(*,*) 'mo_mad double precision failed!'
   endif
 
   ! Single precision
@@ -77,9 +77,9 @@ PROGRAM main
   if (any(mask .neqv. sollmask)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'Single precision o.k.'
+     write(*,*) 'mo_mad single precision o.k.'
   else
-     write(*,*) 'Single precision failed'
+     write(*,*) 'mo_mad single precision failed!'
   endif
 
 END PROGRAM main

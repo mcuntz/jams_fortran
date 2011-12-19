@@ -58,9 +58,9 @@ PROGRAM main
   
 
   if (isgood) then
-     write(*,*) 'Double precision o.k.'
+     write(*,*) 'mo_fit double precision o.k.'
   else
-     write(*,*) 'Double precision failed'
+     write(*,*) 'mo_fit double precision failed!'
   endif
 
   ! Single precision
@@ -86,9 +86,9 @@ PROGRAM main
   isgood = isgood .and. all(anint((sla-(/sa1, sb1/))*1000._sp) == 0._sp)
 
   if (isgood) then
-     write(*,*) 'Single precision o.k.'
+     write(*,*) 'mo_fit single precision o.k.'
   else
-     write(*,*) 'Single precision failed'
+     write(*,*) 'mo_fit single precision failed!'
   endif
 
 END PROGRAM main

@@ -19,7 +19,7 @@ PROGRAM main
   if (isgood) then
      write(*,*) 'mo_file_utils o.k.'
   else
-     write(*,*) 'mo_file_utils failed'
+     write(*,*) 'mo_file_utils failed!'
   endif
 
 END PROGRAM main

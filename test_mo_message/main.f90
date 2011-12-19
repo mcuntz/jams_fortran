@@ -7,7 +7,6 @@ PROGRAM main
   Write(*,*) ''
   Write(*,*) 'Test mo_message.f90'
 
-  call message('')
   call message('mo_message',advance='no')
   message_text = 'o.k.'
   call message(' ', trim(message_text))

@@ -23,9 +23,9 @@ PROGRAM main
   isgood = isgood .and. (anint(1e15_dp*PI_dp) == 3141592653589793._dp)
 
   if (isgood) then
-     write(*,*) 'Double precision o.k.'
+     write(*,*) 'mo_template double precision o.k.'
   else
-     write(*,*) 'Double precision failed'
+     write(*,*) 'mo_template double precision failed!'
   endif
 
   ! Double precision
@@ -38,9 +38,9 @@ PROGRAM main
   isgood = isgood .and. (anint(1e6_sp*PI_sp) == 3141593._dp)
 
   if (isgood) then
-     write(*,*) 'Single precision o.k.'
+     write(*,*) 'mo_template single precision o.k.'
   else
-     write(*,*) 'Single precision failed'
+     write(*,*) 'mo_template single precision failed!'
   endif
 
 END PROGRAM main

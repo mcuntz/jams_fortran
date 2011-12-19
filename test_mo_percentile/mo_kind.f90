@@ -28,8 +28,8 @@ MODULE mo_kind
   INTEGER, PARAMETER :: i1 = SELECTED_INT_KIND(2)        ! 1 Byte Integer
   INTEGER, PARAMETER :: sp = SELECTED_REAL_KIND(6,37)    ! Single Precision Real
   INTEGER, PARAMETER :: dp = SELECTED_REAL_KIND(15,307)  ! Double Precision Real
-  ! Note" Intrinsic "KIND" is an extension to the Fortran 90 standard.
-  ! I, Matthias C, think that spc=sp and dpc=dp would be enough.
+  ! Note: Intrinsic KIND is an extension to the Fortran 90 standard.
+  ! Matthias C thinks that spc=sp and dpc=dp would be enough.
   INTEGER, PARAMETER :: spc = KIND((1.0_sp,1.0_sp))      ! Single Precision Complex
   INTEGER, PARAMETER :: dpc = KIND((1.0_dp,1.0_dp))      ! Double Precision Complex
   INTEGER, PARAMETER :: lgt = KIND(.true.)               ! Logical

@@ -28,7 +28,7 @@ PROGRAM main
   if (isgood) then
      write(*,*) 'mo_nml o.k.'
   else
-     write(*,*) 'mo_nml failed'
+     write(*,*) 'mo_nml failed!'
   endif
 
 END PROGRAM main

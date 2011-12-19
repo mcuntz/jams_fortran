@@ -146,7 +146,7 @@ CONTAINS
   !     LITERATURE
   !         Brent RP - Some long-period random number generators using shifts and xors, 2010
   !         Brent RP - From Mersenne Primes to Rndom Number Generators, 2006
-  !         L'Ecuyer P & Simard R - ACM: TestU01: A C Library for Empirical Testing of 
+  !         L''Ecuyer P & Simard R - ACM: TestU01: A C Library for Empirical Testing of 
   !                   Random Number Generators, 2007
 
   !     HISTORY
@@ -1130,7 +1130,7 @@ CONTAINS
   !     LITERATURE
   !         Brent RP - Some long-period random number generators using shifts and xors, 2010
   !         Brent RP - From Mersenne Primes to Rndom Number Generators, 2006
-  !         L'Ecuyer P & Simard R - ACM: TestU01: A C Library for Empirical Testing of 
+  !         L''Ecuyer P & Simard R - ACM: TestU01: A C Library for Empirical Testing of 
   !                   Random Number Generators, 2007
   !         http://en.wikipedia.org/wiki/Marsaglia_polar_method
   !         http://de.wikipedia.org/wiki/Polar-Methode

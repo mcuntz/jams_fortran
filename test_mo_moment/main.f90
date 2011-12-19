@@ -76,9 +76,9 @@ PROGRAM main
   isgood = isgood .and. (anint(10._dp*mixed_central_moment_var(dat1,dat2,1,1, mask=((dat1 /= 10.).and.(dat2 /= 10.)))) == 113._dp)
 
   if (isgood) then
-     write(*,*) 'Double precision o.k.'
+     write(*,*) 'mo_moment double precision o.k.'
   else
-     write(*,*) 'Double precision failed'
+     write(*,*) 'mo_moment double precision failed!'
   endif
 
   ! Single precision
@@ -139,9 +139,9 @@ PROGRAM main
   isgood = isgood .and. (anint(10._sp*mixed_central_moment_var(sat1,sat2,1,1, mask=((sat1 /= 10.).and.(sat2 /= 10.)))) == 113._sp)
 
   if (isgood) then
-     write(*,*) 'Single precision o.k.'
+     write(*,*) 'mo_moment single precision o.k.'
   else
-     write(*,*) 'Single precision failed'
+     write(*,*) 'mo_moment single precision failed!'
   endif
 
 END PROGRAM main
