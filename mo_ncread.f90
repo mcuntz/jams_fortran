@@ -62,10 +62,10 @@ contains
     !
     integer(i4), dimension(5)    :: Get_NcDim
     !
-    integer(i4)                               :: ncid    ! id of input stream
-    integer(i4)                               :: status  ! status of read stream
-    integer(i4)                               :: varid   ! id of variable to be read
-    integer(i4)                               :: vartype ! type of variable
+    integer(i4)                  :: ncid    ! id of input stream
+    integer(i4)                  :: status  ! status of read stream
+    integer(i4)                  :: varid   ! id of variable to be read
+    integer(i4)                  :: vartype ! type of variable
     !
     ! Open NetCDF filename
     status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
@@ -88,25 +88,25 @@ contains
   !    PURPOSE
   !        Reads a 2 - 4 dimensional array from a nc file given
   !        the variable name EXACTLY as specified in the file.
-  !        When calling, the array has to have the allocatable attribute, but is
-  !        not yet allocated. This will be done by Get_Nc_Var. If the dimension
-  !        of the actual data is less than the ones of the array, then the dimension
-  !        lengths of the array will be filled with ones.
+  !        When calling, the array has to be allocated correctly!
+  !        If the dimension of the actual data is less than the ones
+  !        of the array, then the dimension lengths of the array will
+  !        be filled with ones.
 
   !    CALLING SEQUENCE
   !        call Get_NcVar(File, Variable_Name, array, start=jdate,count=Nvalues)
 
   !    INTENT(IN)
-  !        character(256) :: File                                         Name of the nc file
+  !        character(256) :: File - Name of the nc file
 
   !    INTENT(IN)
-  !        character(256) :: Variable_Name                                Name of the Variable in the nc file
+  !        character(256) :: Variable_Name - Name of the Variable in the nc file
   
   !    INTENT(INOUT)
-  !        real(sp/dp), dimension(:,:[,:[,:]]), allocatable :: array      array where data will be read
+  !        real(sp/dp), dimension(:,:[,:[,:]]) :: array - array where data will be read
   
   !    INTENT(IN), OPTIONAL
-  !        integer(i4), dimension(:) :: jdate ! len is the number of dimensions of array, starting indeces of first value to read, default is One, see example 
+  !        integer(i4), dimension(:) :: jdate ! starting indeces of first value to read, len is the number of dimensions of array, default is One, see example 
   
   !    INTENT(IN), OPTIONAL
   !        integer(i4), dimension(:) :: count ! same size as jdate, specifies how many values in each dimension is going to be read

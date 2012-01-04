@@ -122,15 +122,14 @@ contains
     ! TIME
     i                =  3
     V(i)%name        =  Dnc(i)%name
-    V(i)%xType       =  NF90_INT
+    V(i)%xType       =  NF90_DOUBLE
     V(i)%nLvls       =  0
     V(i)%nSubs       =  0
     V(i)%nDims       =  1
     V(i)%dimTypes    =  (/i,0,0,0,0/)
     V(i)%wFlag       = .true.
     !
-    ! pointer will
-    V(i)%G1_d => t
+    ! pointer will be attributed during run time
     !
     ! attributes 
     V(i)%nAtt          = 2
@@ -158,7 +157,6 @@ contains
     ! printing
     V(i)%wFlag       =  .true.
     ! pointer  
-    V(i)%G2_f => data(:,:,1)
     !                   during running time 
     ! attributes 
     V(i)%nAtt          = 7

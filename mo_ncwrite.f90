@@ -51,18 +51,21 @@ module mo_ncWrite
      integer(i4), dimension(nMaxDim)        :: start               ! starting indices for netCDF
      integer(i4), dimension(nMaxDim)        :: count               ! counter          for netCDF
      logical                                :: wFlag               ! write flag
+     integer(i4),                     pointer :: G0_i              ! array pointing model variables
      integer(i4), dimension(:      ), pointer :: G1_i              ! array pointing model variables
      integer(i4), dimension(:,:    ), pointer :: G2_i              ! array pointing model variables
      integer(i4), dimension(:,:,:  ), pointer :: G3_i              ! array pointing model variables
      integer(i4), dimension(:,:,:,:), pointer :: G4_i              ! array pointing model variables
-     real(sp), dimension(:    ), pointer    :: G1_f                ! array pointing model variables
-     real(sp), dimension(:,:    ), pointer  :: G2_f                ! array pointing model variables
-     real(sp), dimension(:,:,:  ), pointer  :: G3_f                ! array pointing model variables
-     real(sp), dimension(:,:,:,:), pointer  :: G4_f                ! array pointing model variables
-     real(dp), dimension(:      ), pointer  :: G1_d                ! array pointing model variables
-     real(dp), dimension(:,:    ), pointer  :: G2_d                ! array pointing model variables
-     real(dp), dimension(:,:,:  ), pointer  :: G3_d                ! array pointing model variables
-     real(dp), dimension(:,:,:,:), pointer  :: G4_d                ! array pointing model variables
+     real(sp),                        pointer :: G0_f              ! array pointing model variables
+     real(sp),    dimension(:    ),   pointer :: G1_f              ! array pointing model variables
+     real(sp),    dimension(:,:    ), pointer :: G2_f              ! array pointing model variables
+     real(sp),    dimension(:,:,:  ), pointer :: G3_f              ! array pointing model variables
+     real(sp),    dimension(:,:,:,:), pointer :: G4_f              ! array pointing model variables
+     real(dp),                        pointer :: G0_d              ! array pointing model variables
+     real(dp),    dimension(:      ), pointer :: G1_d              ! array pointing model variables
+     real(dp),    dimension(:,:    ), pointer :: G2_d              ! array pointing model variables
+     real(dp),    dimension(:,:,:  ), pointer :: G3_d              ! array pointing model variables
+     real(dp),    dimension(:,:,:,:), pointer :: G4_d              ! array pointing model variables
   end type variable
   !
   type dims
@@ -152,7 +155,7 @@ contains
           V(i)%dimids(k) = Dnc( V(i)%dimTypes(k) )%dimId
        end do
        if ( V(i)%unlimited ) then
-          ! set counts for unlimited files (time is always the last dimension
+          ! set counts for unlimited files (time is always the last dimension)
           if (V(i)%nDims == 1) cycle
           do k = 1, V(i)%nDims - 1
              V(i)%count(k)  = Dnc( V(i)%dimTypes(k) )%len
@@ -330,8 +333,7 @@ contains
        case (NF90_INT)
           select case (V(i)%nDims-1)
           case (0)
-
-             call check( nf90_put_var ( ncId,  V(i)%varId, iRec, V(i)%start )) 
+             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G0_i, V(i)%start )) 
           case (1)
              call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_i, V(i)%start, V(i)%count ))
           case (2)
@@ -343,9 +345,11 @@ contains
           end select
        case (NF90_FLOAT)
           select case (V(i)%nDims-1)
+          case (0)
+             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G0_f, V(i)%start )) 
           case (1)
              call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_f, V(i)%start, V(i)%count ))
-          case (2)         
+          case (2)
              call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_f, V(i)%start, V(i)%count ))
           case (3)
              call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_f, V(i)%start, V(i)%count ))
@@ -354,6 +358,8 @@ contains
           end select
        case (NF90_DOUBLE)
           select case (V(i)%nDims-1)
+          case (0)
+             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G0_d, V(i)%start )) 
           case (1)
              call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_d, V(i)%start, V(i)%count ))
           case (2)
