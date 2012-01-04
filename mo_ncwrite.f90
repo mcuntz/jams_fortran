@@ -74,6 +74,11 @@ module mo_ncWrite
      integer(i4)                            :: dimId               ! dim. Id
   end type dims
   !
+  ! public types -----------------------------------------------------------------
+  public :: attribute
+  public :: variable
+  public :: dims
+  !
   ! public variables -----------------------------------------------------------------
   integer(i4),public                                :: nVars   ! nr. variables
   integer(i4),public                                :: nDims   ! nr. dimensions 
@@ -81,7 +86,7 @@ module mo_ncWrite
   type(variable),public,  dimension(:), allocatable :: V       ! variable list, THIS STRUCTURE WILL BE WRITTEN IN THE FILE
   type(attribute), public, dimension(nGAtt)         :: gatt    ! global attributes for netCDF
   !
-  ! public routine -------------------------------------------------------------------
+  ! public routines -------------------------------------------------------------------
   public :: create_netCDF        ! create the nc file with variables and their attributes, after they were set
   public :: write_static_netcdf  ! write static data in the file
   public :: write_dynamic_netcdf ! write dynamically (one record after the other) in the file

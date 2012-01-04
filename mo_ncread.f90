@@ -9,8 +9,13 @@ module mo_NcRead
   !
   ! functions and constants of netcdf4 library
   use netcdf,  only: nf90_open, nf90_get_var, nf90_close, NF90_MAX_NAME , &
-                     nf90_inquire, nf90_inq_varids, nf90_inquire_variable, &
+                     nf90_inquire, nf90_inquire_variable, &
                      nf90_inquire_dimension, NF90_NOWRITE
+#ifdef ABSOFT
+  use netcdf,  only: nf90_inq_varid
+#else
+  use netcdf,  only: nf90_inq_varids
+#endif
   !
   implicit none
   !
@@ -45,7 +50,7 @@ contains
   !     character(len=*) :: Var - Variable name exactly as specified in the file
   !
   ! INTENT(IN), OPTIONAL
-  !     logical(1)       :: Print - if given and true, information about dimension
+  !     logical       :: Print - if given and true, information about dimension
   !                                 and their lengths will be printed to standard output
   !
   ! INTENT(OUT)
@@ -63,8 +68,8 @@ contains
     !
     character(len=*), intent(in) :: Filename
     character(len=*), intent(in) :: Variable
-    logical(1),       intent(in), optional :: PrintInfo
-    logical(1)                   :: Flag
+    logical,       intent(in), optional :: PrintInfo
+    logical                   :: Flag
     !
     integer(i4), dimension(5)    :: Get_NcDim
     !
@@ -106,10 +111,10 @@ contains
   !        call Get_NcVar(File, Variable_Name, array, start=jdate,count=Nvalues)
 
   !    INTENT(IN)
-  !        character(256) :: File - Name of the nc file
+  !        character(len=*) :: File - Name of the nc file
 
   !    INTENT(IN)
-  !        character(256) :: Variable_Name - Name of the Variable in the nc file
+  !        character(len=*) :: Variable_Name - Name of the Variable in the nc file
   
   !    INTENT(INOUT)
   !        real(sp/dp), dimension(:,:[,:[,:]]) :: array - array where data will be read
@@ -136,12 +141,13 @@ contains
   !        Modified, Stephan Thober, Nov 2011 - added comments
 
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_4d_sp(Filename, VarName, Data, start, count)
+  subroutine Get_NcVar_4d_sp(Filename, VarName, Dat, start, count)
     !
     implicit none
     !
-    character(256), intent(in)                :: Filename
-    character(256), intent(in)                :: VarName ! Variable name
+    character(len=*), intent(in)                :: Filename
+    character(len=*), intent(in)                :: VarName ! Variable name
+    real(sp), dimension(:,:,:,:),intent(inout) :: Dat    ! array where values should be stored
     integer(i4), dimension(4), optional, intent(in)     :: start
     integer(i4), dimension(4), optional, intent(in)     :: count
     integer(i4), dimension(4)                  :: Rstart
@@ -150,10 +156,9 @@ contains
     integer(i4)                                :: status  ! status of read stream
     integer(i4)                                :: varid   ! id of variable to be read
     integer(i4)                                :: vartype ! type of variable
-    real(sp), dimension(:,:,:,:),intent(inout) :: Data    ! array where values should be stored
     !
     Rstart = 1
-    Rcount = shape(Data)
+    Rcount = shape(Dat)
     !
     if (present(start)) then
        !
@@ -169,10 +174,10 @@ contains
        !
        Rcount = count
        !
-       if ( size(data,1) /= Rcount(1) .or. &
-            size(data,2) /= Rcount(2) .or. &
-            size(data,3) /= Rcount(3) .or. &
-            size(data,4) /= Rcount(4) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       if ( size(Dat,1) /= Rcount(1) .or. &
+            size(Dat,2) /= Rcount(2) .or. &
+            size(Dat,3) /= Rcount(3) .or. &
+            size(Dat,4) /= Rcount(4) ) stop 'ERROR*** size mismatch. Get_NcVar'
 
        !
     end if
@@ -189,7 +194,7 @@ contains
     if ( vartype /= 5 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values by varid
-    status = nf90_get_var(ncid, varid, data)
+    status = nf90_get_var(ncid, varid, Dat)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -201,26 +206,26 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_4d_dp(Filename, VarName, Data, start, count)
+  subroutine Get_NcVar_4d_dp(Filename, VarName, Dat, start, count)
     !
     implicit none
     !
-    character(256), intent(in)                :: Filename
-    character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    character(len=*), intent(in)                :: Filename
+    character(len=*), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    real(dp), dimension(:,:,:,:), intent(inout) :: Dat      ! array where values should be stored
     integer(i4), dimension(4), optional, intent(in)     :: start
     integer(i4), dimension(4), optional, intent(in)     :: count
     integer(i4), dimension(4)                 :: Rstart
     integer(i4), dimension(4)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    real(dp), dimension(:,:,:,:), intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
     Rstart = 1
-    Rcount = shape(Data)
+    Rcount = shape(Dat)
     !
     if (present(start)) then
        !
@@ -236,10 +241,10 @@ contains
        !
        Rcount = count
        !
-       if ( size(data,1) /= Rcount(1) .or. &
-            size(data,2) /= Rcount(2) .or. &
-            size(data,3) /= Rcount(3) .or. &
-            size(data,4) /= Rcount(4) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       if ( size(Dat,1) /= Rcount(1) .or. &
+            size(Dat,2) /= Rcount(2) .or. &
+            size(Dat,3) /= Rcount(3) .or. &
+            size(Dat,4) /= Rcount(4) ) stop 'ERROR*** size mismatch. Get_NcVar'
 
        !
     end if
@@ -256,7 +261,7 @@ contains
     if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
+    status = nf90_get_var(ncid, varid, Dat, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -267,26 +272,26 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_1d_sp(Filename, VarName, Data, start, count)
+  subroutine Get_NcVar_1d_sp(Filename, VarName, Dat, start, count)
     !
     implicit none
     !
-    character(256), intent(in)                :: Filename
-    character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    character(len=*), intent(in)                :: Filename
+    character(len=*), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    real(sp), dimension(:), intent(inout) :: Dat      ! array where values should be stored
     integer(i4), dimension(1), optional, intent(in)     :: start
     integer(i4), dimension(1), optional, intent(in)     :: count
     integer(i4), dimension(1)                 :: Rstart
     integer(i4), dimension(1)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    real(sp), dimension(:), intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
     Rstart = 1
-    Rcount = shape(Data)
+    Rcount = shape(Dat)
     !
     if (present(start)) then
        !
@@ -298,7 +303,7 @@ contains
        !
        Rcount = count
        !
-       if ( size(data,1) /= Rcount(1) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       if ( size(Dat,1) /= Rcount(1) ) stop 'ERROR*** size mismatch. Get_NcVar'
 
        !
     end if
@@ -315,7 +320,7 @@ contains
     if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
+    status = nf90_get_var(ncid, varid, Dat, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -326,26 +331,26 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_1d_dp(Filename, VarName, Data, start, count)
+  subroutine Get_NcVar_1d_dp(Filename, VarName, Dat, start, count)
     !
     implicit none
     !
-    character(256), intent(in)            :: Filename
-    character(256), intent(in)            :: VarName   ! Variable name == Longname in netcdf dataset
+    character(len=*), intent(in)            :: Filename
+    character(len=*), intent(in)            :: VarName   ! Variable name == Longname in netcdf dataset
+    real(dp), dimension(:), intent(inout) :: Dat      ! array where values should be stored
     integer(i4), dimension(1), optional, intent(in)     :: start
     integer(i4), dimension(1), optional, intent(in)     :: count
     integer(i4), dimension(1)             :: Rstart
     integer(i4), dimension(1)             :: Rcount
     integer(i4)                           :: varid     ! id of variable to be read
     integer(i4)                           :: vartype   ! type of variable
-    real(dp), dimension(:), intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
     Rstart = 1
-    Rcount = shape(Data)
+    Rcount = shape(Dat)
     !
     if (present(start)) then
        !
@@ -357,7 +362,7 @@ contains
        !
        Rcount = count
        !
-       if ( size(data,1) /= Rcount(1) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       if ( size(Dat,1) /= Rcount(1) ) stop 'ERROR*** size mismatch. Get_NcVar'
        !
     end if
     !
@@ -373,7 +378,7 @@ contains
     if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
+    status = nf90_get_var(ncid, varid, Dat, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -384,26 +389,26 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_2d_dp(Filename, VarName, Data, start, count)
+  subroutine Get_NcVar_2d_dp(Filename, VarName, Dat, start, count)
     !
     implicit none
     !
-    character(256), intent(in)                :: Filename
-    character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    character(len=*), intent(in)                :: Filename
+    character(len=*), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    real(dp), dimension(:,:),   intent(inout) :: Dat      ! array where values should be stored
     integer(i4), dimension(:), optional, intent(in)     :: start
     integer(i4), dimension(:), optional, intent(in)     :: count
     integer(i4), dimension(2)                 :: Rstart
     integer(i4), dimension(2)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    real(dp), dimension(:,:),   intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
     Rstart = 1
-    Rcount = shape(data)
+    Rcount = shape(Dat)
     !
     if (present(start)) then
        !
@@ -419,8 +424,8 @@ contains
        !
        Rcount = count
        !
-       if ( size(data,1) /= Rcount(1) .or. &
-            size(data,2) /= Rcount(2) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       if ( size(Dat,1) /= Rcount(1) .or. &
+            size(Dat,2) /= Rcount(2) ) stop 'ERROR*** size mismatch. Get_NcVar'
        !
     end if
     !
@@ -436,7 +441,7 @@ contains
     if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
+    status = nf90_get_var(ncid, varid, Dat, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -448,26 +453,26 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_2d_sp(Filename, VarName, Data, start, count)
+  subroutine Get_NcVar_2d_sp(Filename, VarName, Dat, start, count)
     !
     implicit none
     !
-    character(256), intent(in)                :: Filename
-    character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    character(len=*), intent(in)                :: Filename
+    character(len=*), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    real(sp), dimension(:,:),   intent(inout) :: Dat      ! array where values should be stored
     integer(i4), dimension(:), optional, intent(in)     :: start
     integer(i4), dimension(:), optional, intent(in)     :: count
     integer(i4), dimension(2)                 :: Rstart
     integer(i4), dimension(2)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    real(sp), dimension(:,:),   intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
     Rstart = 1
-    Rcount = shape(data)
+    Rcount = shape(Dat)
     !
     if (present(start)) then
        !
@@ -483,8 +488,8 @@ contains
        !
        Rcount = count
        !
-       if ( size(data,1) /= Rcount(1) .or. &
-            size(data,2) /= Rcount(2) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       if ( size(Dat,1) /= Rcount(1) .or. &
+            size(Dat,2) /= Rcount(2) ) stop 'ERROR*** size mismatch. Get_NcVar'
        !
     end if
     !
@@ -500,7 +505,7 @@ contains
     if ( vartype /= 5 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
+    status = nf90_get_var(ncid, varid, Dat, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -512,26 +517,26 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_3d_dp(Filename, VarName, Data, start, count)
+  subroutine Get_NcVar_3d_dp(Filename, VarName, Dat, start, count)
     !
     implicit none
     !
-    character(256), intent(in)                :: Filename
-    character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    character(len=*), intent(in)                :: Filename
+    character(len=*), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    real(dp), dimension(:,:,:), intent(inout) :: Dat      ! array where values should be stored
     integer(i4), dimension(:), optional, intent(in)     :: start
     integer(i4), dimension(:), optional, intent(in)     :: count
     integer(i4), dimension(3)                 :: Rstart
     integer(i4), dimension(3)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    real(dp), dimension(:,:,:), intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
     Rstart = 1
-    Rcount = shape(Data)
+    Rcount = shape(Dat)
     !
     if (present(start)) then
        !
@@ -547,9 +552,9 @@ contains
        !
        Rcount = count
        !
-       if ( size(data,1) /= Rcount(1) .or. &
-            size(data,2) /= Rcount(2) .or. &
-            size(data,3) /= Rcount(3) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       if ( size(Dat,1) /= Rcount(1) .or. &
+            size(Dat,2) /= Rcount(2) .or. &
+            size(Dat,3) /= Rcount(3) ) stop 'ERROR*** size mismatch. Get_NcVar'
        !
     end if
     !
@@ -565,7 +570,7 @@ contains
     if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
+    status = nf90_get_var(ncid, varid, Dat, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -577,26 +582,26 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_3d_sp(Filename, VarName, Data, start, count)
+  subroutine Get_NcVar_3d_sp(Filename, VarName, Dat, start, count)
     !
     implicit none
     !
-    character(256), intent(in)                :: Filename
-    character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    character(len=*), intent(in)                :: Filename
+    character(len=*), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    real(sp), dimension(:,:,:), intent(inout) :: Dat      ! array where values should be stored
     integer(i4), dimension(:), optional, intent(in)     :: start
     integer(i4), dimension(:), optional, intent(in)     :: count
     integer(i4), dimension(3)                 :: Rstart
     integer(i4), dimension(3)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    real(sp), dimension(:,:,:), intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
     Rstart = 1
-    Rcount = shape(data)
+    Rcount = shape(Dat)
     !
     if (present(start)) then
        !
@@ -612,9 +617,9 @@ contains
        !
        Rcount = count
        !
-       if ( size(data,1) /= Rcount(1) .or. &
-            size(data,2) /= Rcount(2) .or. &
-            size(data,3) /= Rcount(3) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       if ( size(Dat,1) /= Rcount(1) .or. &
+            size(Dat,2) /= Rcount(2) .or. &
+            size(Dat,3) /= Rcount(3) ) stop 'ERROR*** size mismatch. Get_NcVar'
        !
     end if
     !
@@ -629,7 +634,7 @@ contains
     ! check variable type ( 5 equals float type )
     if ( vartype /= 5 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
-    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
+    status = nf90_get_var(ncid, varid, Dat, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -640,12 +645,13 @@ contains
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR_4D_SP
   ! ----------------------------------------------------------------------------
-  subroutine Get_NcVar_5d_sp(Filename, VarName, Data, start, count)
+  subroutine Get_NcVar_5d_sp(Filename, VarName, Dat, start, count)
     !
     implicit none
     !
-    character(256), intent(in)                :: Filename
-    character(256), intent(in)                :: VarName ! Variable name
+    character(len=*), intent(in)                :: Filename
+    character(len=*), intent(in)                :: VarName ! Variable name
+    real(sp), dimension(:,:,:,:,:),intent(inout) :: Dat    ! array where values should be stored
     integer(i4), dimension(5), optional, intent(in)     :: start
     integer(i4), dimension(5), optional, intent(in)     :: count
     integer(i4), dimension(5)                  :: Rstart
@@ -654,10 +660,9 @@ contains
     integer(i4)                                :: status  ! status of read stream
     integer(i4)                                :: varid   ! id of variable to be read
     integer(i4)                                :: vartype ! type of variable
-    real(sp), dimension(:,:,:,:,:),intent(inout) :: Data    ! array where values should be stored
     !
     Rstart = 1
-    Rcount = shape(Data)
+    Rcount = shape(Dat)
     !
     if (present(start)) then
        !
@@ -673,11 +678,11 @@ contains
        !
        Rcount = count
        !
-       if ( size(data,1) /= Rcount(1) .or. &
-            size(data,2) /= Rcount(2) .or. &
-            size(data,3) /= Rcount(3) .or. &
-            size(data,4) /= Rcount(4) .or. &
-            size(data,5) /= Rcount(5) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       if ( size(Dat,1) /= Rcount(1) .or. &
+            size(Dat,2) /= Rcount(2) .or. &
+            size(Dat,3) /= Rcount(3) .or. &
+            size(Dat,4) /= Rcount(4) .or. &
+            size(Dat,5) /= Rcount(5) ) stop 'ERROR*** size mismatch. Get_NcVar'
 
        !
     end if
@@ -694,7 +699,7 @@ contains
     if ( vartype /= 5 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values by varid
-    status = nf90_get_var(ncid, varid, data)
+    status = nf90_get_var(ncid, varid, Dat)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -706,26 +711,26 @@ contains
   ! ------------------------------------------------------------------------------
   ! SUBROUTINE GET_NCVAR
   ! ------------------------------------------------------------------------------
-  subroutine Get_NcVar_5d_dp(Filename, VarName, Data, start, count)
+  subroutine Get_NcVar_5d_dp(Filename, VarName, Dat, start, count)
     !
     implicit none
     !
-    character(256), intent(in)                :: Filename
-    character(256), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    character(len=*), intent(in)                :: Filename
+    character(len=*), intent(in)                :: VarName   ! Variable name == Longname in netcdf dataset
+    real(dp), dimension(:,:,:,:,:), intent(inout) :: Dat      ! array where values should be stored
     integer(i4), dimension(5), optional, intent(in)     :: start
     integer(i4), dimension(5), optional, intent(in)     :: count
     integer(i4), dimension(5)                 :: Rstart
     integer(i4), dimension(5)                 :: Rcount
     integer(i4)                               :: varid     ! id of variable to be read
     integer(i4)                               :: vartype   ! type of variable
-    real(dp), dimension(:,:,:,:,:), intent(inout) :: Data      ! array where values should be stored
     !
     ! further Variables
     integer(i4) :: ncid   ! id of input stream
     integer(i4) :: status ! status of read stream
     !
     Rstart = 1
-    Rcount = shape(Data)
+    Rcount = shape(Dat)
     !
     if (present(start)) then
        !
@@ -741,11 +746,11 @@ contains
        !
        Rcount = count
        !
-       if ( size(data,1) /= Rcount(1) .or. &
-            size(data,2) /= Rcount(2) .or. &
-            size(data,3) /= Rcount(3) .or. &
-            size(data,4) /= Rcount(4) .or. &
-            size(data,5) /= Rcount(5) ) stop 'ERROR*** size mismatch. Get_NcVar'
+       if ( size(Dat,1) /= Rcount(1) .or. &
+            size(Dat,2) /= Rcount(2) .or. &
+            size(Dat,3) /= Rcount(3) .or. &
+            size(Dat,4) /= Rcount(4) .or. &
+            size(Dat,5) /= Rcount(5) ) stop 'ERROR*** size mismatch. Get_NcVar'
 
        !
     end if
@@ -762,7 +767,7 @@ contains
     if ( vartype /= 6 ) stop 'ERROR*** type of variable does not match argument type. subroutine get_Info'
     !
     ! get values
-    status = nf90_get_var(ncid, varid, data, Rstart, Rcount)
+    status = nf90_get_var(ncid, varid, Dat, Rstart, Rcount)
     if ( status /= 0) stop 'ERROR*** data could not be read!'
     !
     ! close File
@@ -784,28 +789,38 @@ contains
   ! for detailed information.
   !
   ! ------------------------------------------------------------------------------
-  subroutine get_Info(Varname, ncid, varid, kind,dl, Info)
+  !MC subroutine get_Info(Varname, ncid, varid, kind, dl, Info)
+  subroutine get_Info(Varname, ncid, varid, xtype, dl, Info)
     !
     implicit none
     !
-    character(256),            intent(in)     :: Varname
+    character(len=*),            intent(in)     :: Varname
     integer(i4),               intent(in)     :: ncid 
     integer(i4),               intent(out)    :: varid   ! variable id of data to be read
-    integer(i4),               intent(out)    :: kind    ! type of the variable
+    !integer(i4),               intent(out)    :: kind    ! type of the variable
+    integer(i4),               intent(out)    :: xtype    ! type of the variable
     integer(i4), dimension(:), &
                      optional, intent(inout)  :: dl
-    logical(1),                intent(in), optional :: Info
+    logical,                intent(in), optional :: Info
     !
+#ifndef ABSOFT
     integer(i4)                               :: nVars   ! Number of Variables
     integer(i4), dimension(:), allocatable    :: varids  ! Ids of all variables
+    logical                                   :: flag    ! flag if Variable is in file
+#endif
     integer(i4), dimension(:), allocatable    :: DimID   ! Id of dimension
     integer(i4)                               :: NumDims ! Number of Dimensions for specific variable
     character(NF90_MAX_NAME)                  :: name    ! name of Variables in the file
     integer(i4)                               :: n       ! loop index
     integer(i4)                               :: status  ! control variable
-    logical                                   :: flag    ! flag if Variable is in file
     character(256)                            :: form    ! output format
     !
+#ifdef ABSOFT
+    status = nf90_inq_varid(ncid, Varname, varid)
+    if (status /= 0) stop 'ERROR*** Varname does not exist in file. subroutine get_Info'
+    status = nf90_inquire_variable(ncid, varid, ndims=NumDims)
+    if ( status /= 0 ) stop 'ERROR*** Could NOT inquire Number of Dimensions of Variable'
+#else
     ! inquire number of variables
     status = nf90_inquire(ncid,nVariables = nVars)
     if ( status /= 0 ) stop 'ERROR*** Could NOT inquire Number of Variables'
@@ -834,10 +849,12 @@ contains
     !
     ! check whether variable name was found in the file
     if ( .not. flag ) stop 'ERROR*** Varname does not exist in file. subroutine get_Info'
+#endif
     !
     ! get the dimension ids ant the type of this variable
     allocate(DimId(NumDims))
-    status = nf90_inquire_variable(ncid, varids(n), name, xtype=kind, dimids=DimId)
+    !MC status = nf90_inquire_variable(ncid, varids(n), name, xtype=kind, dimids=DimId)
+    status = nf90_inquire_variable(ncid, varid, xtype=xtype, dimids=DimId)
     if ( status /= 0 ) stop 'ERROR*** Could NOT inquire Ids of Dimensions'
     !
     if ( present(dl) ) then
@@ -857,9 +874,12 @@ contains
           !
           !MC write(form,'(a12,I03.3,a1)'), "(a10,i1,a4,a", len(trim(name)), ")"
           write(form,'(a12,I03.3,a1)') "(a10,i1,a4,a", len(trim(name)), ")"
-          if ( present(info) .and. info .eqv. .true.) then
-             write(*,form) 'Dimension ',n,' is ', trim(name)
-             write(*,'(a14,i5.5)') 'The Length is ',dl(n)
+          !MC if ( present(info) .and. (info .eqv. .true.)) then
+          if (present(info)) then
+             if (info) then
+                write(*,form) 'Dimension ', n, ' is ', trim(name)
+                write(*,'(a14,i5.5)') 'The Length is ', dl(n)
+             end if
           end if
           !
        end do dimloop
