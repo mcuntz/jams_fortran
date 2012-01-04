@@ -845,7 +845,7 @@ contains
           status = nf90_inquire_dimension(ncid, DimId(n), name, dl(n))
           if ( status /= 0 ) stop 'ERROR*** Could NOT inquire Length of Dimension'
           !
-          write(form,'(a12,I03.3,a1)') "(a10,i1,a4,a", len(trim(name)), ")"
+          write(form,'(a12,I03.3,a1)'), "(a10,i1,a4,a", len(trim(name)), ")"
           write(*,form) 'Dimension ',n,' is ', trim(name)
           write(*,'(a14,i5.5)') 'The Length is ',dl(n)
           !

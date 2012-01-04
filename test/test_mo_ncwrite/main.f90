@@ -23,7 +23,7 @@ character(256)                          :: Varname
 LOGICAL :: isgood
 real(sp), dimension(:,:,:), allocatable, target :: data1
 !
-Filename = 'test/test_mo_ncwrite/pr_1961-2000.nc'
+Filename = '../FORTRAN_chs_lib/test/test_mo_ncwrite/pr_1961-2000.nc'
 !
 ! read all variables -------------------------------------------------
 Varname  = 'pr'
@@ -43,7 +43,10 @@ call Get_NcVar(Filename, Varname, t)
 Filename = 'Test.nc'
 !
 ! 1st set netcdf structure V
+print*, lon
+print*, 'setnc'
 call setnc
+print*, 'finished setnc'
 !
 ! 2nd create actual netcdf file
 call create_netcdf(Filename, ncid)

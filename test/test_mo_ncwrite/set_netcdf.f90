@@ -34,7 +34,7 @@ contains
     !
     ! local variables  
     integer(i4) :: i
-    ! 
+    !
     ! define parameters
     nDims  = 3                          ! nr. dim types
     nVars  = 4                          ! total nr. var to print (including dimensions)
@@ -42,7 +42,6 @@ contains
     ! allocate arrays
     allocate ( Dnc(nDims)  )
     allocate ( V(nVars)    )
-
     !
     ! define dimensions --------------------------------------------------------
     Dnc(1)%name      = "easting"
@@ -53,10 +52,10 @@ contains
     !
     Dnc(3)%name      = "time"
     Dnc(3)%len       = NF90_UNLIMITED
-
+    
     !
     ! DIMENSION VARIABLES ------------------------------------------------------
-
+    
     ! EASTING
     i                =  1
     V(i)%name        =  Dnc(i)%name
@@ -69,7 +68,7 @@ contains
     !
     ! pointer to actual data      
     V(i)%G2_d        => Lon
-
+    !
     ! attributes (other possibilities: add_offset, valid_min, valid_max)  
     V(i)%nAtt          = 3
     !
@@ -86,8 +85,11 @@ contains
     V(i)%att(3)%name   = "valid_range"
     V(i)%att(3)%xType  = NF90_FLOAT
     V(i)%att(3)%nValues= 2
+    print*, 'ha'
+    !
     write( V(i)%att(3)%values, '(2f15.2)')  Lon(1,1), Lon(size(Lon,1),size(Lon,2))
-
+    print*, 'lon'
+    stop
     !
     ! NORTHING
     i                =  2
@@ -119,6 +121,7 @@ contains
     V(i)%att(3)%xType  = NF90_FLOAT
     V(i)%att(3)%nValues= 2
     write( V(i)%att(3)%values, '(2f15.2)')  Lat(1,1), Lat(size(Lat,1),size(Lat,2))
+    print*, 'lat'
     !
     ! TIME
     i                =  3
@@ -145,6 +148,7 @@ contains
     V(i)%att(2)%xType  = NF90_CHAR
     V(i)%att(2)%nValues= 1
     V(i)%att(2)%values = "time"
+    print*, 'time'
     !  
     ! FIELD VARIABLES ----------------------------------------------------------
     !
@@ -198,6 +202,7 @@ contains
     V(i)%att(7)%xType  = NF90_CHAR
     V(i)%att(7)%nValues= 1
     V(i)%att(7)%values = "lon lat"
+    print*, 'pr'
     !
     ! global attributes ---------------------------------------------------
     Gatt(1)%name       = "title"
