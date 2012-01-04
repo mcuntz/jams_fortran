@@ -78,7 +78,7 @@ contains
     if ( status /= 0) stop 'ERROR*** nc file could not be opened!'
     !
     Flag = .false.
-    if ( present(PrintInfo) .and. PrintInfo == .true. ) Flag = .true.
+    if ( present(PrintInfo) .and. PrintInfo .eqv. .true. ) Flag = .true.
     !
     ! Inquire file and check if VarName exists in the dataset
     ! Get also the id and the length of the dimensions
@@ -856,7 +856,7 @@ contains
           if ( status /= 0 ) stop 'ERROR*** Could NOT inquire Length of Dimension'
           !
           write(form,'(a12,I03.3,a1)'), "(a10,i1,a4,a", len(trim(name)), ")"
-          if ( present(info) .and. info == .true.) then
+          if ( present(info) .and. info .eqv. .true.) then
              write(*,form) 'Dimension ',n,' is ', trim(name)
              write(*,'(a14,i5.5)') 'The Length is ',dl(n)
           end if
