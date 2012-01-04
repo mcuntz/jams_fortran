@@ -174,7 +174,7 @@ contains
     V(i)%att(3)%name   = "valid_range"
     V(i)%att(3)%xType  = NF90_FLOAT
     V(i)%att(3)%nValues= 2
-    V(i)%att(3)%values = "(/0.,100./)"
+    write( V(i)%att(3)%values, '(2f15.2)')  0._sp, 100._sp
     !
     V(i)%att(4)%name   = "scale_factor"
     V(i)%att(4)%xType  = NF90_FLOAT
