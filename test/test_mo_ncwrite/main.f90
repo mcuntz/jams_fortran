@@ -43,10 +43,7 @@ call Get_NcVar(Filename, Varname, t)
 Filename = 'Test.nc'
 !
 ! 1st set netcdf structure V
-print*, lon
-print*, 'setnc'
 call setnc
-print*, 'finished setnc'
 !
 ! 2nd create actual netcdf file
 call create_netcdf(Filename, ncid)

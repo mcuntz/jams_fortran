@@ -85,11 +85,8 @@ contains
     V(i)%att(3)%name   = "valid_range"
     V(i)%att(3)%xType  = NF90_FLOAT
     V(i)%att(3)%nValues= 2
-    print*, 'ha'
     !
     write( V(i)%att(3)%values, '(2f15.2)')  Lon(1,1), Lon(size(Lon,1),size(Lon,2))
-    print*, 'lon'
-    stop
     !
     ! NORTHING
     i                =  2
@@ -121,7 +118,6 @@ contains
     V(i)%att(3)%xType  = NF90_FLOAT
     V(i)%att(3)%nValues= 2
     write( V(i)%att(3)%values, '(2f15.2)')  Lat(1,1), Lat(size(Lat,1),size(Lat,2))
-    print*, 'lat'
     !
     ! TIME
     i                =  3
@@ -148,7 +144,6 @@ contains
     V(i)%att(2)%xType  = NF90_CHAR
     V(i)%att(2)%nValues= 1
     V(i)%att(2)%values = "time"
-    print*, 'time'
     !  
     ! FIELD VARIABLES ----------------------------------------------------------
     !
@@ -202,7 +197,6 @@ contains
     V(i)%att(7)%xType  = NF90_CHAR
     V(i)%att(7)%nValues= 1
     V(i)%att(7)%values = "lon lat"
-    print*, 'pr'
     !
     ! global attributes ---------------------------------------------------
     Gatt(1)%name       = "title"
