@@ -36,13 +36,17 @@ contains
   !     gets the dimensions of variable in a netcdf file
   !
   ! CALLING SEQUENCE
-  !     dim = Get_NcDim(File, Var)
+  !     dim = Get_NcDim(File, Var, Print)
   !
   ! INTENT(IN)
   !     character(len=*) :: File - Filename of netcdf file
   !
   ! INTENT(IN)
   !     character(len=*) :: Var - Variable name exactly as specified in the file
+  !
+  ! INTENT(IN), OPTIONAL
+  !     logical(1)       :: Print - if given and true, information about dimension
+  !                                 and their lengths will be printed to standard output
   !
   ! INTENT(OUT)
   !     integer(i4), dimension(5) :: dim - dimension length, 1 if dimension dont exist
@@ -53,12 +57,14 @@ contains
   ! HISTORY
   !     Written, Stephan Thober, Dec 2011
   !
-  function Get_NcDim(Filename, Variable)
+  function Get_NcDim(Filename, Variable, PrintInfo)
     !
     implicit none
     !
     character(len=*), intent(in) :: Filename
     character(len=*), intent(in) :: Variable
+    logical(1),       intent(in), optional :: PrintInfo
+    logical(1)                   :: Flag
     !
     integer(i4), dimension(5)    :: Get_NcDim
     !
@@ -71,9 +77,12 @@ contains
     status = nf90_open(trim(Filename),NF90_NOWRITE, ncid)
     if ( status /= 0) stop 'ERROR*** nc file could not be opened!'
     !
+    Flag = .false.
+    if ( present(PrintInfo) .and. PrintInfo == .true. ) Flag = .true.
+    !
     ! Inquire file and check if VarName exists in the dataset
     ! Get also the id and the length of the dimensions
-    call get_Info(Variable,ncid,varid,vartype, Get_NcDim)
+    call get_Info(Variable,ncid,varid,vartype, Get_NcDim, Flag)
     !
     ! close File
     status = nf90_close(ncid)
@@ -775,7 +784,7 @@ contains
   ! for detailed information.
   !
   ! ------------------------------------------------------------------------------
-  subroutine get_Info(Varname, ncid, varid, kind,dl)
+  subroutine get_Info(Varname, ncid, varid, kind,dl, Info)
     !
     implicit none
     !
@@ -785,6 +794,7 @@ contains
     integer(i4),               intent(out)    :: kind    ! type of the variable
     integer(i4), dimension(:), &
                      optional, intent(inout)  :: dl
+    logical(1),                intent(in), optional :: Info
     !
     integer(i4)                               :: nVars   ! Number of Variables
     integer(i4), dimension(:), allocatable    :: varids  ! Ids of all variables
@@ -846,8 +856,10 @@ contains
           if ( status /= 0 ) stop 'ERROR*** Could NOT inquire Length of Dimension'
           !
           write(form,'(a12,I03.3,a1)'), "(a10,i1,a4,a", len(trim(name)), ")"
-          write(*,form) 'Dimension ',n,' is ', trim(name)
-          write(*,'(a14,i5.5)') 'The Length is ',dl(n)
+          if ( present(info) .and. info == .true.) then
+             write(*,form) 'Dimension ',n,' is ', trim(name)
+             write(*,'(a14,i5.5)') 'The Length is ',dl(n)
+          end if
           !
        end do dimloop
        !
