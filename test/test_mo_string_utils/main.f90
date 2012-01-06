@@ -1,11 +1,11 @@
 PROGRAM main
   
   USE mo_kind,   ONLY: i4, i8, dp, sp
-  USE mo_string_utils, ONLY: tolower, toupper, separator, num2str
+  USE mo_string_utils, ONLY: tolower, toupper, separator, num2str, nullstring
 
   IMPLICIT NONE
   
-  CHARACTER(len=100) :: sout
+  CHARACTER(len=100) :: sout, sundef
 
   LOGICAL :: isgood
   
@@ -29,6 +29,8 @@ PROGRAM main
   if (.not.(lle(trim(sout),'101') .and. lge(trim(sout),'101'))) isgood =.false.
   sout = num2str(.true., '(L1)')
   if (.not.(lle(trim(sout),'T') .and. lge(trim(sout),'T'))) isgood =.false.
+  if (.not. nullstring(sout)) isgood =.false.
+  if (nullstring(sundef)) isgood =.false.
 
   Write(*,*) ''
   if (isgood) then

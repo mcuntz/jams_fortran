@@ -616,7 +616,7 @@ CONTAINS
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(dp)                                      :: correlation_dp
 
-    INTEGER(i4) :: n
+    REAL(dp)    :: n
     REAL(dp)    :: mx, my
     REAL(dp)    :: sx, sy, covar
     LOGICAL, DIMENSION(size(x)) :: maske
@@ -651,7 +651,7 @@ CONTAINS
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(sp)                                      :: correlation_sp
 
-    INTEGER(i4) :: n
+    REAL(sp)    :: n
     REAL(sp)    :: mx, my
     REAL(sp)    :: sx, sy, covar
     LOGICAL, DIMENSION(size(x)) :: maske
@@ -738,7 +738,7 @@ CONTAINS
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(dp)                                      :: covariance_dp
 
-    INTEGER(i4) :: n
+    REAL(dp)    :: n
     REAL(dp)    :: mx, my
     LOGICAL, DIMENSION(size(x)) :: maske
 
@@ -770,7 +770,7 @@ CONTAINS
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(sp)                                      :: covariance_sp
 
-    INTEGER(i4) :: n
+    REAL(sp)    :: n
     REAL(sp)    :: mx, my
     LOGICAL, DIMENSION(size(x)) :: maske
 

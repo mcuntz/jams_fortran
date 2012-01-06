@@ -13,6 +13,9 @@ module mo_ncWrite
                      NF90_CHAR, nf90_put_att, NF90_INT, NF90_INT, NF90_GLOBAL, &
                      nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, &
                      NF90_close, nf90_noerr, nf90_strerror, NF90_CLOBBER
+  !
+  ! Use string utils
+  use mo_string_utils, only: nullstring
 
   !
   private
@@ -20,14 +23,9 @@ module mo_ncWrite
   ! definition of parameters
   integer(i4), parameter                    :: nMaxDim = 5         ! nr. max dimensions
   integer(i4), parameter                    :: nMaxAtt = 20        ! nr. max attributes
-  integer(i4), parameter                    :: maxLen  = 256       ! nr. string lenght
-  integer(i4), parameter                    :: nGAtt   = 2         ! nr. global attributes
+  integer(i4), parameter                    :: maxLen  = 256       ! nr. string length
+  integer(i4), parameter                    :: nGAtt   = 20        ! nr. global attributes
   integer(i4), parameter                    :: nAttDim = 2         ! dim array of attribute values
-  !
-  ! definition of variables
-  integer(i4)                               :: nLvls               ! nr. levels
-  integer(i4)                               :: nSubs               ! nr. of sub units / tiles/ fractions
-  integer(i4)                               :: nRecs               ! time intervals
   !
   type attribute
     character (len=maxLen)                  :: name                ! attribute name
@@ -80,10 +78,10 @@ module mo_ncWrite
   public :: dims
   !
   ! public variables -----------------------------------------------------------------
-  integer(i4),public                                :: nVars   ! nr. variables
-  integer(i4),public                                :: nDims   ! nr. dimensions 
-  type (dims), public, dimension(:), allocatable    :: Dnc     ! dimesions list 
-  type(variable),public,  dimension(:), allocatable :: V       ! variable list, THIS STRUCTURE WILL BE WRITTEN IN THE FILE
+  integer(i4),    public                            :: nVars   ! nr. variables
+  integer(i4),    public                            :: nDims   ! nr. dimensions 
+  type (dims),    public, dimension(:), allocatable :: Dnc     ! dimesions list 
+  type(variable), public, dimension(:), allocatable :: V       ! variable list, THIS STRUCTURE WILL BE WRITTEN IN THE FILE
   type(attribute), public, dimension(nGAtt)         :: gatt    ! global attributes for netCDF
   !
   ! public routines -------------------------------------------------------------------
@@ -106,10 +104,13 @@ contains
   !     for an example.
   !
   ! CALLING SEQUENCE
-  !     call create_netCDF(File, nc)
+  !     call create_netCDF(File, nc, Info=Info)
   !
   ! INTENT(IN)
   !     character(len=maxLen) :: File ! Filename of File to be written
+  !
+  ! INTENT(IN), OPTIONAL
+  !     logical               :: Info ! if given and true, progress information will be written
   !
   ! INTENT(OUT)
   !     integer(i4)           :: nc   ! integer value of the stream for the opened file
@@ -127,25 +128,28 @@ contains
   ! HISTORY
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
+  !              Matthias Cuntz  Jan 2012 - Info
   !
-  subroutine create_netCDF(Filename,ncid)
+  subroutine create_netCDF(Filename,ncid,Info)
     !
     implicit none
     !
     ! netcdf related variables
-    character(len=maxLen), intent(in)          :: Filename
-    integer(i4), intent(out)                   :: ncid
-    integer(i4)                                :: i, j, k
-    integer(i4), dimension (nAttDim)           :: att_INT  
-    real(sp), dimension (nAttDim)              :: att_FLOAT
-    character(len=maxLen), dimension (nAttDim) :: att_CHAR
+    character(len=*), intent(in)           :: Filename
+    integer(i4),      intent(out)          :: ncid
+    logical,          intent(in), optional :: Info
     !
-    ! 1  Create netCDF dataset: enter define mode     ->  get ncId  
-    call check( nf90_create ( trim(Filename), NF90_CLOBBER, ncId ))
+    integer(i4)                               :: i, j, k
+    integer(i4), dimension(nAttDim)           :: att_INT  
+    real(sp),    dimension(nAttDim)           :: att_FLOAT
+    character(len=maxLen), dimension(nAttDim) :: att_CHAR
+    !
+    ! 1  Create netCDF dataset: enter define mode     ->  get ncId
+    call check(nf90_create(trim(Filename), NF90_CLOBBER, ncId ))
     !
     ! 2  Define dimensions                                 -> get dimId
     do i=1, nDims
-       call check( nf90_def_dim ( ncId, Dnc(i)%name , Dnc(i)%len, Dnc(i)%dimId ))
+       call check(nf90_def_dim(ncId, Dnc(i)%name , Dnc(i)%len, Dnc(i)%dimId ))
     end do
     !
     ! 3 Define dimids array, which is used to pass the dimids of the dimensions of
@@ -171,9 +175,9 @@ contains
     ! 4 Define the netCDF variables and atributes                            -> get varId
     do i=1, nVars
        if ( .not. V(i)%wFlag ) cycle
-       call check( nf90_def_var ( ncId, V(i)%name, V(i)%xtype, V(i)%dimids(1:V(i)%nDims), V(i)%varId ))
+       call check(nf90_def_var(ncId, V(i)%name, V(i)%xtype, V(i)%dimids(1:V(i)%nDims), V(i)%varId ))
        do k = 1, V(i)%nAtt
-          select case ( V(i)%att(k)%xType )
+          select case (V(i)%att(k)%xType)
           case (NF90_CHAR)
              ! read( V(i)%att(k)%values, *) ( att_CHAR(j), j =1, V(i)%att(k)%nValues )
              read( V(i)%att(k)%values, '(a)')  att_CHAR(1) 
@@ -190,12 +194,16 @@ contains
     !
     ! 5 Global attributes
     do k = 1, nGAtt
-       call check( nf90_put_att ( ncId, NF90_GLOBAL, Gatt(k)%name, Gatt(k)%values ))
+       if (nullstring(Gatt(k)%name)) then
+          call check(nf90_put_att(ncId, NF90_GLOBAL, Gatt(k)%name, Gatt(k)%values))
+       endif
     end do
     !
     ! 6 end definitions: leave define mode
-    call check ( nf90_enddef ( ncId ))
-    print *, "NetCDF file was created", ncId
+    call check(nf90_enddef( ncId ))
+    if (present(Info)) then
+       if (Info) write(*,*) "NetCDF file was created", ncId
+    end if
     ! 
   end subroutine create_netCDF
   ! ----------------------------------------------------------------------------
@@ -208,11 +216,14 @@ contains
   !     where no dimension has the unlimited attribute.
   !
   ! CALLING SEQUENCE
-  !     call write_static_netcdf(nc)
+  !     call write_static_netcdf(nc, Info=Info)
   !
   ! INTENT(IN)
   !     integer(i4) :: nc - stream id of an open netcdf file where data should be written
   !                         can be obtained by an create_netcdf call
+  !
+  ! INTENT(IN), OPTIONAL
+  !     logical :: Info - if given and true, progress information will be written
   !
   ! RESTRICTIONS
   !     Writes only data, where the data pointers of the structure V are assigned.
@@ -227,53 +238,58 @@ contains
   ! HISTORY
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
+  !              Matthias Cuntz  Jan 2012 - Info
   !
-  subroutine write_static_netCDF(ncId)
+  subroutine write_static_netCDF(ncId, Info)
     !
     implicit none
     !
     ! netcdf related variables
     integer(i4), intent(in)           :: ncId
+    logical,     intent(in), optional :: Info
+    !
     integer(i4)                       :: i
 
     ! write all static variables
     do i = 1, nVars
        if ( V(i)%unlimited     ) cycle
        if ( .not. V(i)%wFlag   ) cycle
-       print *, "Var. ", trim(V(i)%name) ," is  static"
+       if (present(Info)) then
+          if (Info) write(*,*) "Var. ", trim(V(i)%name) ," is  static"
+       end if
        select case (V(i)%xtype)
        case (NF90_INT)
           select case (V(i)%nDims)
           case (1)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_i ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_i ))
           case (2)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_i ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_i ))
           case (3)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_i ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_i ))
           case (4)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_i ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_i ))
           end select
        case (NF90_FLOAT)
           select case (V(i)%nDims)
           case (1)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_f ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_f ))
           case (2)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_f ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_f ))
           case (3)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_f ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_f ))
           case (4)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_f ))
+             call check( nf90_put_var( ncId,  V(i)%varId, V(i)%G4_f ))
           end select
        case (NF90_DOUBLE)
           select case (V(i)%nDims)
           case (1)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_d ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_d ))
           case (2)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_d ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_d ))
           case (3)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_d ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_d ))
           case (4)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_d ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_d ))
           end select
        end select
     end do
@@ -291,7 +307,7 @@ contains
   !     specified.
   !
   ! CALLING SEQUENCE
-  !     call write_dynamic_netCDF(nc,rec)
+  !     call write_dynamic_netCDF(nc, rec, Info=Info)
   !
   ! INTENT(IN)
   !     integer(i4) :: nc - stream id of an open netcdf file where data should be written
@@ -299,6 +315,9 @@ contains
   !
   ! INTENT(IN)
   !     integer(i4) :: rec - record id of record which will be written in the file
+  !
+  ! INTENT(IN), OPTIONAL
+  !     logical :: Info - if given and true, progress information will be written
   !
   ! RESTRICTIONS
   !     Writes only data, where the data pointers of the structure V are assigned
@@ -315,14 +334,17 @@ contains
   ! HISTORY
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
+  !              Matthias Cuntz  Jan 2012 - Info
   !
-  subroutine write_dynamic_netCDF(ncId, irec)
+  subroutine write_dynamic_netCDF(ncId, irec, Info)
     !
     implicit none
     !
     ! netcdf related variables
     integer(i4), intent(in)           :: ncId
     integer(i4), intent(in), optional :: iRec
+    logical,     intent(in), optional :: Info
+    !
     integer(i4)                       :: i
     ! NOTES: 1) netCDF file must be on *** data mode ***
     !        2) start and end of the data chuck is controled by
@@ -332,47 +354,49 @@ contains
     do i = 1, nVars
        if ( .not. V(i)%unlimited     ) cycle
        if ( .not. V(i)%wFlag   ) cycle
-       if (iRec ==1) print *, "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
+       if (present(Info)) then
+          if ((iRec ==1) .and. Info) write(*,*) "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
+       end if
        V(i)%start ( V(i)%nDims ) = iRec
        select case (V(i)%xtype)
        case (NF90_INT)
           select case (V(i)%nDims-1)
           case (0)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G0_i, V(i)%start )) 
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_i, V(i)%start )) 
           case (1)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_i, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_i, V(i)%start, V(i)%count ))
           case (2)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_i, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_i, V(i)%start, V(i)%count ))
           case (3)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_i, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_i, V(i)%start, V(i)%count ))
           case (4)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_i, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_i, V(i)%start, V(i)%count ))
           end select
        case (NF90_FLOAT)
           select case (V(i)%nDims-1)
           case (0)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G0_f, V(i)%start )) 
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_f, V(i)%start )) 
           case (1)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_f, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_f, V(i)%start, V(i)%count ))
           case (2)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_f, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_f, V(i)%start, V(i)%count ))
           case (3)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_f, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_f, V(i)%start, V(i)%count ))
           case (4)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_f, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_f, V(i)%start, V(i)%count ))
           end select
        case (NF90_DOUBLE)
           select case (V(i)%nDims-1)
           case (0)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G0_d, V(i)%start )) 
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_d, V(i)%start )) 
           case (1)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G1_d, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_d, V(i)%start, V(i)%count ))
           case (2)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G2_d, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_d, V(i)%start, V(i)%count ))
           case (3)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G3_d, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_d, V(i)%start, V(i)%count ))
           case (4)
-             call check( nf90_put_var ( ncId,  V(i)%varId, V(i)%G4_d, V(i)%start, V(i)%count ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_d, V(i)%start, V(i)%count ))
           end select
        end select
     end do
@@ -388,10 +412,13 @@ contains
   !     closes a stream of an open netcdf file and saves the file.
   !
   ! CALLING SEQUENCE
-  !     call close_netcdf(nc)
+  !     call close_netcdf(nc, Info=Info)
   !
   ! INTENT(IN)
   !     integer(i4) :: nc - stream id of an open netcdf file which shall be closed
+  !
+  ! INTENT(IN), OPTIONAL
+  !     logical :: Info - if given and true, progress information will be written
   !
   ! RESTRICTIONS
   !     closes only an already open stream
@@ -405,31 +432,36 @@ contains
   ! HISTORY
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
+  !              Matthias Cuntz  Jan 2012 - Info
   !
-  subroutine close_netCDF(ncId)
+  subroutine close_netCDF(ncId,Info)
     !
     implicit none
     ! 
-    integer(i4), intent(in)        :: ncId
+    integer(i4), intent(in)           :: ncId
+    logical,     intent(in), optional :: Info
     !
     ! close: save new netCDF dataset
-    call check( nf90_close( ncId ))
-    print *, "NetCDF file was saved"
+    call check(nf90_close( ncId ))
+    if (present(Info)) then
+       if (Info) write(*,*) "NetCDF file was saved."
+    end if
     !
   end subroutine close_netCDF
 
-  !******************************************************************************
+  ! -----------------------------------------------------------------------------
   !  private error checking routine
-  !******************************************************************************
   subroutine check(status)
     !
     implicit none
     !
     integer(i4), intent(in) :: status
-    if(status /= nf90_noerr) then 
-       print *, trim(nf90_strerror(status))
+    !
+    if (status /= nf90_noerr) then
+       write(*,*) trim(nf90_strerror(status))
        stop
     end if
+    !
   end subroutine check
   !
 end module mo_ncWrite

@@ -8,6 +8,7 @@ MODULE mo_string_utils
 
   PRIVATE
 
+  PUBLIC :: nullstring ! Check if string is still NULL
   PUBLIC :: tolower   ! Conversion   : 'ABCXYZ' -> 'abcxyz'   
   PUBLIC :: toupper   ! Conversion   : 'abcxyz' -> 'ABCXYZ'
   PUBLIC :: separator ! Format string: '-----...-----'
@@ -22,6 +23,65 @@ MODULE mo_string_utils
   ! ------------------------------------------------------------------
 
 CONTAINS
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         nullstring
+
+  !     PURPOSE
+  !         Checks if string was already used, i.e. does not contain NULL anymore.
+
+  !     CALLING SEQUENCE
+  !         good = nullstring(str)
+  
+  !     INDENT(IN)
+  !         character(len=*) :: str    String
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         logical :: good    .true.: string was already set; .false.: string still in initialised state
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         if (nullstring(trim(str))) write(*,*) trim(str)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Jan 2012
+
+  FUNCTION nullstring(str)
+
+    IMPLICIT NONE
+
+    CHARACTER(LEN=*), INTENT(in) :: str
+    LOGICAL                      :: nullstring
+
+    if (verify(trim(str), &
+         'abcdefghijklmnobqrstuvwxyzABCDEFGHIFKLMNOPQRSTUVWXYZ1234567890-!@#$%^&*()_+={}[];:"\|/?.>,<`~" ') &
+         == 0) then
+       nullstring = .true.
+    else
+       nullstring = .false.
+    endif
+
+  END FUNCTION nullstring
 
   ! ------------------------------------------------------------------
 

@@ -11,7 +11,7 @@
 ! ------------------------------------------------------------------------------
 program ReadNc
 !
-use mo_kind,    only: i4, sp, dp
+use mo_kind,    only: i4, sp
 use mo_NcRead,  only: Get_NcVar, Get_NcDim
 use mo_setnc,   only: setnc
 use mo_NcWrite, only: create_netcdf, close_netcdf, write_static_netcdf, write_dynamic_netcdf, V
