@@ -8,11 +8,11 @@ MODULE mo_string_utils
 
   PRIVATE
 
-  PUBLIC :: nullstring ! Check if string is still NULL
+  PUBLIC :: nonull    ! Check if string is still NULL
+  PUBLIC :: num2str   ! Convert a number to a string
+  PUBLIC :: separator ! Format string: '-----...-----'
   PUBLIC :: tolower   ! Conversion   : 'ABCXYZ' -> 'abcxyz'   
   PUBLIC :: toupper   ! Conversion   : 'abcxyz' -> 'ABCXYZ'
-  PUBLIC :: separator ! Format string: '-----...-----'
-  PUBLIC :: num2str   ! Convert a number to a string
 
   INTERFACE num2str
      MODULE PROCEDURE i42str, i82str, sp2str, dp2str, log2str
@@ -27,13 +27,13 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         nullstring
+  !         nonull
 
   !     PURPOSE
-  !         Checks if string was already used, i.e. does not contain NULL anymore.
+  !         Checks if string was already used, i.e. does not contain NULL character anymore.
 
   !     CALLING SEQUENCE
-  !         good = nullstring(str)
+  !         used = nonull(str)
   
   !     INDENT(IN)
   !         character(len=*) :: str    String
@@ -42,7 +42,7 @@ CONTAINS
   !         None
 
   !     INDENT(OUT)
-  !         logical :: good    .true.: string was already set; .false.: string still in initialised state
+  !         logical :: used    .true.: string was already set; .false.: string still in initialised state
 
   !     INDENT(IN), OPTIONAL
   !         None
@@ -57,7 +57,7 @@ CONTAINS
   !         None
 
   !     EXAMPLE
-  !         if (nullstring(trim(str))) write(*,*) trim(str)
+  !         if (nonull(str)) write(*,*) trim(str)
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -66,150 +66,20 @@ CONTAINS
   !     HISTORY
   !         Written,  Matthias Cuntz, Jan 2012
 
-  FUNCTION nullstring(str)
+  FUNCTION nonull(str)
 
     IMPLICIT NONE
 
     CHARACTER(LEN=*), INTENT(in) :: str
-    LOGICAL                      :: nullstring
+    LOGICAL                      :: nonull
 
-    if (verify(trim(str), &
-         'abcdefghijklmnobqrstuvwxyzABCDEFGHIFKLMNOPQRSTUVWXYZ1234567890-!@#$%^&*()_+={}[];:"\|/?.>,<`~" ') &
-         == 0) then
-       nullstring = .true.
+    if (scan(str, achar(0)) == 0) then
+       nonull = .true.
     else
-       nullstring = .false.
+       nonull = .false.
     endif
 
-  END FUNCTION nullstring
-
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         tolower
-
-  !     PURPOSE
-  !         Convert all upper case letters in string to lower case letters.
-
-  !     CALLING SEQUENCE
-  !         low = tolower(upper)
-  
-  !     INDENT(IN)
-  !         character(len=*) :: upper    String
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         character(len=len_trim(upper)) :: low    String where all uppercase in input is converted to lowercase
-
-  !     INDENT(IN), OPTIONAL
-  !         None
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         ! Returns 'hallo'
-  !         low = tolower('Hallo')
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         None
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
-
-  FUNCTION tolower(upper)
-
-    IMPLICIT NONE
-
-    CHARACTER(LEN=*)              ,INTENT(in) :: upper
-    CHARACTER(LEN=LEN_TRIM(upper))            :: tolower
-
-    INTEGER            :: i
-    INTEGER ,PARAMETER :: idel = ICHAR('a')-ICHAR('A')
-
-    DO i=1,LEN_TRIM(upper)
-      IF (ICHAR(upper(i:i)) >= ICHAR('A') .AND. &
-          ICHAR(upper(i:i)) <= ICHAR('Z')) THEN
-        tolower(i:i) = CHAR( ICHAR(upper(i:i)) + idel )
-      ELSE
-        tolower(i:i) = upper(i:i)
-      END IF
-    END DO
-
-  END FUNCTION tolower
-
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         toupper
-
-  !     PURPOSE
-  !         Convert all lower case letters in string to upper case letters.
-
-  !     CALLING SEQUENCE
-  !         up = toupper(lower)
-  
-  !     INDENT(IN)
-  !         character(len=*) :: lower    String
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         character(len=len_trim(lower)) :: up    String where all lowercase in input is converted to uppercase
-
-  !     INDENT(IN), OPTIONAL
-  !         None
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         ! Returns 'HALLO'
-  !         up = toupper('Hallo')
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         None
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
-
-  FUNCTION toupper (lower)
-
-    IMPLICIT NONE
-
-    CHARACTER(LEN=*)              ,INTENT(in) :: lower
-    CHARACTER(LEN=LEN_TRIM(lower))            :: toupper
-
-    INTEGER            :: i
-    INTEGER, PARAMETER :: idel = ICHAR('A')-ICHAR('a')
-
-    DO i=1,LEN_TRIM(lower)
-      IF (ICHAR(lower(i:i)) >= ICHAR('a') .AND. &
-          ICHAR(lower(i:i)) <= ICHAR('z')) THEN
-        toupper(i:i) = CHAR( ICHAR(lower(i:i)) + idel )
-      ELSE
-        toupper(i:i) = lower(i:i)
-      END IF
-    END DO
-
-  END FUNCTION toupper
+  END FUNCTION nonull
 
   ! ------------------------------------------------------------------
 
@@ -354,6 +224,134 @@ CONTAINS
     !log2str = adjustl(log2str)
 
   END FUNCTION log2str
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         tolower
+
+  !     PURPOSE
+  !         Convert all upper case letters in string to lower case letters.
+
+  !     CALLING SEQUENCE
+  !         low = tolower(upper)
+  
+  !     INDENT(IN)
+  !         character(len=*) :: upper    String
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         character(len=len_trim(upper)) :: low    String where all uppercase in input is converted to lowercase
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! Returns 'hallo'
+  !         low = tolower('Hallo')
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+
+  FUNCTION tolower(upper)
+
+    IMPLICIT NONE
+
+    CHARACTER(LEN=*)              ,INTENT(in) :: upper
+    CHARACTER(LEN=LEN_TRIM(upper))            :: tolower
+
+    INTEGER            :: i
+    INTEGER ,PARAMETER :: idel = ICHAR('a')-ICHAR('A')
+
+    DO i=1,LEN_TRIM(upper)
+      IF (ICHAR(upper(i:i)) >= ICHAR('A') .AND. &
+          ICHAR(upper(i:i)) <= ICHAR('Z')) THEN
+        tolower(i:i) = CHAR( ICHAR(upper(i:i)) + idel )
+      ELSE
+        tolower(i:i) = upper(i:i)
+      END IF
+    END DO
+
+  END FUNCTION tolower
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         toupper
+
+  !     PURPOSE
+  !         Convert all lower case letters in string to upper case letters.
+
+  !     CALLING SEQUENCE
+  !         up = toupper(lower)
+  
+  !     INDENT(IN)
+  !         character(len=*) :: lower    String
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         character(len=len_trim(lower)) :: up    String where all lowercase in input is converted to uppercase
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! Returns 'HALLO'
+  !         up = toupper('Hallo')
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+
+  FUNCTION toupper (lower)
+
+    IMPLICIT NONE
+
+    CHARACTER(LEN=*)              ,INTENT(in) :: lower
+    CHARACTER(LEN=LEN_TRIM(lower))            :: toupper
+
+    INTEGER            :: i
+    INTEGER, PARAMETER :: idel = ICHAR('A')-ICHAR('a')
+
+    DO i=1,LEN_TRIM(lower)
+      IF (ICHAR(lower(i:i)) >= ICHAR('a') .AND. &
+          ICHAR(lower(i:i)) <= ICHAR('z')) THEN
+        toupper(i:i) = CHAR( ICHAR(lower(i:i)) + idel )
+      ELSE
+        toupper(i:i) = lower(i:i)
+      END IF
+    END DO
+
+  END FUNCTION toupper
 
 END MODULE mo_string_utils
 

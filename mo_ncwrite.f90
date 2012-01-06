@@ -15,7 +15,7 @@ module mo_ncWrite
                      NF90_close, nf90_noerr, nf90_strerror, NF90_CLOBBER
   !
   ! Use string utils
-  use mo_string_utils, only: nullstring
+  use mo_string_utils, only: nonull
 
   !
   private
@@ -80,7 +80,7 @@ module mo_ncWrite
   ! public variables -----------------------------------------------------------------
   integer(i4),    public                            :: nVars   ! nr. variables
   integer(i4),    public                            :: nDims   ! nr. dimensions 
-  type (dims),    public, dimension(:), allocatable :: Dnc     ! dimesions list 
+  type (dims),    public, dimension(:), allocatable :: Dnc     ! dimensions list 
   type(variable), public, dimension(:), allocatable :: V       ! variable list, THIS STRUCTURE WILL BE WRITTEN IN THE FILE
   type(attribute), public, dimension(nGAtt)         :: gatt    ! global attributes for netCDF
   !
@@ -91,7 +91,7 @@ module mo_ncWrite
   public :: close_netcdf         ! save and close the netcdf file
   !
 contains
-  !
+
   ! ------------------------------------------------------------------------------
   !
   ! NAME
@@ -129,7 +129,7 @@ contains
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
-  !
+
   subroutine create_netCDF(Filename,ncid,Info)
     !
     implicit none
@@ -194,7 +194,7 @@ contains
     !
     ! 5 Global attributes
     do k = 1, nGAtt
-       if (nullstring(Gatt(k)%name)) then
+       if (nonull(Gatt(k)%name)) then
           call check(nf90_put_att(ncId, NF90_GLOBAL, Gatt(k)%name, Gatt(k)%values))
        endif
     end do
@@ -206,6 +206,7 @@ contains
     end if
     ! 
   end subroutine create_netCDF
+
   ! ----------------------------------------------------------------------------
   !
   ! NAME
@@ -239,7 +240,7 @@ contains
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
-  !
+
   subroutine write_static_netCDF(ncId, Info)
     !
     implicit none
@@ -335,7 +336,7 @@ contains
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
-  !
+
   subroutine write_dynamic_netCDF(ncId, irec, Info)
     !
     implicit none
@@ -433,7 +434,7 @@ contains
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
-  !
+
   subroutine close_netCDF(ncId,Info)
     !
     implicit none
@@ -463,6 +464,6 @@ contains
     end if
     !
   end subroutine check
-  !
+
 end module mo_ncWrite
 
