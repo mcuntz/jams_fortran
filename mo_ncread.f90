@@ -23,7 +23,8 @@ module mo_NcRead
   interface Get_NcVar
      module procedure Get_NcVar_1d_sp, Get_NcVar_1d_dp, Get_NcVar_2d_sp, Get_NcVar_2d_dp, &
                       Get_NcVar_3d_sp, Get_NcVar_3d_dp, Get_NcVar_4d_sp, Get_NcVar_4d_dp, &
-                      Get_NcVar_5d_sp, Get_NcVar_5d_dp
+                      Get_NcVar_5d_sp, Get_NcVar_5d_dp, Get_NcVar_1d_i4, Get_NcVar_2d_i4, &
+                      Get_NcVar_3d_i4, Get_NcVar_4d_i4, Get_NcVar_5d_i4 
   end interface
   !
 contains
@@ -695,7 +696,276 @@ contains
     call check(nf90_close(ncid))
     !
   end subroutine Get_NcVar_5d_dp
+  
+  subroutine Get_NcVar_1d_i4(Filename, VarName, Dat, start, count)
+    !
+    implicit none
+    !
+    integer, parameter :: idims = 1
+    integer, parameter :: itype = 3 ! 3 = single 5 = float, 6 = double
+    !
+    character(len=*),                        intent(in)    :: Filename
+    character(len=*),                        intent(in)    :: VarName ! Variable name
+    integer(i4), dimension(:),               intent(inout) :: Dat    ! array where values should be stored
+    integer(i4), dimension(idims), optional, intent(in)    :: start
+    integer(i4), dimension(idims), optional, intent(in)    :: count
+    !
+    integer(i4), dimension(idims) :: Rstart
+    integer(i4), dimension(idims) :: Rcount
+    integer(i4)                   :: ncid    ! id of input stream
+    integer(i4)                   :: varid   ! id of variable to be read
+    integer(i4)                   :: vartype ! type of variable
+    integer(i4)                   :: i
+    !
+    ! Defaults for Options Start and Count
+    Rstart = 1
+    Rcount = shape(Dat)
+    !
+    ! Assign options Start and Count if present
+    if (present(start)) then
+       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
+       Rstart = start
+    end if
+    !
+    if (present(count)) then
+       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
+       Rcount = count
+       do i=1, idims
+          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+       end do
+    end if
+    !
+    ! Open NetCDF filename
+    call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
+    !
+    ! Inquire file, check if VarName exists and get the id
+    call Get_Info(Varname,ncid,varid,vartype)
+    ! check variable type ( 5 equals float type, 6 equals double )
+    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    !
+    ! get values by varid
+    call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
+    !
+    ! close File
+    call check(nf90_close(ncid))
+    !
+  end subroutine Get_NcVar_1d_i4
 
+  subroutine Get_NcVar_2d_i4(Filename, VarName, Dat, start, count)
+    !
+    implicit none
+    !
+    integer, parameter :: idims = 2
+    integer, parameter :: itype = 3 ! 3 = single, 5 = float, 6 = double
+    !
+    character(len=*),                        intent(in)    :: Filename
+    character(len=*),                        intent(in)    :: VarName ! Variable name
+    integer(i4), dimension(:,:),             intent(inout) :: Dat    ! array where values should be stored
+    integer(i4), dimension(idims), optional, intent(in)    :: start
+    integer(i4), dimension(idims), optional, intent(in)    :: count
+    !
+    integer(i4), dimension(idims) :: Rstart
+    integer(i4), dimension(idims) :: Rcount
+    integer(i4)                   :: ncid    ! id of input stream
+    integer(i4)                   :: varid   ! id of variable to be read
+    integer(i4)                   :: vartype ! type of variable
+    integer(i4)                   :: i
+    !
+    ! Defaults for Options Start and Count
+    Rstart = 1
+    Rcount = shape(Dat)
+    !
+    ! Assign options Start and Count if present
+    if (present(start)) then
+       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
+       Rstart = start
+    end if
+    !
+    if (present(count)) then
+       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
+       Rcount = count
+       do i=1, idims
+          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+       end do
+    end if
+    !
+    ! Open NetCDF filename
+    call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
+    !
+    ! Inquire file, check if VarName exists and get the id
+    call Get_Info(Varname,ncid,varid,vartype)
+    ! check variable type ( 5 equals float type, 6 equals double )
+    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    !
+    ! get values by varid
+    call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
+    !
+    ! close File
+    call check(nf90_close(ncid))
+    !
+  end subroutine Get_NcVar_2d_i4
+
+  subroutine Get_NcVar_3d_i4(Filename, VarName, Dat, start, count)
+    !
+    implicit none
+    !
+    integer, parameter :: idims = 3
+    integer, parameter :: itype = 3 ! 3 = single, 5 = float, 6 = double
+    !
+    character(len=*),                        intent(in)    :: Filename
+    character(len=*),                        intent(in)    :: VarName ! Variable name
+    integer(i4), dimension(:,:,:),           intent(inout) :: Dat    ! array where values should be stored
+    integer(i4), dimension(idims), optional, intent(in)    :: start
+    integer(i4), dimension(idims), optional, intent(in)    :: count
+    !
+    integer(i4), dimension(idims) :: Rstart
+    integer(i4), dimension(idims) :: Rcount
+    integer(i4)                   :: ncid    ! id of input stream
+    integer(i4)                   :: varid   ! id of variable to be read
+    integer(i4)                   :: vartype ! type of variable
+    integer(i4)                   :: i
+    !
+    ! Defaults for Options Start and Count
+    Rstart = 1
+    Rcount = shape(Dat)
+    !
+    ! Assign options Start and Count if present
+    if (present(start)) then
+       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
+       Rstart = start
+    end if
+    !
+    if (present(count)) then
+       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
+       Rcount = count
+       do i=1, idims
+          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+       end do
+    end if
+    !
+    ! Open NetCDF filename
+    call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
+    !
+    ! Inquire file, check if VarName exists and get the id
+    call Get_Info(Varname,ncid,varid,vartype)
+    ! check variable type ( 5 equals float type, 6 equals double )
+    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    !
+    ! get values by varid
+    call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
+    !
+    ! close File
+    call check(nf90_close(ncid))
+    !
+  end subroutine Get_NcVar_3d_i4
+
+  subroutine Get_NcVar_4d_i4(Filename, VarName, Dat, start, count)
+    !
+    implicit none
+    !
+    integer, parameter :: idims = 4
+    integer, parameter :: itype = 3 ! 3 = single, 5 = float, 6 = double
+    !
+    character(len=*),                        intent(in)    :: Filename
+    character(len=*),                        intent(in)    :: VarName ! Variable name
+    integer(i4), dimension(:,:,:,:),         intent(inout) :: Dat    ! array where values should be stored
+    integer(i4), dimension(idims), optional, intent(in)    :: start
+    integer(i4), dimension(idims), optional, intent(in)    :: count
+    !
+    integer(i4), dimension(idims) :: Rstart
+    integer(i4), dimension(idims) :: Rcount
+    integer(i4)                   :: ncid    ! id of input stream
+    integer(i4)                   :: varid   ! id of variable to be read
+    integer(i4)                   :: vartype ! type of variable
+    integer(i4)                   :: i
+    !
+    ! Defaults for Options Start and Count
+    Rstart = 1
+    Rcount = shape(Dat)
+    !
+    ! Assign options Start and Count if present
+    if (present(start)) then
+       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
+       Rstart = start
+    end if
+    !
+    if (present(count)) then
+       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
+       Rcount = count
+       do i=1, idims
+          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+       end do
+    end if
+    !
+    ! Open NetCDF filename
+    call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
+    !
+    ! Inquire file, check if VarName exists and get the id
+    call Get_Info(Varname,ncid,varid,vartype)
+    ! check variable type ( 5 equals float type, 6 equals double )
+    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    !
+    ! get values by varid
+    call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
+    !
+    ! close File
+    call check(nf90_close(ncid))
+    !
+  end subroutine Get_NcVar_4d_i4
+
+  subroutine Get_NcVar_5d_i4(Filename, VarName, Dat, start, count)
+    !
+    implicit none
+    !
+    integer, parameter :: idims = 5
+    integer, parameter :: itype = 3 ! 3 = single, 5 = float, 6 = double
+    !
+    character(len=*),                        intent(in)    :: Filename
+    character(len=*),                        intent(in)    :: VarName ! Variable name
+    integer(i4), dimension(:,:,:,:,:),       intent(inout) :: Dat    ! array where values should be stored
+    integer(i4), dimension(idims), optional, intent(in)    :: start
+    integer(i4), dimension(idims), optional, intent(in)    :: count
+    !
+    integer(i4), dimension(idims) :: Rstart
+    integer(i4), dimension(idims) :: Rcount
+    integer(i4)                   :: ncid    ! id of input stream
+    integer(i4)                   :: varid   ! id of variable to be read
+    integer(i4)                   :: vartype ! type of variable
+    integer(i4)                   :: i
+    !
+    ! Defaults for Options Start and Count
+    Rstart = 1
+    Rcount = shape(Dat)
+    !
+    ! Assign options Start and Count if present
+    if (present(start)) then
+       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
+       Rstart = start
+    end if
+    !
+    if (present(count)) then
+       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
+       Rcount = count
+       do i=1, idims
+          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+       end do
+    end if
+    !
+    ! Open NetCDF filename
+    call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
+    !
+    ! Inquire file, check if VarName exists and get the id
+    call Get_Info(Varname,ncid,varid,vartype)
+    ! check variable type ( 5 equals float type, 6 equals double )
+    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    !
+    ! get values by varid
+    call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
+    !
+    ! close File
+    call check(nf90_close(ncid))
+    !
+  end subroutine Get_NcVar_5d_i4
   ! ------------------------------------------------------------------------------
   !
   ! SUBROUTINE GET_INFO
