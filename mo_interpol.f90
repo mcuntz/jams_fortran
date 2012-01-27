@@ -98,18 +98,19 @@ CONTAINS
 #else
     REAL(dp),    DIMENSION(size(u)) :: ums
 #endif
-    INTEGER(i4) :: n, m
+    INTEGER(i4) :: m
 #ifdef ABSOFT
+    INTEGER(i4) :: n
     INTEGER(i4) :: i
 #endif
 
     m = size(v)
     if (size(x) /= m) stop 'Error interpol_dp: size(v) /= size(x)'
-    n = size(u)
 
-    s = min(max(locate(x, u), 1), m-1)  ! Subscript intervals
+    s = min(max(locate(x, u), 1_i4), m-1_i4)  ! Subscript intervals
 
 #ifdef ABSOFT
+    n = size(u)
     do i=1, n
        ums = u(i) - x(s(i))
        if (abs(ums) < epsilon(1.0_dp)) ums = 0.0_dp
@@ -139,18 +140,19 @@ CONTAINS
 #else
     REAL(sp),    DIMENSION(size(u)) :: ums
 #endif
-    INTEGER(i4) :: n, m
+    INTEGER(i4) :: m
 #ifdef ABSOFT
+    INTEGER(i4) :: n
     INTEGER(i4) :: i
 #endif
 
     m = size(v)
     if (size(x) /= m) stop 'Error interpol_sp: size(v) /= size(x)'
-    n = size(u)
 
-    s = min(max(locate(x, u), 1), m-1)  ! Subscript intervals
+    s = min(max(locate(x, u), 1_i4), m-1_i4)  ! Subscript intervals
 
 #ifdef ABSOFT
+    n = size(u)
     do i=1, n
        ums = u(i) - x(s(i))
        if (abs(ums) < epsilon(1.0_sp)) ums = 0.0_sp

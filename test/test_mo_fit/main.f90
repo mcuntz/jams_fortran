@@ -13,7 +13,7 @@ PROGRAM main
 
   real(dp), dimension(11) :: dx = (/ (i,i=0,10) /)
   real(dp), dimension(11) :: dy = (/ 1,   6,  17,  34, 57,  86, 121, 162, 209, 262, 321 /)
-  real(dp), dimension(11) :: dsig, dout
+  real(dp), dimension(11) :: dsig
   real(dp), dimension(degree+1) :: da, dw
   real(dp), dimension(degree+1,degree+1) :: dv
   real(dp) :: dchisq
@@ -22,7 +22,7 @@ PROGRAM main
 
   real(sp), dimension(11) :: sx = (/ (i,i=0,10) /)
   real(sp), dimension(11) :: sy = (/ 1,   6,  17,  34, 57,  86, 121, 162, 209, 262, 321 /)
-  real(sp), dimension(11) :: ssig, sout
+  real(sp), dimension(11) :: ssig
   real(sp), dimension(degree+1) :: sa, sw
   real(sp), dimension(degree+1,degree+1) :: sv
   real(sp) :: schisq
@@ -52,7 +52,8 @@ PROGRAM main
   Write(*,*) ''
   dla = polyfit(dx, dy, 1)
   write(*,*) dla
-  dout = linfit(dx, dy, a=da1, b=db1)
+  ! use variable dsig for dummy output
+  dsig = linfit(dx, dy, a=da1, b=db1)
   write(*,*) da1, db1
   isgood = isgood .and. all(anint((dla-(/da1, db1/))*1000._dp) == 0._dp)
   
@@ -81,7 +82,8 @@ PROGRAM main
   Write(*,*) ''
   sla = polyfit(sx, sy, 1)
   write(*,*) sla
-  sout = linfit(sx, sy, a=sa1, b=sb1)
+  ! use variable ssig for dummy output
+  ssig = linfit(sx, sy, a=sa1, b=sb1)
   write(*,*) sa1, sb1
   isgood = isgood .and. all(anint((sla-(/sa1, sb1/))*1000._sp) == 0._sp)
 

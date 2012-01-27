@@ -94,7 +94,8 @@ CONTAINS
     LOGICAL,  DIMENSION(size(arr)) :: maske
     REAL(dp), DIMENSION(size(arr)) :: d
     LOGICAL,  DIMENSION(size(arr)) :: dmask
-    INTEGER(i4) :: n, m, ideriv
+    INTEGER(i4) :: n, ideriv
+    !INTEGER(i4) :: m
     REAL(dp)    :: iz, med, mabsdev, thresh
 
     n = size(arr)
@@ -116,7 +117,7 @@ CONTAINS
 
     select case(ideriv)
     case(0) ! pure values
-       m       = count(maske) 
+       !m       = count(maske)
        med     = median(arr,mask=maske)
        mabsdev = median(abs(arr-med),mask=maske)
        thresh  = mabsdev * iz/0.6745_dp
@@ -125,7 +126,7 @@ CONTAINS
        ! d(1:n-2) = 0.5_dp* (arr(3:n) - arr(1:n-2)) ! does not work -> ask Clemens & Matthias M
        d(1:n-1)     = arr(2:n) - arr(1:n-1)
        dmask(1:n-1) = maske(2:n) .and. maske(1:n-1)
-       m            = count(dmask(1:n-1))
+       !m            = count(dmask(1:n-1))
        med          = median(d(1:n-1),mask=dmask(1:n-1))
        mabsdev      = median(abs(d(1:n-1)-med),mask=dmask(1:n-1))
        thresh       = mabsdev * iz/0.6745_dp
@@ -134,7 +135,7 @@ CONTAINS
     case(2) ! -2nd derivative
        d(1:n-2)     = arr(2:n-1) + arr(2:n-1) - arr(1:n-2) - arr(3:n)
        dmask(1:n-2) = maske(2:n-1) .and. maske(1:n-2) .and. maske(3:n)
-       m            = count(dmask(1:n-2))
+       !m            = count(dmask(1:n-2))
        med          = median(d(1:n-2),mask=dmask(1:n-2))
        mabsdev      = median(abs(d(1:n-2)-med),mask=dmask(1:n-2))
        thresh       = mabsdev * iz/0.6745_dp
@@ -161,7 +162,8 @@ CONTAINS
     LOGICAL,  DIMENSION(size(arr)) :: maske
     REAL(sp), DIMENSION(size(arr)) :: d
     LOGICAL,  DIMENSION(size(arr)) :: dmask
-    INTEGER(i4) :: n, m, ideriv
+    INTEGER(i4) :: n, ideriv
+    !INTEGER(i4) :: m
     REAL(sp)    :: iz, med, mabsdev, thresh
 
     n = size(arr)
@@ -183,7 +185,7 @@ CONTAINS
 
     select case(ideriv)
     case(0) ! pure values
-       m       = count(maske) 
+       !m       = count(maske) 
        med     = median(arr,mask=maske)
        mabsdev = median(abs(arr-med),mask=maske)
        thresh  = mabsdev * iz/0.6745_sp
@@ -192,7 +194,7 @@ CONTAINS
        ! d(1:n-2) = 0.5_sp* (arr(3:n) - arr(1:n-2)) ! does not work -> ask Clemens & Matthias M
        d(1:n-1)     = arr(2:n) - arr(1:n-1)
        dmask(1:n-1) = maske(2:n) .and. maske(1:n-1)
-       m            = count(dmask(1:n-1))
+       !m            = count(dmask(1:n-1))
        med          = median(d(1:n-1),mask=dmask(1:n-1))
        mabsdev      = median(abs(d(1:n-1)-med),mask=dmask(1:n-1))
        thresh       = mabsdev * iz/0.6745_sp
@@ -201,7 +203,7 @@ CONTAINS
     case(2) ! -2nd derivative
        d(1:n-2)     = arr(2:n-1) + arr(2:n-1) - arr(1:n-2) - arr(3:n)
        dmask(1:n-2) = maske(2:n-1) .and. maske(1:n-2) .and. maske(3:n)
-       m            = count(dmask(1:n-2))
+       !m            = count(dmask(1:n-2))
        med          = median(d(1:n-2),mask=dmask(1:n-2))
        mabsdev      = median(abs(d(1:n-2)-med),mask=dmask(1:n-2))
        thresh       = mabsdev * iz/0.6745_sp

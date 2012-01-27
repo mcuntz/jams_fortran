@@ -610,7 +610,8 @@ CONTAINS
     REAL(dp), DIMENSION(size(x)), TARGET :: t
     REAL(dp) :: aa, bb, cchi2
     LOGICAL :: mod2
-    REAL(dp) :: mx, my, sx2, sy2, sxy, sxy2, syx2, r, ssigb
+    REAL(dp) :: mx, my, sx2, sy2, sxy, sxy2, syx2, ssigb
+    !REAL(dp) :: r
 
     if (size(x) /= size(y))   stop 'linfit_dp: size(x) /= size(y)'
     if (present(model2)) then
@@ -626,7 +627,7 @@ CONTAINS
        sx2 = sum((x-mx)*(x-mx))
        sy2 = sum((y-my)*(y-my))
        sxy = sum((x-mx)*(y-my))
-       r = sxy / sqrt(sx2) / sqrt(sy2)
+       !r = sxy / sqrt(sx2) / sqrt(sy2)
        bb = sign(sqrt(sy2/sx2),sxy)
        aa = my - bb*mx
        linfit_dp(:) = aa + bb*x(:)
@@ -695,7 +696,8 @@ CONTAINS
     REAL(sp), DIMENSION(size(x)), TARGET :: t
     REAL(sp) :: aa, bb, cchi2
     LOGICAL :: mod2
-    REAL(sp) :: mx, my, sx2, sy2, sxy, sxy2, syx2, r, ssigb
+    REAL(sp) :: mx, my, sx2, sy2, sxy, sxy2, syx2, ssigb
+    !REAL(sp) :: r
 
     if (size(x) /= size(y))   stop 'linfit_sp: size(x) /= size(y)'
     if (present(model2)) then
@@ -711,7 +713,7 @@ CONTAINS
        sx2 = sum((x-mx)*(x-mx))
        sy2 = sum((y-my)*(y-my))
        sxy = sum((x-mx)*(y-my))
-       r = sxy / sqrt(sx2) / sqrt(sy2)
+       !r = sxy / sqrt(sx2) / sqrt(sy2)
        bb = sign(sqrt(sy2/sx2),sxy)
        aa = my - bb*mx
        linfit_sp(:) = aa + bb*x(:)
@@ -1054,7 +1056,7 @@ CONTAINS
     REAL(dp), DIMENSION(:,:), INTENT(IN) :: u,v
     REAL(dp), DIMENSION(:), INTENT(IN) :: w,b
     REAL(dp), DIMENSION(:), INTENT(OUT) :: x
-    INTEGER(i4) :: mdum,ndum
+    !INTEGER(i4) :: ndum, mdum
     REAL(dp), DIMENSION(size(x)) :: tmp
     REAL(dp), DIMENSION(size(w)) :: wtmp
 
@@ -1063,8 +1065,8 @@ CONTAINS
     if (size(u,2) /= size(v,2)) stop 'svbksb_dp: size(u,2) /= size(v,2)'
     if (size(u,2) /= size(w))   stop 'svbksb_dp: size(u,2) /= size(w)'
     if (size(u,2) /= size(x))   stop 'svbksb_dp: size(u,2) /= size(x)'
-    mdum = size(u,1)
-    ndum = size(u,2)
+    !mdum = size(u,1)
+    !ndum = size(u,2)
     wtmp = w
     where (abs(w) < tiny(1.0_dp)) wtmp = 1.0_dp
     tmp = matmul(b,u) / wtmp
@@ -1079,7 +1081,7 @@ CONTAINS
     REAL(sp), DIMENSION(:,:), INTENT(IN) :: u,v
     REAL(sp), DIMENSION(:), INTENT(IN) :: w,b
     REAL(sp), DIMENSION(:), INTENT(OUT) :: x
-    INTEGER(i4) :: mdum,ndum
+    !INTEGER(i4) :: ndum, mdum
     REAL(sp), DIMENSION(size(x)) :: tmp
     REAL(sp), DIMENSION(size(w)) :: wtmp
 
@@ -1088,8 +1090,8 @@ CONTAINS
     if (size(u,2) /= size(v,2)) stop 'svbksb_sp: size(u,2) /= size(v,2)'
     if (size(u,2) /= size(w))   stop 'svbksb_sp: size(u,2) /= size(w)'
     if (size(u,2) /= size(x))   stop 'svbksb_sp: size(u,2) /= size(x)'
-    mdum = size(u,1)
-    ndum = size(u,2)
+    !mdum = size(u,1)
+    !ndum = size(u,2)
     wtmp = w
     where (abs(w) < tiny(1.0_sp)) wtmp = 1.0_sp
     tmp = matmul(b,u) / wtmp
