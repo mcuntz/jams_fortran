@@ -196,6 +196,19 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
        REAL(SP), DIMENSION(size(x)) :: bessi_v
      END FUNCTION bessi_v
+     FUNCTION dbessi_s(n,x)
+       USE mo_kind
+       INTEGER(I4), INTENT(IN) :: n
+       REAL(DP), INTENT(IN) :: x
+       REAL(DP) :: dbessi_s
+     END FUNCTION dbessi_s
+     !BL
+     FUNCTION dbessi_v(n,x)
+       USE mo_kind
+       INTEGER(I4), INTENT(IN) :: n
+       REAL(DP), DIMENSION(:), INTENT(IN) :: x
+       REAL(DP), DIMENSION(size(x)) :: dbessi_v
+     END FUNCTION dbessi_v
   END INTERFACE
   INTERFACE bessi0
      FUNCTION bessi0_s(x)
@@ -209,6 +222,17 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
        REAL(SP), DIMENSION(size(x)) :: bessi0_v
      END FUNCTION bessi0_v
+     FUNCTION dbessi0_s(x)
+       USE mo_kind
+       REAL(DP), INTENT(IN) :: x
+       REAL(DP) :: dbessi0_s
+     END FUNCTION dbessi0_s
+     !BL
+     FUNCTION dbessi0_v(x)
+       USE mo_kind
+       REAL(DP), DIMENSION(:), INTENT(IN) :: x
+       REAL(DP), DIMENSION(size(x)) :: dbessi0_v
+     END FUNCTION dbessi0_v
   END INTERFACE
   INTERFACE bessi1
      FUNCTION bessi1_s(x)
@@ -222,6 +246,17 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
        REAL(SP), DIMENSION(size(x)) :: bessi1_v
      END FUNCTION bessi1_v
+     FUNCTION dbessi1_s(x)
+       USE mo_kind
+       REAL(DP), INTENT(IN) :: x
+       REAL(DP) :: dbessi1_s
+     END FUNCTION dbessi1_s
+     !BL
+     FUNCTION dbessi1_v(x)
+       USE mo_kind
+       REAL(DP), DIMENSION(:), INTENT(IN) :: x
+       REAL(DP), DIMENSION(size(x)) :: dbessi1_v
+     END FUNCTION dbessi1_v
   END INTERFACE
   INTERFACE
      SUBROUTINE bessik(x,xnu,ri,rk,rip,rkp)
@@ -299,6 +334,19 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
        REAL(SP), DIMENSION(size(x)) :: bessk_v
      END FUNCTION bessk_v
+     FUNCTION dbessk_s(n,x)
+       USE mo_kind
+       INTEGER(I4), INTENT(IN) :: n
+       REAL(DP), INTENT(IN) :: x
+       REAL(DP) :: dbessk_s
+     END FUNCTION dbessk_s
+     !BL
+     FUNCTION dbessk_v(n,x)
+       USE mo_kind
+       INTEGER(I4), INTENT(IN) :: n
+       REAL(DP), DIMENSION(:), INTENT(IN) :: x
+       REAL(DP), DIMENSION(size(x)) :: dbessk_v
+     END FUNCTION dbessk_v
   END INTERFACE
   INTERFACE bessk0
      FUNCTION bessk0_s(x)
@@ -312,6 +360,17 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
        REAL(SP), DIMENSION(size(x)) :: bessk0_v
      END FUNCTION bessk0_v
+     FUNCTION dbessk0_s(x)
+       USE mo_kind
+       REAL(DP), INTENT(IN) :: x
+       REAL(DP) :: dbessk0_s
+     END FUNCTION dbessk0_s
+     !BL
+     FUNCTION dbessk0_v(x)
+       USE mo_kind
+       REAL(DP), DIMENSION(:), INTENT(IN) :: x
+       REAL(DP), DIMENSION(size(x)) :: dbessk0_v
+     END FUNCTION dbessk0_v
   END INTERFACE
   INTERFACE bessk1
      FUNCTION bessk1_s(x)
@@ -325,6 +384,17 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
        REAL(SP), DIMENSION(size(x)) :: bessk1_v
      END FUNCTION bessk1_v
+     FUNCTION dbessk1_s(x)
+       USE mo_kind
+       REAL(DP), INTENT(IN) :: x
+       REAL(DP) :: dbessk1_s
+     END FUNCTION dbessk1_s
+     !BL
+     FUNCTION dbessk1_v(x)
+       USE mo_kind
+       REAL(DP), DIMENSION(:), INTENT(IN) :: x
+       REAL(DP), DIMENSION(size(x)) :: dbessk1_v
+     END FUNCTION dbessk1_v
   END INTERFACE
   INTERFACE bessy
      FUNCTION bessy_s(n,x)
