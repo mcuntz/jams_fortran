@@ -336,6 +336,7 @@ contains
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
+  !              Stephan Thober  Jan 2012 - iRec is not optional
 
   subroutine write_dynamic_netCDF(ncId, irec, Info)
     !
@@ -343,7 +344,7 @@ contains
     !
     ! netcdf related variables
     integer(i4), intent(in)           :: ncId
-    integer(i4), intent(in), optional :: iRec
+    integer(i4), intent(in)           :: iRec
     logical,     intent(in), optional :: Info
     !
     integer(i4)                       :: i
@@ -352,6 +353,7 @@ contains
     !           V(:)%start and  V(:)%count
     !
     ! set values for variables (one scalar or grid at a time)
+    !
     do i = 1, nVars
        if ( .not. V(i)%unlimited     ) cycle
        if ( .not. V(i)%wFlag   ) cycle
