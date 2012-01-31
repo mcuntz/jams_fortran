@@ -189,7 +189,7 @@ MODULE mo_nr
        REAL(SP), INTENT(IN) :: x
        REAL(SP) :: bessi_s
      END FUNCTION bessi_s
-     !BL
+     !JM
      FUNCTION bessi_v(n,x)
        USE mo_kind
        INTEGER(I4), INTENT(IN) :: n
@@ -202,7 +202,7 @@ MODULE mo_nr
        REAL(DP), INTENT(IN) :: x
        REAL(DP) :: dbessi_s
      END FUNCTION dbessi_s
-     !BL
+     !JM
      FUNCTION dbessi_v(n,x)
        USE mo_kind
        INTEGER(I4), INTENT(IN) :: n
@@ -216,7 +216,7 @@ MODULE mo_nr
        REAL(SP), INTENT(IN) :: x
        REAL(SP) :: bessi0_s
      END FUNCTION bessi0_s
-     !BL
+     !JM
      FUNCTION bessi0_v(x)
        USE mo_kind
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
@@ -227,7 +227,7 @@ MODULE mo_nr
        REAL(DP), INTENT(IN) :: x
        REAL(DP) :: dbessi0_s
      END FUNCTION dbessi0_s
-     !BL
+     !JM
      FUNCTION dbessi0_v(x)
        USE mo_kind
        REAL(DP), DIMENSION(:), INTENT(IN) :: x
@@ -240,7 +240,7 @@ MODULE mo_nr
        REAL(SP), INTENT(IN) :: x
        REAL(SP) :: bessi1_s
      END FUNCTION bessi1_s
-     !BL
+     !JM
      FUNCTION bessi1_v(x)
        USE mo_kind
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
@@ -251,7 +251,7 @@ MODULE mo_nr
        REAL(DP), INTENT(IN) :: x
        REAL(DP) :: dbessi1_s
      END FUNCTION dbessi1_s
-     !BL
+     !JM
      FUNCTION dbessi1_v(x)
        USE mo_kind
        REAL(DP), DIMENSION(:), INTENT(IN) :: x
@@ -272,7 +272,7 @@ MODULE mo_nr
        REAL(SP), INTENT(IN) :: x
        REAL(SP) :: bessj_s
      END FUNCTION bessj_s
-     !BL
+     !JM
      FUNCTION bessj_v(n,x)
        USE mo_kind
        INTEGER(I4), INTENT(IN) :: n
@@ -286,7 +286,7 @@ MODULE mo_nr
        REAL(SP), INTENT(IN) :: x
        REAL(SP) :: bessj0_s
      END FUNCTION bessj0_s
-     !BL
+     !JM
      FUNCTION bessj0_v(x)
        USE mo_kind
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
@@ -299,7 +299,7 @@ MODULE mo_nr
        REAL(SP), INTENT(IN) :: x
        REAL(SP) :: bessj1_s
      END FUNCTION bessj1_s
-     !BL
+     !JM
      FUNCTION bessj1_v(x)
        USE mo_kind
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
@@ -312,7 +312,7 @@ MODULE mo_nr
        REAL(SP), INTENT(IN) :: x,xnu
        REAL(SP), INTENT(OUT) :: rj,ry,rjp,ryp
      END SUBROUTINE bessjy_s
-     !BL
+     !JM
      SUBROUTINE bessjy_v(x,xnu,rj,ry,rjp,ryp)
        USE mo_kind
        REAL(SP), INTENT(IN) :: xnu
@@ -327,7 +327,7 @@ MODULE mo_nr
        REAL(SP), INTENT(IN) :: x
        REAL(SP) :: bessk_s
      END FUNCTION bessk_s
-     !BL
+     !JM
      FUNCTION bessk_v(n,x)
        USE mo_kind
        INTEGER(I4), INTENT(IN) :: n
@@ -340,7 +340,7 @@ MODULE mo_nr
        REAL(DP), INTENT(IN) :: x
        REAL(DP) :: dbessk_s
      END FUNCTION dbessk_s
-     !BL
+     !JM
      FUNCTION dbessk_v(n,x)
        USE mo_kind
        INTEGER(I4), INTENT(IN) :: n
@@ -354,7 +354,7 @@ MODULE mo_nr
        REAL(SP), INTENT(IN) :: x
        REAL(SP) :: bessk0_s
      END FUNCTION bessk0_s
-     !BL
+     !JM
      FUNCTION bessk0_v(x)
        USE mo_kind
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
@@ -365,7 +365,7 @@ MODULE mo_nr
        REAL(DP), INTENT(IN) :: x
        REAL(DP) :: dbessk0_s
      END FUNCTION dbessk0_s
-     !BL
+     !JM
      FUNCTION dbessk0_v(x)
        USE mo_kind
        REAL(DP), DIMENSION(:), INTENT(IN) :: x
@@ -378,7 +378,7 @@ MODULE mo_nr
        REAL(SP), INTENT(IN) :: x
        REAL(SP) :: bessk1_s
      END FUNCTION bessk1_s
-     !BL
+     !JM
      FUNCTION bessk1_v(x)
        USE mo_kind
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
@@ -389,7 +389,7 @@ MODULE mo_nr
        REAL(DP), INTENT(IN) :: x
        REAL(DP) :: dbessk1_s
      END FUNCTION dbessk1_s
-     !BL
+     !JM
      FUNCTION dbessk1_v(x)
        USE mo_kind
        REAL(DP), DIMENSION(:), INTENT(IN) :: x
@@ -2201,13 +2201,19 @@ MODULE mo_nr
        REAL(SP), INTENT(OUT) :: y,dy
      END SUBROUTINE polin2
   END INTERFACE
-  INTERFACE
-     SUBROUTINE polint(xa,ya,x,y,dy)
+  INTERFACE polint
+     SUBROUTINE spolint(xa,ya,x,y,dy)
        USE mo_kind
        REAL(SP), DIMENSION(:), INTENT(IN) :: xa,ya
        REAL(SP), INTENT(IN) :: x
        REAL(SP), INTENT(OUT) :: y,dy
-     END SUBROUTINE polint
+     END SUBROUTINE spolint
+     SUBROUTINE dpolint(xa,ya,x,y,dy)
+       USE mo_kind
+       REAL(DP), DIMENSION(:), INTENT(IN) :: xa,ya
+       REAL(DP), INTENT(IN) :: x
+       REAL(DP), INTENT(OUT) :: y,dy
+     END SUBROUTINE dpolint
   END INTERFACE
   INTERFACE
      SUBROUTINE powell(p,xi,ftol,iter,fret)
@@ -2288,11 +2294,11 @@ MODULE mo_nr
        LOGICAL(LGT), INTENT(OUT) :: sing
      END SUBROUTINE qrdcmp
   END INTERFACE
-  INTERFACE
-     FUNCTION qromb(func,a,b)
+  INTERFACE qromb
+     FUNCTION qromb_sp(func,a,b)
        USE mo_kind
        REAL(SP), INTENT(IN) :: a,b
-       REAL(SP) :: qromb
+       REAL(SP) :: qromb_sp
        INTERFACE
           FUNCTION func(x)
             USE mo_kind
@@ -2300,7 +2306,20 @@ MODULE mo_nr
             REAL(SP), DIMENSION(size(x)) :: func
           END FUNCTION func
        END INTERFACE
-     END FUNCTION qromb
+     END FUNCTION qromb_sp
+     ! JM
+     FUNCTION qromb_dp(func,a,b)
+       USE mo_kind
+       REAL(DP), INTENT(IN) :: a,b
+       REAL(DP) :: qromb_dp
+       INTERFACE
+          FUNCTION func(x)
+            USE mo_kind
+            REAL(DP), DIMENSION(:), INTENT(IN) :: x
+            REAL(DP), DIMENSION(size(x)) :: func
+          END FUNCTION func
+       END INTERFACE
+     END FUNCTION qromb_dp
   END INTERFACE
   INTERFACE
      FUNCTION qromo(func,a,b,choose)
@@ -3250,8 +3269,8 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: z
      END SUBROUTINE tqli
   END INTERFACE
-  INTERFACE
-     SUBROUTINE trapzd(func,a,b,s,n)
+  INTERFACE trapzd
+     SUBROUTINE strapzd(func,a,b,s,n)
        USE mo_kind
        REAL(SP), INTENT(IN) :: a,b
        REAL(SP), INTENT(INOUT) :: s
@@ -3263,7 +3282,20 @@ MODULE mo_nr
             REAL(SP), DIMENSION(size(x)) :: func
           END FUNCTION func
        END INTERFACE
-     END SUBROUTINE trapzd
+     END SUBROUTINE strapzd
+     SUBROUTINE dtrapzd(func,a,b,s,n)
+       USE mo_kind
+       REAL(DP), INTENT(IN) :: a,b
+       REAL(DP), INTENT(INOUT) :: s
+       INTEGER(I4), INTENT(IN) :: n
+       INTERFACE
+          FUNCTION func(x)
+            USE mo_kind
+            REAL(DP), DIMENSION(:), INTENT(IN) :: x
+            REAL(DP), DIMENSION(size(x)) :: func
+          END FUNCTION func
+       END INTERFACE
+     END SUBROUTINE dtrapzd
   END INTERFACE
   INTERFACE
      SUBROUTINE tred2(a,d,e,novectors)

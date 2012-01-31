@@ -41,6 +41,9 @@ MODULE mo_nrutil
   INTERFACE imaxloc
      MODULE PROCEDURE imaxloc_r,imaxloc_i
   END INTERFACE
+  INTERFACE iminloc
+     MODULE PROCEDURE iminloc_s,iminloc_d
+  END INTERFACE
   INTERFACE assert
      MODULE PROCEDURE assert1,assert2,assert3,assert4,assert_v
   END INTERFACE
@@ -497,13 +500,21 @@ CONTAINS
     imaxloc_i=imax(1)
   END FUNCTION imaxloc_i
   !BL
-  FUNCTION iminloc(arr)
+  FUNCTION iminloc_s(arr)
     REAL(SP), DIMENSION(:), INTENT(IN) :: arr
     INTEGER(I4), DIMENSION(1) :: imin
-    INTEGER(I4) :: iminloc
+    INTEGER(I4) :: iminloc_s
     imin=minloc(arr(:))
-    iminloc=imin(1)
-  END FUNCTION iminloc
+    iminloc_s=imin(1)
+  END FUNCTION iminloc_s
+  !JM
+  FUNCTION iminloc_d(arr)
+    REAL(DP), DIMENSION(:), INTENT(IN) :: arr
+    INTEGER(I4), DIMENSION(1) :: imin
+    INTEGER(I4) :: iminloc_d
+    imin=minloc(arr(:))
+    iminloc_d=imin(1)
+  END FUNCTION iminloc_d
   !BL
   SUBROUTINE assert1(n1,string)
     CHARACTER(LEN=*), INTENT(IN) :: string
