@@ -82,7 +82,7 @@ MODULE mo_nrutil
      MODULE PROCEDURE diagadd_rv,diagadd_r
   END INTERFACE
   INTERFACE diagmult
-     MODULE PROCEDURE diagmult_rv,diagmult_r
+     MODULE PROCEDURE diagmult_rvsp,diagmult_rsp, diagmult_rvdp,diagmult_rdp
   END INTERFACE
   INTERFACE get_diag
      MODULE PROCEDURE get_diag_rv, get_diag_dv
@@ -1269,7 +1269,7 @@ CONTAINS
     end do
   END SUBROUTINE diagadd_r
   !BL
-  SUBROUTINE diagmult_rv(mat,diag)
+  SUBROUTINE diagmult_rvsp(mat,diag)
     REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: mat
     REAL(SP), DIMENSION(:), INTENT(IN) :: diag
     INTEGER(I4) :: j,n
@@ -1277,9 +1277,9 @@ CONTAINS
     do j=1,n
        mat(j,j)=mat(j,j)*diag(j)
     end do
-  END SUBROUTINE diagmult_rv
+  END SUBROUTINE diagmult_rvsp
   !BL
-  SUBROUTINE diagmult_r(mat,diag)
+  SUBROUTINE diagmult_rsp(mat,diag)
     REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: mat
     REAL(SP), INTENT(IN) :: diag
     INTEGER(I4) :: j,n
@@ -1287,7 +1287,27 @@ CONTAINS
     do j=1,n
        mat(j,j)=mat(j,j)*diag
     end do
-  END SUBROUTINE diagmult_r
+  END SUBROUTINE diagmult_rsp
+  !BL
+  SUBROUTINE diagmult_rvdp(mat,diag)
+    REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: mat
+    REAL(DP), DIMENSION(:), INTENT(IN) :: diag
+    INTEGER(I4) :: j,n
+    n = assert_eq2(size(diag),min(size(mat,1),size(mat,2)),'diagmult_rv')
+    do j=1,n
+       mat(j,j)=mat(j,j)*diag(j)
+    end do
+  END SUBROUTINE diagmult_rvdp
+  !BL
+  SUBROUTINE diagmult_rdp(mat,diag)
+    REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: mat
+    REAL(DP), INTENT(IN) :: diag
+    INTEGER(I4) :: j,n
+    n = min(size(mat,1),size(mat,2))
+    do j=1,n
+       mat(j,j)=mat(j,j)*diag
+    end do
+  END SUBROUTINE diagmult_rdp
   !BL
   FUNCTION get_diag_rv(mat)
     REAL(SP), DIMENSION(:,:), INTENT(IN) :: mat

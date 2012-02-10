@@ -683,13 +683,18 @@ MODULE mo_nr
        INTEGER(I4), INTENT(IN) :: isign
      END SUBROUTINE cosft2
   END INTERFACE
-  INTERFACE
-     SUBROUTINE covsrt(covar,maska)
+  INTERFACE covsrt
+     SUBROUTINE covsrt_sp(covar,maska)
        USE mo_kind
        REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: covar
        LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: maska
-     END SUBROUTINE covsrt
-  END INTERFACE
+     END SUBROUTINE covsrt_sp
+     SUBROUTINE covsrt_dp(covar,maska)
+       USE mo_kind
+       REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: covar
+       LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: maska
+     END SUBROUTINE covsrt_dp
+  END INTERFACE covsrt
   INTERFACE
      SUBROUTINE cyclic(a,b,c,alpha,beta,r,x)
        USE mo_kind
@@ -2046,8 +2051,8 @@ MODULE mo_nr
        END INTERFACE
      END SUBROUTINE mrqcof
   END INTERFACE
-  INTERFACE
-     SUBROUTINE mrqmin(x,y,sig,a,maska,covar,alpha,chisq,funcs,alamda)
+  INTERFACE mrqmin
+     SUBROUTINE mrqmin_sp(x,y,sig,a,maska,covar,alpha,chisq,funcs,alamda)
        USE mo_kind
        REAL(SP), DIMENSION(:), INTENT(IN) :: x,y,sig
        REAL(SP), DIMENSION(:), INTENT(INOUT) :: a
@@ -2063,8 +2068,25 @@ MODULE mo_nr
             REAL(SP), DIMENSION(:,:), INTENT(OUT) :: dyda
           END SUBROUTINE funcs
        END INTERFACE
-     END SUBROUTINE mrqmin
-  END INTERFACE
+     END SUBROUTINE mrqmin_sp
+     SUBROUTINE mrqmin_dp(x,y,sig,a,maska,covar,alpha,chisq,funcs,alamda)
+       USE mo_kind
+       REAL(DP), DIMENSION(:), INTENT(IN) :: x,y,sig
+       REAL(DP), DIMENSION(:), INTENT(INOUT) :: a
+       REAL(DP), DIMENSION(:,:), INTENT(OUT) :: covar,alpha
+       REAL(DP), INTENT(OUT) :: chisq
+       REAL(DP), INTENT(INOUT) :: alamda
+       LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: maska
+       INTERFACE
+          SUBROUTINE funcs(x,a,yfit,dyda)
+            USE mo_kind
+            REAL(DP), DIMENSION(:), INTENT(IN) :: x,a
+            REAL(DP), DIMENSION(:), INTENT(OUT) :: yfit
+            REAL(DP), DIMENSION(:,:), INTENT(OUT) :: dyda
+          END SUBROUTINE funcs
+       END INTERFACE
+     END SUBROUTINE mrqmin_dp
+  END INTERFACE mrqmin
   INTERFACE
      SUBROUTINE newt(x,check)
        USE mo_kind
