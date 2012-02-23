@@ -1,3 +1,4 @@
+
 MODULE mo_histo
 
   ! This module calculates the Histogram of data (x,y) and is 
@@ -654,7 +655,8 @@ CONTAINS
      epsname = "Histogram.eps"
   end if
 
-  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]]; then source ~/.bashrc; module load gnuplot/4.4.4 ; fi')
+  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]]; ' // &
+              'then source ~/.bashrc; module load gnuplot/4.4.4 ; fi')
 
   gnudat='data.dat'
   gnucmd='gnuplot.cmd'
@@ -707,7 +709,8 @@ CONTAINS
      epsname = "Histogram.eps"
   end if
 
-  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]]; then source ~/.bashrc; module load gnuplot/4.4.4 ; fi')
+  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]]; ' // &
+              'then source ~/.bashrc; module load gnuplot/4.4.4 ; fi')
 
   gnudat='data.dat'
   gnucmd='gnuplot.cmd'
@@ -760,8 +763,8 @@ CONTAINS
      epsname = "Histogram.eps"
   end if
 
-  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]]; then source ~/.bashrc; module load gnuplot/4.4.4 ; fi')
-
+  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]]; ' // &
+              'then source ~/.bashrc ; module load gnuplot/4.4.4 ; fi')
   gnudat='data.dat'
   gnucmd='gnuplot.cmd'
   
@@ -813,7 +816,8 @@ CONTAINS
      epsname = "Histogram.eps"
   end if
 
-  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]]; then source ~/.bashrc; module load gnuplot/4.4.4 ; fi')
+  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]];' // &
+              'then source ~/.bashrc; module load gnuplot/4.4.4 ; fi')
 
   gnudat='data.dat'
   gnucmd='gnuplot.cmd'
