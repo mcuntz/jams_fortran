@@ -19,7 +19,7 @@ PROGRAM main
   USE mo_percentile
   USE mo_sort
   USE mo_string_utils
-  USE mo_template
+  !USE mo_template
   USE mo_xor4096
 
   IMPLICIT NONE

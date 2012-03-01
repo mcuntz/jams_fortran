@@ -1,27 +1,26 @@
 
 MODULE mo_histo
 
-  ! This module calculates the Histogram of data (x,y) and is 
-  ! part of the UFZ CHS Fortran library.
+  ! This module calculates the Histogram of data
+  ! and is part of the UFZ CHS Fortran library.
 
   ! Written  Juliane Mai, Feb 2012
   ! Modified 
 
   USE mo_kind, ONLY: i4, sp, dp
+#ifdef NAG
+  USE f90_unix_proc
+#endif
 
   IMPLICIT NONE
 
   PRIVATE
 
-  PUBLIC :: histo, histoplot           ! Histogram of data
+  PUBLIC :: histo           ! Histogram of data
 
   INTERFACE histo
      MODULE PROCEDURE histo_sp_1d, histo_dp_1d, histo_sp_2d, histo_dp_2d
   END INTERFACE histo
-
-  INTERFACE histoplot
-     MODULE PROCEDURE GnuPlot_Histo_sp_bin, GnuPlot_Histo_dp_bin, GnuPlot_Histo_sp_mean, GnuPlot_Histo_dp_mean
-  END INTERFACE histoplot
 
   ! ------------------------------------------------------------------
 
@@ -561,291 +560,6 @@ CONTAINS
     end if
 
   END SUBROUTINE histo_sp_2d
-
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         histoplot
-
-  !     PURPOSE
-  !         Plots a histogram using Gnuplot.
-  !
-  !         Therefore, the x-values (center of the bin) and the y-values 
-  !         (either number of data points in each bin or an average y-value of each bin) 
-  !         have to be given. Further, the plotter needs the specific width of the bins.
-  !         Optionally, a filename can be given.
-
-  !     CALLING SEQUENCE
-  !         call histoplot(binx, bincount, width)                       ! traditional histogram without options
-  !         call histoplot(binx, biny, width)                           ! histogram with averaged second coordinate
-  !         call histoplot(binx, bincount, width, filename='file.eps')  ! traditional histogram with optional filename
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: binx(:)     1D array of x values
-  !         integer(i4) :: bincount(:) 1D array of data points fallen in each bin
-  !       or
-  !         real(sp/dp) :: biny(:)     1D array of averaged second coordinate
-  !         real(sp/dp) :: width       width of a bin
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         None
-
-  !     INDENT(IN), OPTIONAL
-  !         character   :: filename   Name of the eps-file.
-  !                                   Default, 'Histogram.eps'. 
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Only working on EVE cluster system.
-  !          
-
-  !     EXAMPLE
-  !
-  !         binx = (/4.0, 6.0/)
-  !         bincount = (/2, 2/)
-  !         width = 2.0
-  !
-  !         histoplot(binx, bincount, width)
-  !         --> Histogram.eps
-  !
-  !         binx = (/ (/4.0, 6.0/) , (/1.5, 3.5/) /)
-  !         bincount = (/2, 2/)
-  !         width = 2.0
-  !
-  !         histoplot(binx(:,1), binx(:,2), width, filename='Histogram_averaged.eps')
-  !         --> Histogram_averaged.eps
-  !
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         
-
-  !     HISTORY
-  !         Written,  Juliane Mai, Feb 2012
-  !         Modified, 
-
-  SUBROUTINE GnuPlot_Histo_sp_bin(binx,bincount,width,filename)
-
-  REAL(SP),    DIMENSION(:), INTENT(IN) :: binx
-  INTEGER(I4), DIMENSION(:), INTENT(IN) :: bincount
-  REAL(SP),                  INTENT(IN) :: width
-  CHARACTER(*), OPTIONAL,    INTENT(IN) :: filename
-
-  INTEGER(I4)       :: i
-  CHARACTER(256)    :: gnudat, gnucmd, epsname
-  CHARACTER(256)     :: str1, str2
-
-  open (unit=10, file='data.dat', status='unknown')
-  do i=1,size(binx)
-     write(10,*) binx(i),bincount(i)
-  end do
-  close(unit=10)
-
-  if (present(filename)) then
-     epsname = filename
-  else
-     epsname = "Histogram.eps"
-  end if
-
-  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]]; ' // &
-              'then source ~/.bashrc; module load gnuplot/4.4.4 ; fi')
-
-  gnudat='data.dat'
-  gnucmd='gnuplot.cmd'
-  
-   open(unit=11,file=trim(gnucmd),status='unknown')
-   write(11,'(a)') 'set terminal postscript eps enhanced "Helvetica" 20 '
-   write(11,'(a)') 'set output "'// trim(adjustl(epsname)) //'" '
-   write(11,'(a)') 'set title "Histogram" '
-   write(11,'(a)') 'set nokey '
-   write (str1,*)  minval(binx)-2*(maxval(binx)-minval(binx))/size(binx)
-   write (str2,*)  maxval(binx)+2*(maxval(binx)-minval(binx))/size(binx)
-   write(11,'(a)') 'set xrange ['//trim(str1)//':'//trim(str2)//']'
-   write (str1,*)  0
-   write (str2,*)  maxval(bincount)+1
-   write(11,'(a)') 'set yrange ['//trim(str1)//':'//trim(str2)//']'
-   write(11,'(a)') 'set style fill solid 0.25 border'
-   write (str1,*)  width   
-   write(11,'(a)') 'set boxwidth '//trim(str1)
-   write(11,'(a)') 'plot "'//trim(gnudat)//'" with boxes'
-   write(11,'(a)') 'quit'
-   close(11)
-
-   call system(trim('gnuplot '//trim(gnucmd)))
-
-   call system('rm -f ' // trim(gnudat) )
-   call system('rm -f ' // trim(gnucmd) )
-
-  END SUBROUTINE GnuPlot_Histo_sp_bin
-
-  SUBROUTINE GnuPlot_Histo_dp_bin(binx,bincount,width,filename)
-
-  REAL(DP),    DIMENSION(:), INTENT(IN) :: binx
-  INTEGER(I4), DIMENSION(:), INTENT(IN) :: bincount
-  REAL(DP),                  INTENT(IN) :: width
-  CHARACTER(*), OPTIONAL,    INTENT(IN) :: filename
-
-  INTEGER(I4)       :: i
-  CHARACTER(256)    :: gnudat, gnucmd, epsname
-  CHARACTER(256)     :: str1, str2
-
-  open (unit=10, file='data.dat', status='unknown')
-  do i=1,size(binx)
-     write(10,*) binx(i),bincount(i)
-  end do
-  close(unit=10)
-
-  if (present(filename)) then
-     epsname = filename
-  else
-     epsname = "Histogram.eps"
-  end if
-
-  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]]; ' // &
-              'then source ~/.bashrc; module load gnuplot/4.4.4 ; fi')
-
-  gnudat='data.dat'
-  gnucmd='gnuplot.cmd'
-  
-   open(unit=11,file=trim(gnucmd),status='unknown')
-   write(11,'(a)') 'set terminal postscript eps enhanced "Helvetica" 20 '
-   write(11,'(a)') 'set output "'// trim(adjustl(epsname)) //'" '
-   write(11,'(a)') 'set title "Histogram" '
-   write(11,'(a)') 'set nokey '
-   write (str1,*) minval(binx)-2*(maxval(binx)-minval(binx))/size(binx)
-   write (str2,*) maxval(binx)+2*(maxval(binx)-minval(binx))/size(binx)
-   write(11,'(a)') 'set xrange ['//trim(str1)//':'//trim(str2)//']'
-   write (str1,*) 0
-   write (str2,*) maxval(bincount)+1
-   write(11,'(a)') 'set yrange ['//trim(str1)//':'//trim(str2)//']'
-   write(11,'(a)') 'set style fill solid 0.25 border'
-   write (str1,*)  width   
-   write(11,'(a)') 'set boxwidth '//trim(str1)
-   write(11,'(a)') 'plot "'//trim(gnudat)//'" with boxes'
-   write(11,'(a)') 'quit'
-   close(11)
-
-   call system(trim('gnuplot '//trim(gnucmd)))
-
-   call system('rm -f ' // trim(gnudat) )
-   call system('rm -f ' // trim(gnucmd) )
-
-  END SUBROUTINE GnuPlot_Histo_dp_bin
-
-  SUBROUTINE GnuPlot_Histo_sp_mean(binx,biny,width,filename)
-
-  REAL(SP),    DIMENSION(:),                   INTENT(IN) :: binx
-  REAL(SP),    DIMENSION(:),                   INTENT(IN) :: biny      ! Mean of y-Values in bin x
-  REAL(SP),                                    INTENT(IN) :: width
-  CHARACTER(*),                   OPTIONAL,    INTENT(IN) :: filename
-
-  INTEGER(I4)       :: i
-  CHARACTER(256)    :: gnudat, gnucmd, epsname
-  CHARACTER(256)    :: str1, str2
-
-  open (unit=10, file='data.dat', status='unknown')
-  do i=1,size(binx)
-     write(10,*) binx(i),biny(i)
-  end do
-  close(unit=10)
-
-  if (present(filename)) then
-     epsname = filename
-  else
-     epsname = "Histogram.eps"
-  end if
-
-  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]]; ' // &
-              'then source ~/.bashrc ; module load gnuplot/4.4.4 ; fi')
-  gnudat='data.dat'
-  gnucmd='gnuplot.cmd'
-  
-   open(unit=11,file=trim(gnucmd),status='unknown')
-   write(11,'(a)') 'set terminal postscript eps enhanced "Helvetica" 20 '
-   write(11,'(a)') 'set output "'// trim(adjustl(epsname)) //'" '
-   write(11,'(a)') 'set title "Histogram" '
-   write(11,'(a)') 'set nokey '
-   write (str1,*)  minval(binx)-2*(maxval(binx)-minval(binx))/size(binx)
-   write (str2,*)  maxval(binx)+2*(maxval(binx)-minval(binx))/size(binx)
-   write(11,'(a)') 'set xrange ['//trim(str1)//':'//trim(str2)//']'
-   write (str1,*)  minval(biny)-2*(maxval(biny)-minval(biny))/size(biny)
-   write (str2,*)  maxval(biny)+2*(maxval(biny)-minval(biny))/size(biny)
-   write(11,'(a)') 'set yrange ['//trim(str1)//':'//trim(str2)//']'
-   write(11,'(a)') 'set style fill solid 0.25 border'
-   write (str1,*)  width   
-   write(11,'(a)') 'set boxwidth '//trim(str1)
-   write(11,'(a)') 'plot "'//trim(gnudat)//'" with boxes'
-   write(11,'(a)') 'quit'
-   close(11)
-
-   call system(trim('gnuplot '//trim(gnucmd)))
-
-   call system('rm -f ' // trim(gnudat) )
-   call system('rm -f ' // trim(gnucmd) )
-
-  END SUBROUTINE GnuPlot_Histo_sp_mean
-
-  SUBROUTINE GnuPlot_Histo_dp_mean(binx,biny,width,filename)
-
-  REAL(DP),    DIMENSION(:),                   INTENT(IN) :: binx
-  REAL(DP),    DIMENSION(:),                   INTENT(IN) :: biny      ! Mean of y-Values in bin x
-  REAL(DP),                                    INTENT(IN) :: width
-  CHARACTER(*),                   OPTIONAL,    INTENT(IN) :: filename
-
-  INTEGER(I4)       :: i
-  CHARACTER(256)    :: gnudat, gnucmd, epsname
-  CHARACTER(256)    :: str1, str2
-
-  open (unit=10, file='data.dat', status='unknown')
-  do i=1,size(binx,1)
-     write(10,*) binx(i),biny(i)
-  end do
-  close(unit=10)
-
-  if (present(filename)) then
-     epsname = filename
-  else
-     epsname = "Histogram.eps"
-  end if
-
-  call system('if [[ $(echo $LOADEDMODULES | grep -o gnuplot) != "gnuplot" ]];' // &
-              'then source ~/.bashrc; module load gnuplot/4.4.4 ; fi')
-
-  gnudat='data.dat'
-  gnucmd='gnuplot.cmd'
-  
-   open(unit=11,file=trim(gnucmd),status='unknown')
-   write(11,'(a)') 'set terminal postscript eps enhanced "Helvetica" 20 '
-   write(11,'(a)') 'set output "'// trim(adjustl(epsname)) //'" '
-   write(11,'(a)') 'set title "Histogram" '
-   write(11,'(a)') 'set nokey '
-   write (str1,*)  minval(binx)-2*(maxval(binx)-minval(binx))/size(binx)
-   write (str2,*)  maxval(binx)+2*(maxval(binx)-minval(binx))/size(binx)
-   write(11,'(a)') 'set xrange ['//trim(str1)//':'//trim(str2)//']'
-   write (str1,*)  minval(biny)-2*(maxval(biny)-minval(biny))/size(biny)
-   write (str2,*)  maxval(biny)+2*(maxval(biny)-minval(biny))/size(biny)
-   write(11,'(a)') 'set yrange ['//trim(str1)//':'//trim(str2)//']'
-   write(11,'(a)') 'set style fill solid 0.25 border'
-   write (str1,*)  width   
-   write(11,'(a)') 'set boxwidth '//trim(str1)
-   write(11,'(a)') 'plot "'//trim(gnudat)//'" with boxes'
-   write(11,'(a)') 'quit'
-   close(11)
-
-   call system(trim('gnuplot '//trim(gnucmd)))
-
-   call system('rm -f ' // trim(gnudat) )
-   call system('rm -f ' // trim(gnucmd) )
-
-  END SUBROUTINE GnuPlot_Histo_dp_mean
 
   ! ------------------------------------------------------------------
 
