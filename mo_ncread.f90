@@ -19,6 +19,7 @@ module mo_NcRead
   !
   public :: Get_NcDim ! get the dimensions of a Variable
   public :: Get_NcVar ! get the data of a Variable in a nc file
+  public :: check
   !
   interface Get_NcVar
      module procedure Get_NcVar_1d_sp, Get_NcVar_1d_dp, Get_NcVar_2d_sp, Get_NcVar_2d_dp, &
@@ -145,7 +146,7 @@ contains
   !        Written,  Stephan Thober, Nov 2011
   !        Modified, Stephan Thober, Nov 2011 - added comments
   !        Modified, Matthias Cuntz, Jan 2012 - unified routines for different dimensions and data types
-
+  !        Modified, Stephan Thober, Mar 2012 - corrected dynamical read of data
   ! ------------------------------------------------------------------------------
 
   subroutine Get_NcVar_1d_sp(Filename, VarName, Dat, start, count)
@@ -158,11 +159,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(sp),    dimension(:),               intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(idims), optional, intent(in)    :: start
-    integer(i4), dimension(idims), optional, intent(in)    :: count
+    integer(i4), dimension(:), optional, intent(in)    :: start
+    integer(i4), dimension(:), optional, intent(in)    :: count
     !
-    integer(i4), dimension(idims) :: Rstart
-    integer(i4), dimension(idims) :: Rcount
+    integer(i4), dimension(5) :: Rstart
+    integer(i4), dimension(5) :: Rcount
     integer(i4)                   :: ncid    ! id of input stream
     integer(i4)                   :: varid   ! id of variable to be read
     integer(i4)                   :: vartype ! type of variable
@@ -170,19 +171,22 @@ contains
     !
     ! Defaults for Options Start and Count
     Rstart = 1
-    Rcount = shape(Dat)
+    Rcount = 1
+    Rcount(1:idims) = shape(Dat)
     !
     ! Assign options Start and Count if present
     if (present(start)) then
-       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
-       Rstart = start
+       if (size(start) < size(shape(dat))) stop 'ERROR*** start has less values than data has dimensions. GetNcVar'
+       if (size(start) > 5) stop 'ERROR*** start has dimension greater than 5. GetNcVar'
+       Rstart(1:size(start)) = start
     end if
     !
     if (present(count)) then
-       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
-       Rcount = count
+       if (size(count) < size(shape(dat))) stop 'ERROR*** count has less values than data has dimensions. GetNcVar'
+       if (size(count) > 5) stop 'ERROR*** count has dimension greater than 5. GetNcVar'
+       Rcount(1:size(count)) = count
        do i=1, idims
-          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+          if (size(Dat,i) < Rcount(i)) stop 'ERROR*** try to read more data in dimension than there is. Get_NcVar'
        end do
     end if
     !
@@ -213,11 +217,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(dp),    dimension(:),               intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(idims), optional, intent(in)    :: start
-    integer(i4), dimension(idims), optional, intent(in)    :: count
+    integer(i4), dimension(:), optional, intent(in)    :: start
+    integer(i4), dimension(:), optional, intent(in)    :: count
     !
-    integer(i4), dimension(idims) :: Rstart
-    integer(i4), dimension(idims) :: Rcount
+    integer(i4), dimension(5) :: Rstart
+    integer(i4), dimension(5) :: Rcount
     integer(i4)                   :: ncid    ! id of input stream
     integer(i4)                   :: varid   ! id of variable to be read
     integer(i4)                   :: vartype ! type of variable
@@ -225,19 +229,22 @@ contains
     !
     ! Defaults for Options Start and Count
     Rstart = 1
-    Rcount = shape(Dat)
+    Rcount = 1
+    Rcount(1:idims) = shape(Dat)
     !
     ! Assign options Start and Count if present
     if (present(start)) then
-       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
-       Rstart = start
+       if (size(start) < size(shape(dat))) stop 'ERROR*** start has less values than data has dimensions. GetNcVar'
+       if (size(start) > 5) stop 'ERROR*** start has dimension greater than 5. GetNcVar'
+       Rstart(1:size(start)) = start
     end if
     !
     if (present(count)) then
-       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
-       Rcount = count
+       if (size(count) < size(shape(dat))) stop 'ERROR*** count has less values than data has dimensions. GetNcVar'
+       if (size(count) > 5) stop 'ERROR*** count has dimension greater than 5. GetNcVar'
+       Rcount(1:size(count)) = count
        do i=1, idims
-          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+          if (size(Dat,i) < Rcount(i)) stop 'ERROR*** try to read more data in dimension than there is. Get_NcVar'
        end do
     end if
     !
@@ -268,11 +275,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(sp),    dimension(:,:),             intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(idims), optional, intent(in)    :: start
-    integer(i4), dimension(idims), optional, intent(in)    :: count
+    integer(i4), dimension(:), optional, intent(in)    :: start
+    integer(i4), dimension(:), optional, intent(in)    :: count
     !
-    integer(i4), dimension(idims) :: Rstart
-    integer(i4), dimension(idims) :: Rcount
+    integer(i4), dimension(5) :: Rstart
+    integer(i4), dimension(5) :: Rcount
     integer(i4)                   :: ncid    ! id of input stream
     integer(i4)                   :: varid   ! id of variable to be read
     integer(i4)                   :: vartype ! type of variable
@@ -280,19 +287,22 @@ contains
     !
     ! Defaults for Options Start and Count
     Rstart = 1
-    Rcount = shape(Dat)
+    Rcount = 1
+    Rcount(1:idims) = shape(Dat)
     !
     ! Assign options Start and Count if present
     if (present(start)) then
-       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
-       Rstart = start
+       if (size(start) < size(shape(dat))) stop 'ERROR*** start has less values than data has dimensions. GetNcVar'
+       if (size(start) > 5) stop 'ERROR*** start has dimension greater than 5. GetNcVar'
+       Rstart(1:size(start)) = start
     end if
     !
     if (present(count)) then
-       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
-       Rcount = count
+       if (size(count) < size(shape(dat))) stop 'ERROR*** count has less values than data has dimensions. GetNcVar'
+       if (size(count) > 5) stop 'ERROR*** count has dimension greater than 5. GetNcVar'
+       Rcount(1:size(count)) = count
        do i=1, idims
-          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+          if (size(Dat,i) < Rcount(i)) stop 'ERROR*** try to read more data in dimension than there is. Get_NcVar'
        end do
     end if
     !
@@ -323,11 +333,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(dp),    dimension(:,:),             intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(idims), optional, intent(in)    :: start
-    integer(i4), dimension(idims), optional, intent(in)    :: count
+    integer(i4), dimension(:), optional, intent(in)    :: start
+    integer(i4), dimension(:), optional, intent(in)    :: count
     !
-    integer(i4), dimension(idims) :: Rstart
-    integer(i4), dimension(idims) :: Rcount
+    integer(i4), dimension(5) :: Rstart
+    integer(i4), dimension(5) :: Rcount
     integer(i4)                   :: ncid    ! id of input stream
     integer(i4)                   :: varid   ! id of variable to be read
     integer(i4)                   :: vartype ! type of variable
@@ -335,19 +345,22 @@ contains
     !
     ! Defaults for Options Start and Count
     Rstart = 1
-    Rcount = shape(Dat)
+    Rcount = 1
+    Rcount(1:idims) = shape(Dat)
     !
     ! Assign options Start and Count if present
     if (present(start)) then
-       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
-       Rstart = start
+       if (size(start) < size(shape(dat))) stop 'ERROR*** start has less values than data has dimensions. GetNcVar'
+       if (size(start) > 5) stop 'ERROR*** start has dimension greater than 5. GetNcVar'
+       Rstart(1:size(start)) = start
     end if
     !
     if (present(count)) then
-       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
-       Rcount = count
+       if (size(count) < size(shape(dat))) stop 'ERROR*** count has less values than data has dimensions. GetNcVar'
+       if (size(count) > 5) stop 'ERROR*** count has dimension greater than 5. GetNcVar'
+       Rcount(1:size(count)) = count
        do i=1, idims
-          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+          if (size(Dat,i) < Rcount(i)) stop 'ERROR*** try to read more data in dimension than there is. Get_NcVar'
        end do
     end if
     !
@@ -378,11 +391,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(sp),    dimension(:,:,:),           intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(idims), optional, intent(in)    :: start
-    integer(i4), dimension(idims), optional, intent(in)    :: count
+    integer(i4), dimension(:), optional, intent(in)    :: start
+    integer(i4), dimension(:), optional, intent(in)    :: count
     !
-    integer(i4), dimension(idims) :: Rstart
-    integer(i4), dimension(idims) :: Rcount
+    integer(i4), dimension(5) :: Rstart
+    integer(i4), dimension(5) :: Rcount
     integer(i4)                   :: ncid    ! id of input stream
     integer(i4)                   :: varid   ! id of variable to be read
     integer(i4)                   :: vartype ! type of variable
@@ -390,19 +403,22 @@ contains
     !
     ! Defaults for Options Start and Count
     Rstart = 1
-    Rcount = shape(Dat)
+    Rcount = 1
+    Rcount(1:idims) = shape(Dat)
     !
     ! Assign options Start and Count if present
     if (present(start)) then
-       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
-       Rstart = start
+       if (size(start) < size(shape(dat))) stop 'ERROR*** start has less values than data has dimensions. GetNcVar'
+       if (size(start) > 5) stop 'ERROR*** start has dimension greater than 5. GetNcVar'
+       Rstart(1:size(start)) = start
     end if
     !
     if (present(count)) then
-       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
-       Rcount = count
+       if (size(count) < size(shape(dat))) stop 'ERROR*** count has less values than data has dimensions. GetNcVar'
+       if (size(count) > 5) stop 'ERROR*** count has dimension greater than 5. GetNcVar'
+       Rcount(1:size(count)) = count
        do i=1, idims
-          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+          if (size(Dat,i) < Rcount(i)) stop 'ERROR*** try to read more data in dimension than there is. Get_NcVar'
        end do
     end if
     !
@@ -433,31 +449,34 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(dp),    dimension(:,:,:),           intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(idims), optional, intent(in)    :: start
-    integer(i4), dimension(idims), optional, intent(in)    :: count
+    integer(i4), dimension(:), optional, intent(in)    :: start
+    integer(i4), dimension(:), optional, intent(in)    :: count
     !
-    integer(i4), dimension(idims) :: Rstart
-    integer(i4), dimension(idims) :: Rcount
-    integer(i4)                   :: ncid    ! id of input stream
-    integer(i4)                   :: varid   ! id of variable to be read
-    integer(i4)                   :: vartype ! type of variable
-    integer(i4)                   :: i
+    integer(i4), dimension(5) :: Rstart
+    integer(i4), dimension(5) :: Rcount
+    integer(i4)               :: ncid    ! id of input stream
+    integer(i4)               :: varid   ! id of variable to be read
+    integer(i4)               :: vartype ! type of variable
+    integer(i4)               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
-    Rcount = shape(Dat)
+    Rcount = 1
+    Rcount(1:idims) = shape(Dat)
     !
     ! Assign options Start and Count if present
     if (present(start)) then
-       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
-       Rstart = start
+       if (size(start) < size(shape(dat))) stop 'ERROR*** start has less values than data has dimensions. GetNcVar'
+       if (size(start) > 5) stop 'ERROR*** start has dimension greater than 5. GetNcVar'
+       Rstart(1:size(start)) = start
     end if
     !
     if (present(count)) then
-       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
-       Rcount = count
+       if (size(count) < size(shape(dat))) stop 'ERROR*** count has less values than data has dimensions. GetNcVar'
+       if (size(count) > 5) stop 'ERROR*** count has dimension greater than 5. GetNcVar'
+       Rcount(1:size(count)) = count
        do i=1, idims
-          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+          if (size(Dat,i) < Rcount(i)) stop 'ERROR*** try to read more data in dimension than there is. Get_NcVar'
        end do
     end if
     !
@@ -488,11 +507,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(sp),    dimension(:,:,:,:),         intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(idims), optional, intent(in)    :: start
-    integer(i4), dimension(idims), optional, intent(in)    :: count
+     integer(i4), dimension(:), optional, intent(in)    :: start
+    integer(i4), dimension(:), optional, intent(in)    :: count
     !
-    integer(i4), dimension(idims) :: Rstart
-    integer(i4), dimension(idims) :: Rcount
+    integer(i4), dimension(5) :: Rstart
+    integer(i4), dimension(5) :: Rcount
     integer(i4)                   :: ncid    ! id of input stream
     integer(i4)                   :: varid   ! id of variable to be read
     integer(i4)                   :: vartype ! type of variable
@@ -500,19 +519,22 @@ contains
     !
     ! Defaults for Options Start and Count
     Rstart = 1
-    Rcount = shape(Dat)
+    Rcount = 1
+    Rcount(1:idims) = shape(Dat)
     !
     ! Assign options Start and Count if present
     if (present(start)) then
-       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
-       Rstart = start
+       if (size(start) < size(shape(dat))) stop 'ERROR*** start has less values than data has dimensions. GetNcVar'
+       if (size(start) > 5) stop 'ERROR*** start has dimension greater than 5. GetNcVar'
+       Rstart(1:size(start)) = start
     end if
     !
     if (present(count)) then
-       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
-       Rcount = count
+       if (size(count) < size(shape(dat))) stop 'ERROR*** count has less values than data has dimensions. GetNcVar'
+       if (size(count) > 5) stop 'ERROR*** count has dimension greater than 5. GetNcVar'
+       Rcount(1:size(count)) = count
        do i=1, idims
-          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+          if (size(Dat,i) < Rcount(i)) stop 'ERROR*** try to read more data in dimension than there is. Get_NcVar'
        end do
     end if
     !
@@ -543,11 +565,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(dp),    dimension(:,:,:,:),         intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(idims), optional, intent(in)    :: start
-    integer(i4), dimension(idims), optional, intent(in)    :: count
+    integer(i4), dimension(:), optional, intent(in)    :: start
+    integer(i4), dimension(:), optional, intent(in)    :: count
     !
-    integer(i4), dimension(idims) :: Rstart
-    integer(i4), dimension(idims) :: Rcount
+    integer(i4), dimension(5) :: Rstart
+    integer(i4), dimension(5) :: Rcount
     integer(i4)                   :: ncid    ! id of input stream
     integer(i4)                   :: varid   ! id of variable to be read
     integer(i4)                   :: vartype ! type of variable
@@ -555,19 +577,22 @@ contains
     !
     ! Defaults for Options Start and Count
     Rstart = 1
-    Rcount = shape(Dat)
+    Rcount = 1
+    Rcount(1:idims) = shape(Dat)
     !
     ! Assign options Start and Count if present
     if (present(start)) then
-       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
-       Rstart = start
+       if (size(start) < size(shape(dat))) stop 'ERROR*** start has less values than data has dimensions. GetNcVar'
+       if (size(start) > 5) stop 'ERROR*** start has dimension greater than 5. GetNcVar'
+       Rstart(1:size(start)) = start
     end if
     !
     if (present(count)) then
-       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
-       Rcount = count
+       if (size(count) < size(shape(dat))) stop 'ERROR*** count has less values than data has dimensions. GetNcVar'
+       if (size(count) > 5) stop 'ERROR*** count has dimension greater than 5. GetNcVar'
+       Rcount(1:size(count)) = count
        do i=1, idims
-          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+          if (size(Dat,i) < Rcount(i)) stop 'ERROR*** try to read more data in dimension than there is. Get_NcVar'
        end do
     end if
     !
@@ -598,11 +623,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(sp),    dimension(:,:,:,:,:),       intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(idims), optional, intent(in)    :: start
-    integer(i4), dimension(idims), optional, intent(in)    :: count
+    integer(i4), dimension(:), optional, intent(in)    :: start
+    integer(i4), dimension(:), optional, intent(in)    :: count
     !
-    integer(i4), dimension(idims) :: Rstart
-    integer(i4), dimension(idims) :: Rcount
+    integer(i4), dimension(5) :: Rstart
+    integer(i4), dimension(5) :: Rcount
     integer(i4)                   :: ncid    ! id of input stream
     integer(i4)                   :: varid   ! id of variable to be read
     integer(i4)                   :: vartype ! type of variable
@@ -610,19 +635,22 @@ contains
     !
     ! Defaults for Options Start and Count
     Rstart = 1
-    Rcount = shape(Dat)
+    Rcount = 1
+    Rcount(1:idims) = shape(Dat)
     !
     ! Assign options Start and Count if present
     if (present(start)) then
-       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
-       Rstart = start
+       if (size(start) < size(shape(dat))) stop 'ERROR*** start has less values than data has dimensions. GetNcVar'
+       if (size(start) > 5) stop 'ERROR*** start has dimension greater than 5. GetNcVar'
+       Rstart(1:size(start)) = start
     end if
     !
     if (present(count)) then
-       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
-       Rcount = count
+       if (size(count) < size(shape(dat))) stop 'ERROR*** count has less values than data has dimensions. GetNcVar'
+       if (size(count) > 5) stop 'ERROR*** count has dimension greater than 5. GetNcVar'
+       Rcount(1:size(count)) = count
        do i=1, idims
-          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+          if (size(Dat,i) < Rcount(i)) stop 'ERROR*** try to read more data in dimension than there is. Get_NcVar'
        end do
     end if
     !
@@ -653,11 +681,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(dp),    dimension(:,:,:,:,:),       intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(idims), optional, intent(in)    :: start
-    integer(i4), dimension(idims), optional, intent(in)    :: count
+    integer(i4), dimension(:), optional, intent(in)    :: start
+    integer(i4), dimension(:), optional, intent(in)    :: count
     !
-    integer(i4), dimension(idims) :: Rstart
-    integer(i4), dimension(idims) :: Rcount
+    integer(i4), dimension(5) :: Rstart
+    integer(i4), dimension(5) :: Rcount
     integer(i4)                   :: ncid    ! id of input stream
     integer(i4)                   :: varid   ! id of variable to be read
     integer(i4)                   :: vartype ! type of variable
@@ -665,19 +693,22 @@ contains
     !
     ! Defaults for Options Start and Count
     Rstart = 1
-    Rcount = shape(Dat)
+    Rcount = 1
+    Rcount(1:idims) = shape(Dat)
     !
     ! Assign options Start and Count if present
     if (present(start)) then
-       if (size(start) /= idims) stop 'ERROR*** size of start does not equal dimensions of data. GetNcVar'
-       Rstart = start
+       if (size(start) < size(shape(dat))) stop 'ERROR*** start has less values than data has dimensions. GetNcVar'
+       if (size(start) > 5) stop 'ERROR*** start has dimension greater than 5. GetNcVar'
+       Rstart(1:size(start)) = start
     end if
     !
     if (present(count)) then
-       if (size(count) /= idims) stop 'ERROR*** size of count does not equal dimensions of data. GetNcVar'
-       Rcount = count
+       if (size(count) < size(shape(dat))) stop 'ERROR*** count has less values than data has dimensions. GetNcVar'
+       if (size(count) > 5) stop 'ERROR*** count has dimension greater than 5. GetNcVar'
+       Rcount(1:size(count)) = count
        do i=1, idims
-          if (size(Dat,i) /= Rcount(i)) stop 'ERROR*** size mismatch. Get_NcVar'
+          if (size(Dat,i) < Rcount(i)) stop 'ERROR*** try to read more data in dimension than there is. Get_NcVar'
        end do
     end if
     !
