@@ -77,21 +77,34 @@ CONTAINS
   !     HISTORY
   !         Written,  Juliane Mai, March 2012
 
-  SUBROUTINE anneal_dp(cost, para, temp, costbest, parabest, & 
+  SUBROUTINE anneal_dp(cost, para, range, temp, costbest, parabest, & 
                        DT_in, nITERmax_in, LEN_in, nST_in, & 
-                       eps_in, acc_in, seeds_in, printflag_in)
+                       eps_in, acc_in, seeds_in, printflag_in, coststatus_in, maskpara_in)
 
     IMPLICIT NONE
 
     INTERFACE
-       FUNCTION cost(paraset)
+       FUNCTION cost(paraset,status_in)
+       ! calculates the cost function at a certain parameter set paraset and 
+       ! returns optionally if it is a valid parameter set (status_in)
            use mo_kind
            REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
            REAL(DP)                            :: cost
+           LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
        END FUNCTION cost
     END INTERFACE
+    
+    INTERFACE
+       SUBROUTINE range(paraset,iPar,rangePar)
+       ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
+           use mo_kind
+           REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+           INTEGER(I4),            INTENT(IN)  :: iPar
+           REAL(DP), DIMENSION(2), INTENT(OUT) :: rangePar
+       END SUBROUTINE range
+    END INTERFACE
 
-    REAL(DP),    DIMENSION(:,:),          INTENT(IN)    :: para  ! parameter(i), min(parameter(i)), max(parameter(i))
+    REAL(DP),    DIMENSION(:),            INTENT(IN)    :: para  ! initial parameter i
     REAL(DP),                             INTENT(IN)    :: temp  ! starting temperature
     REAL(DP),                             INTENT(OUT)   :: costbest  ! minimized value of cost function
     REAL(DP),    DIMENSION(size(para,1)), INTENT(OUT)   :: parabest  ! parameter set minimizing the cost function
@@ -103,6 +116,13 @@ CONTAINS
     REAL(DP),    OPTIONAL,       INTENT(IN)  :: acc_in   ! Acceptance Ratio, <0.1 stopping criteria
     INTEGER(I8), OPTIONAL,       INTENT(IN)  :: seeds_in(3)   ! Seeds of random numbers
     LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in ! If command line output is written (.true.) 
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: coststatus_in  ! Checks status of cost function value, 
+                                                               ! i.e. is parameter set is feasible (.true.)
+                                                               ! default = .false.
+    LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), INTENT(IN)  :: maskpara_in  
+                                                         ! true if parameter will be optimized
+                                                         ! false if parameter is discarded in optimization
+                                                         ! default = .true.
 
     INTEGER(I4) :: n    ! Number of parameters
     REAL(DP)    :: T
@@ -114,7 +134,10 @@ CONTAINS
     REAL(DP)    :: acc 
     INTEGER(I8) :: seeds(3)
     LOGICAL     :: printflag
-
+    LOGICAL     :: coststatus
+    LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
+    INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
+    
     type paramLim
        real(DP)                                 :: min                 !            minimum value
        real(DP)                                 :: max                 !            maximum value
@@ -132,14 +155,13 @@ CONTAINS
     integer(I8), dimension(0:63) :: xin1, xin2,xin3   ! optional arguments for restarting RN streams
 
     ! for SA
-    integer(I8)            :: idummy
+    integer(I8)            :: idummy,i
     character(10)          :: timeseed
     real(DP)               :: NormPhi
     real(DP)               :: ac_ratio, pa
     real(DP)               :: fo, fn, df, fBest, rho, fInc, fbb, dr
     real(DP)               :: T0, DT0
     real(DP),  parameter   :: small = -700._DP
-    integer(I4)            :: iPar
     integer(I4)            :: nITER
     integer(I4)            :: j, iter, kk
     integer(I4)            :: Ipos, Ineg
@@ -147,13 +169,16 @@ CONTAINS
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
     logical(1)             :: iStop 
+    
+    integer(I4)            :: iPar
+    real(DP), DIMENSION(2) :: iParRange
 
     n = size(para,1)
 
-    ! Input check
-    if (size(para,2) .ne. 3) then
-       stop 'Input argument para must have 3 columns (initial parameter value, min value, max value)'
-    end if
+    !! Input check
+    !if (size(para,2) .ne. 3) then
+    !   stop 'Input argument para must have 3 columns (initial parameter value, min value, max value)'
+    !end if
 
     if (present(DT_in)) then
        if ( (DT_in .lt. 0.7_dp) .or. (DT_in .gt. 0.999_dp) ) then
@@ -177,7 +202,8 @@ CONTAINS
 
     if (present(LEN_in)) then
        if (LEN_in .lt. Max(20_i4*n,250_i4)) then
-          stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
+          !stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
+          print*, 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
        else
           LEN = LEN_in
        end if
@@ -231,6 +257,29 @@ CONTAINS
        printflag = .false.
     endif
 
+    if (present(maskpara_in)) then
+       if (count(maskpara_in) .eq. 0_i4) then
+          stop 'Input argument maskpara: At least one element has to be true'
+       else
+          maskpara = maskpara_in
+       end if
+    else
+       maskpara = .true.
+    endif
+    
+    allocate ( truepara(count(maskpara)) )
+    idummy = 0_i4
+    do i=1,N
+       if ( maskpara(i) ) then
+          idummy = idummy+1_i4
+          truepara(idummy) = i
+       end if
+    end do
+    
+    if (printflag) then
+       print*, 'Following parameters will be optimized: ',truepara
+    end if
+
     T = temp
 
     call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
@@ -239,11 +288,12 @@ CONTAINS
     seeds = 0_i8
 
     ! Start Simulated Annealing routine
-    gamma(:)%min = para(:,2)
-    gamma(:)%max = para(:,3)
+    !gamma(:)%min = para(:,2)
+    !gamma(:)%max = para(:,3)
     gamma(:)%dmult = 1.0_dp
-    gamma(:)%new = para(:,1)
-    gamma(:)%old = para(:,1)
+    gamma(:)%new = para(:)
+    gamma(:)%old = para(:)
+    gamma(:)%best = para(:)
     NormPhi = -9999.9_dp
     T0=      T
     DT0=     DT
@@ -267,10 +317,12 @@ CONTAINS
     DT=     DT0
     ! Storing the best solution so far
     NormPhi = fo
+    fo      = fo/NormPhi
     fBest   = 1.0_dp   != fo/NormPhi
 
     if (printflag) then
        print '(A15,E15.7,A4,E15.7,A4)',     ' start NSe   = ', fBest , '  ( ',fBest*normPhi,' )  '
+       print '(I8, 2I5, 4E15.7)',   1_i4, 0_i4, 0_i4, 1._dp, T, fo*normPhi, fBest*normPhi
     end if
     !
     ! ****************** Stop Criterium  *******************
@@ -284,77 +336,109 @@ CONTAINS
        Ineg= 0_i4
        fbb=  fBest
        !LEN = int( real(iter,dp)*sqrt(real(iter,dp)) / nITER + 1.5*real(N,dp),i4) 
-       ! Repeat LEN times
-       loopLEN: do j=1,LEN
+       ! Repeat LEN times with feasible solution
+       j=1
+       loopLEN: do while (j .le. LEN)
+         !print*, 'iPar: ',j
          iTotalCounterR =  iTotalCounterR + 1_i4
          iTotalCounter = iTotalCounter + 1_i4
-         if ( (iTotalCounter .eq. 1_i4) .and. printflag)  then
-           print '(I8, 2I5, E15.7,3E15.7)',   ITotalCounter, Ipos, Ineg, ac_ratio, T, fo, fBest
-         end if
-         if (mod(iTotalCounter,1000_i4) == 0_i4) then
-           !call writeresults_o(4,fn) 
-         end if
+         !if (mod(iTotalCounter,1000_i4) == 0_i4) then
+         !  call writeresults_o(4,fn) 
+         !end if
          !
 	 ! Generate a random subsequent state and evaluate its objective function
          ! (1) Generate new parameter set
          dR=(1.0_DP - real(iTotalCounterR,dp) / real(nITERmax,dp))**2.0_DP
-         if (.not. (dR >= 0.05_DP ) .and. (iTotalCounterR <= int(real(nIterMax,dp)/3._dp*4_dp))) dR = 0.05_DP   
+         if (  .not. (dR >= 0.05_DP ) .and. &
+               (iTotalCounterR <= int(real(nIterMax,dp)/3._dp*4_dp))) then
+            dR = 0.05_DP
+         end if   
          ! (1a) Select parameter to be changed    
          call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
-         iPar = int(real(N,dp)*RN2+1._DP,i4)
+         !iPar = int(real(N,dp)*RN2+1._DP,i4)
+         iPar = truepara(int(real(count(maskpara),dp)*RN2+1._DP,i4))
+         !print*, 'iPar=',iPar
          ! (1b) Generate new value of selected parameter
          call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
-         gamma(iPar)%new = parGen_dp(gamma(iPar)%old,  gamma(iPar)%dMult*dR, gamma(iPar)%min, gamma(iPar)%max, 8_i4, 1_i4,RN3)
+         call range(gamma(:)%old, iPar, iParRange )
+         gamma(iPar)%min = iParRange(1)
+         gamma(iPar)%max = iParRange(2)
+         gamma(iPar)%new = parGen_dp( gamma(iPar)%old, gamma(iPar)%dMult*dR, &
+                                      gamma(iPar)%min, gamma(iPar)%max, 8_i4, 1_i4,RN3)
          ! (2) Calculate new objective function value and normalize it
-         fn = cost(gamma(:)%new) 
-         fn = fn/normPhi
-         !
-         ! write parameters
-         !call writeresults_o(5,fn)
-         !
-         df = fn-fo             
-         !
-         ! analyze change in the objective function: df
-         if (df < 0.0_DP) then
-           !
-           ! accept the new state
-	   Ipos=Ipos+1_i4
-           fo = fn
-           gamma(:)%old   = gamma(:)%new 
-           !
-           ! keep best solution
-           if (fo < fBest) then
-             fBest =  fo
-             gamma(:)%best   = gamma(:)%new
-           endif
-	else
-           if ( df >  eps ) then
-             rho=-df/T
-             if (rho < small) then
-               pa=0.0_DP
-             else
-               pa=EXP(rho)
-             end if                     
-  	     !
-             call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
+         !print*, 'coststatus before=',coststatus
+         if (present(coststatus_in)) then
+            if (coststatus_in) then
+               fn = cost(gamma(:)%new,coststatus)  !  coststatus is INTENT(OUT)
+            else
+               fn = cost(gamma(:)%new) 
+               coststatus = .true.
+            end if
+         else
+            fn = cost(gamma(:)%new) 
+            coststatus = .true.
+         end if
+         !print*, 'coststatus after=',coststatus
+          
+         feasible: if (coststatus) then   ! feasible parameter set
+          fn = fn/normPhi
+          !
+          !
+          df = fn-fo             
+          !
+          ! analyze change in the objective function: df
+          if (df < 0.0_DP) then
              !
-             if (pa > RN1) then
-               ! accept new state with certain probability
-               Ineg=Ineg+1_i4
-               fo = fn
-               ! save old state
-               gamma(:)%old   = gamma(:)%new 
+             ! accept the new state
+	         Ipos=Ipos+1_i4
+             !print*, 'Ipos=',Ipos
+             fo = fn
+             gamma(:)%old   = gamma(:)%new 
+             !
+             ! keep best solution
+             if (fo < fBest) then
+               fBest =  fo
+               gamma(:)%best   = gamma(:)%new
+             endif
+	       else
+             if ( df >  eps ) then
+               rho=-df/T
+               if (rho < small) then   !small = -700._dp
+                 pa=0.0_DP
+               else
+                 pa=EXP(rho)
+               end if    
+               !print*, 'rho=',rho,'  pa=',pa                 
+  	           !
+               call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
+               !print*, RN1
+               !
+               if (pa > RN1) then
+                 ! accept new state with certain probability
+                 Ineg=Ineg+1_i4
+                 !print*, 'Ineg=',Ineg
+                 !pause
+                 fo = fn
+                 ! save old state
+                 gamma(:)%old   = gamma(:)%new 
+               end if
+             !else
+                !print*,'NO CHANGE IN OBJ FUNCTION',gamma(:)%new
              end if
-           end if
-	 end if
-
+	       end if
+           j=j+1
+         else
+           iTotalCounterR =  iTotalCounterR - 1_i4
+           iTotalCounter = iTotalCounter - 1_i4
+         end if feasible !valid parameter set
       end do loopLEN
       !
       ! estimate acceptance ratio
       ac_ratio=(real(Ipos,dp) + real(Ineg,dp))/real(LEN,dp)
       !    
       if (printflag) then
-         print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, fo, fBest
+         print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
+                                           fo*NormPhi, fBest*NormPhi
       end if
       !
       ! Cooling schedule
@@ -401,13 +485,22 @@ CONTAINS
          end if
       end if
       ! STOP condition
-      if ( iTotalCounter > nITERmax ) iStop=.FALSE.                                    
+      if ( iTotalCounter > nITERmax ) then
+         !print*, 'iStop = .false.'
+         iStop=.FALSE.          
+      end if                          
       !
     end do loopTest
     !
-    ! heuristic *global* minimum (end solution)
+    ! heuristic *glopbal* minimum (end solution)
     !
     ! write final results
+    !
+    ! calculate cost function again (only for check and return values)  
+    parabest = gamma(:)%best
+    costbest = cost(parabest)
+    fo = costbest/NormPhi
+
     if (printflag) then
        print *, '   '
        print '(A15,E15.7,A4,E15.7,A4)',       ' end NSe     = ', fBest , '  ( ',fBest*normPhi,' )  '
@@ -418,9 +511,8 @@ CONTAINS
     
        print *, 'Final check:    ', (fo - fBest)
     end if
-
-    parabest = gamma(:)%best
-    costbest = cost(parabest)
+    
+    deallocate(truepara)
 
   END SUBROUTINE anneal_dp
 
@@ -431,10 +523,11 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
     IMPLICIT NONE
 
     INTERFACE
-       FUNCTION cost(paraset)
+       FUNCTION cost(paraset,status_in)
            use mo_kind
            REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
            REAL(SP)                            :: cost
+           LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
        END FUNCTION cost
     END INTERFACE
 
@@ -645,13 +738,17 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
 	 ! Generate a random subsequent state and evaluate its objective function
          ! (1) Generate new parameter set
          dR=(1.0_SP - real(iTotalCounterR,SP) / real(nITERmax,SP))**2.0_SP
-         if (.not. (dR >= 0.05_SP ) .and. (iTotalCounterR <= int(real(nIterMax,SP)/3._SP*4_SP))) dR = 0.05_SP   
+         if ( .not. (dR >= 0.05_SP ) .and. &
+              (iTotalCounterR <= int(real(nIterMax,SP)/3._SP*4_SP))) then
+            dR = 0.05_SP   
+         end if
          ! (1a) Select parameter to be changed    
          call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
          iPar = int(real(N,SP)*RN2+1._SP,i4)
          ! (1b) Generate new value of selected parameter
          call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
-         gamma(iPar)%new = parGen_SP(gamma(iPar)%old,  gamma(iPar)%dMult*dR, gamma(iPar)%min, gamma(iPar)%max, 8_i4, 1_i4,RN3)
+         gamma(iPar)%new = parGen_SP( gamma(iPar)%old,  gamma(iPar)%dMult*dR, &
+                                      gamma(iPar)%min, gamma(iPar)%max, 8_i4, 1_i4,RN3)
          ! (2) Calculate new objective function value and normalize it
          fn = cost(gamma(:)%new) 
          fn = fn/normPhi
@@ -665,7 +762,7 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
          if (df < 0.0_SP) then
            !
            ! accept the new state
-	   Ipos=Ipos+1_i4
+	        Ipos=Ipos+1_i4
            fo = fn
            gamma(:)%old   = gamma(:)%new 
            !
@@ -896,11 +993,6 @@ real(SP) function  dChange_sp(delta,iDigit,isZero)
   endif
   dChange_sp=real(iDelta,sp)/real(ioszt,sp)
 end function  dChange_sp
-
-
-
-
-
 
   ! ------------------------------------------------------------------
 
