@@ -4,8 +4,9 @@ This is the FORTRAN library of the
 Department Computational Hydrosystems
 Helmholtz Centre for Environmental Research - UFZ
 Permoserstr. 15
-04318 Leipzig
-Germany
+04318 Leipzig, Germany
+
+One can produce a browseable html of the library in the directory html by calling: ./f2html -d html
 
 The library is maintained with a subversion system at:
 https://svn.ufz.de/svn/chs-svn/FORTRAN_chs_lib/
@@ -16,4 +17,4 @@ https://svn.ufz.de/chs-svn/wiki/WikiFortran
 The above wiki will be printed to a PDF file from time to time, which is provided in wiki.pdf.
 Be aware that the current PDF is not always up to date.
 
-Created 11.11.2011 by Juliane Mai and Matthias Cuntz
+Created 11.11.2011 by Juliane Mai and Matthias Cuntz - matthias.cuntz (at) ufz.de
