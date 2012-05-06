@@ -4,7 +4,7 @@ MODULE mo_constants
   !
   !  Written Nov 2011, Matthias Cuntz
 
-  USE mo_kind, ONLY: sp, dp, i8
+  USE mo_kind, ONLY: sp, dp
 
   IMPLICIT NONE
 
