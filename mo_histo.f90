@@ -3,7 +3,7 @@ MODULE mo_histo
 
   ! This module calculates the Histogram of data
   ! and is part of the UFZ CHS Fortran library.
-
+  !
   ! Written  Juliane Mai, Feb 2012
   ! Modified 
 
