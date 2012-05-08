@@ -113,7 +113,7 @@ contains
   !        be filled with ones.
 
   !    CALLING SEQUENCE
-  !        call Get_NcVar(Filename, VarName, Dat, start=jdate, count=Nvalues)
+  !        call Get_NcVar(Filename, VarName, Dat, start=jdate, count=Nvalues, fid)
 
   !    INTENT(IN)
   !        character(len=*) :: Filename - Name of the nc file
@@ -126,12 +126,13 @@ contains
   
   !    INTENT(IN), OPTIONAL
   !        integer(i4), dimension(:) :: jdate ! starting indeces of first value to read
-  !                                             len is the number of dimensions of array, default is 1, see example 
-  
-  !    INTENT(IN), OPTIONAL
-  !        integer(i4), dimension(:) :: count ! same size as jdate, specifies how many values in each dimension
-  !                                             is going to be read
-  
+  !                                           ! len is the number of dimensions of
+  !                                           ! array, default is 1, see example 
+  !        integer(i4), dimension(:) :: count ! same size as jdate, specifies how 
+  !                                           ! many values in each dimension
+  !                                           ! is going to be read
+  !        integer(i4)               :: fid   ! file handle of opened netcdf file
+  !
   !    RESTRICTIONS
   !        Output array is a floating point of 2-5 dimensions.
   !        NOT yet tested for different compilers than intel11.1.075
@@ -148,6 +149,7 @@ contains
   !        Modified, Stephan Thober, Nov 2011 - added comments
   !        Modified, Matthias Cuntz, Jan 2012 - unified routines for different dimensions and data types
   !        Modified, Stephan Thober, Mar 2012 - corrected dynamical read of data
+  !        Modified, Stephan Thober, May 2012 - fid
   ! ------------------------------------------------------------------------------
 
   subroutine Get_NcVar_1d_sp(Filename, VarName, Dat, start, count, fid)
