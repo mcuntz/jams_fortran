@@ -22,14 +22,6 @@ MODULE mo_anneal
      MODULE PROCEDURE anneal_dp
   END INTERFACE anneal
 
-  !INTERFACE parGen
-  !   MODULE PROCEDURE parGen_dp
-  !END INTERFACE parGen
-
-  !INTERFACE dChange
-  !   MODULE PROCEDURE dChange_dp
-  !END INTERFACE dChange
-
   ! ------------------------------------------------------------------
 
 CONTAINS
@@ -155,14 +147,14 @@ CONTAINS
     integer(I8), dimension(0:63) :: xin1, xin2,xin3   ! optional arguments for restarting RN streams
 
     ! for SA
-    integer(I8)            :: idummy,i
+    integer(I4)            :: idummy,i
     character(10)          :: timeseed
     real(DP)               :: NormPhi
     real(DP)               :: ac_ratio, pa
     real(DP)               :: fo, fn, df, fBest, rho, fInc, fbb, dr
     real(DP)               :: T0, DT0
     real(DP),  parameter   :: small = -700._DP
-    integer(I4)            :: nITER
+    !integer(I4)            :: nITER
     integer(I4)            :: j, iter, kk
     integer(I4)            :: Ipos, Ineg
     integer(I4)            :: iConL, iConR, iConF
@@ -174,11 +166,6 @@ CONTAINS
     real(DP), DIMENSION(2) :: iParRange
 
     n = size(para,1)
-
-    !! Input check
-    !if (size(para,2) .ne. 3) then
-    !   stop 'Input argument para must have 3 columns (initial parameter value, min value, max value)'
-    !end if
 
     if (present(DT_in)) then
        if ( (DT_in .lt. 0.7_dp) .or. (DT_in .gt. 0.999_dp) ) then
@@ -203,7 +190,8 @@ CONTAINS
     if (present(LEN_in)) then
        if (LEN_in .lt. Max(20_i4*n,250_i4)) then
           !stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
-          print*, 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
+          print*, 'WARNING: Input argument LEN should be greater than Max(250,20*N), N=number of parameters'
+          LEN = LEN_in
        else
           LEN = LEN_in
        end if
@@ -238,7 +226,7 @@ CONTAINS
           acc = acc_in
        end if
     else
-       acc = 0.1_i4
+       acc = 0.1_dp
     endif
 
     if (present(seeds_in)) then
@@ -247,6 +235,7 @@ CONTAINS
        ! Seeds depend on actual time
        call date_and_time(time=timeseed)
        read(timeseed,'(i6,1x,i3)') idummy, seeds(1)
+       print*,'seeds(1)=', seeds(1)
        seeds(2) = seeds(1)+1000_i8
        seeds(3) = seeds(2)+1000_i8
     endif
@@ -297,7 +286,7 @@ CONTAINS
     NormPhi = -9999.9_dp
     T0=      T
     DT0=     DT
-    nITER =  2_i4*N
+    !nITER =  2_i4*N
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old)   
@@ -350,7 +339,7 @@ CONTAINS
          ! (1) Generate new parameter set
          dR=(1.0_DP - real(iTotalCounterR,dp) / real(nITERmax,dp))**2.0_DP
          if (  .not. (dR >= 0.05_DP ) .and. &
-               (iTotalCounterR <= int(real(nIterMax,dp)/3._dp*4_dp))) then
+               (iTotalCounterR <= int(real(nIterMax,dp)/3._dp*4_dp,i4))) then
             dR = 0.05_DP
          end if   
          ! (1a) Select parameter to be changed    
@@ -390,7 +379,7 @@ CONTAINS
           if (df < 0.0_DP) then
              !
              ! accept the new state
-	         Ipos=Ipos+1_i4
+             Ipos=Ipos+1_i4
              !print*, 'Ipos=',Ipos
              fo = fn
              gamma(:)%old   = gamma(:)%new 
@@ -400,7 +389,7 @@ CONTAINS
                fBest =  fo
                gamma(:)%best   = gamma(:)%new
              endif
-	       else
+          else
              if ( df >  eps ) then
                rho=-df/T
                if (rho < small) then   !small = -700._dp
@@ -425,7 +414,7 @@ CONTAINS
              !else
                 !print*,'NO CHANGE IN OBJ FUNCTION',gamma(:)%new
              end if
-	       end if
+          end if
            j=j+1
          else
            iTotalCounterR =  iTotalCounterR - 1_i4
@@ -503,7 +492,8 @@ CONTAINS
 
     if (printflag) then
        print *, '   '
-       print '(A15,E15.7,A4,E15.7,A4)',       ' end NSe     = ', fBest , '  ( ',fBest*normPhi,' )  '
+       !print '(A15,E15.7,A4,E15.7,A4)',       ' end cost    = ', fBest , '  ( ',fBest*normPhi,' )  '
+       print '(A15,E15.7)',                   ' end cost    = ',fBest*normPhi
        print *,           'end parameter: '
        do kk = 1,N
           print '(A10,I3,A3, E15.7)' ,    '    para #',kk,' = ',gamma(kk)%best
@@ -514,24 +504,36 @@ CONTAINS
     
     deallocate(truepara)
 
-  END SUBROUTINE anneal_dp
+END SUBROUTINE anneal_dp
 
-SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, & 
+SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, & 
                        DT_in, nITERmax_in, LEN_in, nST_in, & 
-                       eps_in, acc_in, seeds_in, printflag_in)
+                       eps_in, acc_in, seeds_in, printflag_in, coststatus_in, maskpara_in)
 
     IMPLICIT NONE
 
     INTERFACE
        FUNCTION cost(paraset,status_in)
+       ! calculates the cost function at a certain parameter set paraset and 
+       ! returns optionally if it is a valid parameter set (status_in)
            use mo_kind
            REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
            REAL(SP)                            :: cost
            LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
        END FUNCTION cost
     END INTERFACE
+    
+    INTERFACE
+       SUBROUTINE range(paraset,iPar,rangePar)
+       ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
+           use mo_kind
+           REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
+           INTEGER(I4),            INTENT(IN)  :: iPar
+           REAL(SP), DIMENSION(2), INTENT(OUT) :: rangePar
+       END SUBROUTINE range
+    END INTERFACE
 
-    REAL(SP),    DIMENSION(:,:),          INTENT(IN)    :: para  ! parameter(i), min(parameter(i)), max(parameter(i))
+    REAL(SP),    DIMENSION(:),            INTENT(IN)    :: para  ! initial parameter i
     REAL(SP),                             INTENT(IN)    :: temp  ! starting temperature
     REAL(SP),                             INTENT(OUT)   :: costbest  ! minimized value of cost function
     REAL(SP),    DIMENSION(size(para,1)), INTENT(OUT)   :: parabest  ! parameter set minimizing the cost function
@@ -541,8 +543,15 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
     INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in   ! Number of consecutive LEN steps
     REAL(SP),    OPTIONAL,       INTENT(IN)  :: eps_in   ! epsilon decreement of cost function
     REAL(SP),    OPTIONAL,       INTENT(IN)  :: acc_in   ! Acceptance Ratio, <0.1 stopping criteria
-    INTEGER(I8), OPTIONAL,       INTENT(IN)  :: seeds_in(3)   ! Seeds of random numbers
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: seeds_in(3)   ! Seeds of random numbers
     LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in ! If command line output is written (.true.) 
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: coststatus_in  ! Checks status of cost function value, 
+                                                               ! i.e. is parameter set is feasible (.true.)
+                                                               ! default = .false.
+    LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), INTENT(IN)  :: maskpara_in  
+                                                         ! true if parameter will be optimized
+                                                         ! false if parameter is discarded in optimization
+                                                         ! default = .true.
 
     INTEGER(I4) :: n    ! Number of parameters
     REAL(SP)    :: T
@@ -554,7 +563,10 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
     REAL(SP)    :: acc 
     INTEGER(I4) :: seeds(3)
     LOGICAL     :: printflag
-
+    LOGICAL     :: coststatus
+    LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
+    INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
+    
     type paramLim
        real(SP)                                 :: min                 !            minimum value
        real(SP)                                 :: max                 !            maximum value
@@ -566,43 +578,40 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
     type (paramLim), dimension (size(para,1)), target   :: gamma      !            Transfer function parameters
 
     ! for random numbers
-    real(SP)                     :: RN1, RN2, RN3     ! Random numbers
-    integer(I4)                  :: iin1, iin2, iin3  ! optional arguments for restarting RN streams
-    integer(I4)                  :: win1, win2, win3  ! optional arguments for restarting RN streams
-    integer(I4), dimension(0:127):: xin1, xin2,xin3   ! optional arguments for restarting RN streams
+    real(SP)                      :: RN1, RN2, RN3     ! Random numbers
+    integer(I4)                   :: iin1, iin2, iin3  ! optional arguments for restarting RN streams
+    integer(I4)                   :: win1, win2, win3  ! optional arguments for restarting RN streams
+    integer(I4), dimension(0:127) :: xin1, xin2,xin3   ! optional arguments for restarting RN streams
 
     ! for SA
-    integer(I8)            :: idummy
+    integer(I4)            :: idummy,i
     character(10)          :: timeseed
     real(SP)               :: NormPhi
     real(SP)               :: ac_ratio, pa
     real(SP)               :: fo, fn, df, fBest, rho, fInc, fbb, dr
     real(SP)               :: T0, DT0
-    real(SP),  parameter   :: small = -700._SP
-    integer(I4)            :: iPar
-    integer(I4)            :: nITER
+    real(SP),  parameter   :: small = -700._DP
+    !integer(I4)            :: nITER
     integer(I4)            :: j, iter, kk
     integer(I4)            :: Ipos, Ineg
     integer(I4)            :: iConL, iConR, iConF
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
     logical(1)             :: iStop 
+    
+    integer(I4)            :: iPar
+    real(SP), DIMENSION(2) :: iParRange
 
     n = size(para,1)
 
-    ! Input check
-    if (size(para,2) .ne. 3) then
-       stop 'Input argument para must have 3 columns (initial parameter value, min value, max value)'
-    end if
-
     if (present(DT_in)) then
-       if ( (DT_in .lt. 0.7_SP) .or. (DT_in .gt. 0.999_SP) ) then
+       if ( (DT_in .lt. 0.7_sp) .or. (DT_in .gt. 0.999_sp) ) then
           stop 'Input argument DT must lie between 0.7 and 0.999'
        else
           DT = DT_in
        end if
     else
-       DT = 0.9_SP
+       DT = 0.9_sp
     endif
 
     if (present(nITERmax_in)) then
@@ -617,7 +626,9 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
 
     if (present(LEN_in)) then
        if (LEN_in .lt. Max(20_i4*n,250_i4)) then
-          stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
+          !stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
+          print*, 'WARNING: Input argument LEN should be greater than Max(250,20*N), N=number of parameters'
+          LEN = LEN_in
        else
           LEN = LEN_in
        end if
@@ -636,23 +647,23 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
     endif
 
     if (present(eps_in)) then
-       if (eps_in .le. 0.0_SP) then
+       if (eps_in .le. 0.0_sp) then
           stop 'Input argument eps must be greater than 0'
        else
           eps = eps_in
        end if
     else
-       eps = 0.01_SP
+       eps = 0.01_sp
     endif
 
     if (present(acc_in)) then
-       if ((acc_in .le. 0.0_SP) .or. (acc_in .ge. 1.0_SP)) then
+       if ((acc_in .le. 0.0_sp) .or. (acc_in .ge. 1.0_sp)) then
           stop 'Input argument acc must lie between 0.0 and 1.0'
        else
           acc = acc_in
        end if
     else
-       acc = 0.1_i4
+       acc = 0.1_sp
     endif
 
     if (present(seeds_in)) then
@@ -671,23 +682,47 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
        printflag = .false.
     endif
 
+    if (present(maskpara_in)) then
+       if (count(maskpara_in) .eq. 0_i4) then
+          stop 'Input argument maskpara: At least one element has to be true'
+       else
+          maskpara = maskpara_in
+       end if
+    else
+       maskpara = .true.
+    endif
+    
+    allocate ( truepara(count(maskpara)) )
+    idummy = 0_i4
+    do i=1,N
+       if ( maskpara(i) ) then
+          idummy = idummy+1_i4
+          truepara(idummy) = i
+       end if
+    end do
+    
+    if (printflag) then
+       print*, 'Following parameters will be optimized: ',truepara
+    end if
+
     T = temp
 
     call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
     call xor4096(seeds(2), RN2, iin=iin2, win=win2, xin=xin2)
     call xor4096(seeds(3), RN3, iin=iin3, win=win3, xin=xin3)
-    seeds = 0_i8
+    seeds = 0_i4
 
     ! Start Simulated Annealing routine
-    gamma(:)%min = para(:,2)
-    gamma(:)%max = para(:,3)
-    gamma(:)%dmult = 1.0_SP
-    gamma(:)%new = para(:,1)
-    gamma(:)%old = para(:,1)
-    NormPhi = -9999.9_SP
+    !gamma(:)%min = para(:,2)
+    !gamma(:)%max = para(:,3)
+    gamma(:)%dmult = 1.0_sp
+    gamma(:)%new = para(:)
+    gamma(:)%old = para(:)
+    gamma(:)%best = para(:)
+    NormPhi = -9999.9_sp
     T0=      T
     DT0=     DT
-    nITER =  2_i4*N
+    !nITER =  2_i4*N
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old)   
@@ -707,10 +742,12 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
     DT=     DT0
     ! Storing the best solution so far
     NormPhi = fo
-    fBest   = 1.0_SP   != fo/NormPhi
+    fo      = fo/NormPhi
+    fBest   = 1.0_sp   != fo/NormPhi
 
     if (printflag) then
        print '(A15,E15.7,A4,E15.7,A4)',     ' start NSe   = ', fBest , '  ( ',fBest*normPhi,' )  '
+       print '(I8, 2I5, 4E15.7)',   1_i4, 0_i4, 0_i4, 1._sp, T, fo*normPhi, fBest*normPhi
     end if
     !
     ! ****************** Stop Criterium  *******************
@@ -723,93 +760,121 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
        Ipos= 0_i4
        Ineg= 0_i4
        fbb=  fBest
-       !LEN = int( real(iter,SP)*sqrt(real(iter,SP)) / nITER + 1.5*real(N,SP),i4) 
-       ! Repeat LEN times
-       loopLEN: do j=1,LEN
+       !LEN = int( real(iter,sp)*sqrt(real(iter,sp)) / nITER + 1.5*real(N,sp),i4) 
+       ! Repeat LEN times with feasible solution
+       j=1_i4
+       loopLEN: do while (j .le. LEN)
+         !print*, 'iPar: ',j
          iTotalCounterR =  iTotalCounterR + 1_i4
          iTotalCounter = iTotalCounter + 1_i4
-         if ( (iTotalCounter .eq. 1_i4) .and. printflag)  then
-           print '(I8, 2I5, E15.7,3E15.7)',   ITotalCounter, Ipos, Ineg, ac_ratio, T, fo, fBest
-         end if
-         if (mod(iTotalCounter,1000_i4) == 0_i4) then
-           !call writeresults_o(4,fn) 
-         end if
+         !if (mod(iTotalCounter,1000_i4) == 0_i4) then
+         !  call writeresults_o(4,fn) 
+         !end if
          !
 	 ! Generate a random subsequent state and evaluate its objective function
          ! (1) Generate new parameter set
-         dR=(1.0_SP - real(iTotalCounterR,SP) / real(nITERmax,SP))**2.0_SP
-         if ( .not. (dR >= 0.05_SP ) .and. &
-              (iTotalCounterR <= int(real(nIterMax,SP)/3._SP*4_SP))) then
-            dR = 0.05_SP   
-         end if
+         dR=(1.0_SP - real(iTotalCounterR,sp) / real(nITERmax,sp))**2.0_SP
+         if (  .not. (dR >= 0.05_SP ) .and. &
+               (iTotalCounterR <= int(real(nIterMax,sp)/3._sp*4_sp,i4))) then
+            dR = 0.05_SP
+         end if   
          ! (1a) Select parameter to be changed    
          call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
-         iPar = int(real(N,SP)*RN2+1._SP,i4)
+         !iPar = int(real(N,dp)*RN2+1._DP,i4)
+         iPar = truepara(int(real(count(maskpara),sp)*RN2+1._sp,i4))
+         !print*, 'iPar=',iPar
          ! (1b) Generate new value of selected parameter
          call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
-         gamma(iPar)%new = parGen_SP( gamma(iPar)%old,  gamma(iPar)%dMult*dR, &
+         call range(gamma(:)%old, iPar, iParRange )
+         gamma(iPar)%min = iParRange(1)
+         gamma(iPar)%max = iParRange(2)
+         gamma(iPar)%new = parGen_sp( gamma(iPar)%old, gamma(iPar)%dMult*dR, &
                                       gamma(iPar)%min, gamma(iPar)%max, 8_i4, 1_i4,RN3)
          ! (2) Calculate new objective function value and normalize it
-         fn = cost(gamma(:)%new) 
-         fn = fn/normPhi
-         !
-         ! write parameters
-         !call writeresults_o(5,fn)
-         !
-         df = fn-fo             
-         !
-         ! analyze change in the objective function: df
-         if (df < 0.0_SP) then
-           !
-           ! accept the new state
-	        Ipos=Ipos+1_i4
-           fo = fn
-           gamma(:)%old   = gamma(:)%new 
-           !
-           ! keep best solution
-           if (fo < fBest) then
-             fBest =  fo
-             gamma(:)%best   = gamma(:)%new
-           endif
-	else
-           if ( df >  eps ) then
-             rho=-df/T
-             if (rho < small) then
-               pa=0.0_SP
-             else
-               pa=EXP(rho)
-             end if                     
-  	     !
-             call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
+         !print*, 'coststatus before=',coststatus
+         if (present(coststatus_in)) then
+            if (coststatus_in) then
+               fn = cost(gamma(:)%new,coststatus)  !  coststatus is INTENT(OUT)
+            else
+               fn = cost(gamma(:)%new) 
+               coststatus = .true.
+            end if
+         else
+            fn = cost(gamma(:)%new) 
+            coststatus = .true.
+         end if
+         !print*, 'coststatus after=',coststatus
+          
+         feasible: if (coststatus) then   ! feasible parameter set
+          fn = fn/normPhi
+          !
+          !
+          df = fn-fo             
+          !
+          ! analyze change in the objective function: df
+          if (df < 0.0_SP) then
              !
-             if (pa > RN1) then
-               ! accept new state with certain probability
-               Ineg=Ineg+1_i4
-               fo = fn
-               ! save old state
-               gamma(:)%old   = gamma(:)%new 
+             ! accept the new state
+             Ipos=Ipos+1_i4
+             !print*, 'Ipos=',Ipos
+             fo = fn
+             gamma(:)%old   = gamma(:)%new 
+             !
+             ! keep best solution
+             if (fo < fBest) then
+               fBest =  fo
+               gamma(:)%best   = gamma(:)%new
+             endif
+          else
+             if ( df >  eps ) then
+               rho=-df/T
+               if (rho < small) then   !small = -700._dp
+                 pa=0.0_SP
+               else
+                 pa=EXP(rho)
+               end if    
+               !print*, 'rho=',rho,'  pa=',pa                 
+  	           !
+               call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
+               !print*, RN1
+               !
+               if (pa > RN1) then
+                 ! accept new state with certain probability
+                 Ineg=Ineg+1_i4
+                 !print*, 'Ineg=',Ineg
+                 !pause
+                 fo = fn
+                 ! save old state
+                 gamma(:)%old   = gamma(:)%new 
+               end if
+             !else
+                !print*,'NO CHANGE IN OBJ FUNCTION',gamma(:)%new
              end if
-           end if
-	 end if
-
+          end if
+           j=j+1
+         else
+           iTotalCounterR =  iTotalCounterR - 1_i4
+           iTotalCounter = iTotalCounter - 1_i4
+         end if feasible !valid parameter set
       end do loopLEN
       !
       ! estimate acceptance ratio
-      ac_ratio=(real(Ipos,SP) + real(Ineg,SP))/real(LEN,SP)
+      ac_ratio=(real(Ipos,sp) + real(Ineg,sp))/real(LEN,sp)
       !    
       if (printflag) then
-         print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, fo, fBest
+         print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
+                                           fo*NormPhi, fBest*NormPhi
       end if
       !
       ! Cooling schedule
       fInc= (fbb-fBest)/fbb
-      if (fInc < 0.00000001_SP) then
+      if (fInc < 0.00000001_sp) then
         iConF= iConF+1_i4
       else
         iConF=0_i4
       end if
       !
-      if ((ac_ratio < 0.15_SP) .and. (iConF > 5_i4) .and. (iConR <= -3_i4)) then     ! - iConR  no reheating
+      if ((ac_ratio < 0.15_sp) .and. (iConF > 5_i4) .and. (iConR <= -3_i4)) then     ! - iConR  no reheating
         ! Re-heating
         if (printflag) then
            print *, 'Re-heating: ', iConR
@@ -822,8 +887,8 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
         gamma(:)%old   = gamma(:)%best
       else
         ! Update Temperature (geometrical decrement)
-        if (ac_ratio < 0.4_SP)  then 
-          DT=0.995_SP
+        if (ac_ratio < 0.4_sp)  then 
+          DT=0.995_sp
         else
           DT=DT0
         end if
@@ -839,22 +904,32 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
       if ((iConL > nST) .and. (ac_ratio < acc) .and. (iConR > 2_i4) ) iStop=.FALSE.
       ! a way out maximum
       if ( iTotalCounter > nITERmax .and. ac_ratio > acc) then
-         nITERmax = int(real(nITERmax,sp)* 1.10_sp,i4)
+         nITERmax = int(real(nITERmax,dp)* 1.10_sp,i4)
          if (printflag) then
             print *,                       'nITERmax changed to =', nITERmax
          end if
       end if
       ! STOP condition
-      if ( iTotalCounter > nITERmax ) iStop=.FALSE.                                    
+      if ( iTotalCounter > nITERmax ) then
+         !print*, 'iStop = .false.'
+         iStop=.FALSE.          
+      end if                          
       !
     end do loopTest
     !
-    ! heuristic *global* minimum (end solution)
+    ! heuristic *glopbal* minimum (end solution)
     !
     ! write final results
+    !
+    ! calculate cost function again (only for check and return values)  
+    parabest = gamma(:)%best
+    costbest = cost(parabest)
+    fo = costbest/NormPhi
+
     if (printflag) then
        print *, '   '
-       print '(A15,E15.7,A4,E15.7,A4)',       ' end NSe     = ', fBest , '  ( ',fBest*normPhi,' )  '
+       !print '(A15,E15.7,A4,E15.7,A4)',       ' end cost    = ', fBest , '  ( ',fBest*normPhi,' )  '
+       print '(A15,E15.7)',                   ' end cost    = ',fBest*normPhi
        print *,           'end parameter: '
        do kk = 1,N
           print '(A10,I3,A3, E15.7)' ,    '    para #',kk,' = ',gamma(kk)%best
@@ -862,11 +937,10 @@ SUBROUTINE anneal_sp(cost, para, temp, costbest, parabest, &
     
        print *, 'Final check:    ', (fo - fBest)
     end if
+    
+    deallocate(truepara)
 
-    parabest = gamma(:)%best
-    costbest = cost(parabest)
-
-  END SUBROUTINE anneal_sp
+END SUBROUTINE anneal_sp
 
 !***************************************************
 !*               PRIVATE FUNCTIONS                 *
