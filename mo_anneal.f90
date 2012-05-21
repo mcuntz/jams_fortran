@@ -6,7 +6,8 @@ MODULE mo_anneal
   ! 
 
   ! Written  Juliane Mai, March 2012
-  ! Modified 
+  ! Modified Juliane Mai, May   2012 : sp version
+  !          Juliane Mai, May   2012 : documentation
 
   USE mo_kind,    ONLY: i4, i8, sp, dp
   USE mo_xor4096, ONLY: xor4096
@@ -33,23 +34,85 @@ CONTAINS
 
   !     PURPOSE
   !         Minimizes a user provided cost function using the Simulated Annealing strategy
-  !
-  !         
+  !    
 
   !     CALLING SEQUENCE
-  !         
+  !         para = (/ 1.0_dp , 2.0_dp /)
+  !         temperature = 10.0_dp
+  !
+  !         user defined function cost_dp which calculates the cost function value for a 
+  !         parameter set (the interface given below has to be used for this function!)
+  !
+  !         user defined subroutine range_dp which returns the range for a parameter  
+  !         (the subroutine has to have a specific interface givene below!)
+  !
+  !         call anneal(cost_dp, para, range_dp, temperature, costbest, parabest)
+  !
+  !         see also test folder for a detailed example
+
   
   !     INDENT(IN)
-  !         None
+  !         REAL(SP/DP),    DIMENSION(:)  :: para  ... initial parameter set
+  !
+  !         REAL(SP/DP)                   :: temp  ... initial temperature
 
   !     INDENT(INOUT)
   !         None
 
   !     INDENT(OUT)
-  !         None
+  !         REAL(SP/DP),                              :: costbest ... minimized value of cost 
+  !                                                                   function
+  !
+  !         REAL(SP/DP),    DIMENSION(size(para,1))   :: parabest ... parameter set minimizing the
+  !                                                                   cost function
 
   !     INDENT(IN), OPTIONAL
-  !         None
+  !         REAL(SP/DP)    :: DT_in          ... geometrical decreement of temperature
+  !                                              0.7<DT<0.999
+  !                                              DEFAULT: 0.9
+  !
+  !         INTEGER(I4)    :: nITERmax_in    ... maximal number of iterations
+  !                                              will be increased by 10% if stopping criteria of
+  !                                              acceptance ratio or epsilon decreement of cost 
+  !                                              function is not fullfilled
+  !                                              DEFAULT: 1000
+  !
+  !         INTEGER(I4)    :: LEN_in         ... Length of Markov Chain
+  !                                              DEFAULT: MAX(250, size(para,1))
+  !
+  !         INTEGER(I4)    :: nST_in         ... Number of consecutive LEN steps
+  !                                              DEFAULT: 5
+  !
+  !         REAL(SP/DP)    :: eps_in         ... Stopping criteria of epsilon decreement of 
+  !                                              cost function
+  !                                              DEFAULT: 0.01
+  !
+  !         REAL(SP/DP)    :: acc_in         ... Stopping criteria for Acceptance Ratio
+  !                                              acc_in <= 0.1
+  !                                              DEFAULT: 0.1
+  !
+  !         INTEGER(I4/I8) :: seeds_in(3)    ... Seeds of random numbers used for random parameter
+  !                                              set generation
+  !                                              DEFAULT: dependent on current time
+  !
+  !         LOGICAL        :: printflag_in   ... If .true. detailed command line output is written
+  !                                              DEFAULT: .false.
+  !
+  !         LOGICAL        :: coststatus_in  ... If .true. the status of cost function value is  
+  !                                              checked, i.e. rejects parameter sets which are not
+  !                                              valid therefore the calculation of the user 
+  !                                              provided FUNCTION cost has to set the OPTIONAL 
+  !                                              coststatus variable to .false. in case of an 
+  !                                              invalid parameter set
+  !                                              DEFAULT = .false. (assuming that each parameter set
+  !                                                                 is valid)
+  !
+  !         LOGICAL, DIMENSION(size(para,1))  
+  !                        :: maskpara_in    ... vector of logicals
+  !                                              maskpara(i) = .true.  --> parameter is optimized
+  !                                              maskpara(i) = .false. --> parameter is discarded 
+  !                                                                        from optimiztaion
+  !                                              DEFAULT = .true.
 
   !     INDENT(INOUT), OPTIONAL
   !         None
@@ -58,16 +121,44 @@ CONTAINS
   !         None
 
   !     RESTRICTIONS
-  !         
-
+  !         Needs a user defined:
+  !         (1) FUNCTION to evaluate the cost function value for a given parameter set.
+  !             this function needs to have the following interface:
+  !                     FUNCTION cost(paraset,status_in)
+  !                     ! calculates the cost function at a certain parameter set paraset and 
+  !                     ! returns optionally if it is a valid parameter set (status_in)
+  !                         USE mo_kind
+  !                         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+  !                         REAL(DP)                            :: cost
+  !                         LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
+  !                     END FUNCTION cost
+  !         (2) SUBROUTINE to specify the valid range of each parameter 
+  !             (at a certain parameter set).
+  !             this routine needs to have the following interface:
+  !                     SUBROUTINE range(paraset,iPar,rangePar)
+  !                     ! gives the range (min,max) of the parameter iPar at a 
+  !                     ! certain parameter set paraset
+  !                         USE mo_kind
+  !                         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+  !                         INTEGER(I4),            INTENT(IN)  :: iPar
+  !                         REAL(DP), DIMENSION(2), INTENT(OUT) :: rangePar
+  !                     END SUBROUTINE range
   !     EXAMPLE
-  !         
+  !         see test/test_mo_anneal/
 
   !     LITERATURE
-  !         
+  !         (1) S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi. 
+  !             Optimization by simulated annealing. 
+  !             Science, 220:671–680, 1983.
+  !
+  !         (2) N. Metropolis, A. W. Rosenbluth, M. N. Rosenbluth, A. H. Teller, and E. Teller. 
+  !             Equation of state calculations by fast computing machines. 
+  !             J. Chem. Phys., 21:1087–1092, June 1953.
 
   !     HISTORY
-  !         Written,  Juliane Mai, March 2012
+  !        Written  Juliane Mai, March 2012
+  !        Modified Juliane Mai, May   2012 : sp version
+  !                 Juliane Mai, May   2012 : documentation
 
   SUBROUTINE anneal_dp(cost, para, range, temp, costbest, parabest, & 
                        DT_in, nITERmax_in, LEN_in, nST_in, & 
