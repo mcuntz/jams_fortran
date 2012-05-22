@@ -32,7 +32,7 @@ PROGRAM anneal_test
   costbestAll = cost_dp(para(:))
   parabestAll = para(:)
 
-  ! Run Simulated Annealing 10 times
+  ! Run Simulated Annealing <runs> times
   open(unit=1, file='Anneal.out',   status='unknown')
   write (1, *) 'cost           para(1)        para(2)        para(3)        para(4)        '
   do i=1,runs
