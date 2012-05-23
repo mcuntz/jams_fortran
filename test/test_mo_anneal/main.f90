@@ -1,7 +1,7 @@
 PROGRAM anneal_test
 
   use mo_kind,   only: dp, i4, i8
-  use mo_anneal, only: anneal
+  use mo_anneal, only: anneal, GetTemperature
   use mo_cost,   only: cost_dp, range_dp
 
   IMPLICIT NONE
@@ -25,24 +25,36 @@ PROGRAM anneal_test
   para(4) = 0.4_dp
 
   ! Initialization
-  temperature = 10.0_dp
+  print*, '-----------------------------------'
+  print*, '   INITIALIZATION                  '
+  print*, '-----------------------------------'
   print*, 'Initial parameter set:       ',para
   print*, 'Initial cost function value: ',cost_dp(para(:))
-  print*, '-----------------------------------'
   costbestAll = cost_dp(para(:))
   parabestAll = para(:)
+  print*, '-----------------------------------'
+  print*, '   INITIAL TEMPERATURE             '
+  print*, '-----------------------------------'
+  print*, 'Estimation of Initial Temperature: '
+  !temperature = 10.0_dp
+  seeds(1) = 854_i8
+  seeds(2) = seeds(1) + 1000_i8
+  temperature = GetTemperature(para, cost_dp, range_dp, 0.95_dp, samplesize_in=500_i4,seeds_in=seeds(1:2),printflag_in=.true.)
+  print*, '-----------------------------------'
+  print*, '   SIMULATED ANNEALING             '
+  print*, '-----------------------------------'
 
   ! Run Simulated Annealing <runs> times
   open(unit=1, file='Anneal.out',   status='unknown')
   write (1, *) 'cost           para(1)        para(2)        para(3)        para(4)        '
   do i=1,runs
      ! Setting the seeds: Only used to generate comparable results for test case
-     seeds(1) = int(i,i8)*914_i8
+     seeds(1) = int(i,i8)*259_i8
      seeds(2) = seeds(1) + 1000_i8
      seeds(3) = seeds(2) + 1000_i8
      !
      call anneal(cost_dp, para, range_dp, temperature, costbest, parabest, seeds_in=seeds,&
-                 nITERmax_in=150000_i4,eps_in=0.00001_dp,printflag_in=.false.)
+                 LEN_in=250_i4,nITERmax_in=150000_i4,eps_in=0.00001_dp,printflag_in=.false.)
      if (costbestAll .gt. costbest) then
         costbestAll = costbest
         parabestAll = parabest
@@ -60,7 +72,7 @@ PROGRAM anneal_test
 
   ! Is program running properly?   costbestAll = 7.8976644995166545E-02
   print*, '-----------------------------------'
-  if ( anint(costbestAll*100000) .eq. 7898._dp ) then
+  if ( anint(costbestAll*100000) .eq. 9473._dp ) then
      print*, 'mo_anneal: o.k.'
   else
      print*, 'failed '

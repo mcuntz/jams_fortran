@@ -6,8 +6,9 @@ MODULE mo_anneal
   ! 
 
   ! Written  Juliane Mai, March 2012
-  ! Modified Juliane Mai, May   2012 : sp version
-  !          Juliane Mai, May   2012 : documentation
+  ! Modified Juliane Mai, May   2012 : anneal: sp version
+  !          Juliane Mai, May   2012 : anneal: documentation
+  !          Juliane Mai, May   2012 : GetTemperature: sp and dp version
 
   USE mo_kind,    ONLY: i4, i8, sp, dp
   USE mo_xor4096, ONLY: xor4096
@@ -17,11 +18,18 @@ MODULE mo_anneal
   PRIVATE
 
   PUBLIC :: anneal            ! Minimization of a cost function via Simaulated Annealing
+  PUBLIC :: GetTemperature    ! Function which returns the optimal initial temperature for 
+                              ! a given acceptance ratio and initial parameter set
 
   ! Interfaces for single and double precision routines; sort alphabetically
   INTERFACE anneal
-     MODULE PROCEDURE anneal_dp
+     MODULE PROCEDURE anneal_dp, anneal_sp
   END INTERFACE anneal
+
+  INTERFACE GetTemperature
+     MODULE PROCEDURE GetTemperature_dp !, GetTemperature_sp
+  END INTERFACE GetTemperature
+
 
   ! ------------------------------------------------------------------
 
@@ -463,7 +471,7 @@ CONTAINS
          feasible: if (coststatus) then   ! feasible parameter set
           fn = fn/normPhi
           !
-          !
+          ! Change in cost function value
           df = fn-fo             
           !
           ! analyze change in the objective function: df
@@ -506,7 +514,7 @@ CONTAINS
                 !print*,'NO CHANGE IN OBJ FUNCTION',gamma(:)%new
              end if
           end if
-           j=j+1
+          j=j+1
          else
            iTotalCounterR =  iTotalCounterR - 1_i4
            iTotalCounter = iTotalCounter - 1_i4
@@ -1033,10 +1041,417 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
 
 END SUBROUTINE anneal_sp
 
+real(DP) function GetTemperature_dp(paraset, cost, range, acc_goal, samplesize_in, maskpara_in,seeds_in,printflag_in)
+  use mo_kind, only: dp, i4, i8
+  implicit none
+  !
+  real(dp),               dimension(:),               intent(in)    :: paraset         ! a valid parameter set of the model
+  real(dp),                                           intent(in)    :: acc_goal        ! acceptance ratio to achieve
+  integer(i4), optional,                              intent(in)    :: samplesize_in   ! size of random set the 
+                                                                                       ! acc_estimate is based on
+                                                                                       ! default = Max(250, 20*<Number of parameters>)
+  logical,     optional,  dimension(size(paraset,1)), intent(in)    :: maskpara_in     ! true if parameter will be optimized
+                                                                                       ! false if parameter is discarded in 
+                                                                                       ! optimization
+                                                                                       ! default = .true.
+  integer(i8), optional,  dimension(2),               intent(in)    :: seeds_in        ! Seeds of random numbers
+                                                                                       ! default = time dependent
+  logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation 
+                                                                                       ! is printed
+                                                                                       ! default = .false.
+
+  INTERFACE
+     FUNCTION cost(paraset,status_in)
+       ! calculates the cost function at a certain parameter set paraset and 
+       ! returns optionally if it is a valid parameter set (status_in)
+       use mo_kind
+       REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+       REAL(DP)                            :: cost
+       LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
+     END FUNCTION cost
+  END INTERFACE
+    
+  INTERFACE
+     SUBROUTINE range(paraset,iPar,rangePar)
+       ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
+       use mo_kind
+       REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+       INTEGER(I4),            INTENT(IN)  :: iPar
+       REAL(DP), DIMENSION(2), INTENT(OUT) :: rangePar
+     END SUBROUTINE range
+  END INTERFACE
+  !
+  ! Local variables
+  !
+  integer(i4)                           :: n
+  integer(i4)                           :: samplesize
+  integer(i4)                           :: idummy, i, j
+  integer(i4)                           :: iPar
+  real(dp),      dimension(2)           :: iParRange
+  character(10)                         :: timeseed
+  real(dp)                              :: NormPhi
+  real(dp)                              :: fo, fn, dr
+  real(dp)                              :: T
+
+  LOGICAL                                   :: coststatus
+  LOGICAL,     DIMENSION(size(paraset,1))   :: maskpara    ! true if parameter will be optimized
+  INTEGER(I4), DIMENSION(:), ALLOCATABLE    :: truepara    ! indexes of parameters to be optimized
+  LOGICAL                                   :: printflag   ! if detailed estimation of temperature is printed
+  
+  type paramLim
+     real(DP)                                 :: min                 !            minimum value
+     real(DP)                                 :: max                 !            maximum value
+     real(DP)                                 :: new                 !            new state value
+     real(DP)                                 :: old                 !            old state value
+     real(DP)                                 :: best                !            best value found
+     real(DP)                                 :: dMult               !            sencitivity multiplier for parameter search
+  end type paramLim
+  type (paramLim), dimension (size(paraset,1)), target   :: gamma    !            Transfer function parameters
+
+  ! for random numbers
+  INTEGER(I8)                  :: seeds(2)
+  real(DP)                     :: RN1, RN2     ! Random numbers
+  integer(I8)                  :: iin1, iin2   ! optional arguments for restarting RN streams
+  integer(I8)                  :: win1, win2   ! optional arguments for restarting RN streams
+  integer(I8), dimension(0:63) :: xin1, xin2   ! optional arguments for restarting RN streams
+  
+  ! for initial temperature estimate
+  real(DP)                              :: acc_estim  ! estimate of acceptance probability
+                                                      ! depends on temperature
+                                                      ! goal: find a temperature such that acc_estim ~ 0.9
+  real(DP), dimension(:,:), allocatable :: Energy     ! dim(LEN,2) cost function values before (:,1) and after (:,2) transition
+ 
+  n = size(paraset,1)
+
+  if (present(samplesize_in)) then
+     if (samplesize_in .lt. Max(20_i4*n,250_i4)) then
+        !stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
+        print*, 'WARNING (GetTemperature): '
+        print*, 'Input argument samplesize_in should be greater than Max(250,20*N), N=number of parameters'
+        samplesize = samplesize_in
+     else
+        samplesize = samplesize_in
+     end if
+  else
+     samplesize = Max(20_i4*n,250_i4)
+  endif
+
+  if (present(maskpara_in)) then
+     if (count(maskpara_in) .eq. 0_i4) then
+        stop 'Input argument maskpara: At least one element has to be true'
+     else
+        maskpara = maskpara_in
+     end if
+  else
+     maskpara = .true.
+  endif
+
+  if (present(seeds_in)) then
+     seeds = seeds_in
+  else
+     ! Seeds depend on actual time
+     call date_and_time(time=timeseed)
+     read(timeseed,'(i6,1x,i3)') idummy, seeds(1)
+     print*,'temp: seeds(1)=', seeds(1)
+     seeds(2) = seeds(1)+1000_i8
+  endif
+
+  if (present(printflag_in)) then
+     printflag = printflag_in
+  else
+     printflag = .false.
+  endif
+
+  allocate(Energy(samplesize,2))
+
+  allocate ( truepara(count(maskpara)) )
+  idummy = 0_i4
+  do i=1,N
+     if ( maskpara(i) ) then
+        idummy = idummy+1_i4
+        truepara(idummy) = i
+     end if
+  end do
+
+  ! Setting up the RNG
+  ! (1) Seeds depend on actual time or on input seeds
+  ! (2) Initialize the streams
+        call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
+        call xor4096(seeds(2), RN2, iin=iin2, win=win2, xin=xin2)
+        seeds = 0_i8
+  ! (3) Now ready for calling
+
+
+!TODO
+! status? 
+
+  gamma(:)%dmult = 1.0_dp
+  gamma(:)%new   = paraset(:)
+  gamma(:)%old   = paraset(:)
+  gamma(:)%best  = paraset(:)
+  NormPhi        = -9999.9_dp
+
+  fo =  cost(paraset) 
+  NormPhi = fo
+  fo      = fo/NormPhi
+
+  j=1
+  loopSamplesize: do while (j .le. samplesize)
+     ! Generate a random subsequent state and evaluate its objective function
+     ! (1)  Generate new parameter set
+            dR=1.0_DP
+     ! (1a) Select parameter to be changed    
+            call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
+            iPar = truepara(int(real(count(maskpara),dp)*RN1+1._DP,i4))
+     ! (1b) Generate new value of selected parameter
+            call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
+            call range(gamma(:)%old, iPar, iParRange )
+            gamma(iPar)%min = iParRange(1)
+            gamma(iPar)%max = iParRange(2)
+            gamma(iPar)%new = parGen_dp( gamma(iPar)%old, gamma(iPar)%dMult*dR, &
+                 gamma(iPar)%min, gamma(iPar)%max, 8_i4, 1_i4,RN2)
+     ! (2)  Calculate new objective function value and normalize it
+            fn = cost(gamma(:)%new) 
+            coststatus = .true.
+     
+     feasible: if (coststatus) then   ! feasible parameter set
+        fn = fn/normPhi
+        ! Save Energy states of feasible transitions
+        ! for adaption of optimal initial temperature
+        ! Walid Ben-Ameur: "Comput. the Initial Temperature of Sim. Annealing"
+        ! Comput. Opt. and App. 2004
+        Energy(j,2) = fn     ! E_max_t
+        Energy(j,1) = fo     ! E_min_t
+        j=j+1
+      end if feasible !valid parameter set
+   end do loopSamplesize
+
+   ! estimation of the acceptance probability based on the random set ||<Samplesize>||
+   ! only if actual temperature (T) equals initial temperature (temp)
+   T = 1.0_dp
+   acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
+   if (printflag) then
+      print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
+   end if
+   Do While (abs(acc_estim - acc_goal) .gt. 0.0001_dp)
+      T = T * (Log(acc_estim)/Log(acc_goal))**(0.5_dp) ! **(1.0/p)  with p=1.0
+      acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
+      if (printflag) then
+         print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
+      end if
+   end do
+   GetTemperature_dp = T
+   !
+end function GetTemperature_dp
+
+real(sp) function GetTemperature_sp(paraset, cost, range, acc_goal, samplesize_in, maskpara_in,seeds_in,printflag_in)
+  use mo_kind, only: sp, i4
+  implicit none
+  !
+  real(sp),               dimension(:),               intent(in)    :: paraset         ! a valid parameter set of the model
+  real(sp),                                           intent(in)    :: acc_goal        ! acceptance ratio to achieve
+  integer(i4), optional,                              intent(in)    :: samplesize_in   ! size of random set the 
+                                                                                       ! acc_estimate is based on
+                                                                                       ! default = Max(250, 20*<Number of parameters>)
+  logical,     optional,  dimension(size(paraset,1)), intent(in)    :: maskpara_in     ! true if parameter will be optimized
+                                                                                       ! false if parameter is discarded in 
+                                                                                       ! optimization
+                                                                                       ! default = .true.
+  integer(i4), optional,  dimension(2),               intent(in)    :: seeds_in        ! Seeds of random numbers
+                                                                                       ! default = time dependent
+  logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation 
+                                                                                       ! is printed
+                                                                                       ! default = .false.
+
+  INTERFACE
+     FUNCTION cost(paraset,status_in)
+       ! calculates the cost function at a certain parameter set paraset and 
+       ! returns optionally if it is a valid parameter set (status_in)
+       use mo_kind
+       REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
+       REAL(SP)                            :: cost
+       LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
+     END FUNCTION cost
+  END INTERFACE
+    
+  INTERFACE
+     SUBROUTINE range(paraset,iPar,rangePar)
+       ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
+       use mo_kind
+       REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
+       INTEGER(I4),            INTENT(IN)  :: iPar
+       REAL(SP), DIMENSION(2), INTENT(OUT) :: rangePar
+     END SUBROUTINE range
+  END INTERFACE
+  !
+  ! Local variables
+  !
+  integer(i4)                           :: n
+  integer(i4)                           :: samplesize
+  integer(i4)                           :: idummy, i, j
+  integer(i4)                           :: iPar
+  real(sp),      dimension(2)           :: iParRange
+  character(10)                         :: timeseed
+  real(sp)                              :: NormPhi
+  real(sp)                              :: fo, fn, dr
+  real(sp)                              :: T
+
+  LOGICAL                                   :: coststatus
+  LOGICAL,     DIMENSION(size(paraset,1))   :: maskpara    ! true if parameter will be optimized
+  INTEGER(I4), DIMENSION(:), ALLOCATABLE    :: truepara    ! indexes of parameters to be optimized
+  LOGICAL                                   :: printflag   ! if detailed estimation of temperature is printed
+  
+  type paramLim
+     real(SP)                                 :: min                 !            minimum value
+     real(SP)                                 :: max                 !            maximum value
+     real(SP)                                 :: new                 !            new state value
+     real(SP)                                 :: old                 !            old state value
+     real(SP)                                 :: best                !            best value found
+     real(SP)                                 :: dMult               !            sencitivity multiplier for parameter search
+  end type paramLim
+  type (paramLim), dimension (size(paraset,1)), target   :: gamma    !            Transfer function parameters
+
+  ! for random numbers
+  INTEGER(I4)                   :: seeds(2)
+  real(SP)                      :: RN1, RN2     ! Random numbers
+  integer(I4)                   :: iin1, iin2   ! optional arguments for restarting RN streams
+  integer(I4)                   :: win1, win2   ! optional arguments for restarting RN streams
+  integer(I4), dimension(0:127) :: xin1, xin2   ! optional arguments for restarting RN streams
+  
+  ! for initial temperature estimate
+  real(SP)                              :: acc_estim  ! estimate of acceptance probability
+                                                      ! depends on temperature
+                                                      ! goal: find a temperature such that acc_estim ~ 0.9
+  real(SP), dimension(:,:), allocatable :: Energy     ! dim(LEN,2) cost function values before (:,1) and after (:,2) transition
+ 
+  n = size(paraset,1)
+
+  if (present(samplesize_in)) then
+     if (samplesize_in .lt. Max(20_i4*n,250_i4)) then
+        !stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
+        print*, 'WARNING (GetTemperature): '
+        print*, 'Input argument samplesize_in should be greater than Max(250,20*N), N=number of parameters'
+        samplesize = samplesize_in
+     else
+        samplesize = samplesize_in
+     end if
+  else
+     samplesize = Max(20_i4*n,250_i4)
+  endif
+
+  if (present(maskpara_in)) then
+     if (count(maskpara_in) .eq. 0_i4) then
+        stop 'Input argument maskpara: At least one element has to be true'
+     else
+        maskpara = maskpara_in
+     end if
+  else
+     maskpara = .true.
+  endif
+
+  if (present(seeds_in)) then
+     seeds = seeds_in
+  else
+     ! Seeds depend on actual time
+     call date_and_time(time=timeseed)
+     read(timeseed,'(i6,1x,i3)') idummy, seeds(1)
+     print*,'temp: seeds(1)=', seeds(1)
+     seeds(2) = seeds(1)+1000_i4
+  endif
+
+  if (present(printflag_in)) then
+     printflag = printflag_in
+  else
+     printflag = .false.
+  endif
+
+  allocate(Energy(samplesize,2))
+
+  allocate ( truepara(count(maskpara)) )
+  idummy = 0_i4
+  do i=1,N
+     if ( maskpara(i) ) then
+        idummy = idummy+1_i4
+        truepara(idummy) = i
+     end if
+  end do
+
+  ! Setting up the RNG
+  ! (1) Seeds depend on actual time or on input seeds
+  ! (2) Initialize the streams
+        call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
+        call xor4096(seeds(2), RN2, iin=iin2, win=win2, xin=xin2)
+        seeds = 0_i4
+  ! (3) Now ready for calling
+
+
+!TODO
+! status? 
+
+  gamma(:)%dmult = 1.0_sp
+  gamma(:)%new   = paraset(:)
+  gamma(:)%old   = paraset(:)
+  gamma(:)%best  = paraset(:)
+  NormPhi        = -9999.9_sp
+
+  fo      =  cost(paraset) 
+  NormPhi = fo
+  fo      = fo/NormPhi
+
+  j=1
+  loopSamplesize: do while (j .le. samplesize)
+     ! Generate a random subsequent state and evaluate its objective function
+     ! (1)  Generate new parameter set
+            dR=1.0_SP
+     ! (1a) Select parameter to be changed    
+            call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
+            iPar = truepara(int(real(count(maskpara),sp)*RN1+1._SP,i4))
+     ! (1b) Generate new value of selected parameter
+            call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
+            call range(gamma(:)%old, iPar, iParRange )
+            gamma(iPar)%min = iParRange(1)
+            gamma(iPar)%max = iParRange(2)
+            gamma(iPar)%new = parGen_sp( gamma(iPar)%old, gamma(iPar)%dMult*dR, &
+                 gamma(iPar)%min, gamma(iPar)%max, 8_i4, 1_i4,RN2)
+     ! (2)  Calculate new objective function value and normalize it
+            fn = cost(gamma(:)%new) 
+            coststatus = .true.
+     
+     feasible: if (coststatus) then   ! feasible parameter set
+        fn = fn/normPhi
+        ! Save Energy states of feasible transitions
+        ! for adaption of optimal initial temperature
+        ! Walid Ben-Ameur: "Comput. the Initial Temperature of Sim. Annealing"
+        ! Comput. Opt. and App. 2004
+        Energy(j,2) = fn     ! E_max_t
+        Energy(j,1) = fo     ! E_min_t
+        j=j+1
+      end if feasible !valid parameter set
+   end do loopSamplesize
+
+   ! estimation of the acceptance probability based on the random set ||<Samplesize>||
+   ! only if actual temperature (T) equals initial temperature (temp)
+   T = 1.0_sp
+   acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
+   if (printflag) then
+      print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
+   end if
+   Do While (abs(acc_estim - acc_goal) .gt. 0.0001_sp)
+      T = T * (Log(acc_estim)/Log(acc_goal))**(0.5_sp) ! **(1.0/p)  with p=1.0
+      acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
+      if (printflag) then
+         print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
+      end if
+   end do
+   GetTemperature_sp = T
+   !
+end function GetTemperature_sp
+
 !***************************************************
 !*               PRIVATE FUNCTIONS                 *
 !***************************************************
 
+!
 real(DP) function parGen_dp(old, dMax, oMin, oMax,iDigit,isZero,RN)
   use mo_kind, only: dp,i4
   implicit none
