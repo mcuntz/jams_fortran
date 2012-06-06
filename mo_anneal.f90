@@ -27,7 +27,7 @@ MODULE mo_anneal
   END INTERFACE anneal
 
   INTERFACE GetTemperature
-     MODULE PROCEDURE GetTemperature_dp !, GetTemperature_sp
+     MODULE PROCEDURE GetTemperature_dp,  GetTemperature_sp
   END INTERFACE GetTemperature
 
 
