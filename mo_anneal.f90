@@ -1228,12 +1228,13 @@ real(DP) function GetTemperature_dp(paraset, cost, range, acc_goal, samplesize_i
 
    ! estimation of the acceptance probability based on the random set ||<Samplesize>||
    ! only if actual temperature (T) equals initial temperature (temp)
-   T = 1.0_dp
+   T = maxval(Energy)  !1.0_dp
+   !print*, Energy(:,2)/T
    acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
    if (printflag) then
       print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
    end if
-   Do While (abs(acc_estim - acc_goal) .gt. 0.0001_dp)
+   Do While ( (acc_estim .lt. 1.0_dp) .and. (abs(acc_estim - acc_goal) .gt. 0.0001_dp))
       T = T * (Log(acc_estim)/Log(acc_goal))**(0.5_dp) ! **(1.0/p)  with p=1.0
       acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
       if (printflag) then
