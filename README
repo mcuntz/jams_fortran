@@ -6,7 +6,7 @@ Helmholtz Centre for Environmental Research - UFZ
 Permoserstr. 15
 04318 Leipzig, Germany
 
-One can produce a browseable html of the library in the directory html by calling: ./f2html -d html
+One can produce a browseable html of the library in the directory html by calling: make SRCPATH=. html
 
 The library is maintained with a subversion system at:
 https://svn.ufz.de/svn/chs-svn/FORTRAN_chs_lib/
