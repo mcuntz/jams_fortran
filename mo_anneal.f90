@@ -259,7 +259,7 @@ CONTAINS
     integer(I4)            :: iConL, iConR, iConF
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
-    logical(1)             :: iStop 
+    logical                :: iStop 
     
     integer(I4)            :: iPar
     real(DP), DIMENSION(2) :: iParRange
@@ -696,7 +696,7 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
     integer(I4)            :: iConL, iConR, iConF
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
-    logical(1)             :: iStop 
+    logical                :: iStop 
     
     integer(I4)            :: iPar
     real(SP), DIMENSION(2) :: iParRange
