@@ -1,6 +1,6 @@
 PROGRAM main
   
-  USE mo_kind,    ONLY: dp, sp
+  USE mo_kind,    ONLY: dp
   USE mo_boxcox,  ONLY: boxcox, invboxcox, get_boxcox
 
   IMPLICIT NONE
