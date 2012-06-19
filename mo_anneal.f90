@@ -9,6 +9,7 @@ MODULE mo_anneal
   ! Modified Juliane Mai, May   2012 : anneal: sp version
   !          Juliane Mai, May   2012 : anneal: documentation
   !          Juliane Mai, May   2012 : GetTemperature: sp and dp version
+  !          Juliane Mai, June  2012 : weighted parameter selection
 
   USE mo_kind,    ONLY: i4, i8, sp, dp
   USE mo_xor4096, ONLY: xor4096
