@@ -258,7 +258,6 @@ CONTAINS
 
     ! for SA
     integer(I4)            :: idummy,i
-    real(DP)               :: sumWeight
     character(10)          :: timeseed
     real(DP)               :: NormPhi
     real(DP)               :: ac_ratio, pa
@@ -1110,7 +1109,8 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
 
 END SUBROUTINE anneal_sp
 
-real(DP) function GetTemperature_dp(paraset, cost, range, acc_goal, samplesize_in, maskpara_in,seeds_in,printflag_in)
+real(DP) function GetTemperature_dp( paraset, cost, range, acc_goal, &
+                                     samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in)
   use mo_kind, only: dp, i4, i8
   implicit none
   !
@@ -1128,6 +1128,9 @@ real(DP) function GetTemperature_dp(paraset, cost, range, acc_goal, samplesize_i
   logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation 
                                                                                        ! is printed
                                                                                        ! default = .false.
+  REAL(DP),    OPTIONAL,  DIMENSION(size(paraset,1)), INTENT(IN)     :: weight_in  
+                                                         ! vector of weights per parameter
+                                                         ! gives the frequency of parameter to be chosen for optimization 
 
   INTERFACE
      FUNCTION cost(paraset,status_in)
@@ -1166,6 +1169,7 @@ real(DP) function GetTemperature_dp(paraset, cost, range, acc_goal, samplesize_i
   LOGICAL,     DIMENSION(size(paraset,1))   :: maskpara    ! true if parameter will be optimized
   INTEGER(I4), DIMENSION(:), ALLOCATABLE    :: truepara    ! indexes of parameters to be optimized
   LOGICAL                                   :: printflag   ! if detailed estimation of temperature is printed
+  REAL(DP),    DIMENSION(size(paraset,1))   :: weight      ! CDF of parameter to chose for optimization
   
   type paramLim
      real(DP)                                 :: min                 !            minimum value
@@ -1242,6 +1246,23 @@ real(DP) function GetTemperature_dp(paraset, cost, range, acc_goal, samplesize_i
      end if
   end do
 
+  weight    = 0.0_dp
+  if (present(weight_in)) then
+     where ( maskpara(:) ) 
+        weight(:) = weight_in(:)
+     end where
+  else
+     where ( maskpara(:) ) 
+        weight(:) = 1.0_dp
+     end where
+  endif
+  ! scaling the weights
+  weight = weight/sum(weight)
+  ! cummulating the weights
+  do i=2,n
+     weight(i) = weight(i) + weight(i-1)
+  end do
+
   ! Setting up the RNG
   ! (1) Seeds depend on actual time or on input seeds
   ! (2) Initialize the streams
@@ -1271,7 +1292,17 @@ real(DP) function GetTemperature_dp(paraset, cost, range, acc_goal, samplesize_i
             dR=1.0_DP
      ! (1a) Select parameter to be changed    
             call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
-            iPar = truepara(int(real(count(maskpara),dp)*RN1+1._DP,i4))
+            ! V1: select one parameter from all n
+            !iPar = int(real(N,dp)*RN1+1._DP,i4)
+            !
+            ! V2: select only masked parameters
+            !iPar = truepara(int(real(count(maskpara),dp)*RN1+1._DP,i4))
+            !
+            ! V3: select according to CDF based on weights and mask
+            iPar=1_i4
+            do while (weight(iPar) .lt. RN1)
+               iPar = iPar + 1_i4
+            end do
      ! (1b) Generate new value of selected parameter
             call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
             call range(gamma(:)%old, iPar, iParRange )
@@ -1314,7 +1345,8 @@ real(DP) function GetTemperature_dp(paraset, cost, range, acc_goal, samplesize_i
    !
 end function GetTemperature_dp
 
-real(sp) function GetTemperature_sp(paraset, cost, range, acc_goal, samplesize_in, maskpara_in,seeds_in,printflag_in)
+real(sp) function GetTemperature_sp( paraset, cost, range, acc_goal, & 
+                                     samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in)
   use mo_kind, only: sp, i4
   implicit none
   !
@@ -1332,6 +1364,9 @@ real(sp) function GetTemperature_sp(paraset, cost, range, acc_goal, samplesize_i
   logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation 
                                                                                        ! is printed
                                                                                        ! default = .false.
+  REAL(sp),    OPTIONAL,  DIMENSION(size(paraset,1)), INTENT(IN)     :: weight_in  
+                                                         ! vector of weights per parameter
+                                                         ! gives the frequency of parameter to be chosen for optimization 
 
   INTERFACE
      FUNCTION cost(paraset,status_in)
@@ -1370,6 +1405,7 @@ real(sp) function GetTemperature_sp(paraset, cost, range, acc_goal, samplesize_i
   LOGICAL,     DIMENSION(size(paraset,1))   :: maskpara    ! true if parameter will be optimized
   INTEGER(I4), DIMENSION(:), ALLOCATABLE    :: truepara    ! indexes of parameters to be optimized
   LOGICAL                                   :: printflag   ! if detailed estimation of temperature is printed
+  REAL(SP),    DIMENSION(size(paraset,1))   :: weight      ! CDF of parameter to chose for optimization
   
   type paramLim
      real(SP)                                 :: min                 !            minimum value
@@ -1446,6 +1482,23 @@ real(sp) function GetTemperature_sp(paraset, cost, range, acc_goal, samplesize_i
      end if
   end do
 
+  weight    = 0.0_sp
+  if (present(weight_in)) then
+     where ( maskpara(:) ) 
+        weight(:) = weight_in(:)
+     end where
+  else
+     where ( maskpara(:) ) 
+        weight(:) = 1.0_sp
+     end where
+  endif
+  ! scaling the weights
+  weight = weight/sum(weight)
+  ! cummulating the weights
+  do i=2,n
+     weight(i) = weight(i) + weight(i-1)
+  end do
+  
   ! Setting up the RNG
   ! (1) Seeds depend on actual time or on input seeds
   ! (2) Initialize the streams
@@ -1475,7 +1528,17 @@ real(sp) function GetTemperature_sp(paraset, cost, range, acc_goal, samplesize_i
             dR=1.0_SP
      ! (1a) Select parameter to be changed    
             call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
-            iPar = truepara(int(real(count(maskpara),sp)*RN1+1._SP,i4))
+            ! V1: select one parameter from all n
+            !iPar = int(real(N,sp)*RN1+1._SP,i4)
+            !
+            ! V2: select only masked parameters
+            !iPar = truepara(int(real(count(maskpara),sp)*RN1+1._SP,i4))
+            !
+            ! V3: select according to CDF based on weights and mask
+            iPar=1_i4
+            do while (weight(iPar) .lt. RN1)
+               iPar = iPar + 1_i4
+            end do
      ! (1b) Generate new value of selected parameter
             call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
             call range(gamma(:)%old, iPar, iParRange )
@@ -1501,12 +1564,12 @@ real(sp) function GetTemperature_sp(paraset, cost, range, acc_goal, samplesize_i
 
    ! estimation of the acceptance probability based on the random set ||<Samplesize>||
    ! only if actual temperature (T) equals initial temperature (temp)
-   T = 1.0_sp
+   T = maxval(Energy)  !1.0_sp
    acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
    if (printflag) then
       print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
    end if
-   Do While (abs(acc_estim - acc_goal) .gt. 0.0001_sp)
+    Do While ( (acc_estim .lt. 1.0_sp) .and. (abs(acc_estim - acc_goal) .gt. 0.0001_sp))
       T = T * (Log(acc_estim)/Log(acc_goal))**(0.5_sp) ! **(1.0/p)  with p=1.0
       acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
       if (printflag) then
