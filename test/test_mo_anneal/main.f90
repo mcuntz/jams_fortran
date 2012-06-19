@@ -54,7 +54,8 @@ PROGRAM anneal_test
      seeds(3) = seeds(2) + 1000_i8
      !
      call anneal(cost_dp, para, range_dp, temperature, costbest, parabest, seeds_in=seeds,&
-                 LEN_in=250_i4,nITERmax_in=150000_i4,eps_in=0.00001_dp,printflag_in=.false.)
+                 LEN_in=250_i4,nITERmax_in=150000_i4,eps_in=0.00001_dp,&
+                 printflag_in=.false.)
      if (costbestAll .gt. costbest) then
         costbestAll = costbest
         parabestAll = parabest

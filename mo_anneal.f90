@@ -115,12 +115,19 @@ CONTAINS
   !                                              DEFAULT = .false. (assuming that each parameter set
   !                                                                 is valid)
   !
-  !         LOGICAL, DIMENSION(size(para,1))  
-  !                        :: maskpara_in    ... vector of logicals
+  !         LOGICAL, DIMENSION(size(para,1)) :: 
+  !                           maskpara_in    ... vector of logicals
   !                                              maskpara(i) = .true.  --> parameter is optimized
   !                                              maskpara(i) = .false. --> parameter is discarded 
   !                                                                        from optimiztaion
   !                                              DEFAULT = .true.
+  !         REAL(DP), DIMENSION(size(para,1)) ::
+  !                           weight_in      ... vector of weights per parameter
+  !                                              gives the frequency of parameter to be chosen for
+  !                                              optimization (will be scaled to a CDF internally)
+  !                                              eg. [1,2,1] --> parameter 2 is chosen twice as 
+  !                                                              often as parameter 1 and 2
+  !                                              DEFAULT: weight_in = 1.0_dp
 
   !     INDENT(INOUT), OPTIONAL
   !         None
@@ -170,7 +177,7 @@ CONTAINS
 
   SUBROUTINE anneal_dp(cost, para, range, temp, costbest, parabest, & 
                        DT_in, nITERmax_in, LEN_in, nST_in, & 
-                       eps_in, acc_in, seeds_in, printflag_in, coststatus_in, maskpara_in)
+                       eps_in, acc_in, seeds_in, printflag_in, coststatus_in, maskpara_in, weight_in)
 
     IMPLICIT NONE
 
@@ -214,6 +221,9 @@ CONTAINS
                                                          ! true if parameter will be optimized
                                                          ! false if parameter is discarded in optimization
                                                          ! default = .true.
+    REAL(DP),    OPTIONAL, DIMENSION(size(para,1)), INTENT(IN)  :: weight_in  
+                                                         ! vector of weights per parameter
+                                                         ! gives the frequency of parameter to be chosen for optimization 
 
     INTEGER(I4) :: n    ! Number of parameters
     REAL(DP)    :: T
@@ -228,6 +238,7 @@ CONTAINS
     LOGICAL     :: coststatus
     LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
+    REAL(DP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter to chose for optimization
     
     type paramLim
        real(DP)                                 :: min                 !            minimum value
@@ -247,6 +258,7 @@ CONTAINS
 
     ! for SA
     integer(I4)            :: idummy,i
+    real(DP)               :: sumWeight
     character(10)          :: timeseed
     real(DP)               :: NormPhi
     real(DP)               :: ac_ratio, pa
@@ -368,6 +380,23 @@ CONTAINS
        print*, 'Following parameters will be optimized: ',truepara
     end if
 
+    weight    = 0.0_dp
+    if (present(weight_in)) then
+       where ( maskpara(:) ) 
+          weight(:) = weight_in(:)
+       end where
+    else
+       where ( maskpara(:) ) 
+          weight(:) = 1.0_dp
+       end where
+    endif
+    ! scaling the weights
+    weight = weight/sum(weight)
+    ! cummulating the weights
+    do i=2,n
+       weight(i) = weight(i) + weight(i-1)
+    end do
+
     T = temp
 
     call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
@@ -443,9 +472,18 @@ CONTAINS
          end if   
          ! (1a) Select parameter to be changed    
          call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
+         ! V1: select one parameter from all n
          !iPar = int(real(N,dp)*RN2+1._DP,i4)
-         iPar = truepara(int(real(count(maskpara),dp)*RN2+1._DP,i4))
-         !print*, 'iPar=',iPar
+         !
+         ! V2: select only masked parameters
+         !iPar = truepara(int(real(count(maskpara),dp)*RN2+1._DP,i4))
+         !
+         ! V3: select according to CDF based on weights and mask
+         iPar=1_i4
+         do while (weight(iPar) .lt. RN2)
+            iPar = iPar + 1_i4
+         end do
+         !print*, 'iPar=',iPar !
          ! (1b) Generate new value of selected parameter
          call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
          call range(gamma(:)%old, iPar, iParRange )
@@ -607,7 +645,7 @@ END SUBROUTINE anneal_dp
 
 SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, & 
                        DT_in, nITERmax_in, LEN_in, nST_in, & 
-                       eps_in, acc_in, seeds_in, printflag_in, coststatus_in, maskpara_in)
+                       eps_in, acc_in, seeds_in, printflag_in, coststatus_in, maskpara_in, weight_in)
 
     IMPLICIT NONE
 
@@ -651,6 +689,10 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
                                                          ! true if parameter will be optimized
                                                          ! false if parameter is discarded in optimization
                                                          ! default = .true.
+    REAL(SP),    OPTIONAL, DIMENSION(size(para,1)), INTENT(IN)  :: weight_in  
+                                                         ! vector of weights per parameter
+                                                         ! gives the frequency of parameter to be chosen for optimization 
+
 
     INTEGER(I4) :: n    ! Number of parameters
     REAL(SP)    :: T
@@ -665,6 +707,7 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
     LOGICAL     :: coststatus
     LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
+    REAL(SP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter to chose for optimization
     
     type paramLim
        real(SP)                                 :: min                 !            minimum value
@@ -804,6 +847,23 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
        print*, 'Following parameters will be optimized: ',truepara
     end if
 
+    weight    = 0.0_sp
+    if (present(weight_in)) then
+       where ( maskpara(:) ) 
+          weight(:) = weight_in(:)
+       end where
+    else
+       where ( maskpara(:) ) 
+          weight(:) = 1.0_sp
+       end where
+    endif
+    ! scaling the weights
+    weight = weight/sum(weight)
+    ! cummulating the weights
+    do i=2,n
+       weight(i) = weight(i) + weight(i-1)
+    end do
+
     T = temp
 
     call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
@@ -879,9 +939,18 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
          end if   
          ! (1a) Select parameter to be changed    
          call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
-         !iPar = int(real(N,dp)*RN2+1._DP,i4)
-         iPar = truepara(int(real(count(maskpara),sp)*RN2+1._sp,i4))
-         !print*, 'iPar=',iPar
+         ! V1: select one parameter from all n
+         !iPar = int(real(N,sp)*RN2+1._SP,i4)
+         !
+         ! V2: select only masked parameters
+         !iPar = truepara(int(real(count(maskpara),sp)*RN2+1._SP,i4))
+         !
+         ! V3: select according to CDF based on weights and mask
+         iPar=1_i4
+         do while (weight(iPar) .lt. RN2)
+            iPar = iPar + 1_i4
+         end do
+         !print*, 'iPar=',iPar !
          ! (1b) Generate new value of selected parameter
          call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
          call range(gamma(:)%old, iPar, iParRange )
