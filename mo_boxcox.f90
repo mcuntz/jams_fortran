@@ -30,7 +30,7 @@ MODULE mo_boxcox
      MODULE PROCEDURE get_boxcox_sp, get_boxcox_dp
   END INTERFACE get_boxcox
   INTERFACE invboxcox
-     MODULE PROCEDURE invboxcox_sp, invboxcox_dp
+     MODULE PROCEDURE invboxcox_0d_sp, invboxcox_0d_dp, invboxcox_1d_sp, invboxcox_1d_dp
   END INTERFACE invboxcox
 
   ! ------------------------------------------------------------------
@@ -44,7 +44,7 @@ CONTAINS
 
   !     PURPOSE
   !         Transform a positive dataset with a Box-Cox power transformation.
-  !             boxcox(x) = (x**lambda - 1)/lambda    if lambda > 0
+  !             boxcox(x) = (x**lambda - 1)/lambda    if lambda <> 0
   !                         ln(x)                     if lambda = 0
   !
   !         If an optinal mask is given, then the Box-Cox transformation is only performed on
@@ -53,7 +53,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         out = boxcox(x, lmbda, mask=mask)
-  
+
   !     INDENT(IN)
   !         real(sp/dp) :: x(:)       1D-array with input numbers (>0.)
   !         real(sp/dp) :: lmbda      Exponent power of Box-Cox transform (>= 0.)
@@ -153,12 +153,12 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  ! Given a function f, and given a bracketing triplet of abscissas ax, bx, cx (such that bx is 
-  ! between ax and cx, and f(bx) is less than both f(ax) and f(cx)), this routine isolates 
-  ! the minimum to a fractional precision of about tol using Brent''s method. The abscissa of 
+  ! Given a function f, and given a bracketing triplet of abscissas ax, bx, cx (such that bx is
+  ! between ax and cx, and f(bx) is less than both f(ax) and f(cx)), this routine isolates
+  ! the minimum to a fractional precision of about tol using Brent''s method. The abscissa of
   ! the minimum is returned.
-  ! Parameters: Maximum allowed number of iterations; goldenratio; and a small number that 
-  ! protects against trying to achieve fractional accuracy for a minimum that happens to be 
+  ! Parameters: Maximum allowed number of iterations; goldenratio; and a small number that
+  ! protects against trying to achieve fractional accuracy for a minimum that happens to be
   ! exactly zero.
   Function brent_sp(ax, bx, cx, func_sp, tol, dat)
 
@@ -374,7 +374,7 @@ CONTAINS
     LOGICAL,  DIMENSION(size(x))        :: maske
     REAL(sp), DIMENSION(:), ALLOCATABLE :: xx
     INTEGER(i4) :: nn
-    
+
 
     maske(:) = .true.
     if (present(mask)) then
@@ -407,7 +407,7 @@ CONTAINS
     LOGICAL,  DIMENSION(size(x))        :: maske
     REAL(dp), DIMENSION(:), ALLOCATABLE :: xx
     INTEGER(i4) :: nn
-    
+
 
     maske(:) = .true.
     if (present(mask)) then
@@ -418,8 +418,8 @@ CONTAINS
     if (allocated(xx)) deallocate(xx)
     allocate(xx(nn))
     xx = pack(x, mask=maske)
-    ax = -2.0_dp
-    bx = 2.0_dp
+    ax = -5.0_dp
+    bx = 5.0_dp
     call mnbrak_dp(ax, bx, cx, fa, fb, fc, llf_boxcox_dp, xx)
     get_boxcox_dp = brent_dp(ax, bx, cx, llf_boxcox_dp, tol, xx)
 
@@ -432,20 +432,22 @@ CONTAINS
 
   !     PURPOSE
   !         Back-transformation of Box-Cox-transformed data.
-  !             boxcox(x)    = (x**lambda - 1)/lambda        if lambda > 0
+  !             boxcox(x)    = (x**lambda - 1)/lambda        if lambda <> 0
   !                            ln(x)                         if lambda = 0
-  !             invboxcox(y) = (lambda*y + 1)**(1/lambda)    if lambda > 0
+  !             invboxcox(y) = (lambda*y + 1)**(1/lambda)    if lambda <> 0
   !                            exp(y)                        if lambda = 0
   !
   !         If an optinal mask is given, then the inverse Box-Cox transformation is only performed on
   !         those locations that correspond to true values in the mask.
   !         x can be single or double precision. The result will have the same numerical precision.
+  !         x can be scalar or vector
 
   !     CALLING SEQUENCE
-  !         out = invboxcox(x, lmbda, mask=mask)
-  
+  !         out = invboxcox(x, lmbda)                   ! scalar x
+  !         out = invboxcox(x, lmbda, mask=mask)        ! vector x
+
   !     INDENT(IN)
-  !         real(sp/dp) :: x(:)       1D-array with input numbers (>0.)
+  !         real(sp/dp) :: x / x(:)   scalar/1D-array with input numbers (>0.)
   !         real(sp/dp) :: lmbda      Exponent power of Box-Cox transform (>= 0.)
 
   !     INDENT(INOUT)
@@ -457,6 +459,7 @@ CONTAINS
   !     INDENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
+  !                                   Only applicable if x is a 1D-array
 
   !     INDENT(INOUT), OPTIONAL
   !         None
@@ -475,68 +478,135 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, March 2011
-  !            - Modified Python code of Travis Oliphant (2002): boxcox, llf_boxcox, get_boxcox
-  !            - Modified numerical recipes: brent, mnbrak, swap, shft
+  !            - Modified MC: Python code of Travis Oliphant (2002): boxcox, llf_boxcox, get_boxcox
+  !            - Modified MC: numerical recipes: brent, mnbrak, swap, shft
+  !            - Modified JM: scalar version of invboxcox
 
-  FUNCTION invboxcox_sp(x, lmbda, mask)
+  FUNCTION invboxcox_1d_sp(x, lmbda, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:), INTENT(in)           :: x
     REAL(sp),               INTENT(in)           :: lmbda
     LOGICAL,  DIMENSION(:), INTENT(in), OPTIONAL :: mask
-    REAL(sp), DIMENSION(size(x))                 :: invboxcox_sp
+    REAL(sp), DIMENSION(size(x))                 :: invboxcox_1d_sp
 
-    LOGICAL, DIMENSION(size(x)) :: maske
-    REAL(sp)                    :: lmbda1
+    LOGICAL, DIMENSION(size(x))  :: maske
+    REAL(sp)                     :: lmbda1
+    REAL(sp), DIMENSION(size(x)) :: temp
 
     maske(:) = .true.
     if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error invboxcox_sp: size(mask) /= size(x)'
+       if (size(mask) /= size(x)) stop 'Error invboxcox_1d_sp: size(mask) /= size(x)'
        maske = mask
     endif
     if (lmbda == 0.0_sp) then
        where (maske)
-          invboxcox_sp = exp(x)
+          invboxcox_1d_sp = exp(x)
        elsewhere
-          invboxcox_sp = x
+          invboxcox_1d_sp = x
        end where
     else
        lmbda1    = 1.0_sp / lmbda
-       invboxcox_sp = merge(exp(lmbda1*log(lmbda*x+1.0_sp)), x, maske)
+       temp      = lmbda*x+1.0_sp
+       where (temp .gt. 0.0_sp)
+          temp = exp(lmbda1*log(temp))
+       elsewhere
+          temp = 0.0_sp
+       end where
+       invboxcox_1d_sp = merge(temp, x, maske)
     endif
 
-  END FUNCTION invboxcox_sp
+  END FUNCTION invboxcox_1d_sp
 
-  FUNCTION invboxcox_dp(x, lmbda, mask)
+  FUNCTION invboxcox_1d_dp(x, lmbda, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:), INTENT(in)           :: x
     REAL(dp),               INTENT(in)           :: lmbda
     LOGICAL,  DIMENSION(:), INTENT(in), OPTIONAL :: mask
-    REAL(dp), DIMENSION(size(x))                 :: invboxcox_dp
+    REAL(dp), DIMENSION(size(x))                 :: invboxcox_1d_dp
 
-    LOGICAL, DIMENSION(size(x)) :: maske
-    REAL(dp)                    :: lmbda1
+    LOGICAL, DIMENSION(size(x))  :: maske
+    REAL(dp)                     :: lmbda1
+    REAL(dp), DIMENSION(size(x)) :: temp
 
     maske(:) = .true.
     if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error invboxcox_dp: size(mask) /= size(x)'
+       if (size(mask) /= size(x)) stop 'Error invboxcox_1d_dp: size(mask) /= size(x)'
        maske = mask
     endif
     if (lmbda == 0.0_dp) then
        where (maske)
-          invboxcox_dp = exp(x)
+          invboxcox_1d_dp = exp(x)
        elsewhere
-          invboxcox_dp = x
+          invboxcox_1d_dp = x
        end where
     else
        lmbda1    = 1.0_dp / lmbda
-       invboxcox_dp = merge(exp(lmbda1*log(lmbda*x+1.0_dp)), x, maske)
+       temp      = lmbda*x+1.0_dp
+       where (temp .gt. 0.0_dp)
+          temp = exp(lmbda1*log(temp))
+       elsewhere
+          temp = 0.0_dp
+       end where
+       invboxcox_1d_dp = merge(temp, x, maske)
     endif
 
-  END FUNCTION invboxcox_dp
+  END FUNCTION invboxcox_1d_dp
+
+  FUNCTION invboxcox_0d_sp(x, lmbda)
+
+    IMPLICIT NONE
+
+    REAL(sp), INTENT(in)           :: x
+    REAL(sp), INTENT(in)           :: lmbda
+    REAL(sp)                       :: invboxcox_0d_sp
+
+    REAL(sp)                       :: lmbda1
+    REAL(sp)                       :: temp
+
+    if (lmbda .eq. 0.0_sp) then
+       invboxcox_0d_sp = exp(x)
+    else
+       lmbda1    = 1.0_sp / lmbda
+       temp      = lmbda*x+1.0_sp
+       if (temp .gt. 0.0_sp) then
+          temp = exp(lmbda1*log(temp))
+       else
+          temp = 0.0_sp
+       end if
+       invboxcox_0d_sp = temp
+    endif
+
+  END FUNCTION invboxcox_0d_sp
+
+  FUNCTION invboxcox_0d_dp(x, lmbda)
+
+    IMPLICIT NONE
+
+    REAL(dp), INTENT(in)           :: x
+    REAL(dp), INTENT(in)           :: lmbda
+    REAL(dp)                       :: invboxcox_0d_dp
+
+    REAL(dp)                       :: lmbda1
+    REAL(dp)                       :: temp
+
+    if (lmbda .eq. 0.0_dp) then
+       invboxcox_0d_dp = exp(x)
+    else
+       lmbda1    = 1.0_dp / lmbda
+       temp      = lmbda*x+1.0_dp
+       if (temp .gt. 0.0_dp) then
+          temp = exp(lmbda1*log(temp))
+       else
+          temp = 0.0_dp
+       end if
+       invboxcox_0d_dp = temp
+    endif
+
+  END FUNCTION invboxcox_0d_dp
 
   ! ------------------------------------------------------------------
 
@@ -584,10 +654,10 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  ! Given a function func, and given distinct initial points ax and bx, this routine searches 
-  ! in the downhill direction (defined by the functionas evaluated at the initial points) and 
+  ! Given a function func, and given distinct initial points ax and bx, this routine searches
+  ! in the downhill direction (defined by the functionas evaluated at the initial points) and
   ! returns new points ax, bx, cx that bracket a minimum of the function.
-  ! Parameters: GOLD is the default ratio by which successive intervals are magnified; GLIMIT 
+  ! Parameters: GOLD is the default ratio by which successive intervals are magnified; GLIMIT
   ! is the maximum magnification allowed for a parabolic-fit step.
   SUBROUTINE mnbrak_sp(ax, bx, cx, fa, fb, fc, func_sp, dat)
 
