@@ -4,8 +4,7 @@ MODULE mo_anneal
   ! and is part of the UFZ CHS Fortran library.
 
   ! 
-
-  ! Written  Juliane Mai, March 2012
+  ! Written  Juliane Mai, March 2012 : module implementation
   ! Modified Juliane Mai, May   2012 : anneal: sp version
   !          Juliane Mai, May   2012 : anneal: documentation
   !          Juliane Mai, May   2012 : GetTemperature: sp and dp version
@@ -172,7 +171,9 @@ CONTAINS
   !             J. Chem. Phys., 21:1087–1092, June 1953.
 
   !     HISTORY
-  !        Written  Juliane Mai, March 2012
+  !        Written  Samaniego,   Jan   2000 : Created 
+  !                 Samaniego,   Mar   2003 : Re-heating
+  !                 Juliane Mai, March 2012 : modular version
   !        Modified Juliane Mai, May   2012 : sp version
   !                 Juliane Mai, May   2012 : documentation
 
