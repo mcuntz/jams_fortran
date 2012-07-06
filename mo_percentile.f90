@@ -17,7 +17,8 @@ MODULE mo_percentile
 
   PUBLIC :: ksmallest       ! Returns the kth smallest value in an array (median if k=N/2)
   PUBLIC :: median          ! Returns the median
-  PUBLIC :: percentile      ! Returns the percent smallest value in an array (median if k=50)
+  PUBLIC :: percentile      ! Returns the value below which a certain percent of array values fall.
+                            ! (median if k=50)
 
   ! Public
   INTERFACE ksmallest
@@ -354,13 +355,25 @@ CONTAINS
   !         percentile
 
   !     PURPOSE
-  !         Returns the percent smallest value in an array.
+  !         Returns the value below which a certain percent of array values fall.
   !
   !         If an optinal mask is given, values only on those locations that correspond
   !         to true values in the mask are used.
+  !
+  !         Different definitions can be applied to interpolate the stepwise CDF of the given data.
+  !         (1) Inverse empirical CDF (no interpolation, default MATHEMATICA)
+  !         (2) Linear interpolation (California method)
+  !         (3) Element numbered closest
+  !         (4) Linear interpolation (hydrologist method)
+  !         (5) Mean-based estimate (Weibull method, default IMSL)
+  !         (6) Mode-based estimate
+  !         (7) Median-based estimate
+  !         (8) normal distribution estimate
+  !         
+  !         See: http://reference.wolfram.com/mathematica/tutorial/BasicStatistics.html
 
   !     CALLING SEQUENCE
-  !         out = percentile(vec,k,mask=mask)
+  !         out = percentile(vec,k,mask=mask,mode_in=mode)
   
   !     INTENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
@@ -376,6 +389,10 @@ CONTAINS
   !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)    1D-array of logical values with size(vec).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
+  !         integer(i4) :: mode_in    Specifies the interpolation scheme applied.
+  !                                   Default: 
+  !                                       Inverse empirical CDF (no interpolation, default Mathematica)
+  !                                       mode_in = 1_i4
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -388,9 +405,9 @@ CONTAINS
 
   !     EXAMPLE
   !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
-  !         ! Returns 9
+  !         ! Returns 10.
   !         out = percentile(vec,95.)
-  !         ! Returns (9,8)
+  !         ! Returns (10.,8)
   !         out = percentile(vec,(/95.,80./))
   !         -> see also example in test directory
 
@@ -398,19 +415,23 @@ CONTAINS
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Mar 2011
-  !         Modified, Stephan Thober, Dec 2011 - added 1 dimensional version
+  !         Written,  Matthias Cuntz, Mar  2011
+  !         Modified, Stephan Thober, Dec  2011 - added 1 dimensional version
+  !                   Juliane Mai,    July 2012 - different interpolation schemes
 
-  FUNCTION percentile_0d_dp(arrin,k,mask)
+  FUNCTION percentile_0d_dp(arrin,k,mask,mode_in)
 
     IMPLICIT NONE
 
     REAL(dp),    DIMENSION(:),           INTENT(IN) :: arrin
     REAL(dp),                            INTENT(IN) :: k
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: mode_in                
     REAL(dp)                                        :: percentile_0d_dp
 
-    INTEGER(i4) :: n, nn
+    INTEGER(i4)                         :: n, nn1, nn2
+    INTEGER(i4)                         :: mode
+    REAL(dp)                            :: kk, ks1, ks2
     REAL(dp), DIMENSION(:), ALLOCATABLE :: arr
 
     if (present(mask)) then
@@ -423,26 +444,98 @@ CONTAINS
        arr = arrin
     endif
 
+    if (present(mode_in)) then
+       mode = mode_in
+    else
+       ! Default : Inverse empirical CDF
+       mode = 1_i4
+    end if
+
     if (n < 2) stop 'percentile_0d_dp: n < 2'
     
-    nn = floor(k/100._dp*real(n,dp),kind=i4)
-    percentile_0d_dp = ksmallest(arr,nn)
+    select case (mode)
+       ! Inverse empirical CDF: Mathematica default
+       case(1_i4) 
+          kk = k/100._dp*real(n,dp)
+          nn1 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+          nn2 = nn1
+
+       ! Linear interpolation (California method)
+       case(2_i4)
+          kk  = k/100._dp*real(n,dp)
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! Element numbered closest
+       case(3_i4)
+          kk = 0.5_dp+k/100._dp*real(n,dp)
+          nn1 = min(n, max(1_i4,floor(kk,kind=i4)))
+          nn2 = nn1
+
+       ! Linear interpolation (hydrologist method)
+       case(4_i4)
+          kk  = 0.5_dp+k/100._dp*(real(n,dp))
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! Mean-based estimate (Weibull method): IMSL default
+       case(5_i4)
+          kk  = k/100._dp*(real(n,dp)+1._dp)
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! Mode-based estimate
+       case(6_i4)
+          kk  = 1.0_dp+k/100._dp*(real(n,dp)-1._dp)
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! Median-based estimate
+       case(7_i4)
+          kk  = 1.0_dp/3.0_dp+k/100._dp*(real(n,dp)+1.0_dp/3.0_dp)
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! Normal distribution estimate
+       case(8_i4)
+          kk  = 3.0_dp/8.0_dp+k/100._dp*(real(n,dp)+1.0_dp/4.0_dp)
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! No valid mode
+       case default
+          stop 'percentile_0d_dp: mode > 8 not implemented'
+
+    end select
+
+    if (nn1 .eq. nn2) then
+       ! no interpolation
+       percentile_0d_dp = ksmallest(arr,nn1)
+    else
+       ! interpolation
+       ks1 = ksmallest(arr,nn1)
+       ks2 = ksmallest(arr,nn2)
+       percentile_0d_dp = ks1 + (ks2-ks1)*(kk-real(nn1,dp))
+    end if
 
     deallocate(arr)
 
   END FUNCTION percentile_0d_dp
 
 
-  FUNCTION percentile_0d_sp(arrin,k,mask)
+  FUNCTION percentile_0d_sp(arrin,k,mask,mode_in)
 
     IMPLICIT NONE
 
     REAL(sp),    DIMENSION(:),           INTENT(IN) :: arrin
     REAL(sp),                            INTENT(IN) :: k
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: mode_in
     REAL(sp)                                        :: percentile_0d_sp
 
-    INTEGER(i4) :: n, nn
+    INTEGER(i4)                         :: n, nn1, nn2
+    INTEGER(i4)                         :: mode
+    REAL(sp)                            :: kk, ks1, ks2
     REAL(sp), DIMENSION(:), ALLOCATABLE :: arr
 
     if (present(mask)) then
@@ -455,27 +548,101 @@ CONTAINS
        arr = arrin
     endif
 
+    if (present(mode_in)) then
+       mode = mode_in
+    else
+       ! Default : Inverse empirical CDF
+       mode = 1_i4
+    end if
+
     if (n < 2) stop 'percentile_0d_sp: n < 2'
     
-    nn = floor(k/100._sp*real(n,sp),kind=i4)
-    percentile_0d_sp = ksmallest(arr,nn)
+       select case (mode)
+       ! Inverse empirical CDF: Mathematica default
+       case(1_i4) 
+          kk = k/100._sp*real(n,sp)
+          nn1 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+          nn2 = nn1
+
+       ! Linear interpolation (California method)
+       case(2_i4)
+          kk  = k/100._sp*real(n,sp)
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! Element numbered closest
+       case(3_i4)
+          kk = 0.5_sp+k/100._sp*real(n,sp)
+          nn1 = min(n, max(1_i4,floor(kk,kind=i4)))
+          nn2 = nn1
+
+       ! Linear interpolation (hydrologist method)
+       case(4_i4)
+          kk  = 0.5_sp+k/100._sp*(real(n,sp))
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! Mean-based estimate (Weibull method): IMSL default
+       case(5_i4)
+          kk  = k/100._sp*(real(n,sp)+1._sp)
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! Mode-based estimate
+       case(6_i4)
+          kk  = 1.0_sp+k/100._sp*(real(n,sp)-1._sp)
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! Median-based estimate
+       case(7_i4)
+          kk  = 1.0_sp/3.0_sp+k/100._sp*(real(n,sp)+1.0_sp/3.0_sp)
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! Normal distribution estimate
+       case(8_i4)
+          kk  = 3.0_sp/8.0_sp+k/100._sp*(real(n,sp)+1.0_sp/4.0_sp)
+          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+
+       ! No valid mode
+       case default
+          stop 'percentile_0d_sp: mode > 8 not implemented'
+
+    end select
+
+    if (nn1 .eq. nn2) then
+       ! no interpolation
+       percentile_0d_sp = ksmallest(arr,nn1)
+    else
+       ! interpolation
+       ks1 = ksmallest(arr,nn1)
+       ks2 = ksmallest(arr,nn2)
+       percentile_0d_sp = ks1 + (ks2-ks1)*(kk-real(nn1,sp))
+    end if
 
     deallocate(arr)
 
   END FUNCTION percentile_0d_sp
 
-  function percentile_1d_dp(arrin,k,mask)
+  function percentile_1d_dp(arrin,k,mask,mode_in)
 
     IMPLICIT NONE
 
     REAL(dp),    DIMENSION(:),           INTENT(IN) :: arrin
-    REAL(dp),    Dimension(:),           INTENT(IN) :: k
+    REAL(dp),    DIMENSION(:),           INTENT(IN) :: k
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: mode_in
 
-    REAL(dp),    Dimension(size(k))                 :: percentile_1d_dp
+    REAL(dp),    DIMENSION(size(k))                 :: percentile_1d_dp
 
-    INTEGER(i4) :: n, nn
-    REAL(dp), DIMENSION(:), ALLOCATABLE :: arr
+    INTEGER(i4)                            :: i, n
+    INTEGER(i4)                            :: mode
+    INTEGER(i4), DIMENSION(size(k))        :: nn1, nn2
+    REAL(dp),    DIMENSION(size(k))        :: kk
+    REAL(dp)                               :: ks1, ks2
+    REAL(dp),    DIMENSION(:), ALLOCATABLE :: arr
 
     if (present(mask)) then
        n = count(mask)
@@ -487,31 +654,105 @@ CONTAINS
        arr = arrin
     endif
 
+    if (present(mode_in)) then
+       mode = mode_in
+    else
+       ! Default : Inverse empirical CDF
+       mode = 1_i4
+    end if
+
     ! check consistency
     !if (size(k) > size(arr)) stop 'percentile_1d_dp: more Quantiles than data: size(k) > size(arr)'
     if (n < 2) stop 'percentile_1d_dp: n < 2'
-    
-    do n = 1, size(k)
-       nn = floor(k(n)/100._dp*real(size(arr),dp),kind=i4)
-       percentile_1d_dp(n) = ksmallest(arr,nn)
+
+    select case (mode)
+       ! Inverse empirical CDF: Mathematica default
+       case(1_i4)   
+          kk(:) = k(:)/100._dp*real(n,dp)
+          nn1(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+          nn2 = nn1
+
+      ! Linear interpolation (California method)
+       case(2_i4)
+          kk(:)  = k(:)/100._dp*real(n,dp)
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! Element numbered closest
+       case(3_i4)
+          kk(:) = 0.5_dp+k(:)/100._dp*real(n,dp)
+          nn1(:) = min(n, max(1_i4,floor(kk(:),kind=i4)))
+          nn2 = nn1
+
+       ! Linear interpolation (hydrologist method)
+       case(4_i4)
+          kk(:)  = 0.5_dp+k(:)/100._dp*(real(n,dp))
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! Mean-based estimate (Weibull method): IMSL default
+       case(5_i4)
+          kk(:)  = k(:)/100._dp*(real(n,dp)+1._dp)
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! Mode-based estimate
+       case(6_i4)
+          kk(:)  = 1.0_dp+k(:)/100._dp*(real(n,dp)-1._dp)
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! Median-based estimate
+       case(7_i4)
+          kk(:)  = 1.0_dp/3.0_dp+k(:)/100._dp*(real(n,dp)+1.0_dp/3.0_dp)
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! Normal distribution estimate
+       case(8_i4)
+          kk(:)  = 3.0_dp/8.0_dp+k(:)/100._dp*(real(n,dp)+1.0_dp/4.0_dp)
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! No valid mode
+       case default
+          stop 'percentile_1d_dp: mode > 8 not implemented'
+
+    end select
+
+    do i=1, size(k)
+       if (nn1(i) .eq. nn2(i)) then
+          ! no interpolation
+          percentile_1d_dp(i) = ksmallest(arr,nn1(i))
+       else
+          ! interpolation
+          ks1 = ksmallest(arr,nn1(i))
+          ks2 = ksmallest(arr,nn2(i))
+          percentile_1d_dp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),dp))
+       end if
     end do
 
     deallocate(arr)
 
   END function percentile_1d_dp
 
-  function percentile_1d_sp(arrin,k,mask)
+  function percentile_1d_sp(arrin,k,mask,mode_in)
 
     IMPLICIT NONE
 
     REAL(sp),    DIMENSION(:),           INTENT(IN) :: arrin
-    REAL(sp),    Dimension(:),           INTENT(IN) :: k
+    REAL(sp),    DIMENSION(:),           INTENT(IN) :: k
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: mode_in
 
-    REAL(sp),    Dimension(size(k))                 :: percentile_1d_sp
+    REAL(sp),    DIMENSION(size(k))                 :: percentile_1d_sp
 
-    INTEGER(i4) :: n, nn
-    REAL(sp), DIMENSION(:), ALLOCATABLE :: arr
+    INTEGER(i4)                            :: i, n
+    INTEGER(i4)                            :: mode
+    INTEGER(i4), DIMENSION(size(k))        :: nn1, nn2
+    REAL(sp),    DIMENSION(size(k))        :: kk
+    REAL(sp)                               :: ks1, ks2
+    REAL(sp),    DIMENSION(:), ALLOCATABLE :: arr
 
     if (present(mask)) then
        n = count(mask)
@@ -523,13 +764,82 @@ CONTAINS
        arr = arrin
     endif
 
+    if (present(mode_in)) then
+       mode = mode_in
+    else
+       ! Default : Inverse empirical CDF
+       mode = 1_i4
+    end if
+
     ! check consistency
     !if (size(k) > size(arr)) stop 'percentile_1d_sp: more Quantiles than data: size(k) > size(arr)'
     if (n < 2) stop 'percentile_1d_sp: n < 2'
-    
-    do n = 1, size(k)
-       nn = floor(k(n)/100._sp*real(size(arr),sp),kind=i4)
-       percentile_1d_sp(n) = ksmallest(arr,nn)
+
+    select case (mode)
+       ! Inverse empirical CDF: Mathematica default
+       case(1_i4)   
+          kk(:) = k(:)/100._sp*real(n,sp)
+          nn1(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+          nn2 = nn1
+
+      ! Linear interpolation (California method)
+       case(2_i4)
+          kk(:)  = k(:)/100._sp*real(n,sp)
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! Element numbered closest
+       case(3_i4)
+          kk(:) = 0.5_sp+k(:)/100._sp*real(n,sp)
+          nn1(:) = min(n, max(1_i4,floor(kk(:),kind=i4)))
+          nn2 = nn1
+
+       ! Linear interpolation (hydrologist method)
+       case(4_i4)
+          kk(:)  = 0.5_sp+k(:)/100._sp*(real(n,sp))
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! Mean-based estimate (Weibull method): IMSL default
+       case(5_i4)
+          kk(:)  = k(:)/100._sp*(real(n,sp)+1._sp)
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! Mode-based estimate
+       case(6_i4)
+          kk(:)  = 1.0_sp+k(:)/100._sp*(real(n,sp)-1._sp)
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! Median-based estimate
+       case(7_i4)
+          kk(:)  = 1.0_sp/3.0_sp+k(:)/100._sp*(real(n,sp)+1.0_sp/3.0_sp)
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! Normal distribution estimate
+       case(8_i4)
+          kk(:)  = 3.0_sp/8.0_sp+k(:)/100._sp*(real(n,sp)+1.0_sp/4.0_sp)
+          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+
+       ! No valid mode
+       case default
+          stop 'percentile_1d_sp: mode > 8 not implemented'
+
+    end select
+
+    do i=1, size(k)
+       if (nn1(i) .eq. nn2(i)) then
+          ! no interpolation
+          percentile_1d_sp(i) = ksmallest(arr,nn1(i))
+       else
+          ! interpolation
+          ks1 = ksmallest(arr,nn1(i))
+          ks2 = ksmallest(arr,nn2(i))
+          percentile_1d_sp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),sp))
+       end if
     end do
 
     deallocate(arr)
