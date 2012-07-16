@@ -261,6 +261,8 @@ contains
        select case (V(i)%xtype)
        case (NF90_INT)
           select case (V(i)%nDims)
+          case (0)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_i ))
           case (1)
              call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_i ))
           case (2)
@@ -272,6 +274,8 @@ contains
           end select
        case (NF90_FLOAT)
           select case (V(i)%nDims)
+          case (0)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_f ))
           case (1)
              call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_f ))
           case (2)
@@ -283,6 +287,8 @@ contains
           end select
        case (NF90_DOUBLE)
           select case (V(i)%nDims)
+          case (0)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_d ))
           case (1)
              call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_d ))
           case (2)
