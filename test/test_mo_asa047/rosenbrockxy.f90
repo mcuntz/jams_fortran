@@ -1,4 +1,4 @@
-function rosenbrock(x)
+function rosenbrockxy(p, xx, yy)
 
 !*****************************************************************************80
 !
@@ -26,7 +26,9 @@ function rosenbrock(x)
 !
 !  Parameters:
 !
-!    Input, real(dp) X(2), the argument.
+!    Input, real(dp) P(2), the argument.
+!    Input, real(dp) X(1), the argument 2.
+!    Input, real(dp) Y(1), the argument 3.
 !
 !    Output, real(dp) ROSENBROCK, the value of the function.
 !
@@ -34,20 +36,20 @@ function rosenbrock(x)
 
   implicit none
 
-  real(dp), dimension(:), intent(in) :: x
-  real(dp) :: rosenbrock
+  real(dp), dimension(:), intent(in) :: p
+  real(dp), dimension(:), intent(in) :: xx
+  real(dp), dimension(:), intent(in) :: yy
+  real(dp) :: rosenbrockxy
 
   real(dp) :: fx
   real(dp) :: fx1
   real(dp) :: fx2
 
-  fx1 = x(2) - x(1) * x(1)
-  fx2 = 1.0_dp - x(1)
+  fx1 = p(2) - p(1) * p(1)
+  fx2 = xx(1) - p(1)
 
-  fx = 100.0_dp * fx1 * fx1 + fx2 * fx2
+  fx = yy(1) * fx1 * fx1 + fx2 * fx2
 
-  rosenbrock = fx
+  rosenbrockxy = fx
 
-  return
-
-end function rosenbrock
+end function rosenbrockxy
