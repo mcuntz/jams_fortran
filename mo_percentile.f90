@@ -19,6 +19,7 @@ MODULE mo_percentile
   PUBLIC :: median          ! Returns the median
   PUBLIC :: percentile      ! Returns the value below which a certain percent of array values fall.
                             ! (median if k=50)
+  PUBLIC :: qmedian         ! Quick median calculation (k=N/2)
 
   ! Public
   INTERFACE ksmallest
@@ -31,6 +32,9 @@ MODULE mo_percentile
      MODULE PROCEDURE percentile_0d_sp, percentile_0d_dp
      MODULE PROCEDURE percentile_1d_sp, percentile_1d_dp
   END INTERFACE percentile
+  INTERFACE qmedian
+     MODULE PROCEDURE qmedian_sp, qmedian_dp
+  END INTERFACE qmedian
 
   ! Private
   INTERFACE swap
@@ -63,7 +67,7 @@ CONTAINS
   !         to true values in the mask are used.
 
   !     CALLING SEQUENCE
-  !         out = ksmallest(vec,k,mask=mask)
+  !         out = ksmallest(vec,k,mask=mask,before=before)
   
   !     INTENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
@@ -83,7 +87,7 @@ CONTAINS
   !         None
 
   !     INTENT(OUT), OPTIONAL
-  !         None
+  !         real(sp/dp) :: before      (k-1)-th smallest value in input array for median/percentile calculations
 
   !     RESTRICTIONS
   !         None
@@ -100,14 +104,15 @@ CONTAINS
   !     HISTORY
   !         Written,  Matthias Cuntz, Mar 2011
 
-  FUNCTION ksmallest_dp(arrin,k,mask)
+  FUNCTION ksmallest_dp(arrin,k,mask,before)
 
     IMPLICIT NONE
 
-    REAL(dp),    DIMENSION(:),           INTENT(IN) :: arrin
-    INTEGER(i4),                         INTENT(IN) :: k
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
-    REAL(dp)                                        :: ksmallest_dp
+    REAL(dp),    DIMENSION(:),           INTENT(IN)  :: arrin
+    INTEGER(i4),                         INTENT(IN)  :: k
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(dp),                  OPTIONAL, INTENT(OUT) :: before
+    REAL(dp)                                         :: ksmallest_dp
 
     INTEGER(i4) :: i, r, j, l, n
     REAL(dp)    :: a
@@ -132,6 +137,7 @@ CONTAINS
        if (r-l <= 1) then
           if (r-l == 1) call swap(arr(l), arr(r), arr(l)>arr(r))
           ksmallest_dp = arr(k)
+          if (present(before)) before = maxval(arr(:k-1))
           deallocate(arr)
           RETURN
        else
@@ -161,20 +167,23 @@ CONTAINS
           if (j <= k) l = i
        end if
     end do
+    ksmallest_dp = arr(k)
+    if (present(before)) before = maxval(arr(:k-1))
 
     deallocate(arr)
 
   END FUNCTION ksmallest_dp
 
 
-  FUNCTION ksmallest_sp(arrin,k,mask)
+  FUNCTION ksmallest_sp(arrin,k,mask,before)
 
     IMPLICIT NONE
 
-    REAL(sp),    DIMENSION(:),           INTENT(IN) :: arrin
-    INTEGER(i4),                         INTENT(IN) :: k
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
-    REAL(sp)                                        :: ksmallest_sp
+    REAL(sp),    DIMENSION(:),           INTENT(IN)  :: arrin
+    INTEGER(i4),                         INTENT(IN)  :: k
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(sp),                  OPTIONAL, INTENT(OUT) :: before
+    REAL(sp)                                         :: ksmallest_sp
 
     INTEGER(i4) :: i, r, j, l, n
     REAL(sp)    :: a
@@ -199,6 +208,7 @@ CONTAINS
        if (r-l <= 1) then
           if (r-l == 1) call swap(arr(l), arr(r), arr(l)>arr(r))
           ksmallest_sp = arr(k)
+          if (present(before)) before = maxval(arr(:k-1))
           deallocate(arr)
           RETURN
        else
@@ -228,6 +238,8 @@ CONTAINS
           if (j <= k) l = i
        end if
     end do
+    ksmallest_sp = arr(k)
+    if (present(before)) before = maxval(arr(:k-1))
 
     deallocate(arr)
 
@@ -292,26 +304,34 @@ CONTAINS
 
     INTEGER(i4) :: n
     REAL(dp), DIMENSION(:), ALLOCATABLE :: arr
+    REAL(dp) :: tmp
 
     if (present(mask)) then
        n = count(mask)
        allocate(arr(n))
        arr = pack(arrin,mask)
+
+       if (n < 2) stop 'median_dp: n < 2'
+    
+       if (mod(n,2) == 0) then ! Even
+          median_dp = ksmallest(arr,n/2+1,before=tmp)
+          median_dp = 0.5_dp*(median_dp+tmp)
+       else ! Odd
+          median_dp = ksmallest(arr,(n+1)/2)
+       endif
+
+       deallocate(arr)
     else
        n = size(arrin)
-       allocate(arr(n))
-       arr = arrin
-    endif
-
-    if (n < 2) stop 'median_dp: n < 2'
+       if (n < 2) stop 'median_dp: n < 2'
     
-    if (mod(n,2) == 0) then ! Even
-       median_dp = 0.5_dp * (ksmallest(arr,n/2) + ksmallest(arr,n/2+1))
-    else ! Odd
-       median_dp = ksmallest(arr,(n+1)/2)
+       if (mod(n,2) == 0) then ! Even
+          median_dp = ksmallest(arrin,n/2+1,before=tmp)
+          median_dp = 0.5_dp*(median_dp+tmp)
+       else ! Odd
+          median_dp = ksmallest(arrin,(n+1)/2)
+       endif
     endif
-
-    deallocate(arr)
 
   END FUNCTION median_dp
 
@@ -326,26 +346,34 @@ CONTAINS
 
     INTEGER(i4) :: n
     REAL(sp), DIMENSION(:), ALLOCATABLE :: arr
+    REAL(sp) :: tmp
 
     if (present(mask)) then
        n = count(mask)
        allocate(arr(n))
        arr = pack(arrin,mask)
+
+       if (n < 2) stop 'median_sp: n < 2'
+    
+       if (mod(n,2) == 0) then ! Even
+          median_sp = ksmallest(arr,n/2+1,before=tmp)
+          median_sp = 0.5_sp*(median_sp+tmp)
+       else ! Odd
+          median_sp = ksmallest(arr,(n+1)/2)
+       endif
+
+       deallocate(arr)
     else
        n = size(arrin)
-       allocate(arr(n))
-       arr = arrin
-    endif
-
-    if (n < 2) stop 'median_sp: n < 2'
+       if (n < 2) stop 'median_sp: n < 2'
     
-    if (mod(n,2) == 0) then ! Even
-       median_sp = 0.5_sp * (ksmallest(arr,n/2) + ksmallest(arr,n/2+1))
-    else ! Odd
-       median_sp = ksmallest(arr,(n+1)/2)
+       if (mod(n,2) == 0) then ! Even
+          median_sp = ksmallest(arrin,n/2+1,before=tmp)
+          median_sp = 0.5_sp*(median_sp+tmp)
+       else ! Odd
+          median_sp = ksmallest(arrin,(n+1)/2)
+       endif
     endif
-
-    deallocate(arr)
 
   END FUNCTION median_sp
 
@@ -436,12 +464,8 @@ CONTAINS
 
     if (present(mask)) then
        n = count(mask)
-       allocate(arr(n))
-       arr = pack(arrin,mask)
     else
        n = size(arrin)
-       allocate(arr(n))
-       arr = arrin
     endif
 
     if (present(mode_in)) then
@@ -508,17 +532,28 @@ CONTAINS
 
     end select
 
-    if (nn1 .eq. nn2) then
-       ! no interpolation
-       percentile_0d_dp = ksmallest(arr,nn1)
+    if (present(mask)) then
+       allocate(arr(n))
+       arr = pack(arrin,mask)
+       if (nn1 .eq. nn2) then
+          ! no interpolation
+          percentile_0d_dp = ksmallest(arr,nn1)
+       else
+          ! interpolation
+          ks2 = ksmallest(arr,nn2,before=ks1)
+          percentile_0d_dp = ks1 + (ks2-ks1)*(kk-real(nn1,dp))
+       end if
+       deallocate(arr)
     else
-       ! interpolation
-       ks1 = ksmallest(arr,nn1)
-       ks2 = ksmallest(arr,nn2)
-       percentile_0d_dp = ks1 + (ks2-ks1)*(kk-real(nn1,dp))
-    end if
-
-    deallocate(arr)
+       if (nn1 .eq. nn2) then
+          ! no interpolation
+          percentile_0d_dp = ksmallest(arrin,nn1)
+       else
+          ! interpolation
+          ks2 = ksmallest(arrin,nn2,before=ks1)
+          percentile_0d_dp = ks1 + (ks2-ks1)*(kk-real(nn1,dp))
+       end if
+    endif
 
   END FUNCTION percentile_0d_dp
 
@@ -530,7 +565,7 @@ CONTAINS
     REAL(sp),    DIMENSION(:),           INTENT(IN) :: arrin
     REAL(sp),                            INTENT(IN) :: k
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
-    INTEGER(i4),               OPTIONAL, INTENT(IN) :: mode_in
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: mode_in                
     REAL(sp)                                        :: percentile_0d_sp
 
     INTEGER(i4)                         :: n, nn1, nn2
@@ -540,12 +575,8 @@ CONTAINS
 
     if (present(mask)) then
        n = count(mask)
-       allocate(arr(n))
-       arr = pack(arrin,mask)
     else
        n = size(arrin)
-       allocate(arr(n))
-       arr = arrin
     endif
 
     if (present(mode_in)) then
@@ -557,7 +588,7 @@ CONTAINS
 
     if (n < 2) stop 'percentile_0d_sp: n < 2'
     
-       select case (mode)
+    select case (mode)
        ! Inverse empirical CDF: Mathematica default
        case(1_i4) 
           kk = k/100._sp*real(n,sp)
@@ -612,19 +643,31 @@ CONTAINS
 
     end select
 
-    if (nn1 .eq. nn2) then
-       ! no interpolation
-       percentile_0d_sp = ksmallest(arr,nn1)
+    if (present(mask)) then
+       allocate(arr(n))
+       arr = pack(arrin,mask)
+       if (nn1 .eq. nn2) then
+          ! no interpolation
+          percentile_0d_sp = ksmallest(arr,nn1)
+       else
+          ! interpolation
+          ks2 = ksmallest(arr,nn2,before=ks1)
+          percentile_0d_sp = ks1 + (ks2-ks1)*(kk-real(nn1,sp))
+       end if
+       deallocate(arr)
     else
-       ! interpolation
-       ks1 = ksmallest(arr,nn1)
-       ks2 = ksmallest(arr,nn2)
-       percentile_0d_sp = ks1 + (ks2-ks1)*(kk-real(nn1,sp))
-    end if
-
-    deallocate(arr)
+       if (nn1 .eq. nn2) then
+          ! no interpolation
+          percentile_0d_sp = ksmallest(arrin,nn1)
+       else
+          ! interpolation
+          ks2 = ksmallest(arrin,nn2,before=ks1)
+          percentile_0d_sp = ks1 + (ks2-ks1)*(kk-real(nn1,sp))
+       end if
+    endif
 
   END FUNCTION percentile_0d_sp
+
 
   function percentile_1d_dp(arrin,k,mask,mode_in)
 
@@ -646,12 +689,8 @@ CONTAINS
 
     if (present(mask)) then
        n = count(mask)
-       allocate(arr(n))
-       arr = pack(arrin,mask)
     else
        n = size(arrin)
-       allocate(arr(n))
-       arr = arrin
     endif
 
     if (present(mode_in)) then
@@ -720,21 +759,35 @@ CONTAINS
 
     end select
 
-    do i=1, size(k)
-       if (nn1(i) .eq. nn2(i)) then
-          ! no interpolation
-          percentile_1d_dp(i) = ksmallest(arr,nn1(i))
-       else
-          ! interpolation
-          ks1 = ksmallest(arr,nn1(i))
-          ks2 = ksmallest(arr,nn2(i))
-          percentile_1d_dp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),dp))
-       end if
-    end do
-
-    deallocate(arr)
+    if (present(mask)) then
+       allocate(arr(n))
+       arr = pack(arrin,mask)
+       do i=1, size(k)
+          if (nn1(i) .eq. nn2(i)) then
+             ! no interpolation
+             percentile_1d_dp(i) = ksmallest(arr,nn1(i))
+          else
+             ! interpolation
+             ks2 = ksmallest(arr,nn2(i),before=ks1)
+             percentile_1d_dp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),dp))
+          end if
+       end do
+       deallocate(arr)
+    else
+       do i=1, size(k)
+          if (nn1(i) .eq. nn2(i)) then
+             ! no interpolation
+             percentile_1d_dp(i) = ksmallest(arrin,nn1(i))
+          else
+             ! interpolation
+             ks2 = ksmallest(arrin,nn2(i),before=ks1)
+             percentile_1d_dp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),dp))
+          end if
+       end do
+    endif
 
   END function percentile_1d_dp
+
 
   function percentile_1d_sp(arrin,k,mask,mode_in)
 
@@ -756,12 +809,8 @@ CONTAINS
 
     if (present(mask)) then
        n = count(mask)
-       allocate(arr(n))
-       arr = pack(arrin,mask)
     else
        n = size(arrin)
-       allocate(arr(n))
-       arr = arrin
     endif
 
     if (present(mode_in)) then
@@ -830,21 +879,169 @@ CONTAINS
 
     end select
 
-    do i=1, size(k)
-       if (nn1(i) .eq. nn2(i)) then
-          ! no interpolation
-          percentile_1d_sp(i) = ksmallest(arr,nn1(i))
-       else
-          ! interpolation
-          ks1 = ksmallest(arr,nn1(i))
-          ks2 = ksmallest(arr,nn2(i))
-          percentile_1d_sp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),sp))
-       end if
-    end do
-
-    deallocate(arr)
+    if (present(mask)) then
+       allocate(arr(n))
+       arr = pack(arrin,mask)
+       do i=1, size(k)
+          if (nn1(i) .eq. nn2(i)) then
+             ! no interpolation
+             percentile_1d_sp(i) = ksmallest(arr,nn1(i))
+          else
+             ! interpolation
+             ks2 = ksmallest(arr,nn2(i),before=ks1)
+             percentile_1d_sp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),sp))
+          end if
+       end do
+       deallocate(arr)
+    else
+       do i=1, size(k)
+          if (nn1(i) .eq. nn2(i)) then
+             ! no interpolation
+             percentile_1d_sp(i) = ksmallest(arrin,nn1(i))
+          else
+             ! interpolation
+             ks2 = ksmallest(arrin,nn2(i),before=ks1)
+             percentile_1d_sp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),sp))
+          end if
+       end do
+    endif
 
   END function percentile_1d_sp
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         qmedian
+
+  !     PURPOSE
+  !         Returns the quickly calculated median by overwriting the input array.
+  !         It takes the size/2-th element as the median.
+
+  !     CALLING SEQUENCE
+  !         out = qmedian(vec)
+  
+  !     INTENT(IN)
+  !         None
+
+  !     INTENT(INOUT)
+  !         real(sp/dp) :: vec(:)     1D-array with input numbers
+
+  !     INTENT(OUT)
+  !         real(sp/dp) :: out        median of values in input array
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
+  !         ! Returns 5.
+  !         out = qmedian(vec)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Niklaus Wirth. "Algorithms and Data Structures". Prentice-Hall, Inc., 1985. ISBN 0-13-022005-1.
+
+  !     HISTORY
+  !         Written, Filip Hroch as part of Munipack: http://munipack.physics.muni.cz
+  !         Modified, Matthias Cuntz, Jul 2012 - function, k=n/2
+
+  function qmedian_dp(dat)
+
+    IMPLICIT NONE
+
+    real(dp), dimension(:), intent(inout) :: dat
+    real(dp) :: qmedian_dp
+
+    real(dp) :: w
+    integer(i4) :: n,k
+    integer(i4) :: l,r,i,j
+
+    logical :: iseven
+
+    n = size(dat)
+    k = n/2_i4+1_i4
+    l = 1_i4
+    r = n
+    do while( l < r )
+       qmedian_dp = dat(k)
+       i = l
+       j = r
+       do
+          do while( dat(i) < qmedian_dp )
+             i = i + 1_i4
+          enddo
+          do while( qmedian_dp < dat(j) )
+             j = j - 1_i4
+          enddo
+          if ( i <= j ) then
+             w      = dat(i)
+             dat(i) = dat(j)
+             dat(j) = w
+             i = i + 1_i4
+             j = j - 1_i4
+          endif
+          if ( i > j ) exit
+       enddo
+       if ( j < k ) l = i
+       if ( k < i ) r = j
+    enddo
+    if (mod(n,2_i4) == 0_i4) then
+       qmedian_dp = 0.5_dp*(dat(k) + maxval(dat(:k-1)))
+    else
+       qmedian_dp = dat(k)
+    endif
+
+  end function qmedian_dp
+
+  function qmedian_sp(dat)
+
+    IMPLICIT NONE
+
+    real(sp), dimension(:), intent(inout) :: dat
+    real(sp) :: qmedian_sp
+
+    real(sp) :: w
+    integer(i4) :: n,k
+    integer(i4) :: l,r,i,j
+
+    n = size(dat)
+    k = n/2
+    l = 1
+    r = n
+    do while( l < r )
+       qmedian_sp = dat(k)
+       i = l
+       j = r
+       do
+          do while( dat(i) < qmedian_sp )
+             i = i + 1
+          enddo
+          do while( qmedian_sp < dat(j) )
+             j = j - 1
+          enddo
+          if( i <= j ) then
+             w = dat(i)
+             dat(i) = dat(j)
+             dat(j) = w
+             i = i + 1
+             j = j - 1
+          endif
+          if( i > j ) exit
+       enddo
+       if( j < k ) l = i
+       if( k < i ) r = j
+    enddo
+
+  end function qmedian_sp
 
   ! ------------------------------------------------------------------
 
