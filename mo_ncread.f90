@@ -2,35 +2,51 @@ module mo_NcRead
   
   ! This module provides subroutines for reading arrays from nc file using the netcdf4 library
   
-  ! Please make sure you include the netcdf4 library in your makefile in order to use this module
+  ! License
+  ! -------
+  ! This file is part of the UFZ Fortran library.
 
-  ! numerical precision
+  ! The UFZ Fortran library is free software: you can redistribute it and/or modify
+  ! it under the terms of the GNU Lesser General Public License as published by
+  ! the Free Software Foundation, either version 3 of the License, or
+  ! (at your option) any later version.
+
+  ! The UFZ Fortran library is distributed in the hope that it will be useful,
+  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ! GNU Lesser General Public License for more details.
+
+  ! You should have received a copy of the GNU Lesser General Public License
+  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+
+  ! Copyright 2011-2012 Stephan Thober, Matthias Cuntz
+
   use mo_kind, only: i4, sp, dp
-  !
+
   ! functions and constants of netcdf4 library
   use netcdf,  only: nf90_open, nf90_get_var, nf90_close, NF90_MAX_NAME , &
                      nf90_inq_varid, nf90_inquire_variable, &
                      nf90_inquire_dimension, NF90_NOWRITE, &
                      nf90_noerr, nf90_strerror
-  !
+
   implicit none
-  !
+
   private
-  !
+
   public :: Get_NcDim ! get the dimensions of a Variable
   public :: Get_NcVar ! get the data of a Variable in a nc file
   public :: NcOpen    ! Open a file and get a handle back
   public :: NcClose   ! Close a file
-  !
+
   interface Get_NcVar
      module procedure Get_NcVar_1d_sp, Get_NcVar_1d_dp, Get_NcVar_2d_sp, Get_NcVar_2d_dp, &
                       Get_NcVar_3d_sp, Get_NcVar_3d_dp, Get_NcVar_4d_sp, Get_NcVar_4d_dp, &
                       Get_NcVar_5d_sp, Get_NcVar_5d_dp, Get_NcVar_1d_i4, Get_NcVar_2d_i4, &
                       Get_NcVar_3d_i4, Get_NcVar_4d_i4, Get_NcVar_5d_i4 
   end interface
-  !
+
 contains
-  !
+
   ! ------------------------------------------------------------------------------
   ! 
   ! NAME

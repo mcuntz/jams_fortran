@@ -14,6 +14,7 @@ PROGRAM main
   USE mo_kind
   USE mo_mad
   USE mo_message
+  USE mo_minpack
   USE mo_moment
   USE mo_ncread
   USE mo_ncwrite

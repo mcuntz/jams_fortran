@@ -10,6 +10,25 @@ MODULE mo_nml
   !                                     all integer(i4)
   !                                     quiet
 
+  ! License
+  ! -------
+  ! This file is part of the UFZ Fortran library.
+
+  ! The UFZ Fortran library is free software: you can redistribute it and/or modify
+  ! it under the terms of the GNU Lesser General Public License as published by
+  ! the Free Software Foundation, either version 3 of the License, or
+  ! (at your option) any later version.
+
+  ! The UFZ Fortran library is distributed in the hope that it will be useful,
+  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ! GNU Lesser General Public License for more details.
+
+  ! You should have received a copy of the GNU Lesser General Public License
+  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+
+  ! Copyright 2001-2011 Luis Kornblueh, Matthias Cuntz
+
   USE mo_kind,         ONLY: i4
   USE mo_string_utils, ONLY: tolower
   USE mo_message,      ONLY: message, message_text

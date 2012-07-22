@@ -32,7 +32,7 @@ MODULE mo_asa047
   PRIVATE
 
   PUBLIC :: nelmin          ! minimizes a function using the Nelder-Mead algorithm
-  PUBLIC :: nelminxy        ! same as nelmin but pass x and y
+  PUBLIC :: nelminxy        ! same as nelmin but pass x and y to function
 
   ! ------------------------------------------------------------------
 

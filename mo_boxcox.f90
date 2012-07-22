@@ -13,6 +13,56 @@ MODULE mo_boxcox
   !   - modified Python code of Travis Oliphant (2002): boxcox, llf_boxcox, get_boxcox
   !   - modified numerical recipes: brent, mnbrak, swap, shft
 
+  ! License
+  ! -------
+  ! This file is part of the UFZ Fortran library.
+
+  ! The UFZ Fortran library is free software: you can redistribute it and/or modify
+  ! it under the terms of the GNU Lesser General Public License as published by
+  ! the Free Software Foundation, either version 3 of the License, or
+  ! (at your option) any later version.
+
+  ! The UFZ Fortran library is distributed in the hope that it will be useful,
+  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ! GNU Lesser General Public License for more details.
+
+  ! You should have received a copy of the GNU Lesser General Public License
+  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+
+  ! Copyright 2011-2012 Matthias Cuntz, Juliane Mai
+
+
+  ! Note on Numerical Recipes License
+  ! ---------------------------------
+  ! Be aware that some code is under the Numerical Recipes License 3rd
+  ! edition <http://www.nr.com/aboutNR3license.html>
+
+  ! The Numerical Recipes Personal Single-User License lets you personally
+  ! use Numerical Recipes code ("the code") on any number of computers,
+  ! but only one computer at a time. You are not permitted to allow anyone
+  ! else to access or use the code. You may, under this license, transfer
+  ! precompiled, executable applications incorporating the code to other,
+  ! unlicensed, persons, providing that (i) the application is
+  ! noncommercial (i.e., does not involve the selling or licensing of the
+  ! application for a fee), and (ii) the application was first developed,
+  ! compiled, and successfully run by you, and (iii) the code is bound
+  ! into the application in such a manner that it cannot be accessed as
+  ! individual routines and cannot practicably be unbound and used in
+  ! other programs. That is, under this license, your application user
+  ! must not be able to use Numerical Recipes code as part of a program
+  ! library or "mix and match" workbench.
+
+  ! Businesses and organizations that purchase the disk or code download,
+  ! and that thus acquire one or more Numerical Recipes Personal
+  ! Single-User Licenses, may permanently assign those licenses, in the
+  ! number acquired, to individual employees. Such an assignment must be
+  ! made before the code is first used and, once made, it is irrevocable
+  ! and can not be transferred. 
+
+  ! If you do not hold a Numerical Recipes License, this code is only for
+  ! informational and educational purposes but cannot be used.
+
   USE mo_kind, ONLY: i4, sp, dp
 
   IMPLICIT NONE

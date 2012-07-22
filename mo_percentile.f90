@@ -9,17 +9,66 @@ MODULE mo_percentile
 
   ! Written March 2011, Matthias Cuntz
 
-  USE mo_kind, ONLY: i4, sp, dp, spc, dpc
+  ! License
+  ! -------
+  ! This file is part of the UFZ Fortran library.
+
+  ! The UFZ Fortran library is free software: you can redistribute it and/or modify
+  ! it under the terms of the GNU Lesser General Public License as published by
+  ! the Free Software Foundation, either version 3 of the License, or
+  ! (at your option) any later version.
+
+  ! The UFZ Fortran library is distributed in the hope that it will be useful,
+  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ! GNU Lesser General Public License for more details.
+
+  ! You should have received a copy of the GNU Lesser General Public License
+  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+
+  ! Copyright 2011-2012 Matthias Cuntz, Juliane Mai, Stephan Thober
+
+
+  ! Note on Numerical Recipes License
+  ! ---------------------------------
+  ! Be aware that some code is under the Numerical Recipes License 3rd
+  ! edition <http://www.nr.com/aboutNR3license.html>
+
+  ! The Numerical Recipes Personal Single-User License lets you personally
+  ! use Numerical Recipes code ("the code") on any number of computers,
+  ! but only one computer at a time. You are not permitted to allow anyone
+  ! else to access or use the code. You may, under this license, transfer
+  ! precompiled, executable applications incorporating the code to other,
+  ! unlicensed, persons, providing that (i) the application is
+  ! noncommercial (i.e., does not involve the selling or licensing of the
+  ! application for a fee), and (ii) the application was first developed,
+  ! compiled, and successfully run by you, and (iii) the code is bound
+  ! into the application in such a manner that it cannot be accessed as
+  ! individual routines and cannot practicably be unbound and used in
+  ! other programs. That is, under this license, your application user
+  ! must not be able to use Numerical Recipes code as part of a program
+  ! library or "mix and match" workbench.
+
+  ! Businesses and organizations that purchase the disk or code download,
+  ! and that thus acquire one or more Numerical Recipes Personal
+  ! Single-User Licenses, may permanently assign those licenses, in the
+  ! number acquired, to individual employees. Such an assignment must be
+  ! made before the code is first used and, once made, it is irrevocable
+  ! and can not be transferred. 
+
+  ! If you do not hold a Numerical Recipes License, this code is only for
+  ! informational and educational purposes but cannot be used.
+
+  USE mo_kind, ONLY: i4, i8, sp, dp, spc, dpc
 
   Implicit NONE
 
   PRIVATE
 
-  PUBLIC :: ksmallest       ! Returns the kth smallest value in an array (median if k=N/2)
-  PUBLIC :: median          ! Returns the median
-  PUBLIC :: percentile      ! Returns the value below which a certain percent of array values fall.
-                            ! (median if k=50)
-  PUBLIC :: qmedian         ! Quick median calculation (k=N/2)
+  PUBLIC :: ksmallest       ! The kth smallest value in an array
+  PUBLIC :: median          ! Median
+  PUBLIC :: percentile      ! The value below which a certain percent of the input fall
+  PUBLIC :: qmedian         ! Quick median calculation, rearranges input
 
   ! Public
   INTERFACE ksmallest
@@ -67,7 +116,7 @@ CONTAINS
   !         to true values in the mask are used.
 
   !     CALLING SEQUENCE
-  !         out = ksmallest(vec,k,mask=mask,before=before)
+  !         out = ksmallest(vec,k,mask=mask,before=before,previous=previous,after=after,next=next)
   
   !     INTENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
@@ -87,7 +136,10 @@ CONTAINS
   !         None
 
   !     INTENT(OUT), OPTIONAL
-  !         real(sp/dp) :: before      (k-1)-th smallest value in input array for median/percentile calculations
+  !         real(sp/dp) :: before      (k-1)-th smallest value in input array, e.g. for median/percentile calculations
+  !         real(sp/dp) :: previous    same as before
+  !         real(sp/dp) :: after       (k+1)-th smallest value in input array
+  !         real(sp/dp) :: next        same as after
 
   !     RESTRICTIONS
   !         None
@@ -103,8 +155,9 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Mar 2011
+  !         Modified, Matthias Cuntz, Juliane Mai, Jul 2012 - next/previous
 
-  FUNCTION ksmallest_dp(arrin,k,mask,before)
+  FUNCTION ksmallest_dp(arrin,k,mask,before,after,previous,next)
 
     IMPLICIT NONE
 
@@ -112,6 +165,9 @@ CONTAINS
     INTEGER(i4),                         INTENT(IN)  :: k
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(dp),                  OPTIONAL, INTENT(OUT) :: before
+    REAL(dp),                  OPTIONAL, INTENT(OUT) :: after
+    REAL(dp),                  OPTIONAL, INTENT(OUT) :: previous
+    REAL(dp),                  OPTIONAL, INTENT(OUT) :: next
     REAL(dp)                                         :: ksmallest_dp
 
     INTEGER(i4) :: i, r, j, l, n
@@ -137,7 +193,10 @@ CONTAINS
        if (r-l <= 1) then
           if (r-l == 1) call swap(arr(l), arr(r), arr(l)>arr(r))
           ksmallest_dp = arr(k)
-          if (present(before)) before = maxval(arr(:k-1))
+          if (present(before))   before   = maxval(arr(:k-1))
+          if (present(previous)) previous = maxval(arr(:k-1))
+          if (present(after))    after    = minval(arr(k+1:))
+          if (present(next))     next     = minval(arr(k+1:))
           deallocate(arr)
           RETURN
        else
@@ -168,14 +227,17 @@ CONTAINS
        end if
     end do
     ksmallest_dp = arr(k)
-    if (present(before)) before = maxval(arr(:k-1))
+    if (present(before))   before   = maxval(arr(:k-1))
+    if (present(previous)) previous = maxval(arr(:k-1))
+    if (present(after))    after    = minval(arr(k+1:))
+    if (present(next))     next     = minval(arr(k+1:))
 
     deallocate(arr)
 
   END FUNCTION ksmallest_dp
 
 
-  FUNCTION ksmallest_sp(arrin,k,mask,before)
+  FUNCTION ksmallest_sp(arrin,k,mask,before,after,previous,next)
 
     IMPLICIT NONE
 
@@ -183,6 +245,9 @@ CONTAINS
     INTEGER(i4),                         INTENT(IN)  :: k
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(sp),                  OPTIONAL, INTENT(OUT) :: before
+    REAL(sp),                  OPTIONAL, INTENT(OUT) :: after
+    REAL(sp),                  OPTIONAL, INTENT(OUT) :: previous
+    REAL(sp),                  OPTIONAL, INTENT(OUT) :: next
     REAL(sp)                                         :: ksmallest_sp
 
     INTEGER(i4) :: i, r, j, l, n
@@ -208,7 +273,10 @@ CONTAINS
        if (r-l <= 1) then
           if (r-l == 1) call swap(arr(l), arr(r), arr(l)>arr(r))
           ksmallest_sp = arr(k)
-          if (present(before)) before = maxval(arr(:k-1))
+          if (present(before))   before   = maxval(arr(:k-1))
+          if (present(previous)) previous = maxval(arr(:k-1))
+          if (present(after))    after    = minval(arr(k+1:))
+          if (present(next))     next     = minval(arr(k+1:))
           deallocate(arr)
           RETURN
        else
@@ -239,7 +307,10 @@ CONTAINS
        end if
     end do
     ksmallest_sp = arr(k)
-    if (present(before)) before = maxval(arr(:k-1))
+    if (present(before))   before   = maxval(arr(:k-1))
+    if (present(previous)) previous = maxval(arr(:k-1))
+    if (present(after))    after    = minval(arr(k+1:))
+    if (present(next))     next     = minval(arr(k+1:))
 
     deallocate(arr)
 
@@ -293,6 +364,7 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Mar 2011
+  !         Modified, Matthias Cuntz, Juliane Mai, Jul 2012 - uses previous of ksmallest to half execution time
 
   FUNCTION median_dp(arrin,mask)
 
@@ -314,7 +386,7 @@ CONTAINS
        if (n < 2) stop 'median_dp: n < 2'
     
        if (mod(n,2) == 0) then ! Even
-          median_dp = ksmallest(arr,n/2+1,before=tmp)
+          median_dp = ksmallest(arr,n/2+1,previous=tmp)
           median_dp = 0.5_dp*(median_dp+tmp)
        else ! Odd
           median_dp = ksmallest(arr,(n+1)/2)
@@ -326,7 +398,7 @@ CONTAINS
        if (n < 2) stop 'median_dp: n < 2'
     
        if (mod(n,2) == 0) then ! Even
-          median_dp = ksmallest(arrin,n/2+1,before=tmp)
+          median_dp = ksmallest(arrin,n/2+1,previous=tmp)
           median_dp = 0.5_dp*(median_dp+tmp)
        else ! Odd
           median_dp = ksmallest(arrin,(n+1)/2)
@@ -356,7 +428,7 @@ CONTAINS
        if (n < 2) stop 'median_sp: n < 2'
     
        if (mod(n,2) == 0) then ! Even
-          median_sp = ksmallest(arr,n/2+1,before=tmp)
+          median_sp = ksmallest(arr,n/2+1,previous=tmp)
           median_sp = 0.5_sp*(median_sp+tmp)
        else ! Odd
           median_sp = ksmallest(arr,(n+1)/2)
@@ -368,7 +440,7 @@ CONTAINS
        if (n < 2) stop 'median_sp: n < 2'
     
        if (mod(n,2) == 0) then ! Even
-          median_sp = ksmallest(arrin,n/2+1,before=tmp)
+          median_sp = ksmallest(arrin,n/2+1,previous=tmp)
           median_sp = 0.5_sp*(median_sp+tmp)
        else ! Odd
           median_sp = ksmallest(arrin,(n+1)/2)
@@ -446,6 +518,7 @@ CONTAINS
   !         Written,  Matthias Cuntz, Mar  2011
   !         Modified, Stephan Thober, Dec  2011 - added 1 dimensional version
   !                   Juliane Mai,    July 2012 - different interpolation schemes
+  !         Modified, Matthias Cuntz, Juliane Mai, Jul 2012 - uses previous of ksmallest to half execution time
 
   FUNCTION percentile_0d_dp(arrin,k,mask,mode_in)
 
@@ -540,7 +613,7 @@ CONTAINS
           percentile_0d_dp = ksmallest(arr,nn1)
        else
           ! interpolation
-          ks2 = ksmallest(arr,nn2,before=ks1)
+          ks2 = ksmallest(arr,nn2,previous=ks1)
           percentile_0d_dp = ks1 + (ks2-ks1)*(kk-real(nn1,dp))
        end if
        deallocate(arr)
@@ -550,7 +623,7 @@ CONTAINS
           percentile_0d_dp = ksmallest(arrin,nn1)
        else
           ! interpolation
-          ks2 = ksmallest(arrin,nn2,before=ks1)
+          ks2 = ksmallest(arrin,nn2,previous=ks1)
           percentile_0d_dp = ks1 + (ks2-ks1)*(kk-real(nn1,dp))
        end if
     endif
@@ -651,7 +724,7 @@ CONTAINS
           percentile_0d_sp = ksmallest(arr,nn1)
        else
           ! interpolation
-          ks2 = ksmallest(arr,nn2,before=ks1)
+          ks2 = ksmallest(arr,nn2,previous=ks1)
           percentile_0d_sp = ks1 + (ks2-ks1)*(kk-real(nn1,sp))
        end if
        deallocate(arr)
@@ -661,7 +734,7 @@ CONTAINS
           percentile_0d_sp = ksmallest(arrin,nn1)
        else
           ! interpolation
-          ks2 = ksmallest(arrin,nn2,before=ks1)
+          ks2 = ksmallest(arrin,nn2,previous=ks1)
           percentile_0d_sp = ks1 + (ks2-ks1)*(kk-real(nn1,sp))
        end if
     endif
@@ -768,7 +841,7 @@ CONTAINS
              percentile_1d_dp(i) = ksmallest(arr,nn1(i))
           else
              ! interpolation
-             ks2 = ksmallest(arr,nn2(i),before=ks1)
+             ks2 = ksmallest(arr,nn2(i),previous=ks1)
              percentile_1d_dp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),dp))
           end if
        end do
@@ -780,7 +853,7 @@ CONTAINS
              percentile_1d_dp(i) = ksmallest(arrin,nn1(i))
           else
              ! interpolation
-             ks2 = ksmallest(arrin,nn2(i),before=ks1)
+             ks2 = ksmallest(arrin,nn2(i),previous=ks1)
              percentile_1d_dp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),dp))
           end if
        end do
@@ -888,7 +961,7 @@ CONTAINS
              percentile_1d_sp(i) = ksmallest(arr,nn1(i))
           else
              ! interpolation
-             ks2 = ksmallest(arr,nn2(i),before=ks1)
+             ks2 = ksmallest(arr,nn2(i),previous=ks1)
              percentile_1d_sp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),sp))
           end if
        end do
@@ -900,7 +973,7 @@ CONTAINS
              percentile_1d_sp(i) = ksmallest(arrin,nn1(i))
           else
              ! interpolation
-             ks2 = ksmallest(arrin,nn2(i),before=ks1)
+             ks2 = ksmallest(arrin,nn2(i),previous=ks1)
              percentile_1d_sp(i) = ks1 + (ks2-ks1)*(kk(i)-real(nn1(i),sp))
           end if
        end do
@@ -914,8 +987,7 @@ CONTAINS
   !         qmedian
 
   !     PURPOSE
-  !         Returns the quickly calculated median by overwriting the input array.
-  !         It takes the size/2-th element as the median.
+  !         Quick calculation of the median thereby rearranging the input array.
 
   !     CALLING SEQUENCE
   !         out = qmedian(vec)
@@ -924,7 +996,8 @@ CONTAINS
   !         None
 
   !     INTENT(INOUT)
-  !         real(sp/dp) :: vec(:)     1D-array with input numbers
+  !         real(sp/dp) :: vec(:)     1D-array with input numbers.
+  !                                   Wil be rearranged on output.
 
   !     INTENT(OUT)
   !         real(sp/dp) :: out        median of values in input array
@@ -943,7 +1016,7 @@ CONTAINS
 
   !     EXAMPLE
   !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
-  !         ! Returns 5.
+  !         ! Returns 5.5
   !         out = qmedian(vec)
   !         -> see also example in test directory
 
@@ -952,7 +1025,8 @@ CONTAINS
 
   !     HISTORY
   !         Written, Filip Hroch as part of Munipack: http://munipack.physics.muni.cz
-  !         Modified, Matthias Cuntz, Jul 2012 - function, k=n/2
+  !         Modified, Matthias Cuntz, Jul 2012 - function, k=n/2+1
+  !         Modified, Matthias Cuntz, Juliane Mai, Jul 2012 - real median for even n
 
   function qmedian_dp(dat)
 
@@ -965,11 +1039,9 @@ CONTAINS
     integer(i4) :: n,k
     integer(i4) :: l,r,i,j
 
-    logical :: iseven
-
     n = size(dat)
-    k = n/2_i4+1_i4
-    l = 1_i4
+    k = n/2 + 1
+    l = 1
     r = n
     do while( l < r )
        qmedian_dp = dat(k)
@@ -977,30 +1049,31 @@ CONTAINS
        j = r
        do
           do while( dat(i) < qmedian_dp )
-             i = i + 1_i4
+             i = i + 1
           enddo
           do while( qmedian_dp < dat(j) )
-             j = j - 1_i4
+             j = j - 1
           enddo
           if ( i <= j ) then
              w      = dat(i)
              dat(i) = dat(j)
              dat(j) = w
-             i = i + 1_i4
-             j = j - 1_i4
+             i = i + 1
+             j = j - 1
           endif
           if ( i > j ) exit
        enddo
        if ( j < k ) l = i
        if ( k < i ) r = j
     enddo
-    if (mod(n,2_i4) == 0_i4) then
+    if (mod(n,2) == 0) then
        qmedian_dp = 0.5_dp*(dat(k) + maxval(dat(:k-1)))
     else
        qmedian_dp = dat(k)
     endif
 
   end function qmedian_dp
+
 
   function qmedian_sp(dat)
 
@@ -1014,7 +1087,7 @@ CONTAINS
     integer(i4) :: l,r,i,j
 
     n = size(dat)
-    k = n/2
+    k = n/2 + 1
     l = 1
     r = n
     do while( l < r )
@@ -1028,18 +1101,23 @@ CONTAINS
           do while( qmedian_sp < dat(j) )
              j = j - 1
           enddo
-          if( i <= j ) then
-             w = dat(i)
+          if ( i <= j ) then
+             w      = dat(i)
              dat(i) = dat(j)
              dat(j) = w
              i = i + 1
              j = j - 1
           endif
-          if( i > j ) exit
+          if ( i > j ) exit
        enddo
-       if( j < k ) l = i
-       if( k < i ) r = j
+       if ( j < k ) l = i
+       if ( k < i ) r = j
     enddo
+    if (mod(n,2) == 0) then
+       qmedian_sp = 0.5_sp*(dat(k) + maxval(dat(:k-1)))
+    else
+       qmedian_sp = dat(k)
+    endif
 
   end function qmedian_sp
 

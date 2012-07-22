@@ -5,12 +5,27 @@ MODULE mo_histo
   ! and is part of the UFZ CHS Fortran library.
   !
   ! Written  Juliane Mai, Feb 2012
-  ! Modified 
+
+  ! License
+  ! -------
+  ! This file is part of the UFZ Fortran library.
+
+  ! The UFZ Fortran library is free software: you can redistribute it and/or modify
+  ! it under the terms of the GNU Lesser General Public License as published by
+  ! the Free Software Foundation, either version 3 of the License, or
+  ! (at your option) any later version.
+
+  ! The UFZ Fortran library is distributed in the hope that it will be useful,
+  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ! GNU Lesser General Public License for more details.
+
+  ! You should have received a copy of the GNU Lesser General Public License
+  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+
+  ! Copyright 2012 Juliane Mai
 
   USE mo_kind, ONLY: i4, sp, dp
-#ifdef NAG
-  USE f90_unix_proc
-#endif
 
   IMPLICIT NONE
 
@@ -125,7 +140,6 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Juliane Mai, Feb 2012
-  !         Modified, 
 
   SUBROUTINE histo_dp_1d(x, binx, bincount, width, mask, bins, binwidth)
 
@@ -689,7 +703,6 @@ CONTAINS
   !         
   !     HISTORY
   !         Written,  Juliane Mai, Mar 2012
-  !         Modified, 
 
   SUBROUTINE histo2d_dp(x, binx, bincount, width, mask, bins, binwidth)
 

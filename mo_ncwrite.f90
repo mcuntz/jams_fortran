@@ -1,39 +1,53 @@
 module mo_ncWrite
   !
-  ! This module provides a structure and subroutines for writing a netcdf file
-  ! using the netcdf library
-  !
-  ! Please make sure you include the netcdf4 library in your makefile in order to use this module
-  !
-  ! numerical precision
+  ! This module provides a structure and subroutines for writing a netcdf file using the netcdf library
+
+  ! License
+  ! -------
+  ! This file is part of the UFZ Fortran library.
+
+  ! The UFZ Fortran library is free software: you can redistribute it and/or modify
+  ! it under the terms of the GNU Lesser General Public License as published by
+  ! the Free Software Foundation, either version 3 of the License, or
+  ! (at your option) any later version.
+
+  ! The UFZ Fortran library is distributed in the hope that it will be useful,
+  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  ! GNU Lesser General Public License for more details.
+
+  ! You should have received a copy of the GNU Lesser General Public License
+  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+
+  ! Copyright 2011-2012 Luis Samaniego, Stephan Thober, Matthias Cuntz
+
   use mo_kind, only: i4, sp, dp
-  !
+
   ! functions and constants of netcdf4 library
   use netcdf,  only: nf90_create, nf90_def_dim, NF90_UNLIMITED, nf90_def_var, &
                      NF90_CHAR, nf90_put_att, NF90_INT, NF90_INT, NF90_GLOBAL, &
                      nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, &
                      NF90_close, nf90_noerr, nf90_strerror, NF90_CLOBBER
-  !
+
   ! Use string utils
   use mo_string_utils, only: nonull
 
-  !
   private
-  !
+
   ! definition of parameters
   integer(i4), parameter                    :: nMaxDim = 5         ! nr. max dimensions
   integer(i4), parameter                    :: nMaxAtt = 20        ! nr. max attributes
   integer(i4), parameter                    :: maxLen  = 256       ! nr. string length
   integer(i4), parameter                    :: nGAtt   = 20        ! nr. global attributes
   integer(i4), parameter                    :: nAttDim = 2         ! dim array of attribute values
-  !
+
   type attribute
     character (len=maxLen)                  :: name                ! attribute name
     integer(i4)                             :: xType               ! attribute of the values
     integer(i4)                             :: nValues             ! number of attributes       
     character (len=maxLen)                  :: values              ! numbers or "characters" separed by spaces
   end type attribute
-  !
+
   type variable
      character (len=maxLen)                 :: name                ! short name
      integer(i4)                            :: xType               ! NF90 var. type
@@ -65,31 +79,31 @@ module mo_ncWrite
      real(dp),    dimension(:,:,:  ), pointer :: G3_d              ! array pointing model variables
      real(dp),    dimension(:,:,:,:), pointer :: G4_d              ! array pointing model variables
   end type variable
-  !
+
   type dims
      character (len=maxLen)                 :: name                ! dim. name
      integer(i4)                            :: len                 ! dim. lenght, undefined time => NF90_UNLIMITED
      integer(i4)                            :: dimId               ! dim. Id
   end type dims
-  !
+
   ! public types -----------------------------------------------------------------
   public :: attribute
   public :: variable
   public :: dims
-  !
+
   ! public variables -----------------------------------------------------------------
   integer(i4),    public                            :: nVars   ! nr. variables
   integer(i4),    public                            :: nDims   ! nr. dimensions 
   type (dims),    public, dimension(:), allocatable :: Dnc     ! dimensions list 
   type(variable), public, dimension(:), allocatable :: V       ! variable list, THIS STRUCTURE WILL BE WRITTEN IN THE FILE
   type(attribute), public, dimension(nGAtt)         :: gatt    ! global attributes for netCDF
-  !
+
   ! public routines -------------------------------------------------------------------
   public :: create_netCDF        ! create the nc file with variables and their attributes, after they were set
   public :: write_static_netcdf  ! write static data in the file
   public :: write_dynamic_netcdf ! write dynamically (one record after the other) in the file
   public :: close_netcdf         ! save and close the netcdf file
-  !
+
 contains
 
   ! ------------------------------------------------------------------------------

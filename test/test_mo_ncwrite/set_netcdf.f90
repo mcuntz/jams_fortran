@@ -4,16 +4,16 @@ Module mo_setnc
   ! the dimensions and the data arrays
   !
   ! number precision
-  use mo_kind, only: i4, sp, dp
+  use mo_kind, only: i4, sp
   !
   ! use user defined variables
-  use mo_MainVar, only: data, lat, lon, t
+  use mo_MainVar, only: lat, lon
   !
   ! use netcdfstruct V
   use mo_NCWrite, only: V, Dnc, Gatt, ndims, nVars
   !
   ! use constants of netcdf library
-  use netcdf, only: NF90_CHAR, NF90_FLOAT, NF90_INT, NF90_UNLIMITED, NF90_DOUBLE
+  use netcdf, only: NF90_CHAR, NF90_FLOAT, NF90_UNLIMITED, NF90_DOUBLE
   !
   implicit none
   !
