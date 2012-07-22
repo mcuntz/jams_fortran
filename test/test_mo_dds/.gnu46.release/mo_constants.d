@@ -1,1 +1,0 @@
-/Users/cuntz/prog/chs-svn/FORTRAN_chs_lib/test/test_mo_dds/.gnu46.release/mo_constants.o /Users/cuntz/prog/chs-svn/FORTRAN_chs_lib/test/test_mo_dds/.gnu46.release/mo_constants.d : /Users/cuntz/prog/chs-svn/FORTRAN_chs_lib/test/test_mo_dds/mo_constants.f90 /Users/cuntz/prog/chs-svn/FORTRAN_chs_lib/test/test_mo_dds/.gnu46.release/mo_kind.o
