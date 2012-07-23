@@ -29,6 +29,8 @@ MODULE mo_opt_functions
 
   PRIVATE
 
+  ! ------------------------------------------------------------------
+  ! test_min package of John Burkardt
   PUBLIC :: quadratic                         ! Simple quadratic, (x-2)^2+1.
   PUBLIC :: quadratic_exponential             ! Quadratic plus exponential, x^2 + e^(-x).
   PUBLIC :: quartic                           ! Quartic, x^4 + 2x^2 + x + 3.
@@ -38,7 +40,9 @@ MODULE mo_opt_functions
   PUBLIC :: thin_pole                         ! The "Thin Pole", x^2+1+log((pi-x)^2)/pi^4
   PUBLIC :: oscillatory_parabola              ! The oscillatory parabola
   PUBLIC :: cosine_combo                      ! The cosine combo
-  PUBLIC :: abs1                              !  1 + |3x-1|
+  PUBLIC :: abs1                              ! 1 + |3x-1|
+  ! ------------------------------------------------------------------
+  ! test_opt package of John Burkardt
   PUBLIC :: fletcher_powell_helical_valley    ! The Fletcher-Powell helical valley function, N = 3.
   PUBLIC :: biggs_exp6                        ! The Biggs EXP6 function, N = 6.
   PUBLIC :: gaussian                          ! The Gaussian function, N = 3.
@@ -82,13 +86,19 @@ MODULE mo_opt_functions
   PUBLIC :: colville_polynomial               ! The Colville Polynomial, N = 4.
   PUBLIC :: powell3d                          ! The Powell 3D function, N = 3.
   PUBLIC :: himmelblau                        ! The Himmelblau function, N = 2.
+  ! ------------------------------------------------------------------
+  ! Standard test of DDS of Bryan Tolson
   PUBLIC :: griewank                          ! Griewank function
+  ! ------------------------------------------------------------------
+  ! Miscellaneous functions
+  PUBLIC :: rosenbrock                        ! Rosenbrock parabolic valley
 
 CONTAINS
 
   ! ------------------------------------------------------------------
   !
   !  Simple quadratic, (x-2)^2+1
+  !  Solution: x = 2.0
   !  With Brent method:
   !   A,  X*,  B:   1.9999996       2.0000000       2.0000004
   !  FA, FX*, FB:   1.0000000       1.0000000       1.0000000
@@ -124,6 +134,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  Quadratic plus exponential, x^2 + e^(-x)
+  !  Solution: x = 0.35173370
   !  With Brent method:
   !   A,  X*,  B:  0.35173337      0.35173370      0.35173404
   !  FA, FX*, FB:  0.82718403      0.82718403      0.82718403
@@ -166,6 +177,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  Quartic, x^4 + 2x^2 + x + 3
+  !  Solution: x = -0.23673291
   !  With Brent method:
   !   A,  X*,  B: -0.23673324     -0.23673291     -0.23673257
   !  FA, FX*, FB:   2.8784928       2.8784928       2.8784928
@@ -208,6 +220,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  Steep valley, e^x + 1/(100x)
+  !  Solution: x = 0.95344636E-01
   !  With Brent method:
   !   A,  X*,  B:  0.95344301E-01  0.95344636E-01  0.95344971E-01
   !  FA, FX*, FB:   1.2049206       1.2049206       1.2049206
@@ -250,6 +263,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  Steep valley2, e^x - 2x + 1/(100x) - 1/(1000000x^2)
+  !  Solution: x = 0.70320487
   !  With Brent method:
   !   A,  X*,  B:  0.70320453      0.70320487      0.70320521
   !  FA, FX*, FB:  0.62802572      0.62802572      0.62802572
@@ -292,6 +306,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The dying snake, ( x + sin(x) ) * e^(-x^2)
+  !  Solution: x = -0.67957876
   !  With Brent method:
   !   A,  X*,  B: -0.67957911     -0.67957876     -0.67957842
   !  FA, FX*, FB: -0.82423940     -0.82423940     -0.82423940
@@ -335,6 +350,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The "Thin Pole", x^2+1+log((pi-x)^2)/pi^4
+  !  Solution: x = 2.0
   !  With Brent method:
   !   A,  X*,  B:   2.0000000       2.0000007       2.0000011
   !  FA, FX*, FB:   13.002719       13.002727       13.002732
@@ -389,6 +405,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The oscillatory parabola x^2 - 10*sin(x^2-3x+2)
+  !  Solution: x = -1.3384521
   !  With Brent method:
   !   A,  X*,  B:  -1.3384524      -1.3384521      -1.3384517
   !  FA, FX*, FB:  -8.1974224      -8.1974224      -8.1974224
@@ -429,6 +446,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The cosine combo cos(x)+5cos(1.6x)-2cos(2x)+5cos(4.5x)+7cos(9x)
+  !  Solution: x = 1.0167821
   !  With Brent method:
   !   A,  X*,  B:   1.0167817       1.0167821       1.0167824
   !  FA, FX*, FB:  -6.2827509      -6.2827509      -6.2827509
@@ -489,6 +507,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  1 + |3x-1|
+  !  Solution: x = 1./3.
   !  With Brent method:
   !   A,  X*,  B:  0.33333299      0.33333351      0.33333385
   !  FA, FX*, FB:   1.0000010       1.0000005       1.0000015
@@ -3194,7 +3213,7 @@ CONTAINS
   !     x_values -      an array of decision variable values (size nopt)
   !     fvalue   -      the value of the objective function with x_values as input
 
-  FUNCTION griewank(x_values)
+  function griewank(x_values)
 
     use mo_kind, only: i4, dp
 
@@ -3221,6 +3240,57 @@ CONTAINS
     end do
     griewank = u1 - u2 + 1
     !
-  END FUNCTION griewank
+  end function griewank
+
+  ! ------------------------------------------------------------------
+  !
+  !  Rosenbrock parabolic value function, N = 2.
+  !  Solution: x(1:n) = 1.0_dp
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    19 February 2008
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    R ONeill,
+  !    Algorithm AS 47:
+  !    Function Minimization Using a Simplex Procedure,
+  !    Applied Statistics,
+  !    Volume 20, Number 3, 1971, pages 338-345.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(2), the argument.
+  !
+
+  function rosenbrock(x)
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: rosenbrock
+
+    real(dp) :: fx
+    real(dp) :: fx1
+    real(dp) :: fx2
+
+    fx1 = x(2) - x(1) * x(1)
+    fx2 = 1.0_dp - x(1)
+
+    fx = 100.0_dp * fx1 * fx1 + fx2 * fx2
+
+    rosenbrock = fx
+
+  end function rosenbrock
 
 END MODULE mo_opt_functions

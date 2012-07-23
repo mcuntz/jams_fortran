@@ -30,7 +30,7 @@ module mo_dds
   PRIVATE
 
   PUBLIC :: DDS    ! Dynamically Dimensioned Search (DDS)
-  PUBLIC :: DDSxy  ! same as DDS but pass x and y to function
+!  PUBLIC :: DDSxy  ! same as DDS but pass x and y to function
 
 
   ! ------------------------------------------------------------------
@@ -91,7 +91,7 @@ CONTAINS
 
   !     INDENT(IN), OPTIONAL
   !         real(dp)    :: r                  DDS perturbation parameter (default: 0.2)
-  !         integer(i4) :: seed               User seed to initialise the random number generator (default: None)
+  !         integer(i8) :: seed               User seed to initialise the random number generator (default: None)
   !         integer(i8) :: maxiter            Maximum number of iteration or function evaluation (default: 1000)
   !         real(dp)    :: maxit              Maximization or minimization of function
   !                                           1.0 if minimization, -1.0 if maximization (default: 1.0)
@@ -129,6 +129,8 @@ CONTAINS
 #ifdef IMSL
     use RNSET_INT
     use RNUN_INT
+#else
+    use mo_xor4096, only: xor4096, xor4096g
 #endif
 
     implicit none
@@ -145,7 +147,7 @@ CONTAINS
     real(dp),    dimension(:), intent(in)  :: pmin    ! Min value of decision variables 
     real(dp),    dimension(:), intent(in)  :: pmax    ! Max value of decision variables 
     real(dp),        optional, intent(in)  :: r       ! DDS perturbation parameter (-> 0.2 by default)
-    integer(i4),     optional, intent(in)  :: seed    ! User seed to initialise the random number generator
+    integer(i8),     optional, intent(in)  :: seed    ! User seed to initialise the random number generator
     integer(i8),     optional, intent(in)  :: maxiter ! Maximum number of iteration or function evaluation
     real(dp),        optional, intent(in)  :: maxit   ! Maximization or minimization of function
     integer(i8),     optional, intent(out) :: nobj ! Counter for Obj. function evaluations
@@ -153,20 +155,22 @@ CONTAINS
 
     ! Local variables
     integer(i4)    :: pnum     ! Total number of decision variables  
-    integer(i4)    :: iseed    ! User given seed
+    integer(i8)    :: iseed    ! User given seed
     integer(i8)    :: imaxiter ! Maximum number of iteration or function evaluation
     integer(i8)    :: iobj     ! Counter for Obj. function evaluations
     real(dp)       :: ir       ! DDS perturbation parameter
     real(dp)       :: imaxit   ! Maximization or minimization of function
     real(dp)       :: of_value, of_new, of_best, Pn, new_value
     real(dp), dimension(size(pini)) :: pnew   ! Test value of decision variables (dummy) 
-    real(dp), dimension(1)          :: ranval
-    integer(i8)    :: i, k, dvn_count, dv       
+    !real(dp), dimension(1)          :: ranval
+    real(dp)       :: ranval
+    integer(i8)    :: i, dvn_count, dv       
     integer(i4)    :: j
 #ifndef IMSL
-    real(dp)       :: harvest  ! uniform random number variable
-    integer(i4)    :: ssize
-    integer(i4), dimension(:), allocatable :: seeds
+    ! real(dp)       :: harvest  ! uniform random number variable
+    ! integer(i4)    :: ssize
+    ! integer(i4), dimension(:), allocatable :: seeds
+    integer, dimension(8) :: sdate
 #endif
 
     pnum = size(pini)
@@ -183,8 +187,7 @@ CONTAINS
     endif
     if (present(maxiter)) then
        ! max. iteration limit
-       if (maxiter < 6 .or. maxIter > 1000000_i8) &
-            stop 'Error DDS: Enter max no. of function evals in range 6 to 1000000'
+       if (maxiter < 6) stop 'Error DDS: max function evals must be minimum 6'
        imaxiter = maxiter
     else
        imaxiter = 1000
@@ -199,36 +202,28 @@ CONTAINS
     ! Seed random number
     if (present(seed)) then
        ! user seed limit
-       if (seed < 0 .or. seed > 2147483562_i4) then
-          stop 'Error DDS: Enter random seed input in range 0 to 2147483562'
-       endif
+       if (seed <= 0) stop 'Error DDS: seed must be > 0.'
        iseed = seed
     else
-       iseed = 0
+       iseed = -1
     endif
 #ifdef IMSL
-    call RNSET(iseed)
+    if (iseed == -1) then
+       call RNSET(0)
+    else
+       call RNSET(iseed)
+    endif
 #else
-    ! INITIALIZATION OF RANDOM SEEDS	
-    ! set the seed so that results easily replicated
-    call random_seed(SIZE=ssize)  ! size is number elements in array, 2 usually
-    ALLOCATE(seeds(ssize))
-    seeds(1)=iseed
-    do j=1,ssize ! define initial set of seeds
-       seeds(j)=max(1,iseed-j)
-    end do
-    call random_seed(PUT=seeds(1:ssize)) ! set generator initially
-    ! define seeds randomly based on user seed
-    seeds(1)=iseed
-    do j=2,ssize
-       call random_number(harvest) ! get one uniform random number
-       seeds(j)=INT(harvest*2147483398.0) ! limit of seed 2 is constant
-    end do
-    ! Now have replicable, random set of seed arrays, set the generator:
-    call random_seed(PUT=seeds(1:ssize))
-    deallocate(seeds)
-    ! Note - there are probably easier ways to do this but above works...
-    ! DONE random seed setting
+    if (iseed == -1) then
+       call date_and_time(values=sdate)
+       iseed = sdate(1)*31536000000_i8 + sdate(2)*2592000000_i8 + sdate(3)*86400000_i8 + &
+            sdate(5)*3600000_i8 + sdate(6)*60000_i8 + sdate(7)*1000_i8 + sdate(8)
+       call xor4096(iseed,ranval)
+       call xor4096g(iseed,ranval)
+    else
+       call xor4096(iseed,ranval)
+       call xor4096g(iseed,ranval)
+    endif
 #endif
 
     ! Evaluate initial solution and return objective function value (of_value)
@@ -251,13 +246,15 @@ CONTAINS
        dvn_count = 0                                           ! counter for how many DVs selected for perturbation
        pnew = DDS                                                ! define pnew initially as best current solution
        !
+       ! Step 3
        do j=1, pnum
 #ifdef IMSL
           call D_RNUN(ranval)                                    ! selects next uniform random number in sequence
 #else
-          call random_number(ranval)
+          call xor4096(0_i8,ranval)
 #endif
-          if(ranval(1) < Pn) then                                    ! jth DV selected for perturbation
+          ! Step 4
+          if (ranval < Pn) then                                    ! jth DV selected for perturbation
              dvn_count = dvn_count + 1
              ! call 1-D perturbation function to get new DV value (new_value)
              call neigh_value(DDS(j), pmin(j), pmax(j), ir, new_value) 
@@ -265,18 +262,21 @@ CONTAINS
           end if
        end do
        !
+       ! Step 3 case {N} empty
        if (dvn_count == 0) then                                 ! no DVs selected at random, so select one
 #ifdef IMSL
           call D_RNUN(ranval)                                    ! selects next uniform random number in sequence
 #else
-          call random_number(ranval)
+          call xor4096(0_i8,ranval)
 #endif
-          dv = ceiling(real(pnum,dp) * ranval(1))                     ! index for one DV   
+          !dv = ceiling(real(pnum,dp) * ranval(1))                     ! index for one DV   
+          dv = ceiling(real(pnum,dp) * ranval)                     ! index for one DV   
           ! call 1-D perturbation function to get new DV value (new_value):
           call neigh_value(DDS(dv), pmin(dv), pmax(dv), ir, new_value)
           pnew(dv) = new_value                                    ! change relevant DV value in stest
        end if
        !
+       ! Step 5
        ! Evaluate obj function value (of_value) for stest
        of_value = obj_func(pnew)
        of_new = imaxit * of_value                                  ! maxit handles min(= 1) and max(= -1) problems 
@@ -289,189 +289,11 @@ CONTAINS
        iobj = i + 1
        !
     end do
-    close(89)
     !
     if (present(nobj)) nobj = iobj
     !
   end function DDS
 
-
-  function DDSxy(obj_func, pini, pmin, pmax, xx, yy, r, seed, maxiter, maxit, nobj)
-
-    use mo_kind, only: i4, i8, dp
-#ifdef IMSL
-    use RNSET_INT
-    use RNUN_INT
-#endif
-
-    implicit none
-
-    INTERFACE
-       FUNCTION obj_func(pp, xx, yy)
-         USE mo_kind, ONLY: dp
-         IMPLICIT NONE
-         REAL(dp), DIMENSION(:), INTENT(IN) :: pp
-         REAL(dp), DIMENSION(:), INTENT(IN) :: xx
-         REAL(dp), DIMENSION(:), INTENT(IN) :: yy
-         REAL(dp) :: obj_func
-       END FUNCTION obj_func
-    END INTERFACE
-    real(dp),    dimension(:), intent(in)  :: pini    ! inital value of decision variables 
-    real(dp),    dimension(:), intent(in)  :: pmin    ! Min value of decision variables 
-    real(dp),    dimension(:), intent(in)  :: pmax    ! Max value of decision variables 
-    real(dp),    dimension(:), intent(in)  :: xx      ! First argument to obj_func
-    real(dp),    dimension(:), intent(in)  :: yy      ! Second argument fo obj_func
-    real(dp),        optional, intent(in)  :: r       ! DDS perturbation parameter (-> 0.2 by default)
-    integer(i4),     optional, intent(in)  :: seed    ! User seed to initialise the random number generator
-    integer(i8),     optional, intent(in)  :: maxiter ! Maximum number of iteration or function evaluation
-    real(dp),        optional, intent(in)  :: maxit   ! Maximization or minimization of function
-    integer(i8),     optional, intent(out) :: nobj ! Counter for Obj. function evaluations
-    real(dp), dimension(size(pini)) :: DDSxy ! Best value of decision variables
-
-    ! Local variables
-    integer(i4)    :: pnum     ! Total number of decision variables  
-    integer(i4)    :: iseed    ! User given seed
-    integer(i8)    :: imaxiter ! Maximum number of iteration or function evaluation
-    integer(i8)    :: iobj     ! Counter for Obj. function evaluations
-    real(dp)       :: ir       ! DDS perturbation parameter
-    real(dp)       :: imaxit   ! Maximization or minimization of function
-    real(dp)       :: of_value, of_new, of_best, Pn, new_value
-    real(dp), dimension(size(pini)) :: pnew   ! Test value of decision variables (dummy) 
-    real(dp), dimension(1)          :: ranval
-    integer(i8)    :: i, k, dvn_count, dv       
-    integer(i4)    :: j
-#ifndef IMSL
-    real(dp)       :: harvest  ! uniform random number variable
-    integer(i4)    :: ssize
-    integer(i4), dimension(:), allocatable :: seeds
-#endif
-
-    pnum = size(pini)
-    !
-    ! Check input
-    if (size(pmin) /= pnum) stop 'Error DDSxy: size(pmin) /= size(pini)'
-    if (size(pmax) /= pnum) stop 'Error DDSxy: size(pmax) /= size(pini)'
-    if (size(xx) /= size(yy)) stop 'Error DDSxy: size(xx) /= size(yy)'
-    if (present(r)) then
-       ! r limit (Pertrubation parameter)
-       if (r <= 0.0_dp .or. r > 1.0_dp) stop 'Error DDSxy: Enter DDS perturbation parameter (0.0, 1.0]'
-       ir = r
-    else
-       ir = 0.2_dp
-    endif
-    if (present(maxiter)) then
-       ! max. iteration limit
-       if (maxiter < 6 .or. maxIter > 1000000_i8) &
-            stop 'Error DDSxy: Enter max no. of function evals in range 6 to 1000000'
-       imaxiter = maxiter
-    else
-       imaxiter = 1000
-    endif
-    if (present(maxit)) then
-       ! maxit -1 or 1
-       if (abs(maxit) /= 1.0_dp) stop 'Error DDSxy: Enter maxit "-1.0" to maximise or "1.0" to minimise'
-       imaxit = maxit
-    else
-       imaxit = 1.0_dp
-    endif
-    ! Seed random number
-    if (present(seed)) then
-       ! user seed limit
-       if (seed < 0 .or. seed > 2147483562_i4) then
-          stop 'Error DDSxy: Enter random seed input in range 0 to 2147483562'
-       endif
-       iseed = seed
-    else
-       iseed = 0
-    endif
-#ifdef IMSL
-    call RNSET(iseed)
-#else
-    ! INITIALIZATION OF RANDOM SEEDS	
-    ! set the seed so that results easily replicated
-    call random_seed(SIZE=ssize)  ! size is number elements in array, 2 usually
-    ALLOCATE(seeds(ssize))
-    seeds(1)=iseed
-    do j=1,ssize ! define initial set of seeds
-       seeds(j)=max(1,iseed-j)
-    end do
-    call random_seed(PUT=seeds(1:ssize)) ! set generator initially
-    ! define seeds randomly based on user seed
-    seeds(1)=iseed
-    do j=2,ssize
-       call random_number(harvest) ! get one uniform random number
-       seeds(j)=INT(harvest*2147483398.0) ! limit of seed 2 is constant
-    end do
-    ! Now have replicable, random set of seed arrays, set the generator:
-    call random_seed(PUT=seeds(1:ssize))
-    deallocate(seeds)
-    ! Note - there are probably easier ways to do this but above works...
-    ! DONE random seed setting
-#endif
-
-    ! Evaluate initial solution and return objective function value (of_value)
-    !  and Initialise the other variables (e.g. of_best)
-    of_value = obj_func(pini, xx, yy)
-
-    ! maxit is 1.0 for MIN problems, -1 for MAX problems
-    of_new = imaxit * of_value
-
-    ! accumulate DDS initialization outputs
-    iobj    = 1
-    DDSxy     = pini
-    of_best = of_new
-    !
-    ! Code below is now the DDS algorithm as presented in Figure 1 of Tolson and Shoemaker (2007)
-    !
-    do i=1, imaxiter-1
-       ! Determine Decision Variable (DV) selected for perturbation:
-       Pn = 1.0_dp - log(real(i,dp))/log(real(imaxiter-1,dp)) ! probability each DV selected
-       dvn_count = 0                                           ! counter for how many DVs selected for perturbation
-       pnew = DDSxy                                                ! define pnew initially as best current solution
-       !
-       do j=1, pnum
-#ifdef IMSL
-          call D_RNUN(ranval)                                    ! selects next uniform random number in sequence
-#else
-          call random_number(ranval)
-#endif
-          if(ranval(1) < Pn) then                                    ! jth DV selected for perturbation
-             dvn_count = dvn_count + 1
-             ! call 1-D perturbation function to get new DV value (new_value)
-             call neigh_value(DDSxy(j), pmin(j), pmax(j), ir, new_value) 
-             pnew(j) = new_value 
-          end if
-       end do
-       !
-       if (dvn_count == 0) then                                 ! no DVs selected at random, so select one
-#ifdef IMSL
-          call D_RNUN(ranval)                                    ! selects next uniform random number in sequence
-#else
-          call random_number(ranval)
-#endif
-          dv = ceiling(real(pnum,dp) * ranval(1))                     ! index for one DV   
-          ! call 1-D perturbation function to get new DV value (new_value):
-          call neigh_value(DDSxy(dv), pmin(dv), pmax(dv), ir, new_value)
-          pnew(dv) = new_value                                    ! change relevant DV value in stest
-       end if
-       !
-       ! Evaluate obj function value (of_value) for stest
-       of_value = obj_func(pnew, xx, yy)
-       of_new = imaxit * of_value                                  ! maxit handles min(= 1) and max(= -1) problems 
-       ! update current best solution
-       if (of_new <= of_best) then                                               
-          of_best = of_new
-          DDSxy = pnew
-       end if
-       ! accumulate DDS search history
-       iobj = i + 1
-       !
-    end do
-    close(89)
-    !
-    if (present(nobj)) nobj = iobj
-    !
-  end function DDSxy
 
   ! ------------------------------------------------------------------
 
@@ -489,9 +311,11 @@ CONTAINS
 
   subroutine neigh_value(x_cur, x_min, x_max, r, new_value)
 
-    use mo_kind, only: dp
+    use mo_kind, only: i8, dp
 #ifdef IMSL
     USE RNNOA_INT
+#else
+    use mo_xor4096, only: xor4096g
 #endif
 
     implicit none
@@ -499,10 +323,8 @@ CONTAINS
     real(dp), intent(in)   :: x_cur, x_min, x_max, r
     real(dp), intent(out)  :: new_value
     real(dp)               :: x_range
-    real(dp), dimension(1) :: zvalue
-#ifndef IMSL
-    real(dp)               :: work1, work2, work3, ranval
-#endif
+    !real(dp), dimension(1) :: zvalue
+    real(dp) :: zvalue
 
     x_range = x_max - x_min
 
@@ -514,28 +336,12 @@ CONTAINS
 #ifdef IMSL
     call D_RNNOA(zvalue) ! ISML Stat Library 2 routine - Acceptance/rejection 
 #else
-    !	Below returns a standard Gaussian random number based upon Numerical recipes gasdev and 
-    !	Marsagalia-Bray Algorithm
-    Work3=2.0 
-    Do While (Work3.ge.1.0.or.Work3.eq.0.0)
-       call random_number(ranval) ! get one uniform random number
-       Work1 = 2.0 * real(ranval,dp) - 1.0
-       call random_number(ranval) ! get one uniform random number
-       Work2 = 2.0 * real(ranval,dp) - 1.0
-       Work3 = Work1 * Work1 + Work2 * Work2
-    enddo
-    Work3 = ((-2.0 * log(Work3)) / Work3)**0.5  ! natural log	
-    ! pick one of two deviates at random (don't worry about trying to use both):
-    call random_number(ranval) ! get one uniform random number
-    IF (ranval.LT.0.5) THEN
-       zvalue(1) = Work1 * Work3
-    else
-       zvalue(1) = Work2 * Work3
-    endif
+    call xor4096g(0_i8,zvalue)
 #endif
 
     ! calculate new decision variable value:			   	
-    new_value = x_cur + zvalue(1)*r*x_range
+    !new_value = x_cur + zvalue(1)*r*x_range
+    new_value = x_cur + zvalue*r*x_range
 
     !  check new value is within DV bounds.  If not, bounds are reflecting.
     if(new_value < x_min) then
