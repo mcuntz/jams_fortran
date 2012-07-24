@@ -11,7 +11,7 @@ program main
   real(dp),    dimension(np) :: dv_min  ! Min value of decision variables 
   real(dp),    dimension(np) :: dv_max  ! Max value of decision variables 
   real(dp)                   :: r_val   ! DDS perturbation parameter (-> 0.2 by default)
-  integer(i4) :: seed     ! User seed to initialise the random number generator
+  integer(i8) :: seed     ! User seed to initialise the random number generator
   integer(i8) :: nIterMax ! Maximum number of iteration or function evaluation
   real(dp) :: to_max      ! Maximization or minimization of function
   integer(i8) :: nobj     ! Counter for Obj. function evaluations
@@ -25,7 +25,7 @@ program main
   nIterMax = 100000_i8
   r_val    = 0.20_dp
   to_max   = 1.0_dp
-  seed     = 123456789_i4
+  seed     = 123456789_i8
   dv_min   = (/ -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0 /)
   dv_max   = (/ 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0 /)
   dv_ini   = (/ -.226265E+01, -.130187E+01, -.151219E+01, 0.133983E+00, 0.988159E+00, &

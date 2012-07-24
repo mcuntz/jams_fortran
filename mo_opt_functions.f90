@@ -87,11 +87,36 @@ MODULE mo_opt_functions
   PUBLIC :: powell3d                          ! The Powell 3D function, N = 3.
   PUBLIC :: himmelblau                        ! The Himmelblau function, N = 2.
   ! ------------------------------------------------------------------
-  ! Standard test of DDS of Bryan Tolson
-  PUBLIC :: griewank                          ! Griewank function
-  ! ------------------------------------------------------------------
   ! Miscellaneous functions
-  PUBLIC :: rosenbrock                        ! Rosenbrock parabolic valley
+  PUBLIC :: griewank                          ! Griewank function, N = 2 or N = 10.
+  PUBLIC :: rosenbrock                        ! Rosenbrock parabolic valley function, N = 2.
+  PUBLIC :: sphere_model                      ! Sphere model, N >= 1.
+  PUBLIC :: rastrigin                         ! Rastrigin function, N >= 2.
+  PUBLIC :: schwefel                          ! Schwefel function, N >= 2.
+  PUBLIC :: ackley                            ! Ackley function, N >= 2.
+  PUBLIC :: michalewicz                       ! Michalewicz function, N >= 2.
+  PUBLIC :: booth                             ! Booth function, N = 2.
+  PUBLIC :: hump                              ! Hump function, N = 2.
+  PUBLIC :: levy                              ! Levy function, N >= 2.
+  PUBLIC :: matyas                            ! Matyas function, N = 2.
+  PUBLIC :: perm                              ! Perm function, N = 4.
+  PUBLIC :: power_sum                         ! Power sum function, N = 4.
+  ! ------------------------------------------------------------------
+  ! test_optimization package of John Burkardt - inputs are x(m,n) and output f(n), e.g. compare
+  ! rosenbrock = 100.0_dp * (x(2)-x(1)**2)**2 + (1.0_dp-x(1))**2
+  ! rosenbrock_2d(j) = sum((1.0_dp-x(1:m,j))**2) + sum((x(2:m,j)-x(1:m-1,j))**2)
+  PUBLIC :: sphere_model_2d                   !  The sphere model, (M,N).
+  PUBLIC :: axis_parallel_hyper_ellipsoid_2d  !  The axis-parallel hyper-ellipsoid function, (M,N).
+  PUBLIC :: rotated_hyper_ellipsoid_2d        !  The rotated hyper-ellipsoid function, (M,N).
+  PUBLIC :: rosenbrock_2d                     !  Rosenbrock''s valley, (M,N).
+  PUBLIC :: rastrigin_2d                      !  Rastrigin''s function, (M,N).
+  PUBLIC :: schwefel_2d                       !  Schwefel''s function, (M,N).
+  PUBLIC :: griewank_2d                       !  Griewank''s function, (M,N).
+  PUBLIC :: power_sum_2d                      !  The power sum function, (M,N).
+  PUBLIC :: ackley_2d                         !  Ackley''s function, (M,N).
+  PUBLIC :: michalewicz_2d                    !  Michalewicz''s function, (M,N).
+  PUBLIC :: drop_wave_2d                      !  The drop wave function, (M,N).
+  PUBLIC :: deceptive_2d                      !  The deceptive function, (M,N).
 
 CONTAINS
 
@@ -3197,14 +3222,12 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  ! This is the Griewank Function (2-D or 10-D)
-  ! Bound: X(i)=[-600,600], for i=1,2,...,10
-  ! Global minimum: 0, at origin
+  ! This is the Griewank Function, N=2 or N=10.
+  ! Solution: x(1:n) = 0.0_dp
+
   !
-  ! Coded originally by Q Duan.  Edited for incorporation into Fortran DDS algorithm by
+  ! Coded originally by Q Duan. Edited for incorporation into Fortran DDS algorithm by
   ! Bryan Tolson, Nov 2005.
-  ! DDS users should make their objective functions follow this framework
-  ! user function arguments must be the same as above for the Griewank function
   !
   ! Modified Jul 2012 Matthias Cuntz - function, dp, etc.
   !
@@ -3292,5 +3315,1111 @@ CONTAINS
     rosenbrock = fx
 
   end function rosenbrock
+
+  ! ------------------------------------------------------------------
+  !
+  !  Sphere model, N >= 1.
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function sphere_model(x)
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: sphere_model
+
+    integer(i4) :: n
+    integer(i4) :: j
+
+    n = size(x)
+    sphere_model = 0.0_dp
+    do j=1, n
+       sphere_model = sphere_model + x(j)**2 
+    enddo
+
+  end function sphere_model
+
+  ! ------------------------------------------------------------------
+  !
+  !  Rastrigin function, N >= 2.
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function rastrigin(x)
+
+    use mo_constants, only: pi_dp
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: rastrigin
+
+    integer(i4) :: n
+    integer(i4) :: j
+
+    n = size(x)
+    rastrigin = 0.0_dp
+    do j=1, n
+       rastrigin = rastrigin+ (x(j)**2 - 10.0_dp*cos(2.0_dp*pi_dp*x(j))) 
+    enddo
+    rastrigin = rastrigin + 10.0_dp * real(n,dp)
+
+  end function rastrigin
+
+  ! ------------------------------------------------------------------
+  !
+  !  Schwefel function, N >= 2.
+  !  Solution: x(1:n) = 1.0_dp
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function schwefel(x)
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: schwefel
+
+    integer(i4) :: n
+
+    n = size(x)
+    schwefel = sum(-x*sin(sqrt(abs(x)))) + 418.9829_dp*real(n,dp)
+
+  end function schwefel
+
+  ! ------------------------------------------------------------------
+  !
+  !  Ackley function, N >= 2.
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function ackley(x)
+
+    use mo_constants, only: pi_dp
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: ackley
+
+    integer(i4) :: n
+    real(dp), parameter :: a = 20.0_dp
+    real(dp), parameter :: b = 0.2_dp
+    real(dp), parameter :: c = 2.0_dp*pi_dp
+    real(dp) :: s1, s2
+
+    n = size(x)
+    s1 = sum(x**2)
+    s2 = sum(cos(c*x))
+    ackley = -a * exp(-b*sqrt(1.0_dp/real(n,dp)*s1)) - exp(1.0_dp/real(n,dp)*s2) + a + exp(1.0_dp)
+
+  end function ackley
+
+  ! ------------------------------------------------------------------
+  !
+  !  Michalewicz function, N >= 2.
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function michalewicz(x)
+
+    use mo_constants, only: pi_dp
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: michalewicz
+
+    integer(i4) :: n
+    integer(i4) :: j
+    integer(i4), parameter :: p = 20
+
+    n = size(x)
+    michalewicz = 0.0_dp
+    do j=1, n
+       michalewicz = michalewicz + sin(x(j)) * sin(x(j)**2 * (real(j,dp)/pi_dp))**p
+    enddo
+    michalewicz = -michalewicz
+
+  end function michalewicz
+
+  ! ------------------------------------------------------------------
+  !
+  !  Booth function, N = 2.
+  !  Solution: x(1:2) = (/ 1, 3 /)
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function booth(x)
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: booth
+
+    booth = (x(1)+2.0_dp*x(2)-7.0_dp)**2 + (2.0_dp*x(1)+x(2)-5.0_dp)**2
+
+  end function booth
+
+  ! ------------------------------------------------------------------
+  !
+  !  Hump function, N = 2.
+  !  Solution: x(1:2) = (/ 0.0898, -0.7126 /) and (/ -0.0898, 0.7126 /)
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function hump(x)
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: hump
+
+    hump = 1.0316285_dp + 4.0_dp*x(1)**2 - 2.1_dp*x(1)**4 + x(1)**2+ x(1)*x(2) - 4.0_dp*x(2)**2 + 4.0_dp*x(2)**4
+
+  end function hump
+
+  ! ------------------------------------------------------------------
+  !
+  !  Levy function, N >= 2.
+  !  Solution: x(1:n) = 1.0_dp
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function levy(x)
+
+    use mo_constants, only: pi_dp
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: levy
+
+    integer(i4) :: n
+    integer(i4) :: i
+    real(dp), dimension(size(x)) :: z
+
+    n = size(x)
+    z = 1.0_dp+(x-1.0_dp)/4.0_dp
+    levy = sin(pi_dp*z(1))**2
+    do i=1, n-1
+       levy = levy + (z(i)-1.0_dp)**2 * (1.0_dp+10.0_dp*(sin(pi_dp*z(i)+1.0_dp))**2)
+    end do
+    levy = levy + (z(n)-1.0_dp)**2 * (1.0_dp+(sin(2.0_dp*pi_dp*z(n)))**2)
+
+  end function levy
+
+  ! ------------------------------------------------------------------
+  !
+  !  Matyas function, N = 2.
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function matyas(x)
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: matyas
+
+    matyas = 0.26_dp * (x(1)**2 + x(2)**2) -0.48_dp*x(1)*x(2)
+
+  end function matyas
+
+  ! ------------------------------------------------------------------
+  !
+  !  Perm function, N >= 4.
+  !  Solution: forall(i=1:n) x(i) = i
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function perm(x)
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: perm
+
+    integer(i4) :: n
+    integer(i4) :: j, k
+    real(dp) :: s_in
+
+    n = size(x)
+    perm = 0.0_dp
+    do k=1, n
+       s_in = 0.0_dp
+       do j=1, n
+          s_in = s_in + (real(j,dp)**k + 0.5_dp) * ((x(j)/real(j,dp))**k - 1.0_dp)
+       enddo
+       perm = perm + s_in**2
+    enddo
+
+
+  end function perm
+
+  ! ------------------------------------------------------------------
+  !
+  !  Power sum function, N = 4.
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function power_sum(x)
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: power_sum
+
+    integer(i4) :: n
+    integer(i4) :: k
+    real(dp), dimension(4) :: b
+
+    n = size(x)
+    b = (/ 8.0_dp, 18.0_dp, 44.0_dp, 114.0_dp /)
+    power_sum = 0.0_dp
+    do k=1, n
+       power_sum = power_sum + (sum(x**k) - b(k))**2
+    end do
+
+  end function power_sum
+
+  ! ------------------------------------------------------------------
+  !
+  !  Sphere model, N >= 1.
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Author:
+  !
+  !    Matlab code by A. Hedar
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp) X(N), the argument.
+  !
+
+  function sphere(x)
+
+    implicit none
+
+    real(dp), dimension(:), intent(in) :: x
+    real(dp) :: sphere
+
+    integer(i4) :: n
+    integer(i4) :: j
+
+    n = size(x)
+    sphere = 0.0_dp
+    do j=1, n
+       sphere = sphere + x(j)**2 
+    enddo
+
+  end function sphere
+
+  ! ------------------------------------------------------------------
+  !
+  !  The sphere model
+  !  Solution: x(1:n) = 1.0_dp
+  !
+  !  Discussion:
+  !
+  !    The function is continuous, convex, and unimodal.
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    07 January 2012
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Hugues Bersini, Marco Dorigo, Stefan Langerman, Gregory Seront,
+  !    Luca Gambardella,
+  !    Results of the first international contest on evolutionary optimisation,
+  !    In Proceedings of 1996 IEEE International Conference on Evolutionary
+  !    Computation,
+  !    IEEE Press, pages 611-615, 1996.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function sphere_model_2d(x)
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: sphere_model_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    integer(i4) :: j
+
+    m = size(x,1)
+    n = size(x,2)
+    do j = 1, n
+       sphere_model_2d(j) = sum( ( x(1:m,j) - 1.0_dp ) ** 2 )
+    end do
+
+  end function sphere_model_2d
+
+  ! ------------------------------------------------------------------
+  !
+  !  The axis-parallel hyper-ellipsoid function
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Discussion:
+  !
+  !    This function is also known as the weighted sphere model.
+  !
+  !    The function is continuous, convex, and unimodal.
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    18 December 2011
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Marcin Molga, Czeslaw Smutnicki,
+  !    Test functions for optimization needs.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function axis_parallel_hyper_ellipsoid_2d(x)
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: axis_parallel_hyper_ellipsoid_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    integer(i4) :: j
+    real(dp) :: y(size(x,1))
+
+
+    m = size(x,1)
+    n = size(x,2)
+    forall(j=1:m) y(j) = real(j,dp)
+
+    do j = 1, n
+       axis_parallel_hyper_ellipsoid_2d(j) = sum( y(1:m) * x(1:m,j) ** 2 )
+    end do
+
+  end function axis_parallel_hyper_ellipsoid_2d
+
+  ! ------------------------------------------------------------------
+  !
+  !  The rotated hyper-ellipsoid function
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Discussion:
+  !
+  !    This function is also known as the weighted sphere model.
+  !
+  !    The function is continuous, convex, and unimodal.
+  !
+  !     There is a typographical error in Molga and Smutnicki, so that the
+  !     formula for this function is given incorrectly.
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    19 December 2011
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Marcin Molga, Czeslaw Smutnicki,
+  !    Test functions for optimization needs.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function rotated_hyper_ellipsoid_2d(x)
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: rotated_hyper_ellipsoid_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    integer(i4) :: i
+    integer(i4) :: j
+    real(dp) :: x_sum
+
+    m = size(x,1)
+    n = size(x,2)
+    do j = 1, n
+
+       rotated_hyper_ellipsoid_2d(j) = 0.0_dp
+       x_sum = 0.0_dp
+
+       do i = 1, m
+          x_sum = x_sum + x(i,j)
+          rotated_hyper_ellipsoid_2d(j) = rotated_hyper_ellipsoid_2d(j) + x_sum**2
+       end do
+
+    end do
+
+  end function rotated_hyper_ellipsoid_2d
+
+  ! ------------------------------------------------------------------
+  !
+  !  Rosenbrock''s valley
+  !  Solution: x(1:n) = 1.0_dp
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    07 January 2012
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Howard Rosenbrock,
+  !    An Automatic Method for Finding the Greatest or Least Value of a Function,
+  !    Computer Journal,
+  !    Volume 3, 1960, pages 175-184.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function rosenbrock_2d(x)
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: rosenbrock_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    integer(i4) :: j
+
+    m = size(x,1)
+    n = size(x,2)
+    do j = 1, n
+       rosenbrock_2d(j) = sum ( ( 1.0_dp - x(1:m,j) )**2 ) &
+            + sum ( ( x(2:m,j) - x(1:m-1,j) )**2 )
+    end do
+
+  end function rosenbrock_2d
+
+  ! ------------------------------------------------------------------
+  !
+  !  Rastrigin''s function
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    19 December 2011
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Marcin Molga, Czeslaw Smutnicki,
+  !    Test functions for optimization needs.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function rastrigin_2d(x)
+
+    use mo_constants, only: pi_dp
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: rastrigin_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    integer(i4) :: i
+    integer(i4) :: j
+
+    m = size(x,1)
+    n = size(x,2)
+    do j = 1, n
+
+       rastrigin_2d(j) = real( 10 * m, dp )
+
+       do i = 1, m
+          rastrigin_2d(j) = rastrigin_2d(j) + x(i,j) ** 2 - 10.0_dp * cos( 2.0_dp * pi_dp * x(i,j) )
+       end do
+
+    end do
+
+  end function rastrigin_2d
+
+  ! ------------------------------------------------------------------
+  !
+  !  Schwefel''s function.
+  !  Solution: x(1:n) = 420.9687_dp
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    19 December 2011
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Hans-Paul Schwefel,
+  !    Numerical optimization of computer models,
+  !    Wiley, 1981,
+  !    ISBN13: 978-0471099888,
+  !    LC: QA402.5.S3813.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function schwefel_2d(x)
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: schwefel_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    integer(i4) :: j
+
+    m = size(x,1)
+    n = size(x,2)
+    do j = 1, n
+       schwefel_2d(j) = -sum( x(1:m,j) * sin( sqrt( abs( x(1:m,j) ) ) ) )
+    end do
+
+  end function schwefel_2d
+
+  ! ------------------------------------------------------------------
+  !
+  !  Griewank''s function
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    19 December 2011
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Marcin Molga, Czeslaw Smutnicki,
+  !    Test functions for optimization needs.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function griewank_2d(x)
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: griewank_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    integer(i4) :: j
+    real(dp) :: y(size(x,1))
+
+    m = size(x,1)
+    n = size(x,2)
+    forall(j=1:m) y(j) = real(j,dp)
+    y(1:m) = sqrt( y(1:m) )
+
+    do j = 1, n
+       griewank_2d(j) = sum( x(1:m,j) ** 2 ) / 4000.0_dp &
+            - product( cos( x(1:m,j) / y(1:m) ) ) + 1.0_dp
+    end do
+
+  end function griewank_2d
+
+  ! ------------------------------------------------------------------
+  !
+  !  The power sum function.
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    19 December 2011
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Marcin Molga, Czeslaw Smutnicki,
+  !    Test functions for optimization needs.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function power_sum_2d(x)
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: power_sum_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    integer(i4) :: j
+    real(dp) :: y(size(x,1))
+
+    m = size(x,1)
+    n = size(x,2)
+    forall(j=1:m) y(j) = real(j,dp)
+    y(1:m) = y(1:m) + 1.0_dp
+
+    do j = 1, n
+       power_sum_2d(j) = sum( abs( x(1:m,j) ) ** y(1:m) )
+    end do
+
+  end function power_sum_2d
+
+  ! ------------------------------------------------------------------
+  !
+  !  Ackley''s function
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    19 December 2011
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Marcin Molga, Czeslaw Smutnicki,
+  !    Test functions for optimization needs.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function ackley_2d(x)
+
+    use mo_constants, only: pi_dp
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: ackley_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    integer(i4) :: j
+    real(dp), parameter :: a = 20.0_dp
+    real(dp), parameter :: b = 0.2_dp
+    real(dp), parameter :: c = 0.2_dp
+
+    m = size(x,1)
+    n = size(x,2)
+    do j = 1, n
+       ackley_2d(j) = -a * exp( -b * sqrt( sum( x(1:m,j)**2 ) &
+            / real( m, dp ) ) ) &
+            - exp( sum( cos( c * pi_dp * x(1:m,j) ) ) / real( m, dp ) ) &
+            + a + exp( 1.0_dp )
+    end do
+
+  end function ackley_2d
+
+  ! ------------------------------------------------------------------
+  !
+  !  Michalewicz''s function
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    19 December 2011
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Marcin Molga, Czeslaw Smutnicki,
+  !    Test functions for optimization needs.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function michalewicz_2d(x)
+
+    use mo_constants, only: pi_dp
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: michalewicz_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    integer(i4) :: j
+    integer(i4), parameter :: p = 10
+    real(dp) :: y(size(x,1))
+
+    m = size(x,1)
+    n = size(x,2)
+    forall(j=1:m) y(j) = real(j,dp)
+
+    do j = 1, n
+       michalewicz_2d(j) = -sum( &
+            sin( x(1:m,j) ) * ( sin( x(1:m,j)**2 * y(1:m) / pi_dp ) ) ** ( 2 * p ) &
+            )
+    end do
+
+  end function michalewicz_2d
+
+  ! ------------------------------------------------------------------
+  !
+  !  The drop wave function
+  !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    07 January 2012
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Marcin Molga, Czeslaw Smutnicki,
+  !    Test functions for optimization needs.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function drop_wave_2d(x)
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: drop_wave_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    integer(i4) :: j
+    real(dp) :: rsq
+
+    m = size(x,1)
+    n = size(x,2)
+    do j = 1, n
+
+       rsq = sum( x(1:m,j)**2 )
+
+       drop_wave_2d(j) = -( 1.0_dp + cos( 12.0_dp * sqrt( rsq ) ) ) &
+            / ( 0.5_dp * rsq + 2.0_dp )
+
+    end do
+
+  end function drop_wave_2d
+
+  ! ------------------------------------------------------------------
+  !
+  !  The deceptive function
+  !  Solution: forall(i=1:n) x(i) = real(i,dp)/real(n+1,dp)
+  !
+  !  Discussion:
+  !
+  !    In dimension I, the function is a piecewise linear function with
+  !    local minima at 0 and 1.0, and a global minimum at ALPHA(I) = I/(M+1).
+  !
+  !  Licensing:
+  !
+  !    This code is distributed under the GNU LGPL license.
+  !
+  !  Modified:
+  !
+  !    19 December 2011
+  !
+  !  Author:
+  !
+  !    John Burkardt
+  !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Reference:
+  !
+  !    Marcin Molga, Czeslaw Smutnicki,
+  !    Test functions for optimization needs.
+  !
+  !  Parameters:
+  !
+  !    Input, real(dp), dimension(:,:) :: x, the arguments size (m,n), m spatial dimension, n number of arguments.
+  !
+  !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
+  !
+
+  function deceptive_2d(x)
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: x
+    real(dp), dimension(size(x,2)) :: deceptive_2d
+
+    integer(i4) :: m
+    integer(i4) :: n
+    real(dp) :: g
+    integer(i4) :: i
+    integer(i4) :: j
+    real(dp) :: alpha(size(x,1))
+    real(dp), parameter :: beta = 2.0_dp
+    !
+    !  I'm just choosing ALPHA in [0,1] arbitrarily.
+    !
+    m = size(x,1)
+    n = size(x,2)
+    do i = 1, m
+       alpha(i) = real( i, dp ) / real( m + 1, dp )
+    end do
+
+    do j = 1, n
+
+       deceptive_2d(j) = 0.0_dp
+
+       do i = 1, m
+
+          if ( x(i,j) <= 0.0_dp ) then
+             g = x(i,j)
+          else if ( x(i,j) <= 0.8_dp * alpha(i) ) then
+             g = 0.8_dp - x(i,j) / alpha(i)
+          else if ( x(i,j) <= alpha(i) ) then
+             g = 5.0_dp * x(i,j) / alpha(i) - 4.0_dp
+          else if ( x(i,j) <= ( 1.0_dp + 4.0_dp * alpha(i) ) / 5.0_dp ) then
+             g = 1.0_dp + 5.0_dp * ( x(i,j) - alpha(i) ) / ( alpha(i) - 1.0_dp )
+          else if ( x(i,j) <= 1.0_dp ) then
+             g = 0.8_dp + ( x(i,j) - 1.0_dp ) / ( 1.0_dp - alpha(i) )
+          else
+             g = x(i,j) - 1.0_dp
+          end if
+
+          deceptive_2d(j) = deceptive_2d(j) + g
+
+       end do
+
+       deceptive_2d(j) = deceptive_2d(j) / real( m, dp )
+       deceptive_2d(j) = -( deceptive_2d(j) ** beta )
+
+    end do
+
+  end function deceptive_2d
 
 END MODULE mo_opt_functions
