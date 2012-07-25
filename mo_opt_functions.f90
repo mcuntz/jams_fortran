@@ -245,10 +245,21 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  Steep valley, e^x + 1/(100x)
-  !  Solution: x = 0.95344636E-01
+  !  Solution: 
+  !       if x >  0.0 :   x = 0.95344636E-01
+  !       if x < -0.1 :   x = -8.99951
+  !
   !  With Brent method:
   !   A,  X*,  B:  0.95344301E-01  0.95344636E-01  0.95344971E-01
   !  FA, FX*, FB:   1.2049206       1.2049206       1.2049206
+  !
+  !  Discussion:
+  !
+  !    This function has a pole at x = 0,
+  !    near which 
+  !       f -> negative infinity for x -> 0-0 (left) and
+  !       f -> positive infinity for x -> 0+0 (right)
+  !    f has a local maximum at x ~ -0.105412 .
   !
   !  Licensing:
   !
@@ -374,8 +385,11 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  The "Thin Pole", x^2+1+log((pi-x)^2)/pi^4
-  !  Solution: x = 2.0
+  !  The "Thin Pole", 3x^2+1+log((pi-x)^2)/pi^4
+  !  Solution: 
+  !     x    = 0.00108963  
+  !     f(x) = 1.0235
+  !
   !  With Brent method:
   !   A,  X*,  B:   2.0000000       2.0000007       2.0000011
   !  FA, FX*, FB:   13.002719       13.002727       13.002732
@@ -430,7 +444,9 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The oscillatory parabola x^2 - 10*sin(x^2-3x+2)
-  !  Solution: x = -1.3384521
+  !  Solution: 
+  !     x    = -0.146623
+  !     f(x) = -9.97791 
   !  With Brent method:
   !   A,  X*,  B:  -1.3384524      -1.3384521      -1.3384517
   !  FA, FX*, FB:  -8.1974224      -8.1974224      -8.1974224
@@ -471,17 +487,23 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The cosine combo cos(x)+5cos(1.6x)-2cos(2x)+5cos(4.5x)+7cos(9x)
-  !  Solution: x = 1.0167821
+  !  Solution: 
+  !     x    = -21.9443 + 62.831853 * k   , k = Integer
+  !     x    =  21.9443 - 62.831853 * k   , k = Integer
+  !     f(x) = -14.6772
+  !
   !  With Brent method:
   !   A,  X*,  B:   1.0167817       1.0167821       1.0167824
   !  FA, FX*, FB:  -6.2827509      -6.2827509      -6.2827509
   !
   !  Discussion:
   !
-  !    This function is oscillatory.
+  !    This function is symmetric, oscillatory, and has many local minima.
   !
-  !    The function has a local minimum at 1.7922 whose function value is
-  !    very close to the minimum value.
+  !    The function has a local minimum at 1.0167817.
+  !
+  !    The global optimum which function value -14.6772
+  !    appears infinite times. 
   !
   !  Licensing:
   !
