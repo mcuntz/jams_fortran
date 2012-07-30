@@ -57,9 +57,9 @@ case(0)
 end select
 
 if (isgood) then
-   write(*,*) 'mo_inpoly o.k.'
+   write(*,*) 'mo_poly o.k.'
 else
-   write(*,*) 'mo_inpoly failed!'
+   write(*,*) 'mo_poly failed!'
 endif
 
 END PROGRAM inpoly_test
