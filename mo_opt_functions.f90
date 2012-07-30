@@ -62,7 +62,7 @@ MODULE mo_opt_functions
   PUBLIC :: wood                              ! The Wood function, N = 4.
   PUBLIC :: chebyquad                         ! The Chebyquad function, 1 <= N.
   PUBLIC :: leon_cubic_valley                 ! Leon''s cubic valley function, N = 2.
-  PUBLIC :: gregory_karney_tridiagonal_matrix ! Gregory and Karney''s Tridiagonal Matrix Function, 1 <= N.
+  PUBLIC :: gregory_karney_tridia_matrix      ! Gregory and Karney''s Tridiagonal Matrix Function, 1 <= N.
   PUBLIC :: hilbert                           ! The Hilbert function, 1 <= N.
   PUBLIC :: de_jong_f1                        ! The De Jong Function F1, N = 3.
   PUBLIC :: de_jong_f2                        ! The De Jong Function F2, N = 2.
@@ -106,7 +106,7 @@ MODULE mo_opt_functions
   ! rosenbrock = 100.0_dp * (x(2)-x(1)**2)**2 + (1.0_dp-x(1))**2
   ! rosenbrock_2d(j) = sum((1.0_dp-x(1:m,j))**2) + sum((x(2:m,j)-x(1:m-1,j))**2)
   PUBLIC :: sphere_model_2d                   !  The sphere model, (M,N).
-  PUBLIC :: axis_parallel_hyper_ellipsoid_2d  !  The axis-parallel hyper-ellipsoid function, (M,N).
+  PUBLIC :: axis_parallel_hyper_ellips_2d     !  The axis-parallel hyper-ellipsoid function, (M,N).
   PUBLIC :: rotated_hyper_ellipsoid_2d        !  The rotated hyper-ellipsoid function, (M,N).
   PUBLIC :: rosenbrock_2d                     !  Rosenbrock''s valley, (M,N).
   PUBLIC :: rastrigin_2d                      !  Rastrigin''s function, (M,N).
@@ -1888,26 +1888,26 @@ CONTAINS
   !    Input, real(dp) :: X(N), the argument of the objective function.
   !
 
-  function gregory_karney_tridiagonal_matrix(x)
+  function gregory_karney_tridia_matrix(x)
 
     implicit none
 
     integer(i4) :: n
 
-    real(dp) :: gregory_karney_tridiagonal_matrix
+    real(dp) :: gregory_karney_tridia_matrix
     integer(i4) ::i
     real(dp), dimension(:), intent(in) :: x
 
     n = size(x)
-    gregory_karney_tridiagonal_matrix = x(1) * x(1) + 2.0_dp * sum ( x(2:n)**2 )
+    gregory_karney_tridia_matrix = x(1) * x(1) + 2.0_dp * sum ( x(2:n)**2 )
 
     do i = 1, n-1
-       gregory_karney_tridiagonal_matrix = gregory_karney_tridiagonal_matrix - 2.0_dp * x(i) * x(i+1)
+       gregory_karney_tridia_matrix = gregory_karney_tridia_matrix - 2.0_dp * x(i) * x(i+1)
     end do
 
-    gregory_karney_tridiagonal_matrix = gregory_karney_tridiagonal_matrix - 2.0_dp * x(1)
+    gregory_karney_tridia_matrix = gregory_karney_tridia_matrix - 2.0_dp * x(1)
 
-  end function gregory_karney_tridiagonal_matrix
+  end function gregory_karney_tridia_matrix
 
   ! ------------------------------------------------------------------
   !
@@ -3277,13 +3277,12 @@ CONTAINS
     else
        d = 4000.0_dp
     end if
-    u1 = 0.0_dp
+    u1 = sum(x_values**2) / d
     u2 = 1.0_dp
-    do j = 1, nopt
-       u1 = u1 + x_values(j)**2 / d
+    do j=1, nopt
        u2 = u2 * cos(x_values(j)/sqrt(real(j,dp)))
     end do
-    griewank = u1 - u2 + 1
+    griewank = u1 - u2 + 1.0_dp
     !
   end function griewank
 
@@ -3826,12 +3825,12 @@ CONTAINS
   !    Output, real(dp), dimension(size(x,2)) :: f, the function evaluated at the arguments.
   !
 
-  function axis_parallel_hyper_ellipsoid_2d(x)
+  function axis_parallel_hyper_ellips_2d(x)
 
     implicit none
 
     real(dp), dimension(:,:), intent(in) :: x
-    real(dp), dimension(size(x,2)) :: axis_parallel_hyper_ellipsoid_2d
+    real(dp), dimension(size(x,2)) :: axis_parallel_hyper_ellips_2d
 
     integer(i4) :: m
     integer(i4) :: n
@@ -3844,10 +3843,10 @@ CONTAINS
     forall(j=1:m) y(j) = real(j,dp)
 
     do j = 1, n
-       axis_parallel_hyper_ellipsoid_2d(j) = sum( y(1:m) * x(1:m,j) ** 2 )
+       axis_parallel_hyper_ellips_2d(j) = sum( y(1:m) * x(1:m,j) ** 2 )
     end do
 
-  end function axis_parallel_hyper_ellipsoid_2d
+  end function axis_parallel_hyper_ellips_2d
 
   ! ------------------------------------------------------------------
   !
