@@ -76,8 +76,8 @@ MODULE mo_opt_functions
   PUBLIC :: shekel_sqrn5                      ! The Shekel SQRN5 Function, N = 4.  
   PUBLIC :: shekel_sqrn7                      ! The Shekel SQRN7 Function, N = 4. 
   PUBLIC :: shekel_sqrn10                     ! The Shekel SQRN10 Function, N = 4.
-  PUBLIC :: six_nump_camel_back_polynomial    ! The Six-Hump Camel-Back Polynomial, N = 2.
-  PUBLIC :: schubert                          ! The Shubert Function, N = 2.
+  PUBLIC :: six_hump_camel_back_polynomial    ! The Six-Hump Camel-Back Polynomial, N = 2.
+  PUBLIC :: shubert                          ! The Shubert Function, N = 2.
   PUBLIC :: stuckman                          ! The Stuckman Function, N = 2.
   PUBLIC :: easom                             ! The Easom Function, N = 2.
   PUBLIC :: bohachevsky1                      ! The Bohachevsky Function #1, N = 2.
@@ -145,14 +145,16 @@ CONTAINS
   !
   !    Input, real(dp) X, the argument of the objective function.
   !
+
   function quadratic( x )
 
     implicit none
 
-    real(dp), intent(in) :: x
-    real(dp) :: quadratic
+    real(dp), dimension(:), intent(in) :: x
+    real(dp)                           :: quadratic
 
-    quadratic = ( x - 2.0_dp ) * ( x - 2.0_dp ) + 1.0_dp
+    if (size(x,1) .gt. 1_i4) stop 'quadratic: Input has to be array of size 1'
+    quadratic = ( x(1) - 2.0_dp ) * ( x(1) - 2.0_dp ) + 1.0_dp
 
   end function quadratic
 
@@ -192,10 +194,11 @@ CONTAINS
 
     implicit none
 
-    real(dp), intent(in) :: x
-    real(dp) :: quadratic_exponential
+    real(dp), dimension(:), intent(in) :: x
+    real(dp)                           :: quadratic_exponential
 
-    quadratic_exponential = x * x + exp ( - x )
+    if (size(x,1) .gt. 1_i4) stop 'quadratic_exponential: Input has to be array of size 1'
+    quadratic_exponential = x(1) * x(1) + exp ( - x(1) )
 
   end function quadratic_exponential
 
@@ -235,10 +238,11 @@ CONTAINS
 
     implicit none
 
-    real(dp), intent(in) :: x
-    real(dp) :: quartic
+    real(dp), dimension(:), intent(in) :: x
+    real(dp)                           :: quartic
 
-    quartic = ( ( x * x + 2.0_dp ) * x + 1.0_dp ) * x + 3.0_dp
+    if (size(x,1) .gt. 1_i4) stop 'quartic: Input has to be array of size 1'
+    quartic = ( ( x(1) * x(1) + 2.0_dp ) * x(1) + 1.0_dp ) * x(1) + 3.0_dp
 
   end function quartic
 
@@ -289,10 +293,11 @@ CONTAINS
 
     implicit none
 
-    real(dp), intent(in) :: x
-    real(dp) :: steep_valley
+    real(dp), dimension(:), intent(in) :: x
+    real(dp)                           :: steep_valley
 
-    steep_valley = exp ( x ) + 0.01_dp / x
+    if (size(x,1) .gt. 1_i4) stop 'steep_valley: Input has to be array of size 1'
+    steep_valley = exp ( x(1) ) + 0.01_dp / x(1)
 
   end function steep_valley
 
@@ -332,10 +337,11 @@ CONTAINS
 
     implicit none
 
-    real(dp), intent(in) :: x
-    real(dp) :: steep_valley2
+    real(dp), dimension(:), intent(in) :: x
+    real(dp)                           :: steep_valley2
 
-    steep_valley2 = exp( x ) - 2.0_dp * x + 0.01_dp / x - 0.000001_dp / x / x
+    if (size(x,1) .gt. 1_i4) stop 'steep_valley2: Input has to be array of size 1'
+    steep_valley2 = exp( x(1) ) - 2.0_dp * x(1) + 0.01_dp / x(1) - 0.000001_dp / x(1) / x(1)
 
   end function steep_valley2
 
@@ -376,10 +382,11 @@ CONTAINS
 
     implicit none
 
-    real(dp), intent(in) :: x
-    real(dp) :: dying_snake
+    real(dp), dimension(:), intent(in) :: x
+    real(dp)                           :: dying_snake
 
-    dying_snake = ( x + sin ( x ) ) * exp ( - x * x )
+    if (size(x,1) .gt. 1_i4) stop 'dying_snake: Input has to be array of size 1'
+    dying_snake = ( x(1) + sin ( x(1) ) ) * exp ( - x(1) * x(1) )
 
   end function dying_snake
 
@@ -430,13 +437,14 @@ CONTAINS
 
     implicit none
 
-    real(dp), intent(in) :: x
-    real(dp) :: thin_pole
+    real(dp), dimension(:), intent(in) :: x
+    real(dp)                           :: thin_pole
 
-    if ( x == pi_dp ) then
+    if (size(x,1) .gt. 1_i4) stop 'thin_pole: Input has to be array of size 1'
+    if ( x(1) == pi_dp ) then
        thin_pole = - 10000.0_dp
     else
-       thin_pole = 3.0_dp * x * x + 1.0_dp + ( log ( ( x - pi_dp ) * ( x - pi_dp ) ) ) / pi_dp**4
+       thin_pole = 3.0_dp * x(1) * x(1) + 1.0_dp + ( log ( ( x(1) - pi_dp ) * ( x(1) - pi_dp ) ) ) / pi_dp**4
     end if
 
   end function thin_pole
@@ -445,7 +453,7 @@ CONTAINS
   !
   !  The oscillatory parabola x^2 - 10*sin(x^2-3x+2)
   !  Solution: 
-  !     x    = -0.146623
+  !     x    = 0.146623
   !     f(x) = -9.97791 
   !  With Brent method:
   !   A,  X*,  B:  -1.3384524      -1.3384521      -1.3384517
@@ -477,10 +485,11 @@ CONTAINS
 
     implicit none
 
-    real(dp), intent(in) :: x
-    real(dp) :: oscillatory_parabola
+    real(dp), dimension(:), intent(in) :: x
+    real(dp)                           :: oscillatory_parabola
 
-    oscillatory_parabola = x * x - 10.0_dp * sin ( x * x - 3.0_dp * x + 2.0_dp )
+    if (size(x,1) .gt. 1_i4) stop 'oscillatory_parabola: Input has to be array of size 1'
+    oscillatory_parabola = x(1) * x(1) - 10.0_dp * sin ( x(1) * x(1) - 3.0_dp * x(1) + 2.0_dp )
 
   end function oscillatory_parabola
 
@@ -540,20 +549,21 @@ CONTAINS
 
     implicit none
 
-    real(dp), intent(in) :: x
-    real(dp) :: cosine_combo
+    real(dp), dimension(:), intent(in) :: x
+    real(dp)                           :: cosine_combo
 
-    cosine_combo =   cos (           x ) &
-         + 5.0_dp * cos ( 1.6_dp * x ) &
-         - 2.0_dp * cos ( 2.0_dp * x ) &
-         + 5.0_dp * cos ( 4.5_dp * x ) &
-         + 7.0_dp * cos ( 9.0_dp * x )
+    if (size(x,1) .gt. 1_i4) stop 'cosine_combo: Input has to be array of size 1'
+    cosine_combo =   cos (         x(1) ) &
+         + 5.0_dp * cos ( 1.6_dp * x(1) ) &
+         - 2.0_dp * cos ( 2.0_dp * x(1) ) &
+         + 5.0_dp * cos ( 4.5_dp * x(1) ) &
+         + 7.0_dp * cos ( 9.0_dp * x(1) )
 
   end function cosine_combo
 
   ! ------------------------------------------------------------------
   !
-  !  1 + |3x-1|
+  !  abs1, 1 + |3x-1|
   !  Solution: x = 1./3.
   !  With Brent method:
   !   A,  X*,  B:  0.33333299      0.33333351      0.33333385
@@ -581,10 +591,11 @@ CONTAINS
 
     implicit none
 
-    real(dp), intent(in) :: x
-    real(dp) :: abs1
+    real(dp), dimension(:), intent(in) :: x
+    real(dp)                           :: abs1
 
-    abs1 = 1.0_dp + abs ( 3.0_dp * x - 1.0_dp )
+    if (size(x,1) .gt. 1_i4) stop 'abs1: Input has to be array of size 1'
+    abs1 = 1.0_dp + abs ( 3.0_dp * x(1) - 1.0_dp )
 
   end function abs1
 
@@ -832,7 +843,9 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The Gaussian function, N = 3.
-  ! Solution: x(1:n) = 0.0_dp
+  ! Solution: 
+  !     x(1:n) = (/ 0.39895613783875655_dp, 1.0000190844878036_dp, 0.0_dp /)
+  !     found with Mathematica
   !
   !  Licensing:
   !
@@ -858,11 +871,12 @@ CONTAINS
 
     !    integer(i4) :: n
 
-    real(dp) :: gaussian
-    integer(i4) ::i
-    real(dp) :: t
     real(dp), dimension(:), intent(in) :: x
-    real(dp) :: y(15)
+    real(dp)                           :: gaussian
+
+    integer(i4) :: i
+    real(dp)    :: t
+    real(dp)    :: y(15)
 
     y(1:15) = (/ 0.0009_dp, 0.0044_dp, 0.0175_dp, 0.0540_dp, 0.1295_dp, &
          0.2420_dp, 0.3521_dp, 0.3989_dp, 0.3521_dp, 0.2420_dp, &
@@ -934,6 +948,7 @@ CONTAINS
   !
   ! The Box 3-dimensional function, N = 3.
   ! Solution: x(1:3) = (/ 1.0_dp, 10.0_dp, 1.0_dp /)
+  ! seems to be not the only solution
   !
   !  Discussion:
   !
@@ -2019,7 +2034,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The De Jong Function F2, N = 2.
-  ! Solution: x(1:n) = 0.0_dp
+  ! Solution: x(1:n) = 1.0_dp
   !
   !  Licensing:
   !
@@ -2064,7 +2079,9 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The De Jong Function F3 (discontinuous), N = 5.
-  ! Solution: x(1:n) = 1.0_dp
+  ! Solution: 
+  !    x(1:n) depends on search space
+  !           = sum of integer part of left boundary values
   !
   !  Licensing:
   !
@@ -2110,7 +2127,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The De Jong Function F4 (Gaussian noise), N = 30.
-  ! Solution: x(1:n) = -5.0_dp
+  ! Solution: x(1:n) = 0.0_dp
   !
   !  Discussion:
   !
@@ -2258,7 +2275,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The Schaffer Function F6, N = 2.
-  ! Solution: x(1:n) = (/ -32.0_dp, -32.0_dp /)
+  ! Solution: x(1:n) = (/ 0.0_dp, 0.0_dp /)
   !
   !  Discussion:
   !
@@ -2368,7 +2385,10 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The Goldstein Price Polynomial, N = 2.
-  ! Solution: x(1:n) = (/ 0.0_dp, 0.0_dp /)
+  ! Solution:   
+  !    x(1:n) = (/ 0.0_dp, -1.0_dp /)
+  !    f(x)   = 3.0_dp
+  !    http://www.pg.gda.pl/~mkwies/dyd/geadocu/fcngold.html
   !
   !  Discussion:
   !
@@ -2711,29 +2731,29 @@ CONTAINS
   !    Input, real(dp) :: X(N), the argument of the objective function.
   !
 
-  function six_nump_camel_back_polynomial(x)
+  function six_hump_camel_back_polynomial(x)
 
     implicit none
 
     !    integer(i4) :: n
 
-    real(dp) :: six_nump_camel_back_polynomial
+    real(dp) :: six_hump_camel_back_polynomial
     real(dp), dimension(:), intent(in) :: x
 
-    six_nump_camel_back_polynomial = ( 4.0_dp - 2.1_dp * x(1)**2 + x(1)**4 / 3.0_dp ) * x(1)**2 &
+    six_hump_camel_back_polynomial = ( 4.0_dp - 2.1_dp * x(1)**2 + x(1)**4 / 3.0_dp ) * x(1)**2 &
          + x(1) * x(2) + 4.0_dp * ( x(2)**2 - 1.0_dp ) * x(2)**2
 
-  end function six_nump_camel_back_polynomial
+  end function six_hump_camel_back_polynomial
 
   ! ------------------------------------------------------------------
   !
   ! The Shubert Function, N = 2.
-  ! Solution: x(1:n) = (/ 0.0_dp, 0.0_dp /)
+  ! Solution: x(1:n) = (/ -7.0835064076515595_dp, -7.708313735499347_dp /)
   !
   !  Discussion:
   !
   !    For -10 <= X(I) <= 10, the function has 760 local minima, 18 of which
-  !    are global minima, with minimum value -186.73.
+  !    are global minima, with minimum value -186.73090883102378.
   !
   !  Licensing:
   !
@@ -2767,13 +2787,13 @@ CONTAINS
   !    Input, real(dp) :: X(N), the argument of the objective function.
   !
 
-  function schubert(x)
+  function shubert(x)
 
     implicit none
 
     integer(i4) :: n
 
-    real(dp) :: schubert
+    real(dp) :: shubert
     real(dp) :: factor
     integer(i4) ::i
     integer(i4) ::k
@@ -2781,18 +2801,18 @@ CONTAINS
     real(dp), dimension(:), intent(in) :: x
 
     n = size(x)
-    schubert = 1.0_dp
+    shubert = 1.0_dp
 
     do i = 1, n
        factor = 0.0_dp
        do k = 1, 5
           k_r8 = real ( k, dp )
-          factor = factor + k_r8 * cos ( ( k_r8 + 1.0_dp ) * x(1) + k_r8 )
+          factor = factor + k_r8 * cos ( ( k_r8 + 1.0_dp ) * x(i) + k_r8 )
        end do
-       schubert = schubert * factor
+       shubert = shubert * factor
     end do
 
-  end function schubert
+  end function shubert
 
   ! ------------------------------------------------------------------
   !
@@ -3244,7 +3264,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  ! This is the Griewank Function, N=2 or N=10.
+  ! The Griewank Function, N=2 or N=10.
   ! Solution: x(1:n) = 0.0_dp
 
   !
@@ -3288,7 +3308,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Rosenbrock parabolic value function, N = 2.
+  !  The Rosenbrock parabolic value function, N = 2.
   !  Solution: x(1:n) = 1.0_dp
   !
   !  Licensing:
@@ -3339,7 +3359,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Sphere model, N >= 1.
+  !  The Sphere model, N >= 1.
   !  Solution: x(1:n) = 0.0_dp
   !
   !  Author:
@@ -3372,7 +3392,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Rastrigin function, N >= 2.
+  !  The Rastrigin function, N >= 2.
   !  Solution: x(1:n) = 0.0_dp
   !
   !  Author:
@@ -3408,12 +3428,15 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Schwefel function, N >= 2.
+  !  The Schwefel function, N >= 2.
   !  Solution: x(1:n) = 1.0_dp
+  !  Solution: x(1:n) = 420.968746_dp   ( see (2) and (3) )
   !
   !  Author:
   !
-  !    Matlab code by A. Hedar
+  !    (1) Matlab code by A. Hedar
+  !    (2) http://www.aridolan.com/ga/gaa/Schwefel.html
+  !    (3) http://www.it.lut.fi/ip/evo/functions/node10.html
   !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
   !
   !  Parameters:
@@ -3431,13 +3454,13 @@ CONTAINS
     integer(i4) :: n
 
     n = size(x)
-    schwefel = sum(-x*sin(sqrt(abs(x)))) + 418.9829_dp*real(n,dp)
+    schwefel = sum(-x*sin(sqrt(abs(x)))) + 418.982887272433799807913601398_dp*real(n,dp)
 
   end function schwefel
 
   ! ------------------------------------------------------------------
   !
-  !  Ackley function, N >= 2.
+  !  The Ackley function, N >= 2.
   !  Solution: x(1:n) = 0.0_dp
   !
   !  Author:
@@ -3474,8 +3497,16 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Michalewicz function, N >= 2.
+  !  The Michalewicz function, N >= 2.
   !  Solution: x(1:n) = 0.0_dp
+  !
+  !  Discussion:
+  !    The Michalewicz function is a multimodal test function (n! local optima).
+  !    The parameter p defines the "steepness" of the valleys or edges. Larger p leads to 
+  !    more difficult search. For very large p the function behaves like a needle in the 
+  !    haystack (the function values for points in the space outside the narrow peaks give 
+  !    very little information on the location of the global optimum).
+  !    http://www.geatbx.com/docu/fcnindex-01.html#P150_6749
   !
   !  Author:
   !
@@ -3511,8 +3542,8 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Booth function, N = 2.
-  !  Solution: x(1:2) = (/ 1, 3 /)
+  !  The Booth function, N = 2.
+  !  Solution: x(1:2) = (/ 1.0_dp, 3.0_dp /)
   !
   !  Author:
   !
@@ -3537,8 +3568,8 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Hump function, N = 2.
-  !  Solution: x(1:2) = (/ 0.0898, -0.7126 /) and (/ -0.0898, 0.7126 /)
+  !  The Hump function, N = 2.
+  !  Solution: x(1:2) = (/ 0.0898_dp, -0.7126_dp /) and (/ -0.0898_dp, 0.7126_dp /)
   !
   !  Author:
   !
@@ -3563,7 +3594,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Levy function, N >= 2.
+  !  The Levy function, N >= 2.
   !  Solution: x(1:n) = 1.0_dp
   !
   !  Author:
@@ -3601,7 +3632,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Matyas function, N = 2.
+  !  The Matyas function, N = 2.
   !  Solution: x(1:n) = 0.0_dp
   !
   !  Author:
@@ -3627,8 +3658,8 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Perm function, N >= 4.
-  !  Solution: forall(i=1:n) x(i) = i
+  !  The Perm function, N >= 4.
+  !  Solution: forall(i=1:n) x(i) = real(i,dp)
   !
   !  Author:
   !
@@ -3666,8 +3697,13 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Power sum function, N = 4.
-  !  Solution: x(1:n) = 0.0_dp
+  !  The Power sum function, N = 4.
+  !  Solution: 
+  !      x(1:n) = 0.0_dp
+  !      f(x)   = 15320.0
+  !  Solution: 
+  !      x    = (/ 2.9238871232_dp, 1.3610034595_dp, 1.3065975025_dp, 2.4247370177_dp /)
+  !      f(x) = 0.00042
   !
   !  Author:
   !
