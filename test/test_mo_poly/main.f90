@@ -1,13 +1,15 @@
 PROGRAM inpoly_test
 
 use mo_kind,   only: dp, i4
-use mo_poly, only: inpoly
+use mo_poly, only: inpoly, areapoly, center_of_mass
 
 implicit none
 
 integer(i4)                             :: N
 real(dp), dimension(:,:), allocatable   :: coord
 integer(i4)                             :: inside
+real(dp)                                :: area
+real(dp),dimension(2)                   :: com
 
 logical                                 :: isgood
 
@@ -55,6 +57,18 @@ case(1)
 case(0)     
    print*, 'THE POINT IS ON AN EDGE OR AT A VERTEX'
 end select
+
+
+area = areapoly(coord)
+if ( abs(area - 1.0_dp) .gt. tiny(1.0_dp) ) isgood = .false.
+print*, 'AREA OF POLYGON IS ', area
+
+com = center_of_mass(coord)
+if ( ( abs(com(1)- 1.5_dp) .gt. tiny(1.0_dp) ) .or. ( abs(com(2)- 1.5_dp) .gt. tiny(1.0_dp) ) )  isgood = .false.
+print*, 'CENTER OF MASS FOR POLYGON IS ', com
+
+
+
 
 if (isgood) then
    write(*,*) 'mo_poly o.k.'
