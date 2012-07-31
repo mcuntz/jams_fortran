@@ -33,24 +33,289 @@ MODULE mo_poly
 
   PRIVATE
 
+  PUBLIC :: areapoly        ! compute the area of a polygon
+  PUBLIC :: center_of_mass  ! compute the center of mass of a polygon
   PUBLIC :: inpoly          ! Test if 2D point is inside, outside or&
                             ! on vertice/edge of a 2D polygon
-  PUBLIC :: areapoly        ! compute the area of an polygon
-  PUBLIC :: center_of_mass  ! compute the center of mass of an polygon
 
-  INTERFACE inpoly
-     MODULE PROCEDURE inpoly_dp, inpoly_sp
-  END INTERFACE inpoly
   INTERFACE areapoly
      MODULE PROCEDURE areapoly_sp, areapoly_dp
   END INTERFACE areapoly
   INTERFACE center_of_mass
      MODULE PROCEDURE  center_of_mass_sp,center_of_mass_dp
   END INTERFACE center_of_mass
+  INTERFACE inpoly
+     MODULE PROCEDURE inpoly_dp, inpoly_sp
+  END INTERFACE inpoly
 
   ! ------------------------------------------------------------------
 
 CONTAINS
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         areapoly
+
+  !     PURPOSE
+  !         Function for computing the area of a polygon
+  !         The polygon can be convex or not.
+  !         
+  !         The method is only applicable for 2D polygons and points.
+  !
+  !         http://de.wikipedia.org/wiki/Geometrischer_Schwerpunkt
+  !
+  !     CALLING SEQUENCE
+  !         area =  areapoly(coord)
+  
+  !     INDENT(IN)
+  !         real(sp/dp) :: coord(:,2)     (x,y) coordinates of edges of the polygon    
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         None
+
+  !     INDENT(IN), OPTIONAL
+  !         None  
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Only available in 2D version 
+
+  !     EXAMPLE
+  !         polygon(:,1) = (/ 1.0_dp,2.0_dp,2.0_dp,1.0_dp /)
+  !         polygon(:,2) = (/ 1.0_dp,1.0_dp,2.0_dp,2.0_dp /)
+  !
+  !         area = areapoly(polygon )
+  !
+  !         --> area = 1 
+  !
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         http://de.wikipedia.org/wiki/Geometrischer_Schwerpunkt
+
+  !     HISTORY
+  !         Written,  Maren Göhler, July 2012
+
+
+FUNCTION areapoly_dp(coord)
+  IMPLICIT NONE
+
+  REAL(dp), DIMENSION(:,:),     INTENT(IN)     :: coord        ! Coordinates of the polygon in question
+  REAL(dp)                                     :: areapoly_dp
+  
+  ! Local variables
+  INTEGER(i4)                                  :: i,k          ! loop
+  INTEGER(i4)                                  :: Nedges       ! number of coordinates
+  REAL(dp)                                     :: xsum         ! for summing up
+  REAL(dp)                                     :: ysum         ! for summing up
+  
+  xsum   = 0.0_dp
+  ysum   = 0.0_dp
+  Nedges = size(coord,1)
+  
+  do i = 1,  Nedges
+     if (i .eq. Nedges) then
+        k = 1_i4
+     else 
+        k = i + 1_i4
+     end if
+     xsum = xsum + ( coord(i,1) * coord(k,2) ) 
+     ysum = ysum + ( coord(i,2) * coord(k,1) )
+  end do
+  
+  areapoly_dp = 0.5_sp * (xsum - ysum)
+  
+  RETURN
+END FUNCTION areapoly_dp
+
+
+FUNCTION areapoly_sp(coord)
+  IMPLICIT NONE
+  REAL(sp),   dimension(:,:),   INTENT(IN)    :: coord       ! Coordinates of the polygon in question
+  REAL(sp)                                    :: areapoly_sp
+  
+  ! Local variables
+  INTEGER(i4)                                 :: i,k         ! loop
+  INTEGER(i4)                                 :: Nedges      ! number of coordinates
+  REAL(sp)                                    :: xsum        ! for summing up
+  REAL(sp)                                    :: ysum        ! for summing up
+  
+  xsum   = 0.0_sp
+  ysum   = 0.0_sp
+  Nedges = size(coord,1)
+  
+  do i = 1,  Nedges
+     if (i .eq. Nedges) then
+        k = 1_i4
+     else 
+        k = i + 1_i4
+     end if
+     xsum = xsum + ( coord(i,1) * coord(k,2) ) 
+     ysum = ysum + ( coord(i,2) * coord(k,1) )
+  end do
+  
+  
+  areapoly_sp = 0.5_sp * (xsum - ysum)
+  
+END FUNCTION areapoly_sp
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         center_of_mass
+
+  !     PURPOSE
+  !         Function for computing the center of mass of a polygon
+  !         Computation of polygon area needed for center of mass.
+  !         The polygon can be convex or not.
+  !         
+  !         The method is only applicable for 2D polygons and points.
+  !
+  !         http://de.wikipedia.org/wiki/Geometrischer_Schwerpunkt
+  !
+  !         A = sum(xiyi+1-xi+1yi)
+  !         xs = 1/(6*A) * sum(xi+xi+1)(xiyi+1-xi+1yi)
+  !         ys = 1/(6*A) * sum(yi+yi+1)(xiyi+1-xi+1yi)
+
+  !     CALLING SEQUENCE
+  !         com =  center_of_mass(coord)
+  
+  !     INDENT(IN)
+  !         real(sp/dp) :: coord(:,2)     (x,y) coordinates of edges of the polygon    
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         None
+
+  !     INDENT(IN), OPTIONAL
+  !         None  
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Only available in 2D version 
+
+  !     EXAMPLE
+  !         polygon(:,1) = (/ 1.0_dp,2.0_dp,2.0_dp,1.0_dp /)
+  !         polygon(:,2) = (/ 1.0_dp,1.0_dp,2.0_dp,2.0_dp /)
+  !
+  !         com = center_of_mass(polygon)
+  !
+  !         --> com = (/1.5_dp, 1.5_dp/) 
+  !
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         http://de.wikipedia.org/wiki/Geometrischer_Schwerpunkt
+
+  !     HISTORY
+  !         Written,  Maren Göhler, July 2012
+
+  ! ------------------------------------------------------------------
+
+FUNCTION center_of_mass_dp(coord)
+  IMPLICIT NONE
+
+  REAL(dp),   dimension(:,:),   INTENT(IN)    :: coord              ! Coordinates of polygon in question
+  REAL(dp),dimension(2)                       :: center_of_mass_dp
+  
+  ! Local variables
+  INTEGER(i4)                                 :: i,k       ! loop
+  INTEGER(i4)                                 :: Nedges    ! number of coordinates
+  REAL(dp)                                    :: area      ! area of the polygon
+  REAL(dp)                                    :: xsum      ! for summing up
+  REAL(dp)                                    :: ysum      ! for summing up
+  REAL(dp)                                    :: hotspot_x ! for summing up
+  REAL(dp)                                    :: hotspot_y ! for summing up
+
+  xsum = 0.0_dp
+  ysum = 0.0_dp
+  Nedges = size(coord,1)
+  
+  area = areapoly_dp(coord)
+  
+  do i = 1, Nedges
+     if (i .eq. Nedges ) then
+        k = 1_i4
+     else 
+        k = i + 1_i4
+     end if
+     ! multiply x coord by the y coord of next vertex
+     xsum = xsum + ((coord(i,1) + coord(k,1)) * &
+          ((coord(i,1) * coord(k,2) - coord(k,1) * coord(i,2))))
+     
+     ysum = ysum + ((coord(i,2) + coord(k,2)) * & 
+          ((coord(i,1) * coord(k,2) - coord(k,1) * coord(i,2))))
+  end do
+  
+  hotspot_x = 1.0_dp / (6.0_dp * area) * xsum 
+  hotspot_y = 1.0_dp / (6.0_dp * area) * ysum 
+  
+  center_of_mass_dp(1) = hotspot_x
+  center_of_mass_dp(2) = hotspot_y
+  
+  RETURN
+END FUNCTION  center_of_mass_dp
+
+
+FUNCTION center_of_mass_sp(coord)
+  IMPLICIT NONE
+
+  REAL(sp),dimension(:,:),   INTENT(IN)       :: coord               ! Coordinates of polygon in question
+  REAL(sp),dimension(2)                       :: center_of_mass_sp
+
+  ! Local variables
+  INTEGER(i4)                                 :: i,k       ! loop
+  INTEGER(i4)                                 :: Nedges    ! number of coordinates
+  REAL(sp)                                    :: area      ! area of the polygon
+  REAL(sp)                                    :: xsum      ! for summing up
+  REAL(sp)                                    :: ysum      ! for summing up
+  REAL(sp)                                    :: hotspot_x ! for summing up
+  REAL(sp)                                    :: hotspot_y ! for summing up
+  
+  xsum   = 0.0_sp
+  ysum   = 0.0_sp
+  Nedges = size(coord,1)
+  
+  area = areapoly_sp(coord)
+  
+  do i = 1, Nedges
+     if (i .eq. Nedges ) then
+        k = 1_i4
+     else 
+        k = i + 1_i4
+     end if
+     ! multiply x coord by the y coord of next vertex
+     xsum = xsum + ((coord(i,1) + coord(k,1)) * &
+          ((coord(i,1) * coord(k,2) - coord(k,1) * coord(i,2))))
+     
+     ysum = ysum + ((coord(i,2) + coord(k,2)) * & 
+          ((coord(i,1) * coord(k,2) - coord(k,1) * coord(i,2))))
+  end do
+
+  hotspot_x = 1.0_sp / (6.0_sp * area) * xsum 
+  hotspot_y = 1.0_sp / (6.0_sp * area) * ysum 
+  
+  center_of_mass_sp(1) = hotspot_x
+  center_of_mass_sp(2) = hotspot_y
+  
+  RETURN
+END FUNCTION  center_of_mass_sp
 
   ! ------------------------------------------------------------------
 
@@ -110,6 +375,7 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Juliane Mai, July 2012
+  !         Modified, Juliane Mai, July 2012 - removing GOTO statements
 
 SUBROUTINE inpoly_dp(P,coord,erg) 
 !
@@ -123,7 +389,7 @@ SUBROUTINE inpoly_dp(P,coord,erg)
   ! Local variables
   REAL(dp), dimension(:), allocatable   :: X, Y 
   REAL(dp)                              :: lx, ly
-  LOGICAL                               :: MX,MY,NX,NY 
+  LOGICAL                               :: MX,MY,NX,NY, test1, test2
   INTEGER(i4)                           :: N, I, J
 
   N  = size(coord,1)
@@ -141,7 +407,8 @@ SUBROUTINE inpoly_dp(P,coord,erg)
   end do
 
   erg=-1_i4
-  DO 2 I=1,N 
+
+  DO I=1,N 
      J=1+MOD(I,N) 
      ! vertical Vertex
      If ( ( coord(I,1) .eq. coord(J,1) ) .and. ( coord(I,1) .eq. P(1) ) ) then
@@ -164,21 +431,32 @@ SUBROUTINE inpoly_dp(P,coord,erg)
      NX=X(J).GE.0.0_dp 
      MY=Y(I).GE.0.0_dp 
      NY=Y(J).GE.0.0_dp 
-     
-     IF(.NOT.((MY.OR.NY).AND.(MX.OR.NX)).OR.(MX.AND.NX)) GO TO 2 
-     IF(.NOT.(MY.AND.NY.AND.(MX.OR.NX).AND..NOT.(MX.AND.NX))) GO TO 3 
-     erg=-erg 
-     GO TO 2 
-3    IF((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I))) 2,4,5 
-4    erg=0_i4 
-     RETURN 
-5    erg=-erg 
-2    CONTINUE
 
-     deallocate(x)
-     deallocate(y)
+     test1 = .NOT.((MY.OR.NY).AND.(MX.OR.NX)).OR.(MX.AND.NX)
+     test2 = .NOT.(MY.AND.NY.AND.(MX.OR.NX).AND..NOT.(MX.AND.NX))
 
-     RETURN
+     if (.not. test1) then
+        if (test2) then
+           IF ((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)) .lt. 0.0_dp) then
+              cycle
+           ELSE 
+              IF ((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)) .gt. 0.0_dp) then
+                 erg = -erg
+                 cycle
+              ELSE
+                 erg = 0_i4
+                 return
+              END IF
+           END IF
+        else
+           erg=-erg
+        end if
+     end if
+
+  END DO
+
+  deallocate(x)
+  deallocate(y)
  
 END SUBROUTINE inpoly_dp
 
@@ -194,7 +472,7 @@ SUBROUTINE inpoly_sp(P,coord,erg)
   ! Local variables
   REAL(sp), dimension(:), allocatable   :: X, Y 
   REAL(sp)                              :: lx, ly
-  LOGICAL                               :: MX,MY,NX,NY 
+  LOGICAL                               :: MX,MY,NX,NY, test1, test2
   INTEGER(i4)                           :: N, I, J
 
   N  = size(coord,1)
@@ -212,7 +490,8 @@ SUBROUTINE inpoly_sp(P,coord,erg)
   end do
 
   erg=-1_i4
-  DO 2 I=1,N 
+
+  DO I=1,N 
      J=1+MOD(I,N) 
      ! vertical Vertex
      If ( ( coord(I,1) .eq. coord(J,1) ) .and. ( coord(I,1) .eq. P(1) ) ) then
@@ -235,300 +514,33 @@ SUBROUTINE inpoly_sp(P,coord,erg)
      NX=X(J).GE.0.0_sp 
      MY=Y(I).GE.0.0_sp 
      NY=Y(J).GE.0.0_sp 
-     
-     IF(.NOT.((MY.OR.NY).AND.(MX.OR.NX)).OR.(MX.AND.NX)) GO TO 2 
-     IF(.NOT.(MY.AND.NY.AND.(MX.OR.NX).AND..NOT.(MX.AND.NX))) GO TO 3 
-     erg=-erg 
-     GO TO 2 
-3    IF((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I))) 2,4,5 
-4    erg=0_i4 
-     RETURN 
-5    erg=-erg 
-2    CONTINUE
 
-     deallocate(x)
-     deallocate(y)
+     test1 = .NOT.((MY.OR.NY).AND.(MX.OR.NX)).OR.(MX.AND.NX)
+     test2 = .NOT.(MY.AND.NY.AND.(MX.OR.NX).AND..NOT.(MX.AND.NX))
 
-     RETURN
+     if (.not. test1) then
+        if (test2) then
+           IF ((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)) .lt. 0.0_sp) then
+              cycle
+           ELSE 
+              IF ((Y(I)*X(J)-X(I)*Y(J))/(X(J)-X(I)) .gt. 0.0_sp) then
+                 erg = -erg
+                 cycle
+              ELSE
+                 erg = 0_i4
+                 return
+              END IF
+           END IF
+        else
+           erg=-erg
+        end if
+     end if
+
+  END DO
+
+  deallocate(x)
+  deallocate(y)
  
 END SUBROUTINE inpoly_sp
-
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         areapoly
-
-  !     PURPOSE
-  !         function for computing the area of a polygon
-  !         The polygon can be convex or not.
-  !         
-  !         The method is only applicable for 2D polygons and points.
-  !
-  !         http://de.wikipedia.org/wiki/Geometrischer_Schwerpunkt
-  !
-  !     CALLING SEQUENCE
-  !         area =  areapoly(coord)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: coord(:,2)     (x,y) coordinates of edges of the polygon    
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         None
-
-  !     INDENT(IN), OPTIONAL
-  !         None  
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Only available in 2D version 
-
-  !     EXAMPLE
-  !         polygon(:,1) = (/ 1.0_dp,2.0_dp,2.0_dp,1.0_dp /)
-  !         polygon(:,2) = (/ 1.0_dp,1.0_dp,2.0_dp,2.0_dp /)
-  !
-  !         area = areapoly(polygon )
-  !
-  !         --> area = 1 
-  !
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         http://de.wikipedia.org/wiki/Geometrischer_Schwerpunkt
-
-  !     HISTORY
-  !         Written,  Maren Göhler, July 2012
-
-
-FUNCTION areapoly_dp(coord)
-  IMPLICIT NONE
-
-
-REAL(dp), DIMENSION(:,:),     INTENT(IN)     :: coord  ! Coordinates of the polygon
-REAL(dp)                                     :: areapoly_dp
-
-! Local variables
-INTEGER(i4)                                  :: i,k      ! loop
-INTEGER(i4)                                  :: Nedges ! number of coordinates
-REAL(dp)                                     :: xsum     ! for summing up
-REAL(dp)                                     :: ysum     ! for summing up
-
-xsum   = 0.0_dp
-ysum   = 0.0_dp
-Nedges = size(coord,1)
-
-do i = 1,  Nedges
-     if (i .eq. Nedges) then
-         k = 1_i4
-      else 
-         k = i + 1_i4
-      end if
-      xsum = xsum + ( coord(i,1) * coord(k,2) ) 
-      ysum = ysum + ( coord(i,2) * coord(k,1) )
-end do
-
-
-areapoly_dp = 0.5_sp * (xsum - ysum)
-
-
-RETURN
-END FUNCTION areapoly_dp
-
-
-FUNCTION areapoly_sp(coord)
-  IMPLICIT NONE
-REAL(sp),   dimension(:,:),   INTENT(IN)    :: coord       ! Polygon in question
-REAL(sp)                                    :: areapoly_sp
-
-! Local variables
-INTEGER(i4)                                 :: i,k       ! loop
-INTEGER(i4)                                 :: Nedges ! number of coordinates
-REAL(sp)                                    :: xsum     ! for summing up
-REAL(sp)                                    :: ysum     ! for summing up
-
-xsum   = 0.0_sp
-ysum   = 0.0_sp
-Nedges = size(coord,1)
-
-do i = 1,  Nedges
-     if (i .eq. Nedges) then
-         k = 1_i4
-      else 
-         k = i + 1_i4
-      end if
-      xsum = xsum + ( coord(i,1) * coord(k,2) ) 
-      ysum = ysum + ( coord(i,2) * coord(k,1) )
-end do
-
-
-areapoly_sp = 0.5_sp * (xsum - ysum)
-
-END FUNCTION areapoly_sp
-
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         areapoly
-
-  !     PURPOSE
-  !         function for computing the center of mass of a polygon
-  !         Computation of polygon area needed for center of mass.
-  !         The polygon can be convex or not.
-  !         
-  !         The method is only applicable for 2D polygons and points.
-  !
-  !         http://de.wikipedia.org/wiki/Geometrischer_Schwerpunkt
-  !
-  !         A = sum(xiyi+1-xi+1yi)
-  !         xs = 1/(6*A) * sum(xi+xi+1)(xiyi+1-xi+1yi)
-  !         ys = 1/(6*A) * sum(yi+yi+1)(xiyi+1-xi+1yi)
-
-  !     CALLING SEQUENCE
-  !         com =  center_of_mass(coord)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: coord(:,2)     (x,y) coordinates of edges of the polygon    
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         None
-
-  !     INDENT(IN), OPTIONAL
-  !         None  
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Only available in 2D version 
-
-  !     EXAMPLE
-  !         polygon(:,1) = (/ 1.0_dp,2.0_dp,2.0_dp,1.0_dp /)
-  !         polygon(:,2) = (/ 1.0_dp,1.0_dp,2.0_dp,2.0_dp /)
-  !
-  !         com = center_of_mass(polygon)
-  !
-  !         --> com = (/1.5_dp, 1.5_dp/) 
-  !
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         http://de.wikipedia.org/wiki/Geometrischer_Schwerpunkt
-
-  !     HISTORY
-  !         Written,  Maren Göhler, July 2012
-
-  ! ------------------------------------------------------------------
-
-FUNCTION center_of_mass_dp(coord)
-  IMPLICIT NONE
-
-REAL(dp),   dimension(:,:),   INTENT(IN)    :: coord       ! Polygon in question
-REAL(dp),dimension(2)                       :: center_of_mass_dp
-
-! Local variables
-INTEGER(i4)                                 :: i,k       ! loop
-INTEGER(i4)                                 :: Nedges ! number of coordinates
-REAL(dp)                                    :: area
-REAL(dp)                                    :: xsum      ! for summing up
-REAL(dp)                                    :: ysum      ! for summing up
-REAL(dp)                                    :: hotspot_x ! for summing up
-REAL(dp)                                    :: hotspot_y ! for summing up
-
-
-xsum = 0.0_dp
-ysum = 0.0_dp
-Nedges = size(coord,1)
-
-
-area = areapoly_dp(coord)
-
-do i = 1, Nedges
-   if (i .eq. Nedges ) then
-      k = 1_i4
-   else 
-      k = i + 1_i4
-   end if
-   ! multiply x coord by the y coord of next vertex
-   xsum = xsum + ((coord(i,1) + coord(k,1)) * &
-        ((coord(i,1) * coord(k,2) - coord(k,1) * coord(i,2))))
-   
-   ysum = ysum + ((coord(i,2) + coord(k,2)) * & 
-        ((coord(i,1) * coord(k,2) - coord(k,1) * coord(i,2))))
-end do
-
-hotspot_x = 1.0_dp / (6.0_dp * area) * xsum 
-hotspot_y = 1.0_dp / (6.0_dp * area) * ysum 
-
-center_of_mass_dp(1) = hotspot_x
-center_of_mass_dp(2) = hotspot_y
-
-
-
-RETURN
-END FUNCTION  center_of_mass_dp
-
-
-FUNCTION center_of_mass_sp(coord)
-  IMPLICIT NONE
-
-REAL(sp),dimension(:,:),   INTENT(IN)       :: coord       ! Polygon in question
-REAL(sp),dimension(2)                       :: center_of_mass_sp
-
-! Local variables
-INTEGER(i4)                                 :: i,k       ! loop
-INTEGER(i4)                                 :: Nedges ! number of coordinates
-REAL(sp)                                    :: area
-REAL(sp)                                    :: xsum      ! for summing up
-REAL(sp)                                    :: ysum      ! for summing up
-REAL(sp)                                    :: hotspot_x ! for summing up
-REAL(sp)                                    :: hotspot_y ! for summing up
-
-
-xsum   = 0.0_sp
-ysum   = 0.0_sp
-Nedges = size(coord,1)
-
-
-area = areapoly_sp(coord)
-
-do i = 1, Nedges
-   if (i .eq. Nedges ) then
-      k = 1_i4
-   else 
-      k = i + 1_i4
-   end if
-   ! multiply x coord by the y coord of next vertex
-   xsum = xsum + ((coord(i,1) + coord(k,1)) * &
-        ((coord(i,1) * coord(k,2) - coord(k,1) * coord(i,2))))
-   
-   ysum = ysum + ((coord(i,2) + coord(k,2)) * & 
-        ((coord(i,1) * coord(k,2) - coord(k,1) * coord(i,2))))
-end do
-
-hotspot_x = 1.0_sp / (6.0_sp * area) * xsum 
-hotspot_y = 1.0_sp / (6.0_sp * area) * ysum 
-
-center_of_mass_sp(1) = hotspot_x
-center_of_mass_sp(2) = hotspot_y
-
-
-
-RETURN
-END FUNCTION  center_of_mass_sp
-
-
 
 END MODULE mo_poly
