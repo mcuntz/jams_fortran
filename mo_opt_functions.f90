@@ -252,6 +252,7 @@ CONTAINS
   !  Solution: 
   !       if x >  0.0 :   x = 0.95344636E-01
   !       if x < -0.1 :   x = -8.99951
+  !  Search domain: x <= 0.0
   !
   !  With Brent method:
   !   A,  X*,  B:  0.95344301E-01  0.95344636E-01  0.95344971E-01
@@ -304,7 +305,10 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  Steep valley2, e^x - 2x + 1/(100x) - 1/(1000000x^2)
-  !  Solution: x = 0.70320487
+  !  
+  !  Solution: x = 0.70320487     
+  !  Search domain: 0.0 <= x 
+  !
   !  With Brent method:
   !   A,  X*,  B:  0.70320453      0.70320487      0.70320521
   !  FA, FX*, FB:  0.62802572      0.62802572      0.62802572
@@ -843,6 +847,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The Gaussian function, N = 3.
+  ! Search domain: −Pi <= xi <= Pi, i = 1, 2, 3.
   ! Solution: 
   !     x(1:n) = (/ 0.39895613783875655_dp, 1.0000190844878036_dp, 0.0_dp /)
   !     found with Mathematica
@@ -886,8 +891,14 @@ CONTAINS
 
     do i = 1, 15
 
-       t = x(1) * exp ( - 0.5_dp * x(2) * &
-            ( 3.5_dp - 0.5_dp * real ( i - 1, dp ) - x(3) )**2 ) - y(i)
+       ! avoiding underflow
+       t =  - 0.5_dp * x(2) * &
+            ( 3.5_dp - 0.5_dp * real ( i - 1, dp ) - x(3) )**2
+       if ( t .lt. -709._dp ) then
+          t = -y(i)
+       else
+          t = x(1) * exp ( t ) - y(i)
+       end if
 
        gaussian = gaussian + t * t
 
@@ -1433,7 +1444,12 @@ CONTAINS
        r = abs ( ( - 50.0_dp * log ( arg ) )**( 2.0_dp / 3.0_dp ) &
             + 25.0_dp - x(2) )
 
-       t = exp ( - r**x(3) / x(1) ) - arg
+       ! avoiding underflow
+       if ( r**x(3) / x(1) .lt. 709._dp) then
+          t = -arg
+       else
+          t = exp ( - r**x(3) / x(1) ) - arg
+       end if
 
        gulf_rd = gulf_rd + t * t
 
@@ -1653,8 +1669,13 @@ CONTAINS
   !
   ! The Beale function, N = 2.
   ! Solution: x(1:2) = (/ 3.0_dp, 0.5_dp /)
+  ! Search domain: −4.5 <= xi <= 4.5, i = 1, 2.
   !
   !  Discussion:
+  !
+  !    Range according to:
+  !       http://www-optima.amp.i.kyoto-u.ac.jp/member/student/hedar/
+  !       Hedar_files/TestGO_files/Page288.htm
   !
   !    This function has a valley approaching the line X(2) = 1.
   !
@@ -3562,22 +3583,19 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The Michalewicz function, N >= 2.
+  !  Search domain: x restricted to [0, Pi]
   !  Solution: 
-  !     x restricted to [0, Pi]
+  !     numerical, so far best found
+  !     x(1:2)  = (/ 2.2025449852_dp, 1.5694426586_dp /)
+  !     f(x)    = -1.8012271507_dp
   !
   !     numerical, so far best found
-  !     x(1:2)  = (/ 2.202905520172609_dp, 1.5707963267948966_dp /)
-  !     f(x)    = -1.801303410098553_dp
-  !
-  !     numerical, so far best found
-  !     x(1:5)  = (/ 2.2029055201726093_dp, 1.5707963267948966_dp, &
-  !                  1.2849915705529245_dp, 1.9230584698663629_dp, &
-  !                  0.9966770382174085_dp /)
-  !     f(x)    = -4.5376560178704635_dp
+  !     x(1:5)  = (/ 2.1972886714_dp, 1.5755597300_dp, 1.2853999043_dp, &
+  !                  1.9236154762_dp, 1.7214167532_dp /)
+  !     f(x)    = -4.6858793549_dp
   !     known from literature:
   !     f(x)    = -4.687_dp
   !
-  !     http://www.scribd.com/doc/74351406/12/Michalewicz’s-function
   !     x(1:10) = (/ 2.2029055201726093_dp, 2.10505573543129_dp, &
   !                  2.2193332517481035_dp, 1.9230584698663626_dp, &
   !                  0.9966770382174085_dp, 2.0274797779024762_dp, &
@@ -3594,6 +3612,8 @@ CONTAINS
   !    haystack (the function values for points in the space outside the narrow peaks give 
   !    very little information on the location of the global optimum).
   !    http://www.geatbx.com/docu/fcnindex-01.html#P150_6749
+  !
+  !    http://www.scribd.com/doc/74351406/12/Michalewicz’s-function
   !
   !  Author:
   !
