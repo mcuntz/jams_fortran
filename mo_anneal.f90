@@ -1247,6 +1247,7 @@ real(DP) function GetTemperature_dp( paraset, cost, range, acc_goal, &
      call date_and_time(time=timeseed)
      read(timeseed,'(i6,1x,i3)') idummy, seeds(1)
      print*,'temp: seeds(1)=', seeds(1)
+
      seeds(2) = seeds(1)+1000_i8
   endif
 
@@ -1343,23 +1344,28 @@ real(DP) function GetTemperature_dp( paraset, cost, range, acc_goal, &
         ! Comput. Opt. and App. 2004
         Energy(j,2) = fn     ! E_max_t
         Energy(j,1) = fo     ! E_min_t
-        j=j+1
+        j=j+1 
       end if feasible !valid parameter set
    end do loopSamplesize
 
    ! estimation of the acceptance probability based on the random set ||<Samplesize>||
    ! only if actual temperature (T) equals initial temperature (temp)
    T = maxval(Energy)  !1.0_dp
-   !print*, Energy(:,2)/T
+
    acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
    if (printflag) then
       print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
    end if
    Do While ( (acc_estim .lt. 1.0_dp) .and. (abs(acc_estim - acc_goal) .gt. 0.0001_dp))
       T = T * (Log(acc_estim)/Log(acc_goal))**(0.5_dp) ! **(1.0/p)  with p=1.0
-      acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
-      if (printflag) then
-         print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
+      if ( all(T .gt. Energy(:,1)/709._dp) .and. all(T .gt. Energy(:,2)/709._dp) ) then
+         acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
+         if (printflag) then
+            print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
+         end if
+      else
+         T = T/(Log(acc_estim)/Log(acc_goal))**(0.5_dp)
+         exit
       end if
    end do
    GetTemperature_dp = T
@@ -1728,6 +1734,7 @@ real(SP) function  dChange_sp(delta,iDigit,isZero)
   dChange_sp=real(iDelta,sp)/real(ioszt,sp)
 end function  dChange_sp
 
-  ! ------------------------------------------------------------------
+
+! ------------------------------------------------------------------
 
 END MODULE mo_anneal
