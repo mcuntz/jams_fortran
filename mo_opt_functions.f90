@@ -1437,7 +1437,7 @@ CONTAINS
     real(dp) :: r
     real(dp) :: t
     real(dp), dimension(:), intent(in) :: x
-    real(dp) :: sqrtHuge, tmp
+    real(dp) :: sqrtHuge
 
     sqrtHuge = Huge(1.0_dp)**0.5_dp -1.0_dp
 
@@ -2209,6 +2209,7 @@ CONTAINS
   !
 
   function de_jong_f3(x)
+    use mo_kind, only: i8
 
     implicit none
 
@@ -2218,7 +2219,10 @@ CONTAINS
     real(dp), dimension(:), intent(in) :: x
 
     n = size(x)
-    de_jong_f3 = real ( sum ( int ( x(1:n) ) ), dp )
+    ! Original: conversion to int only possible up to i8, else "Floating invalid operation - aborting"
+    ! de_jong_f3 = real ( sum ( int ( x(1:n) ) ), dp )
+
+    de_jong_f3 = sum ( aint ( x(1:n) ) )
 
   end function de_jong_f3
 
@@ -3618,8 +3622,8 @@ CONTAINS
   !     f(x)    = -1.8013033793_dp
   !
   !     numerical, so far best found
-  !     x(1:5)  = (/ 2.2016965645_dp, 1.5705788866_dp, 1.2836930569_dp, 1.9231985659_dp, 1.7206126418_dp /)
-  !     f(x)    = -4.6875236716_dp
+  !     x(1:5)  = (/ 2.2029054902_dp, 1.5707963436_dp, 1.2849915892_dp, 1.9230584622_dp, 1.7204697668_dp /)
+  !     f(x)    = -4.6876581791_dp
   !     known from literature:
   !     f(x)    = -4.687_dp
   !
@@ -3844,11 +3848,8 @@ CONTAINS
   !
   !  The Power sum function, N = 4.
   !  Solution: 
-  !      x(1:n) = 0.0_dp
-  !      f(x)   = 15320.0
-  !  Solution: 
-  !      x    = (/ 2.9238871232_dp, 1.3610034595_dp, 1.3065975025_dp, 2.4247370177_dp /)
-  !      f(x) = 0.00042
+  !      x    = (/ 1.0000653551_dp, 2.0087089520_dp, 1.9912589253_dp, 2.9999732609_dp /)
+  !      f(x) = 0.0000000001
   !
   !  Author:
   !
