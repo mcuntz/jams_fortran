@@ -252,7 +252,7 @@ CONTAINS
   !  Solution: 
   !       if x >  0.0 :   x = 0.95344636E-01
   !       if x < -0.1 :   x = -8.99951
-  !  Search domain: x <= 0.0
+  !  Search domain: x <= -0.1
   !
   !  With Brent method:
   !   A,  X*,  B:  0.95344301E-01  0.95344636E-01  0.95344971E-01
@@ -307,7 +307,7 @@ CONTAINS
   !  Steep valley2, e^x - 2x + 1/(100x) - 1/(1000000x^2)
   !  
   !  Solution: x = 0.70320487     
-  !  Search domain: 0.0 <= x 
+  !  Search domain: 0.001 <= x 
   !
   !  With Brent method:
   !   A,  X*,  B:  0.70320453      0.70320487      0.70320521
@@ -1437,21 +1437,40 @@ CONTAINS
     real(dp) :: r
     real(dp) :: t
     real(dp), dimension(:), intent(in) :: x
+    real(dp) :: sqrtHuge, tmp
+
+    sqrtHuge = Huge(1.0_dp)**0.5_dp -1.0_dp
 
     gulf_rd = 0.0_dp
     do i = 1, 99
+
        arg = real ( i, dp ) / 100.0_dp
        r = abs ( ( - 50.0_dp * log ( arg ) )**( 2.0_dp / 3.0_dp ) &
             + 25.0_dp - x(2) )
 
        ! avoiding underflow
-       if ( r**x(3) / x(1) .lt. 709._dp) then
+       if ( -r**x(3) / x(1) .lt. -708._dp) then
           t = -arg
        else
-          t = exp ( - r**x(3) / x(1) ) - arg
+          if ( -r**x(3) / x(1) .gt. 708._dp) then
+             t = 1000000._dp - arg
+          else
+             t = exp ( - r**x(3) / x(1) ) - arg
+          end if
        end if
 
-       gulf_rd = gulf_rd + t * t
+       if ( abs(t) .gt. sqrtHuge ) then
+          ! under/overflow case
+          t = sqrtHuge
+       end if
+
+       if ( Huge(1.0_dp) -gulf_rd .gt. t*t ) then
+          ! usual case
+          gulf_rd = gulf_rd + t * t
+       else
+          ! overflow case
+          gulf_rd = Huge(1.0_dp)
+       end if
 
     end do
 
@@ -3282,8 +3301,17 @@ CONTAINS
     if ( x(2) == 0.0_dp ) then
        term = 0.0_dp
     else
-       arg = ( x(1) + 2.0_dp * x(2) + x(3) ) / x(2)
-       term = exp ( - arg**2 )
+       !arg = ( x(1) + 2.0_dp * x(2) + x(3) ) / x(2)
+       ! changed according to original paper of Powell (1964)
+       arg = ( x(1) + x(3) ) / x(2) - 2.0_dp
+
+       term = arg*arg
+       if ( term .lt. 708._dp ) then
+          term = exp ( - term )
+       else
+          ! avoid underflow
+          term = 0.0_dp
+       end if
     end if
 
     powell3d = 3.0_dp &
@@ -3585,14 +3613,13 @@ CONTAINS
   !  The Michalewicz function, N >= 2.
   !  Search domain: x restricted to [0, Pi]
   !  Solution: 
-  !     numerical, so far best found
-  !     x(1:2)  = (/ 2.2025449852_dp, 1.5694426586_dp /)
-  !     f(x)    = -1.8012271507_dp
+  !     numerical, so far best found       
+  !     x(1:2)  = (/ 2.2029262967_dp, 1.5707721052_dp /)
+  !     f(x)    = -1.8013033793_dp
   !
   !     numerical, so far best found
-  !     x(1:5)  = (/ 2.1972886714_dp, 1.5755597300_dp, 1.2853999043_dp, &
-  !                  1.9236154762_dp, 1.7214167532_dp /)
-  !     f(x)    = -4.6858793549_dp
+  !     x(1:5)  = (/ 2.2016965645_dp, 1.5705788866_dp, 1.2836930569_dp, 1.9231985659_dp, 1.7206126418_dp /)
+  !     f(x)    = -4.6875236716_dp
   !     known from literature:
   !     f(x)    = -4.687_dp
   !
@@ -3676,12 +3703,23 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The Hump function, N = 2.
-  !  Solution: x(1:2) = (/ 0.0898_dp, -0.7126_dp /) and (/ -0.0898_dp, 0.7126_dp /)
+  !
+  !  Search Domain:
+  !     -5.0_dp <= xi <= 5.0_dp
+  !
+  !  Solution: 
+  !     x(1:2) = (/ 0.08984201310031806_dp , -0.7126564030207396_dp /)     OR
+  !     x(1:2) = (/ -0.08984201310031806_dp , 0.7126564030207396_dp /)
+  !     f(x)   = 0.0_dp
   !
   !  Author:
   !
   !    Matlab code by A. Hedar
   !    Modified Jul 2012 Matthias Cuntz - function, dp, etc.
+  !
+  !  Literature:
+  !
+  !    http://www-optima.amp.i.kyoto-u.ac.jp/member/student/hedar/Hedar_files/TestGO_files/Page1621.htm
   !
   !  Parameters:
   !
@@ -3695,7 +3733,7 @@ CONTAINS
     real(dp), dimension(:), intent(in) :: x
     real(dp) :: hump
 
-    hump = 1.0316285_dp + 4.0_dp*x(1)**2 - 2.1_dp*x(1)**4 + x(1)**2+ x(1)*x(2) - 4.0_dp*x(2)**2 + 4.0_dp*x(2)**4
+    hump = 1.0316285_dp + 4.0_dp*x(1)**2 - 2.1_dp*x(1)**4 + x(1)**6 / 3.0_dp + x(1)*x(2) - 4.0_dp*x(2)**2 + 4.0_dp*x(2)**4
 
   end function hump
 
