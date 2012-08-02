@@ -82,7 +82,7 @@ CONTAINS
   !         None
 
   !     INDENT(OUT), OPTIONAL
-  !         None
+  !         real(dp)    :: funcbest             the best value of the function.
 
   !     RESTRICTIONS
   !         None.
@@ -104,8 +104,9 @@ CONTAINS
   !         Written original Bryan Tolson, Feb 2007 - DDS v1.1
   !         Modified, Rohini Kumar, Feb 2008
   !         Modified, Matthias Cuntz, Jul 2012 - module
+  !                   Juliane Mai,    Aug 2012 - optional argument funcbest added
 
-  function DDS(obj_func, pini, prange, r, seed, maxiter, maxit)
+  function DDS(obj_func, pini, prange, r, seed, maxiter, maxit, funcbest)
 
     use mo_kind,    only: i4, i8, dp
     use mo_xor4096, only: xor4096, xor4096g
@@ -126,6 +127,7 @@ CONTAINS
     integer(i8),       optional, intent(in)  :: seed    ! User seed to initialise the random number generator
     integer(i8),       optional, intent(in)  :: maxiter ! Maximum number of iteration or function evaluation
     logical,           optional, intent(in)  :: maxit   ! Maximization or minimization of function
+    real(dp),          optional, intent(out) :: funcbest !the best value of the function.
     real(dp),          dimension(size(pini)) :: DDS     ! Best value of decision variables
 
     ! Local variables
@@ -222,6 +224,7 @@ CONTAINS
           DDS     = pnew
        end if
     end do
+    if (present(funcbest)) funcbest = of_best
     !
   end function DDS
 
