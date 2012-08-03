@@ -40,10 +40,16 @@ module mo_xor4096
 
   PRIVATE
 
+  PUBLIC :: get_timeseed    ! Returns a seed dependend on time
   PUBLIC :: xor4096         ! Generates uniform distributed random number
   PUBLIC :: xor4096g        ! Generates gaussian distributed random number
 
   ! Interfaces for single and double precision routines
+  INTERFACE get_timeseed
+     MODULE PROCEDURE   get_timeseed_i4_0d, get_timeseed_i4_1d, &
+                        get_timeseed_i8_0d, get_timeseed_i8_1d
+  END INTERFACE get_timeseed
+
   INTERFACE xor4096
      MODULE PROCEDURE   xor4096s_0d, xor4096s_1d, xor4096f_0d, xor4096f_1d, &
                         xor4096l_0d, xor4096l_1d, xor4096d_0d, xor4096d_1d
@@ -54,6 +60,140 @@ module mo_xor4096
   END INTERFACE xor4096g
 
 CONTAINS
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         get_timeseed
+
+  !     PURPOSE
+  !         Function which returns a scalar or a vector of integers
+  !         dependent on time.
+  !         This returned values can be used a seed for initializing
+  !         random number generators like xor4096.
+  !
+  !         If the return variable is a vector, only the first entry
+  !         depends on time while the others are just the entry before
+  !         increased by 1000.
+
+  !     CALLING SEQUENCE
+  !         call get_timeseed(seed)
+  
+  !     INDENT(IN)
+  !         None
+
+  !     INDENT(INOUT)
+  !         integer(i4/i8)                     :: seed
+  !           OR
+  !         integer(i4/i8), dimension(:)       :: seed
+
+  !     INDENT(OUT)
+  !         None                                                       
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         integer(i4) :: seed
+  !         call get_timeseed(seed)
+  !         --> e.g. seed = 327_i4
+  !
+  !         integer(i8), dimension(3) :: seed
+  !         call get_timeseed(seed)
+  !         --> e.g. seed = (/ 327_i8, 1327_i8, 2327_i8 /)
+
+  !     LITERATURE
+  !         
+
+  !     HISTORY
+  !         Written,  Juliane Mai, Aug 2012
+
+  ! ------------------------------------------------------------------
+
+  subroutine get_timeseed_i4_0d(seed)
+    
+    implicit none
+    integer(i4), intent(inout)  :: seed
+
+    ! local variables
+    integer(i4), dimension(8)  :: time_array
+
+    call date_and_time(values=time_array)
+    seed = &
+         time_array(5) * 3600000_i4  + &   ! hour
+         time_array(6) * 60000_i4    + &   ! minutes
+         time_array(7) * 1000_i4     + &   ! seconds
+         time_array(8) * 1_i4              ! milliseconds
+    
+  end subroutine get_timeseed_i4_0d
+
+  subroutine get_timeseed_i4_1d(seed)
+    
+    implicit none
+    integer(i4), dimension(:), intent(inout)  :: seed
+
+    ! local variables
+    integer(i4), dimension(8)  :: time_array
+    integer(i4)                :: i
+
+    call date_and_time(values=time_array)
+    seed(1) = &
+         time_array(5) * 3600000_i4  + &   ! hour
+         time_array(6) * 60000_i4    + &   ! minutes
+         time_array(7) * 1000_i4     + &   ! seconds
+         time_array(8) * 1_i4              ! milliseconds
+    do i=2,size(seed)
+       seed(i) = seed(i-1) + 1000_i4
+    end do
+    
+  end subroutine get_timeseed_i4_1d
+
+  subroutine get_timeseed_i8_0d(seed)
+    
+    implicit none
+    integer(i8), intent(inout)  :: seed
+
+    ! local variables
+    integer(i4), dimension(8)  :: time_array
+
+    call date_and_time(values=time_array)
+    seed = &
+         int(time_array(5),i8) * 3600000_i8  + &   ! hour
+         int(time_array(6),i8) * 60000_i8    + &   ! minutes
+         int(time_array(7),i8) * 1000_i8     + &   ! seconds
+         int(time_array(8),i8) * 1_i8              ! milliseconds
+    
+  end subroutine get_timeseed_i8_0d
+
+  subroutine get_timeseed_i8_1d(seed)
+    
+    implicit none
+    integer(i8), dimension(:), intent(inout)  :: seed
+
+    ! local variables
+    integer(i4), dimension(8)  :: time_array
+    integer(i4)                :: i
+
+    call date_and_time(values=time_array)
+    seed(1) = &
+         int(time_array(5),i8) * 3600000_i8  + &   ! hour
+         int(time_array(6),i8) * 60000_i8    + &   ! minutes
+         int(time_array(7),i8) * 1000_i8     + &   ! seconds
+         int(time_array(8),i8) * 1_i8              ! milliseconds
+    do i=2,size(seed)
+       seed(i) = seed(i-1) + 1000_i8
+    end do
+    
+  end subroutine get_timeseed_i8_1d
 
   ! ------------------------------------------------------------------
 
