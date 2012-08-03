@@ -30,7 +30,7 @@ MODULE mo_anneal
   ! Copyright 2012 Juliane Mai
 
   USE mo_kind,    ONLY: i4, i8, sp, dp
-  USE mo_xor4096, ONLY: xor4096
+  USE mo_xor4096, ONLY: get_timeseed, xor4096
 
   IMPLICIT NONE
 
@@ -259,7 +259,8 @@ CONTAINS
     LOGICAL     :: coststatus
     LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
-    REAL(DP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter to chose for optimization
+    REAL(DP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter chosen for optimization
+    REAL(DP),    DIMENSION(size(para,1))   :: weightUni   ! uniform CDF of parameter chosen for optimization
     
     type paramLim
        real(DP)                                 :: min                 !            minimum value
@@ -279,7 +280,6 @@ CONTAINS
 
     ! for SA
     integer(I4)            :: idummy,i
-    character(10)          :: timeseed
     real(DP)               :: NormPhi
     real(DP)               :: ac_ratio, pa
     real(DP)               :: fo, fn, df, fBest, rho, fInc, fbb, dr
@@ -364,11 +364,7 @@ CONTAINS
        seeds = seeds_in
     else
        ! Seeds depend on actual time
-       call date_and_time(time=timeseed)
-       read(timeseed,'(i6,1x,i3)') idummy, seeds(1)
-       print*,'seeds(1)=', seeds(1)
-       seeds(2) = seeds(1)+1000_i8
-       seeds(3) = seeds(2)+1000_i8
+       call get_timeseed(seeds)
     endif
 
     if (present(printflag_in)) then
@@ -401,20 +397,25 @@ CONTAINS
     end if
 
     weight    = 0.0_dp
+    weightUni = 0.0_dp
     if (present(weight_in)) then
        where ( maskpara(:) ) 
-          weight(:) = weight_in(:)
+          weight(:)    = weight_in(:)
+          weightUni(:) = 1.0_dp
        end where
     else
        where ( maskpara(:) ) 
-          weight(:) = 1.0_dp
+          weight(:)    = 1.0_dp
+          weightUni(:) = 1.0_dp
        end where
     endif
     ! scaling the weights
-    weight = weight/sum(weight)
+    weight    = weight/sum(weight)
+    weightUni = weightUni/sum(weightUni)
     ! cummulating the weights
     do i=2,n
-       weight(i) = weight(i) + weight(i-1)
+       weight(i)    = weight(i)    + weight(i-1)
+       weightUni(i) = weightUni(i) + weightUni(i-1)
     end do
 
     T = temp
@@ -500,9 +501,39 @@ CONTAINS
          !
          ! V3: select according to CDF based on weights and mask
          iPar=1_i4
+         !
+         !   ALL ARE WEIGHTED
          do while (weight(iPar) .lt. RN2)
-            iPar = iPar + 1_i4
+           iPar = iPar + 1_i4
          end do
+         !
+         !  STEPWISE  acc > 0.1  --> weighted
+         ! if (ac_ratio .gt. 0.1_dp) then
+         !   do while (weight(iPar) .lt. RN2)
+         !      iPar = iPar + 1_i4
+         !   end do
+         ! else
+         !   do while (weightUni(iPar) .lt. RN2)
+         !      iPar = iPar + 1_i4
+         !   end do
+         ! end if
+         !
+         !   GRADUAL: LINEAR FUNCTION       
+         !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)                                
+         !   iPar = iPar + 1_i4
+         !end do
+         !
+         !   GRADUAL: ROOT FUNCTION
+         !do while (weightUni(iPar)+(ac_ratio**0.25_dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)     
+         !   iPar = iPar + 1_i4
+         !end do
+         !
+         !   GRADUAL: HILL FUNCTION
+         !do while (weightUni(iPar)+(ac_ratio**5._dp)/(0.3**5._dp+ac_ratio**5._dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2) 
+         !   iPar = iPar + 1_i4
+         !end do 
+         !
+
          !print*, 'iPar=',iPar !
          ! (1b) Generate new value of selected parameter
          call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
@@ -540,6 +571,7 @@ CONTAINS
              !print*, 'Ipos=',Ipos
              fo = fn
              gamma(:)%old   = gamma(:)%new 
+             !print*, gamma(:)%new
              !
              ! keep best solution
              if (fo < fBest) then
@@ -567,6 +599,7 @@ CONTAINS
                  fo = fn
                  ! save old state
                  gamma(:)%old   = gamma(:)%new 
+                 !print*, gamma(:)%new
                end if
              !else
                 !print*,'NO CHANGE IN OBJ FUNCTION',gamma(:)%new
@@ -663,7 +696,7 @@ CONTAINS
 
 END SUBROUTINE anneal_dp
 
-SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, & 
+  SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, & 
                        DT_in, nITERmax_in, LEN_in, nST_in, & 
                        eps_in, acc_in, seeds_in, printflag_in, coststatus_in, maskpara_in, weight_in)
 
@@ -713,7 +746,6 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
                                                          ! vector of weights per parameter
                                                          ! gives the frequency of parameter to be chosen for optimization 
 
-
     INTEGER(I4) :: n    ! Number of parameters
     REAL(SP)    :: T
     REAL(SP)    :: DT  
@@ -727,7 +759,8 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
     LOGICAL     :: coststatus
     LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
-    REAL(SP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter to chose for optimization
+    REAL(SP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter chosen for optimization
+    REAL(SP),    DIMENSION(size(para,1))   :: weightUni   ! uniform CDF of parameter chosen for optimization
     
     type paramLim
        real(SP)                                 :: min                 !            minimum value
@@ -747,12 +780,11 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
 
     ! for SA
     integer(I4)            :: idummy,i
-    character(10)          :: timeseed
     real(SP)               :: NormPhi
     real(SP)               :: ac_ratio, pa
     real(SP)               :: fo, fn, df, fBest, rho, fInc, fbb, dr
     real(SP)               :: T0, DT0
-    real(SP),  parameter   :: small = -700._DP
+    real(SP),  parameter   :: small = -700._SP
     !integer(I4)            :: nITER
     integer(I4)            :: j, iter, kk
     integer(I4)            :: Ipos, Ineg
@@ -832,10 +864,7 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
        seeds = seeds_in
     else
        ! Seeds depend on actual time
-       call date_and_time(time=timeseed)
-       read(timeseed,'(i6,1x,i3)') idummy, seeds(1)
-       seeds(2) = seeds(1)+1000_i4
-       seeds(3) = seeds(2)+1000_i4
+       call get_timeseed(seeds)
     endif
 
     if (present(printflag_in)) then
@@ -868,20 +897,25 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
     end if
 
     weight    = 0.0_sp
+    weightUni = 0.0_sp
     if (present(weight_in)) then
        where ( maskpara(:) ) 
-          weight(:) = weight_in(:)
+          weight(:)    = weight_in(:)
+          weightUni(:) = 1.0_sp
        end where
     else
        where ( maskpara(:) ) 
-          weight(:) = 1.0_sp
+          weight(:)    = 1.0_sp
+          weightUni(:) = 1.0_sp
        end where
     endif
     ! scaling the weights
-    weight = weight/sum(weight)
+    weight    = weight/sum(weight)
+    weightUni = weightUni/sum(weightUni)
     ! cummulating the weights
     do i=2,n
-       weight(i) = weight(i) + weight(i-1)
+       weight(i)    = weight(i)    + weight(i-1)
+       weightUni(i) = weightUni(i) + weightUni(i-1)
     end do
 
     T = temp
@@ -941,7 +975,7 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
        fbb=  fBest
        !LEN = int( real(iter,sp)*sqrt(real(iter,sp)) / nITER + 1.5*real(N,sp),i4) 
        ! Repeat LEN times with feasible solution
-       j=1_i4
+       j=1
        loopLEN: do while (j .le. LEN)
          !print*, 'iPar: ',j
          iTotalCounterR =  iTotalCounterR + 1_i4
@@ -967,9 +1001,39 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
          !
          ! V3: select according to CDF based on weights and mask
          iPar=1_i4
+         !
+         !   ALL ARE WEIGHTED
          do while (weight(iPar) .lt. RN2)
-            iPar = iPar + 1_i4
+           iPar = iPar + 1_i4
          end do
+         !
+         !  STEPWISE  acc > 0.1  --> weighted
+         ! if (ac_ratio .gt. 0.1_sp) then
+         !   do while (weight(iPar) .lt. RN2)
+         !      iPar = iPar + 1_i4
+         !   end do
+         ! else
+         !   do while (weightUni(iPar) .lt. RN2)
+         !      iPar = iPar + 1_i4
+         !   end do
+         ! end if
+         !
+         !   GRADUAL: LINEAR FUNCTION       
+         !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)                                
+         !   iPar = iPar + 1_i4
+         !end do
+         !
+         !   GRADUAL: ROOT FUNCTION
+         !do while (weightUni(iPar)+(ac_ratio**0.25_sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)     
+         !   iPar = iPar + 1_i4
+         !end do
+         !
+         !   GRADUAL: HILL FUNCTION
+         !do while (weightUni(iPar)+(ac_ratio**5._sp)/(0.3**5._sp+ac_ratio**5._sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2) 
+         !   iPar = iPar + 1_i4
+         !end do 
+         !
+
          !print*, 'iPar=',iPar !
          ! (1b) Generate new value of selected parameter
          call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
@@ -996,7 +1060,7 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
          feasible: if (coststatus) then   ! feasible parameter set
           fn = fn/normPhi
           !
-          !
+          ! Change in cost function value
           df = fn-fo             
           !
           ! analyze change in the objective function: df
@@ -1007,6 +1071,7 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
              !print*, 'Ipos=',Ipos
              fo = fn
              gamma(:)%old   = gamma(:)%new 
+             !print*, gamma(:)%new
              !
              ! keep best solution
              if (fo < fBest) then
@@ -1016,7 +1081,7 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
           else
              if ( df >  eps ) then
                rho=-df/T
-               if (rho < small) then   !small = -700._dp
+               if (rho < small) then   !small = -700._sp
                  pa=0.0_SP
                else
                  pa=EXP(rho)
@@ -1034,12 +1099,13 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
                  fo = fn
                  ! save old state
                  gamma(:)%old   = gamma(:)%new 
+                 !print*, gamma(:)%new
                end if
              !else
                 !print*,'NO CHANGE IN OBJ FUNCTION',gamma(:)%new
              end if
           end if
-           j=j+1
+          j=j+1
          else
            iTotalCounterR =  iTotalCounterR - 1_i4
            iTotalCounter = iTotalCounter - 1_i4
@@ -1092,7 +1158,7 @@ SUBROUTINE anneal_sp(cost, para, range, temp, costbest, parabest, &
       if ((iConL > nST) .and. (ac_ratio < acc) .and. (iConR > 2_i4) ) iStop=.FALSE.
       ! a way out maximum
       if ( iTotalCounter > nITERmax .and. ac_ratio > acc) then
-         nITERmax = int(real(nITERmax,dp)* 1.10_sp,i4)
+         nITERmax = int(real(nITERmax,sp)* 1.10_sp,i4)
          if (printflag) then
             print *,                       'nITERmax changed to =', nITERmax
          end if
