@@ -1,8 +1,9 @@
 PROGRAM anneal_test
 
-  use mo_kind,   only: dp, i4, i8
-  use mo_anneal, only: anneal, GetTemperature
-  use mo_cost,   only: cost_dp, range_dp
+  use mo_kind,    only: dp, i4, i8
+  use mo_anneal,  only: anneal, GetTemperature
+  use mo_cost,    only: cost_dp, range_dp
+  use mo_xor4096, only: get_timeseed
 
   IMPLICIT NONE
 
@@ -16,6 +17,11 @@ PROGRAM anneal_test
 
   INTEGER(I4)                       :: i, runs
   INTEGER(I8), DIMENSION(3)         :: seeds
+  REAL(DP)                          :: Tstart, Tend
+
+  ! time dependent seeds
+  call get_timeseed(seeds)
+  print*, 'time dependent seeds would be: ', seeds
 
   runs = 4_i4
 
@@ -39,7 +45,10 @@ PROGRAM anneal_test
   !temperature = 10.0_dp
   seeds(1) = 854_i8
   seeds(2) = seeds(1) + 1000_i8
-  temperature = GetTemperature(para, cost_dp, range_dp, 0.95_dp, samplesize_in=500_i4,seeds_in=seeds(1:2),printflag_in=.true.)
+  print*, 'seeds used:                        ', seeds(1:2)
+  temperature = GetTemperature( para, cost_dp, range_dp, 0.95_dp, samplesize_in=500_i4, &
+       seeds_in=seeds(1:2), printflag_in=.true.)
+
   print*, '-----------------------------------'
   print*, '   SIMULATED ANNEALING             '
   print*, '-----------------------------------'
@@ -52,15 +61,20 @@ PROGRAM anneal_test
      seeds(1) = int(i,i8)*259_i8
      seeds(2) = seeds(1) + 1000_i8
      seeds(3) = seeds(2) + 1000_i8
+     print*, 'seeds used: ', seeds(1:3)
      !
-     call anneal(cost_dp, para, range_dp, temperature, costbest, parabest, seeds_in=seeds,&
-                 LEN_in=250_i4,nITERmax_in=150000_i4,eps_in=0.00001_dp,&
-                 printflag_in=.false.)
+     call cpu_time(Tstart)
+     parabest = anneal(cost_dp, para, range_dp, maxit_in=.false., &
+          temp_in=temperature, seeds_in=seeds,&
+          LEN_in=250_i4,nITERmax_in=150000_i4,eps_in=0.00001_dp,&
+          printflag_in=.false., &
+          funcbest=costbest)
+     call cpu_time(Tend)
      if (costbestAll .gt. costbest) then
         costbestAll = costbest
         parabestAll = parabest
      end if
-     print*,'Run ',i,':   cost = ',costbest
+     print*,'Run ',i,':   cost = ',costbest,'  (CPU time = ',Tend-Tstart,' sec)'
      write (1, '(F15.7,4(F15.7))') costbest, parabest
   end do
   close(unit=1,  status='keep')
