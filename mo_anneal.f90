@@ -499,6 +499,7 @@ CONTAINS
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     !
     ! initialize counters /var for new SA    
     iConL=           0_i4
@@ -514,6 +515,7 @@ CONTAINS
     !T=      T0
     DT=     DT0
     ! Storing the best solution so far
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     NormPhi = fo * maxit
     fo      = fo/NormPhi
     fBest   = 1.0_dp * maxit !fo/NormPhi
@@ -670,7 +672,11 @@ CONTAINS
        end if
        !
        ! Cooling schedule
-       fInc= (fbb-fBest)/fbb
+       if (fbb .gt. tiny(1.0_dp)) then
+          fInc= (fbb-fBest)/fbb
+       else
+          fInc = 1.0_dp
+       end if
        if (fInc < 0.00000001_dp) then
           iConF= iConF+1_i4
        else
@@ -1040,6 +1046,7 @@ CONTAINS
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
     !
     ! initialize counters /var for new SA    
     iConL=           0_i4
@@ -1211,7 +1218,11 @@ CONTAINS
        end if
        !
        ! Cooling schedule
-       fInc= (fbb-fBest)/fbb
+       if (fbb .gt. tiny(1.0_sp)) then
+          fInc= (fbb-fBest)/fbb
+       else
+          fInc = 1.0_sp
+       end if
        if (fInc < 0.00000001_sp) then
           iConF= iConF+1_i4
        else
@@ -1571,6 +1582,7 @@ CONTAINS
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     !
     ! initialize counters /var for new SA    
     iConL=           0_i4
@@ -1741,7 +1753,11 @@ CONTAINS
        end if
        !
        ! Cooling schedule
-       fInc= (fbb-fBest)/fbb
+       if (fbb .gt. tiny(1.0_dp)) then
+          fInc= (fbb-fBest)/fbb
+       else
+          fInc = 1.0_dp
+       end if
        if (fInc < 0.00000001_dp) then
           iConF= iConF+1_i4
        else
@@ -2101,6 +2117,7 @@ CONTAINS
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
     !
     ! initialize counters /var for new SA    
     iConL=           0_i4
@@ -2271,7 +2288,11 @@ CONTAINS
        end if
        !
        ! Cooling schedule
-       fInc= (fbb-fBest)/fbb
+       if (fbb .gt. tiny(1.0_sp)) then
+          fInc= (fbb-fBest)/fbb
+       else
+          fInc = 1.0_sp
+       end if
        if (fInc < 0.00000001_sp) then
           iConF= iConF+1_i4
        else
@@ -2787,6 +2808,7 @@ CONTAINS
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     !
     ! initialize counters /var for new SA    
     iConL=           0_i4
@@ -2969,7 +2991,11 @@ CONTAINS
        end if
        !
        ! Cooling schedule
-       fInc= (fbb-fBest)/fbb
+       if (fbb .gt. tiny(1.0_dp)) then
+          fInc= (fbb-fBest)/fbb
+       else
+          fInc = 1.0_dp
+       end if
        if (fInc < 0.00000001_dp) then
           iConF= iConF+1_i4
        else
@@ -3344,6 +3370,7 @@ CONTAINS
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
     !
     ! initialize counters /var for new SA    
     iConL=           0_i4
@@ -3526,7 +3553,11 @@ CONTAINS
        end if
        !
        ! Cooling schedule
-       fInc= (fbb-fBest)/fbb
+       if (fbb .gt. tiny(1.0_sp)) then
+          fInc= (fbb-fBest)/fbb
+       else
+          fInc = 1.0_sp
+       end if
        if (fInc < 0.00000001_sp) then
           iConF= iConF+1_i4
        else
@@ -3891,6 +3922,7 @@ CONTAINS
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     !
     ! initialize counters /var for new SA    
     iConL=           0_i4
@@ -4072,7 +4104,11 @@ CONTAINS
        end if
        !
        ! Cooling schedule
-       fInc= (fbb-fBest)/fbb
+       if (fbb .gt. tiny(1.0_dp)) then
+          fInc= (fbb-fBest)/fbb
+       else
+          fInc = 1.0_dp
+       end if
        if (fInc < 0.00000001_dp) then
           iConF= iConF+1_i4
        else
@@ -4437,6 +4473,7 @@ CONTAINS
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
     !
     ! initialize counters /var for new SA    
     iConL=           0_i4
@@ -4618,7 +4655,11 @@ CONTAINS
        end if
        !
        ! Cooling schedule
-       fInc= (fbb-fBest)/fbb
+       if (fbb .gt. tiny(1.0_sp)) then
+          fInc= (fbb-fBest)/fbb
+       else
+          fInc = 1.0_sp
+       end if
        if (fInc < 0.00000001_sp) then
           iConF= iConF+1_i4
        else
@@ -4936,12 +4977,12 @@ CONTAINS
 
     if (present(maxit_in)) then
        if (maxit_in) then
-          maxit = -1._sp
+          maxit = -1._dp
        else
-          maxit = 1._sp
+          maxit = 1._dp
        end if
     else
-       maxit = 1._sp
+       maxit = 1._dp
     endif
 
     allocate(Energy(samplesize,2))
@@ -4987,6 +5028,7 @@ CONTAINS
     NormPhi        = -9999.9_dp
 
     fo =  cost(paraset) * maxit
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     NormPhi = fo
     fo      = fo/NormPhi * maxit
 
@@ -5234,6 +5276,7 @@ CONTAINS
     NormPhi        = -9999.9_sp
 
     fo =  cost(paraset) * maxit
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
     NormPhi = fo
     fo      = fo/NormPhi * maxit
 
@@ -5422,12 +5465,12 @@ CONTAINS
 
     if (present(maxit_in)) then
        if (maxit_in) then
-          maxit = -1._sp
+          maxit = -1._dp
        else
-          maxit = 1._sp
+          maxit = 1._dp
        end if
     else
-       maxit = 1._sp
+       maxit = 1._dp
     endif
 
     allocate(Energy(samplesize,2))
@@ -5472,8 +5515,10 @@ CONTAINS
     gamma(:)%best  = paraset(:)
     NormPhi        = -9999.9_dp
 
-    fo =  cost(paraset) * maxit
+    fo      =  cost(paraset) * maxit
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     NormPhi = fo
+    !print*, 'fo = ',fo,'   NormPhi = ',NormPhi
     fo      = fo/NormPhi * maxit
 
     j=1
@@ -5518,7 +5563,7 @@ CONTAINS
 
     ! estimation of the acceptance probability based on the random set ||<Samplesize>||
     ! only if actual temperature (T) equals initial temperature (temp)
-    T = maxval(Energy)  !1.0_dp
+    T = maxval(abs(Energy))  !1.0_dp
 
     acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
     if (printflag) then
@@ -5711,6 +5756,7 @@ CONTAINS
     NormPhi        = -9999.9_sp
 
     fo =  cost(paraset) * maxit
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
     NormPhi = fo
     fo      = fo/NormPhi * maxit
 
@@ -6016,12 +6062,12 @@ CONTAINS
 
     if (present(maxit_in)) then
        if (maxit_in) then
-          maxit = -1._sp
+          maxit = -1._dp
        else
-          maxit = 1._sp
+          maxit = 1._dp
        end if
     else
-       maxit = 1._sp
+       maxit = 1._dp
     endif
 
     allocate(Energy(samplesize,2))
@@ -6067,6 +6113,7 @@ CONTAINS
     NormPhi        = -9999.9_dp
 
     fo =  cost(paraset) * maxit
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     NormPhi = fo
     fo      = fo/NormPhi * maxit
 
@@ -6316,6 +6363,7 @@ CONTAINS
     NormPhi        = -9999.9_sp
 
     fo =  cost(paraset) * maxit
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
     NormPhi = fo
     fo      = fo/NormPhi * maxit
 
@@ -6506,12 +6554,12 @@ CONTAINS
 
     if (present(maxit_in)) then
        if (maxit_in) then
-          maxit = -1._sp
+          maxit = -1._dp
        else
-          maxit = 1._sp
+          maxit = 1._dp
        end if
     else
-       maxit = 1._sp
+       maxit = 1._dp
     endif
 
     allocate(Energy(samplesize,2))
@@ -6557,6 +6605,7 @@ CONTAINS
     NormPhi        = -9999.9_dp
 
     fo =  cost(paraset) * maxit
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     NormPhi = fo
     fo      = fo/NormPhi * maxit
 
@@ -6797,6 +6846,7 @@ CONTAINS
     NormPhi        = -9999.9_sp
 
     fo =  cost(paraset) * maxit
+    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
     NormPhi = fo
     fo      = fo/NormPhi * maxit
 
