@@ -1,7 +1,7 @@
 PROGRAM anneal_test
 
   use mo_kind,    only: dp, i4, i8
-  use mo_anneal,  only: anneal, GetTemperature
+  use mo_anneal,  only: anneal_valid, GetTemperature_valid
   use mo_cost,    only: cost_dp, range_dp
   use mo_xor4096, only: get_timeseed
 
@@ -46,7 +46,7 @@ PROGRAM anneal_test
   seeds(1) = 854_i8
   seeds(2) = seeds(1) + 1000_i8
   print*, 'seeds used:                        ', seeds(1:2)
-  temperature = GetTemperature( para, cost_dp, range_dp, 0.95_dp, samplesize_in=500_i4, &
+  temperature = GetTemperature_valid( para, cost_dp, range_dp, 0.95_dp, samplesize_in=500_i4, &
        seeds_in=seeds(1:2), printflag_in=.true.)
 
   print*, '-----------------------------------'
@@ -64,7 +64,7 @@ PROGRAM anneal_test
      print*, 'seeds used: ', seeds(1:3)
      !
      call cpu_time(Tstart)
-     parabest = anneal(cost_dp, para, range_dp, maxit_in=.false., &
+     parabest = anneal_valid(cost_dp, para, range_dp, maxit_in=.false., &
           temp_in=temperature, seeds_in=seeds,&
           LEN_in=250_i4,nITERmax_in=150000_i4,eps_in=0.00001_dp,&
           printflag_in=.false., &
