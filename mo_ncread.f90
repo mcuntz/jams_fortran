@@ -39,10 +39,12 @@ module mo_NcRead
   public :: NcClose   ! Close a file
 
   interface Get_NcVar
-     module procedure Get_NcVar_1d_sp, Get_NcVar_1d_dp, Get_NcVar_2d_sp, Get_NcVar_2d_dp, &
-                      Get_NcVar_3d_sp, Get_NcVar_3d_dp, Get_NcVar_4d_sp, Get_NcVar_4d_dp, &
-                      Get_NcVar_5d_sp, Get_NcVar_5d_dp, Get_NcVar_1d_i4, Get_NcVar_2d_i4, &
-                      Get_NcVar_3d_i4, Get_NcVar_4d_i4, Get_NcVar_5d_i4 
+     module procedure Get_NcVar_0d_sp, Get_NcVar_0d_dp, Get_NcVar_1d_sp, &
+          Get_NcVar_1d_dp, Get_NcVar_2d_sp, Get_NcVar_2d_dp, &
+          Get_NcVar_3d_sp, Get_NcVar_3d_dp, Get_NcVar_4d_sp, &
+          Get_NcVar_4d_dp, Get_NcVar_5d_sp, Get_NcVar_5d_dp, &
+          Get_NcVar_0d_i4, Get_NcVar_1d_i4, Get_NcVar_2d_i4, &
+          Get_NcVar_3d_i4, Get_NcVar_4d_i4, Get_NcVar_5d_i4 
   end interface
 
 contains
@@ -167,6 +169,75 @@ contains
   !        Modified, Stephan Thober, Mar 2012 - corrected dynamical read of data
   !        Modified, Stephan Thober, May 2012 - fid
   ! ------------------------------------------------------------------------------
+  subroutine Get_NcVar_0d_sp(Filename, VarName, Dat, fid)
+    !
+    implicit none
+    !
+    integer, parameter :: itype = 5 ! 5 = float, 6 = double
+    !
+    character(len=*),                        intent(in)    :: Filename
+    character(len=*),                        intent(in)    :: VarName ! Variable name
+    real(sp),                                intent(inout) :: Dat    ! array where values should be stored
+    integer(i4),               optional, intent(in)    :: fid
+    !
+    integer(i4)               :: ncid    ! id of input stream
+    integer(i4)               :: varid   ! id of variable to be read
+    integer(i4)               :: vartype ! type of variable
+    !
+    ! Open NetCDF filename
+    if (present(fid)) then
+       ncid = fid
+    else
+       call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
+    end if
+    !
+    ! Inquire file, check if VarName exists and get the id
+    call Get_Info(Varname,ncid,varid,vartype)
+    ! check variable type ( 5 equals float type, 6 equals double )
+    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    !
+    ! get values by varid
+    call check(nf90_get_var(ncid, varid, Dat))
+    !
+    ! close File
+    if (.not. present(fid)) call check(nf90_close(ncid))
+    !
+  end subroutine Get_NcVar_0d_sp
+
+  subroutine Get_NcVar_0d_dp(Filename, VarName, Dat, fid)
+    !
+    implicit none
+    !
+    integer, parameter :: itype = 6 ! 5 = float, 6 = double
+    !
+    character(len=*),                        intent(in)    :: Filename
+    character(len=*),                        intent(in)    :: VarName ! Variable name
+    real(dp),                                intent(inout) :: Dat    ! array where values should be stored
+    integer(i4),               optional, intent(in)    :: fid
+    !
+    integer(i4)               :: ncid    ! id of input stream
+    integer(i4)               :: varid   ! id of variable to be read
+    integer(i4)               :: vartype ! type of variable
+    !
+    ! Open NetCDF filename
+    if (present(fid)) then
+       ncid = fid
+    else
+       call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
+    end if
+    !
+    ! Inquire file, check if VarName exists and get the id
+    call Get_Info(Varname,ncid,varid,vartype)
+    ! check variable type ( 5 equals float type, 6 equals double )
+    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    !
+    ! get values by varid
+    call check(nf90_get_var(ncid, varid, Dat))
+    !
+    ! close File
+    if (.not. present(fid)) call check(nf90_close(ncid))
+    !
+  end subroutine Get_NcVar_0d_dp
 
   subroutine Get_NcVar_1d_sp(Filename, VarName, Dat, start, count, fid)
     !
@@ -795,13 +866,48 @@ contains
     if (.not. present(fid)) call check(nf90_close(ncid))
     !
   end subroutine Get_NcVar_5d_dp
+
+  subroutine Get_NcVar_0d_i4(Filename, VarName, Dat, fid)
+    !
+    implicit none
+    !
+    integer, parameter :: itype = 4 ! 5 = float, 6 = double
+    !
+    character(len=*),                        intent(in)    :: Filename
+    character(len=*),                        intent(in)    :: VarName ! Variable name
+    integer(i4),                             intent(inout) :: Dat    ! array where values should be stored
+    integer(i4),               optional, intent(in)    :: fid
+    !
+    integer(i4)               :: ncid    ! id of input stream
+    integer(i4)               :: varid   ! id of variable to be read
+    integer(i4)               :: vartype ! type of variable
+    !
+    ! Open NetCDF filename
+    if (present(fid)) then
+       ncid = fid
+    else
+       call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
+    end if
+    !
+    ! Inquire file, check if VarName exists and get the id
+    call Get_Info(Varname,ncid,varid,vartype)
+    ! check variable type ( 5 equals float type, 6 equals double )
+    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    !
+    ! get values by varid
+    call check(nf90_get_var(ncid, varid, Dat))
+    !
+    ! close File
+    if (.not. present(fid)) call check(nf90_close(ncid))
+    !
+  end subroutine Get_NcVar_0d_i4
   
   subroutine Get_NcVar_1d_i4(Filename, VarName, Dat, start, count, fid)
     !
     implicit none
     !
     integer, parameter :: idims = 1
-    integer, parameter :: itype = 3 ! 3 = single 5 = float, 6 = double
+    integer, parameter :: itype = 4 ! 3 = single 5 = float, 6 = double
     !
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
@@ -861,7 +967,7 @@ contains
     implicit none
     !
     integer, parameter :: idims = 2
-    integer, parameter :: itype = 3 ! 3 = single, 5 = float, 6 = double
+    integer, parameter :: itype = 4 ! 3 = single, 5 = float, 6 = double
     !
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
@@ -921,7 +1027,7 @@ contains
     implicit none
     !
     integer, parameter :: idims = 3
-    integer, parameter :: itype = 3 ! 3 = single, 5 = float, 6 = double
+    integer, parameter :: itype = 4 ! 3 = single, 5 = float, 6 = double
     !
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
@@ -981,7 +1087,7 @@ contains
     implicit none
     !
     integer, parameter :: idims = 4
-    integer, parameter :: itype = 3 ! 3 = single, 5 = float, 6 = double
+    integer, parameter :: itype = 4 ! 3 = single, 5 = float, 6 = double
     !
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
@@ -1041,7 +1147,7 @@ contains
     implicit none
     !
     integer, parameter :: idims = 5
-    integer, parameter :: itype = 3 ! 3 = single, 5 = float, 6 = double
+    integer, parameter :: itype = 4 ! 3 = single, 5 = float, 6 = double
     !
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
