@@ -5,6 +5,7 @@ MODULE mo_append
 
   ! 
   ! Written  Juliane Mai, Aug 2012
+  ! Modified Juliane Mai, Aug 2012 : character append & paste
 
   ! License
   ! -------
@@ -39,7 +40,8 @@ MODULE mo_append
      MODULE PROCEDURE append_i4_v_s, append_i4_v_v, append_i4_m_m, &
                       append_i8_v_s, append_i8_v_v, append_i8_m_m, &
                       append_sp_v_s, append_sp_v_v, append_sp_m_m, &
-                      append_dp_v_s, append_dp_v_v, append_dp_m_m
+                      append_dp_v_s, append_dp_v_v, append_dp_m_m, &
+                      append_char_v_s, append_char_v_v, append_char_m_m
                      
   END INTERFACE append
 
@@ -47,7 +49,8 @@ MODULE mo_append
      MODULE PROCEDURE paste_i4_m_s, paste_i4_m_v, paste_i4_m_m, &
                       paste_i8_m_s, paste_i8_m_v, paste_i8_m_m, &
                       paste_sp_m_s, paste_sp_m_v, paste_sp_m_m, &
-                      paste_dp_m_s, paste_dp_m_v, paste_dp_m_m
+                      paste_dp_m_s, paste_dp_m_v, paste_dp_m_m, &
+                      paste_char_m_s, paste_char_m_v, paste_char_m_m
                      
   END INTERFACE paste
 
@@ -80,12 +83,12 @@ CONTAINS
 
 
   !     INDENT(IN)
-  !         INTEGER(I4/I8)/REAL(SP/DP), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE  
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE  
   !                                       :: input2 ... flexible kind, but same as input1
   !                                                     scalar, vector, or matrix
 
   !     INDENT(INOUT)
-  !         INTEGER(I4/I8)/REAL(SP/DP), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE  
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE  
   !                                       :: input1 ... flexible kind, but same as input2
   !                                                     vector, or matrix
   !                                                     has to be allocatable
@@ -105,6 +108,8 @@ CONTAINS
   !     RESTRICTIONS
   !         Size of input1 and input2 have to fit together,
   !         i.e. number of columns input1 = number of columns input2
+  !
+  !         Strings have to be less or equal 256 characters in length.
 
   !     EXAMPLE
   !         see test/test_mo_append/
@@ -534,6 +539,109 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
   END SUBROUTINE append_dp_m_m
 
+  SUBROUTINE append_char_v_s(vec1, sca2)
+
+    implicit none
+
+    character(*), dimension(:), allocatable, intent(inout)   :: vec1
+    character(*),                            intent(in)      :: sca2
+
+    ! local variables
+    integer(i4)                               :: n1, n2
+    character(256), dimension(:), allocatable :: tmp
+
+    n2 = 1_i4
+
+    if (allocated(vec1)) then
+       n1 = size(vec1)
+       ! save vec1
+       allocate(tmp(n1))
+       tmp=vec1
+       deallocate(vec1)
+
+       allocate(vec1(n1+n2))
+       vec1(1:n1)          = tmp(1:n1)
+       vec1(n1+1_i4)       = sca2
+    else
+       n1 = 0_i4
+
+       allocate(vec1(n2))
+       vec1(1_i4) = sca2
+    end if
+
+  END SUBROUTINE append_char_v_s
+
+  SUBROUTINE append_char_v_v(vec1, vec2)
+
+    character(*), dimension(:), allocatable, intent(inout)   :: vec1
+    character(*), dimension(:),              intent(in)      :: vec2
+
+    ! local variables
+    integer(i4)                               :: n1, n2
+    character(256), dimension(:), allocatable :: tmp
+
+    n2 = size(vec2)
+
+    if (allocated(vec1)) then
+       n1 = size(vec1)
+       ! save vec1
+       allocate(tmp(n1))
+       tmp=vec1
+       deallocate(vec1)
+
+       allocate(vec1(n1+n2))
+       vec1(1:n1)          = tmp(1:n1)
+       vec1(n1+1_i4:n1+n2) = vec2(1:n2)
+    else
+       n1 = 0_i4
+
+       allocate(vec1(n2))
+       vec1(n1+1_i4:n1+n2) = vec2(1:n2)
+    end if
+
+  END SUBROUTINE append_char_v_v
+
+  SUBROUTINE append_char_m_m(mat1, mat2)
+
+    implicit none
+
+    character(*), dimension(:,:), allocatable, intent(inout)   :: mat1
+    character(*), dimension(:,:),              intent(in)      :: mat2
+
+    ! local variables
+    integer(i4)                                 :: m1, m2    ! dim1 of matrixes: rows
+    integer(i4)                                 :: n1, n2    ! dim2 of matrixes: columns
+    character(256), dimension(:,:), allocatable :: tmp
+
+    m2 = size(mat2,1)   ! rows
+    n2 = size(mat2,2)    ! columns
+
+    if (allocated(mat1)) then
+       m1 = size(mat1,1)   ! rows
+       n1 = size(mat1,2)   ! columns
+
+       if (n1 .ne. n2) then
+          print*, 'append: columns of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
+          STOP 
+       end if
+
+       ! save mat1
+       allocate(tmp(m1,n1))
+       tmp=mat1
+       deallocate(mat1)
+
+       allocate(mat1(m1+m2,n1))
+       mat1(1:m1,:)          = tmp(1:m1,:)
+       mat1(m1+1_i4:m1+m2,:) = mat2(1:m2,:)
+    else
+       n1 = 0_i4
+
+       allocate(mat1(m2,n2))
+       mat1 = mat2
+    end if
+
+  END SUBROUTINE append_char_m_m
+
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -559,12 +667,12 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
 
   !     INDENT(IN)
-  !         INTEGER(I4/I8)/REAL(SP/DP), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE  
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE  
   !                                       :: input2 ... flexible kind, but same as input1
   !                                                     scalar, vector, or matrix
 
   !     INDENT(INOUT)
-  !         INTEGER(I4/I8)/REAL(SP/DP), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE  
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE  
   !                                       :: input1 ... flexible kind, but same as input2
   !                                                     vector, or matrix
   !                                                     has to be allocatable
@@ -584,6 +692,8 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
   !     RESTRICTIONS
   !         Size of input1 and input2 have to fit together,
   !         i.e. number of rows input1 = number of rows input2
+  !
+  !         Strings have to be less or equal 256 characters in length.
 
   !     EXAMPLE
   !         see test/test_mo_append/
@@ -1048,6 +1158,120 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
     end if
 
   END SUBROUTINE paste_dp_m_m
+
+  SUBROUTINE paste_char_m_s(mat1, sca2)
+
+    implicit none
+
+    character(*), dimension(:,:), allocatable, intent(inout)   :: mat1
+    character(*),                              intent(in)      :: sca2
+
+    ! local variables
+    integer(i4)                                  :: m1    ! dim1 of matrix
+    integer(i4)                                  :: n1    ! dim2 of matrix
+    character(256), dimension(:,:), allocatable  :: tmp
+
+    if (allocated(mat1)) then
+       m1 = size(mat1,1)   ! rows
+       n1 = size(mat1,2)   ! columns
+       if (m1 .ne. 1_i4) then
+          print*, 'paste: scalar paste to matrix only works with one-line matrix'
+          STOP 
+       end if
+       ! save mat1
+       allocate(tmp(m1,n1))
+       tmp=mat1
+       deallocate(mat1)
+
+       allocate(mat1(1_i4,n1+1_i4))
+       mat1(1,1:n1)          = tmp(1,1:n1)
+       mat1(1,n1+1_i4)       = sca2
+    else
+       allocate(mat1(1_i4,1_i4))
+       mat1(1,1) = sca2
+    end if
+
+  END SUBROUTINE paste_char_m_s
+  
+  SUBROUTINE paste_char_m_v(mat1, vec2)
+
+    implicit none
+
+    character(*), dimension(:,:), allocatable, intent(inout)   :: mat1
+    character(*), dimension(:),                intent(in)      :: vec2
+
+    ! local variables
+    integer(i4)                                  :: m1, m2    ! dim1 of matrixes
+    integer(i4)                                  :: n1, n2    ! dim2 of matrixes
+    character(256), dimension(:,:), allocatable  :: tmp
+
+    m2 = size(vec2,1)   ! rows
+    n2 = 1_i4           ! columns
+
+    if (allocated(mat1)) then
+       m1 = size(mat1,1)   ! rows
+       n1 = size(mat1,2)   ! columns
+       if (m1 .ne. m2) then
+          print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
+          STOP 
+       end if
+       ! save mat1
+       allocate(tmp(m1,n1))
+       tmp=mat1
+       deallocate(mat1)
+
+       allocate(mat1(m1,n1+n2))
+       mat1(:,1:n1)          = tmp(:,1:n1)
+       mat1(1:m2,n1+n2)      = vec2(1:m2)
+    else
+       n1 = 0_i4
+       m1 = m2
+
+       allocate(mat1(m2,n2))
+       mat1(1:m2,n1+n2)      = vec2(1:m2)
+    end if
+
+  END SUBROUTINE paste_char_m_v
+
+  SUBROUTINE paste_char_m_m(mat1, mat2)
+
+    implicit none
+
+    character(*), dimension(:,:), allocatable, intent(inout)   :: mat1
+    character(*), dimension(:,:),              intent(in)      :: mat2
+
+    ! local variables
+    integer(i4)                                  :: m1, m2    ! dim1 of matrixes
+    integer(i4)                                  :: n1, n2    ! dim2 of matrixes
+    character(256), dimension(:,:), allocatable  :: tmp
+
+    m2 = size(mat2,1)   ! rows
+    n2 = size(mat2,2)   ! columns
+
+    if (allocated(mat1)) then
+       m1 = size(mat1,1)   ! rows
+       n1 = size(mat1,2)   ! columns
+       if (m1 .ne. m2) then
+          print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
+          STOP 
+       end if
+       ! save mat1
+       allocate(tmp(m1,n1))
+       tmp=mat1
+       deallocate(mat1)
+
+       allocate(mat1(m1,n1+n2))
+       mat1(:,1:n1)          = tmp(:,1:n1)
+       mat1(:,n1+1_i4:n1+n2) = mat2(:,1:n2)
+    else
+       n1 = 0_i4
+       m1 = m2
+
+       allocate(mat1(m2,n2))
+       mat1(:,n1+1_i4:n1+n2) = mat2(:,1:n2)
+    end if
+
+  END SUBROUTINE paste_char_m_m
 
 
 END MODULE mo_append
