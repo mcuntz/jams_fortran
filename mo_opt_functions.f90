@@ -300,6 +300,8 @@ CONTAINS
     if (size(x,1) .gt. 1_i4) stop 'steep_valley: Input has to be array of size 1'
     steep_valley = exp ( x(1) ) + 0.01_dp / x(1)
 
+    steep_valley = steep_valley + 0.0009877013_dp
+
   end function steep_valley
 
   ! ------------------------------------------------------------------
@@ -391,6 +393,8 @@ CONTAINS
 
     if (size(x,1) .gt. 1_i4) stop 'dying_snake: Input has to be array of size 1'
     dying_snake = ( x(1) + sin ( x(1) ) ) * exp ( - x(1) * x(1) )
+
+    dying_snake = dying_snake + 0.8242393985_dp
 
   end function dying_snake
 
@@ -495,6 +499,8 @@ CONTAINS
     if (size(x,1) .gt. 1_i4) stop 'oscillatory_parabola: Input has to be array of size 1'
     oscillatory_parabola = x(1) * x(1) - 10.0_dp * sin ( x(1) * x(1) - 3.0_dp * x(1) + 2.0_dp )
 
+    oscillatory_parabola = oscillatory_parabola + 9.9779149346_dp
+
   end function oscillatory_parabola
 
   ! ------------------------------------------------------------------
@@ -562,6 +568,8 @@ CONTAINS
          - 2.0_dp * cos ( 2.0_dp * x(1) ) &
          + 5.0_dp * cos ( 4.5_dp * x(1) ) &
          + 7.0_dp * cos ( 9.0_dp * x(1) )
+
+    cosine_combo = cosine_combo + 14.6771885214_dp
 
   end function cosine_combo
 
@@ -1400,6 +1408,8 @@ CONTAINS
 
     end do
 
+    brown_dennis = brown_dennis - 85822.2016263563_dp
+
   end function brown_dennis
 
   ! ------------------------------------------------------------------
@@ -1448,15 +1458,27 @@ CONTAINS
        r = abs ( ( - 50.0_dp * log ( arg ) )**( 2.0_dp / 3.0_dp ) &
             + 25.0_dp - x(2) )
 
+       ! print*, 'arg         = ',arg
+       ! print*, 'r           = ',r
+       ! print*, 'x(1)        = ',x(1)
+       ! print*, 'x(2)        = ',x(2)
+       ! print*, 'x(3)        = ',x(3)
+
        ! avoiding underflow
-       if ( -r**x(3) / x(1) .lt. -708._dp) then
-          t = -arg
-       else
-          if ( -r**x(3) / x(1) .gt. 708._dp) then
-             t = 1000000._dp - arg
+       if ( x(3)*Log(r) .gt. -708.-dp ) then
+          print*, '-exp(x(3)*Log(r)) = ',-exp(x(3)*Log(r))
+          print*, 'x(1)              = ',x(1)
+          if ( -exp(x(3)*Log(r)) / x(1) .lt. -708._dp) then
+             t = -arg
           else
-             t = exp ( - r**x(3) / x(1) ) - arg
+             if ( -r**x(3) / x(1) .gt. 708._dp) then
+                t = 1000000._dp - arg
+             else
+                t = exp ( - r**x(3) / x(1) ) - arg
+             end if
           end if
+       else
+          t = -arg
        end if
 
        if ( abs(t) .gt. sqrtHuge ) then
@@ -2020,6 +2042,8 @@ CONTAINS
 
     gregory_karney_tridia_matrix = gregory_karney_tridia_matrix - 2.0_dp * x(1)
 
+    gregory_karney_tridia_matrix = gregory_karney_tridia_matrix + real(n,dp)
+
   end function gregory_karney_tridia_matrix
 
   ! ------------------------------------------------------------------
@@ -2209,8 +2233,7 @@ CONTAINS
   !
 
   function de_jong_f3(x)
-    use mo_kind, only: i8
-
+   
     implicit none
 
     integer(i4) :: n
@@ -2371,6 +2394,8 @@ CONTAINS
     end do
 
     de_jong_f5 = 1.0_dp / fi
+
+    de_jong_f5 = de_jong_f5 - 0.0019996667_dp
 
   end function de_jong_f5
 
@@ -2548,6 +2573,8 @@ CONTAINS
 
     goldstein_price_polynomial = ( 1.0_dp + a * a * b ) * ( 30.0_dp + c * c * d )
 
+    goldstein_price_polynomial = goldstein_price_polynomial - 3.0_dp
+
   end function goldstein_price_polynomial
 
   ! ------------------------------------------------------------------
@@ -2608,16 +2635,18 @@ CONTAINS
     branin_rcos = a * ( x(2) - b * x(1)**2 + c * x(1) - d )**2 &
          + e * ( 1.0_dp - ff ) * cos ( x(1) ) + e
 
+    branin_rcos = branin_rcos - 0.3978873577_dp
+
   end function branin_rcos
 
   ! ------------------------------------------------------------------
   !
   ! The Shekel SQRN5 Function, N = 4.
-  ! Solution: x(1:n) = (/ 4.0_dp, 4.0_dp, 4.0_dp, 4.0_dp /)
+  ! Solution: x(1:n) = (/ 4.0000371429_dp, 4.0001315700_dp, 4.0000379073_dp, 4.0001323857_dp /)
   !
   !  Discussion:
   !
-  !    The minimal function value is -10.15320.
+  !    The minimal function value is -10.1527236935_dp.
   !
   !  Licensing:
   !
@@ -2671,12 +2700,14 @@ CONTAINS
        shekel_sqrn5 = shekel_sqrn5 - 1.0_dp / ( c(j) + sum ( ( x(1:n) - a(1:n,j) )**2 ) )
     end do
 
+    shekel_sqrn5 = shekel_sqrn5 + 10.1527236935_dp
+
   end function shekel_sqrn5
 
   ! ------------------------------------------------------------------
   !
   ! The Shekel SQRN7 Function, N = 4.
-  ! Solution: x(1:n) = (/ 4.0_dp, 4.0_dp, 4.0_dp, 4.0_dp /)
+  ! Solution: x(1:n) = (/ 4.0005729560_dp, 4.0006881764_dp, 3.9994902225_dp, 3.9996048794_dp /)
   !
   !  Licensing:
   !
@@ -2732,12 +2763,14 @@ CONTAINS
        shekel_sqrn7 = shekel_sqrn7 - 1.0_dp / ( c(j) + sum ( ( x(1:n) - a(1:n,j) )**2 ) )
     end do
 
+    shekel_sqrn7 = shekel_sqrn7 + 10.4024645722_dp
+
   end function shekel_sqrn7
 
   ! ------------------------------------------------------------------
   !
   ! The Shekel SQRN10 Function, N = 4.
-  ! Solution: x(1:n) = (/ 4.0_dp, 4.0_dp, 4.0_dp, 4.0_dp /)
+  ! Solution: x(1:n) = (/ 4.0007465727_dp, 4.0005916919_dp, 3.9996634360_dp, 3.9995095935_dp /)
   !
   !  Licensing:
   !
@@ -2798,6 +2831,8 @@ CONTAINS
        shekel_sqrn10 = shekel_sqrn10 - 1.0_dp / ( c(j) + sum ( ( x(1:n) - a(1:n,j) )**2 ) )
     end do
 
+    shekel_sqrn10 = shekel_sqrn10 + 10.5359339075_dp
+
   end function shekel_sqrn10
 
   ! ------------------------------------------------------------------
@@ -2844,6 +2879,8 @@ CONTAINS
 
     six_hump_camel_back_polynomial = ( 4.0_dp - 2.1_dp * x(1)**2 + x(1)**4 / 3.0_dp ) * x(1)**2 &
          + x(1) * x(2) + 4.0_dp * ( x(2)**2 - 1.0_dp ) * x(2)**2
+
+    six_hump_camel_back_polynomial = six_hump_camel_back_polynomial + 1.0316284229_dp
 
   end function six_hump_camel_back_polynomial
 
@@ -2913,6 +2950,8 @@ CONTAINS
        end do
        shubert = shubert * factor
     end do
+
+    shubert = shubert + 186.7309088310_dp
 
   end function shubert
 
@@ -3047,7 +3086,8 @@ CONTAINS
     real(dp), dimension(:), intent(in) :: x
 
     arg = - ( x(1) - pi_dp )**2 - ( x(2) - pi_dp )**2
-    easom = - cos ( x(1) ) * cos ( x(2) ) * exp ( arg )
+    easom = - cos ( x(1) ) * cos ( x(2) ) * exp ( arg ) 
+    easom = easom + 1.0_dp
 
   end function easom
 
@@ -3615,7 +3655,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The Michalewicz function, N >= 2.
-  !  Search domain: x restricted to [0, Pi]
+  !  Search domain: x restricted to (0, Pi)
   !  Solution: 
   !     numerical, so far best found       
   !     x(1:2)  = (/ 2.2029262967_dp, 1.5707721052_dp /)
@@ -3663,18 +3703,35 @@ CONTAINS
     implicit none
 
     real(dp), dimension(:), intent(in) :: x
-    real(dp) :: michalewicz
+    real(dp)                           :: michalewicz
 
     integer(i4) :: n
     integer(i4) :: j
+    real(dp)    :: tmp
     integer(i4), parameter :: p = 20
 
     n = size(x)
     michalewicz = 0.0_dp
     do j=1, n
-       michalewicz = michalewicz + sin(x(j)) * sin(x(j)**2 * (real(j,dp)/pi_dp))**p
-    enddo
+       ! michalewicz = michalewicz + sin(x(j)) * sin(x(j)**2 * (real(j,dp)/pi_dp))**p
+       tmp = x(j)*x(j) * (real(j,dp)/pi_dp)
+       tmp = sin(tmp)
+       if (abs(tmp) .lt. 1E-15) then
+          tmp = 0.0_dp
+       else 
+          tmp = tmp**p
+       end if
+       tmp = sin(x(j)) * tmp
+       michalewicz = michalewicz + tmp
+    end do
     michalewicz = -michalewicz
+
+    select case(n)
+       case(2_i4)
+          michalewicz = michalewicz + 1.8013033793_dp
+       case(5_i4)
+          michalewicz = michalewicz + 4.6876581791_dp
+    end select
 
   end function michalewicz
 
