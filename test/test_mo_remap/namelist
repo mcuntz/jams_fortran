@@ -1,0 +1,7 @@
+! Namelist for remap
+&RemapNamelist
+    InFile  = "../FORTRAN_chs_lib/test/test_mo_remap/Polar-JJA-1-5.nc"
+    WtsFile = "../FORTRAN_chs_lib/test/test_mo_remap/remap_polar2gk4_umm.nc"
+    OutFile = "../FORTRAN_chs_lib/test/test_mo_remap/GK4-JJA-1-5.nc"
+    nodata  = -9999.
+/
