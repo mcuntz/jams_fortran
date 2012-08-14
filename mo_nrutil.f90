@@ -86,7 +86,8 @@ MODULE mo_nrutil
   END INTERFACE
   INTERFACE reallocate
      MODULE PROCEDURE reallocate_rv,reallocate_rm,&
-          reallocate_iv,reallocate_im,reallocate_hv
+          reallocate_iv,reallocate_im,reallocate_hv, &
+          reallocate_dv, reallocate_dm
   END INTERFACE
   INTERFACE imaxloc
      MODULE PROCEDURE imaxloc_r,imaxloc_i
@@ -455,6 +456,35 @@ CONTAINS
     end where
   END SUBROUTINE masked_swap_zm
   !BL
+  !BL
+  !GD
+  FUNCTION reallocate_dv(p,n)
+    REAL(DP), DIMENSION(:), POINTER :: p, reallocate_dv
+    INTEGER(I4), INTENT(IN) :: n
+    INTEGER(I4) :: nold,ierr
+    allocate(reallocate_dv(n),stat=ierr)
+    if (ierr /= 0) call &
+         nrerror('reallocate_dv: problem in attempt to allocate memory')
+    if (.not. associated(p)) RETURN
+    nold=size(p)
+    reallocate_dv(1:min(nold,n))=p(1:min(nold,n))
+    deallocate(p)
+  END FUNCTION reallocate_dv
+  !GD
+  FUNCTION reallocate_dm(p,n,m)
+    REAL(DP), DIMENSION(:,:), POINTER :: p, reallocate_dm
+    INTEGER(I4), INTENT(IN) :: n,m
+    INTEGER(I4) :: nold,mold,ierr
+    allocate(reallocate_dm(n,m),stat=ierr)
+    if (ierr /= 0) call &
+         nrerror('reallocate_dm: problem in attempt to allocate memory')
+    if (.not. associated(p)) RETURN
+    nold=size(p,1)
+    mold=size(p,2)
+    reallocate_dm(1:min(nold,n),1:min(mold,m))=&
+         p(1:min(nold,n),1:min(mold,m))
+    deallocate(p)
+  END FUNCTION reallocate_dm
   !BL
   FUNCTION reallocate_rv(p,n)
     REAL(SP), DIMENSION(:), POINTER :: p, reallocate_rv
