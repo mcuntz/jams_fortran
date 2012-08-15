@@ -26,7 +26,7 @@ contains
   subroutine setnc
 
     use mo_kind,    only: i4
-    use mo_mainvar, only: dst_data, x, y, time, lat, lon
+    use mo_mainvar, only: dst_data, x, y, lat, lon
     use mo_ncwrite, only: V, Dnc, Gatt, ndims, nVars
     use netcdf,     only: NF90_CHAR, NF90_FLOAT, NF90_INT, NF90_UNLIMITED, NF90_DOUBLE
 
@@ -42,11 +42,6 @@ contains
     allocate(Dnc(nDims))
     allocate(V(nVars))
 
-    ! ! Comment out
-    ! deallocate(time)
-    ! allocate(time(size(dst_data,3)))
-    ! time = 1
-
     ! define dimensions --------------------------------------------------------
     Dnc(1)%name      = "x"
     Dnc(1)%len       = size(dst_data,1)
@@ -55,7 +50,6 @@ contains
     Dnc(2)%len       = size(dst_data,2)
     !
     Dnc(3)%name      = "time"
-    !Dnc(3)%len       = size(time)
     Dnc(3)%len       = NF90_UNLIMITED
     !
     allocate(x(size(dst_data,1)))
