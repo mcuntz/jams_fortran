@@ -30,6 +30,7 @@ module mo_dds
   PRIVATE
 
   PUBLIC :: DDS    ! Dynamically Dimensioned Search (DDS)
+  PUBLIC :: MDDS   ! Modified Dynamically Dimensioned Search (DDS)
 
 
   ! ------------------------------------------------------------------
@@ -228,6 +229,133 @@ CONTAINS
     !
   end function DDS
 
+  ! ------------------------------------------------------------------
+
+  function MDDS(obj_func, pini, prange, seed, maxiter, maxit, funcbest)
+
+    use mo_kind,    only: i4, i8, dp
+    use mo_xor4096, only: xor4096, xor4096g
+
+    implicit none
+
+    INTERFACE
+       function obj_func(pp)
+         use mo_kind, only: dp
+         implicit none
+         real(dp), dimension(:), intent(in) :: pp
+         real(dp) :: obj_func
+       end function obj_func
+    END INTERFACE
+    real(dp),    dimension(:),   intent(in)  :: pini    ! inital value of decision variables 
+    real(dp),    dimension(:,:), intent(in)  :: prange  ! Min/max values of decision variables 
+    integer(i8),       optional, intent(in)  :: seed    ! User seed to initialise the random number generator
+    integer(i8),       optional, intent(in)  :: maxiter ! Maximum number of iteration or function evaluation
+    logical,           optional, intent(in)  :: maxit   ! Maximization or minimization of function
+    real(dp),          optional, intent(out) :: funcbest !the best value of the function.
+    real(dp),          dimension(size(pini)) :: MDDS     ! Best value of decision variables
+
+    ! Local variables
+    integer(i4)    :: pnum     ! Total number of decision variables  
+    integer(i8)    :: iseed    ! User given seed
+    integer(i8)    :: imaxiter ! Maximum number of iteration or function evaluation
+    real(dp)       :: ir       ! MDDS perturbation parameter
+    real(dp)       :: imaxit   ! Maximization or minimization of function
+    real(dp)       :: of_new, of_best, Pn, new_value ! intermediate results
+    real(dp), dimension(size(pini)) :: pnew                    ! Test value of decision variables
+    real(dp)       :: ranval                                   ! random value
+    integer(i8)    :: i                                        ! maxiter=i8
+    integer(i4)    :: j, dvn_count, dv                         ! pnum=i4
+    integer, dimension(8) :: sdate                             ! date_and_time return
+
+    !
+    ! Check input
+    pnum = size(pini)
+    if (size(prange,1) /= pnum) stop 'Error MDDS: size(prange,1) /= size(pini)'
+    if (size(prange,2) /= 2)    stop 'Error MDDS: size(prange,2) /= 2'
+    ! max. iteration
+    imaxiter = 1000
+    if (present(maxiter)) imaxiter = maxiter
+    if (imaxiter < 6) stop 'Error MDDS: max function evals must be minimum 6'
+    ! Min or max objective function
+    imaxit = 1.0_dp
+    if (present(maxit)) then
+       if (maxit) imaxit = -1.0_dp
+    endif
+    ! Given seed
+    iseed = 0
+    if (present(seed)) iseed = seed
+    iseed = max(iseed, 0_i8)
+    !
+    ! Seed random numbers
+    if (iseed == 0) then
+       call date_and_time(values=sdate)
+       iseed = sdate(1)*31536000000_i8 + sdate(2)*2592000000_i8 + sdate(3)*86400000_i8 + &
+            sdate(5)*3600000_i8 + sdate(6)*60000_i8 + sdate(7)*1000_i8 + sdate(8)
+       call xor4096(iseed,ranval)
+       call xor4096g(iseed,ranval)
+    else
+       call xor4096(iseed,ranval)
+       call xor4096g(iseed,ranval)
+    endif
+
+    ! Evaluate initial solution and return objective function value
+    ! and Initialise the other variables (e.g. of_best)
+    ! imaxit is 1.0 for MIN problems, -1 for MAX problems
+    MDDS     = pini
+    of_new  = imaxit * obj_func(pini)
+    of_best = of_new
+
+    !
+    ! Code below is now the MDDS algorithm as presented in Figure 1 of Tolson and Shoemaker (2007)
+    !
+    do i=1, imaxiter-1
+       ! Determine Decision Variable (DV) selected for perturbation:
+       Pn        = 1.0_dp - log(real(i,dp))/log(real(imaxiter-1,dp)) ! probability each DV selected
+       dvn_count = 0                                                 ! counter for how many DVs selected for perturbation
+       pnew      = MDDS                                               ! define pnew initially as best current solution
+       ! Modifications by Huang et al. (2010)
+       Pn        = max(Pn, 0.05_dp)
+       ir        = max(min(0.3_dp, Pn), 0.05_dp)
+       !
+       ! Step 3 of Fig 1 of Tolson and Shoemaker (2007)
+       do j=1, pnum
+          call xor4096(0_i8,ranval)                           ! selects next uniform random number in sequence
+          ! Step 4 of Fig 1 of Tolson and Shoemaker (2007)
+          if (ranval < Pn) then                               ! jth DV selected for perturbation
+             dvn_count = dvn_count + 1
+             ! call 1-D perturbation function to get new DV value (new_value)
+             call neigh_value(MDDS(j), prange(j,1), prange(j,2), ir, new_value) 
+             pnew(j) = new_value 
+          end if
+       end do
+       !
+       ! Step 3 of Fig 1 of Tolson and Shoemaker (2007) in case {N} empty
+       if (dvn_count == 0) then                               ! no DVs selected at random, so select one
+          call xor4096(0_i8,ranval)                           ! selects next uniform random number in sequence
+          dv = ceiling(real(pnum,dp) * ranval)                     ! index for one DV   
+          ! call 1-D perturbation function to get new DV value (new_value):
+          call neigh_value(MDDS(dv), prange(dv,1), prange(dv,2), ir, new_value)
+          pnew(dv) = new_value                                ! change relevant DV value in stest
+       end if
+       !
+       ! Step 5 of Fig 1 of Tolson and Shoemaker (2007)
+       ! Evaluate obj function value for test
+       of_new = imaxit * obj_func(pnew)                       ! imaxit handles min(=1) and max(=-1) problems 
+       ! update current best solution
+       if (of_new <= of_best) then                                               
+          of_best = of_new
+          MDDS    = pnew
+       else ! Modifications by Huang et al. (2010)
+          call xor4096(0_i8,ranval)
+          if (exp(-(of_new-of_best)/of_best) > (1.0_dp-ranval*Pn)) then
+             of_best = of_new
+             MDDS    = pnew
+          endif
+       end if
+    end do
+    if (present(funcbest)) funcbest = of_best
+    !
+  end function MDDS
 
   ! ------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 PROGRAM main
 
   USE mo_anneal
-  USE mo_asa047
+  USE mo_nelmin
   USE mo_boxcox
   USE mo_constants
   USE mo_corr

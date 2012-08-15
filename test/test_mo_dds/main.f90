@@ -1,7 +1,7 @@
 program main
 
   use mo_kind, only: i4, i8, dp
-  use mo_dds,  only: dds
+  use mo_dds,  only: dds, mdds
   use mo_opt_functions, only: griewank
 
   implicit none
@@ -54,6 +54,31 @@ program main
   isgood = isgood .and. (anint(10000._dp*dv_opt(8))  ==   -528._dp)
   isgood = isgood .and. (anint(10000._dp*dv_opt(9))  ==  -1008._dp)
   isgood = isgood .and. (anint(10000._dp*dv_opt(10)) ==     37._dp)
+
+  dv_ini        = (/ -.226265E+01, -.130187E+01, -.151219E+01, 0.133983E+00, 0.988159E+00, &
+                     -.495074E+01, -.126574E+02, 0.572684E+00, 0.303864E+01, 0.343031E+01 /)
+  dv_range(:,1) = (/ -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0 /)
+  dv_range(:,2) = (/ 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0 /)
+  r_val    = 0.20_dp
+  nIterMax = 100000_i8
+  to_max   = .False.
+  seed     = 123456789_i8
+  dv_opt   = MDDS(griewank, dv_ini, dv_range, seed=seed, maxiter=nIterMax, maxit=to_max)
+
+  write(*,*) ''
+  write(*,'(A,10F9.4)') 'Should be    3.1209   0.0577  -0.0168  -6.3592  -0.0393   0.0191  -8.2359   0.0158  -9.4605  -0.0736'
+  write(*,'(A,10F9.4)') 'Output is ', dv_opt
+
+  isgood = isgood .and. (anint(10000._dp*dv_opt(1))  ==  31209._dp)
+  isgood = isgood .and. (anint(10000._dp*dv_opt(2))  ==    577._dp)
+  isgood = isgood .and. (anint(10000._dp*dv_opt(3))  ==   -168._dp)
+  isgood = isgood .and. (anint(10000._dp*dv_opt(4))  == -63592._dp)
+  isgood = isgood .and. (anint(10000._dp*dv_opt(5))  ==   -393._dp)
+  isgood = isgood .and. (anint(10000._dp*dv_opt(6))  ==    191._dp)
+  isgood = isgood .and. (anint(10000._dp*dv_opt(7))  == -82359._dp)
+  isgood = isgood .and. (anint(10000._dp*dv_opt(8))  ==    158._dp)
+  isgood = isgood .and. (anint(10000._dp*dv_opt(9))  == -94605._dp)
+  isgood = isgood .and. (anint(10000._dp*dv_opt(10)) ==   -736._dp)
 
   write(*,*) ''
   if (isgood) then
