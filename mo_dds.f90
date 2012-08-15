@@ -40,11 +40,11 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         DDS
+  !         (M)DDS
 
   !     PURPOSE
   !         Searches Minimum or Maximum of a user-specified function using
-  !         Dynamically Dimensioned Search (DDS)
+  !         Dynamically Dimensioned Search (DDS) or alternativel the modified DDS.
   !
   !         DDS is an n-dimensional continuous global optimization algorithm.
   !         It is coded as a minimizer but one can give maxit=True in a maximization problem,
@@ -59,7 +59,8 @@ CONTAINS
   !             end function func
   !
   !     CALLING SEQUENCE
-  !         popt = DDS(obj_func, pini, prange, r=r, seed=seed, maxiter=maxiter, maxit=maxit)
+  !         popt = DDS(obj_func, pini, prange, r=r, seed=seed, maxiter=maxiter, maxit=maxit, funcbest=funcbest)
+  !         popt = MDDS(obj_func, pini, prange, seed=seed, maxiter=maxiter, maxit=maxit, funcbest=funcbest)
 
   !     INDENT(IN)
   !         real(dp) :: obj_func(p,xx,yy)       Function on which to search the minimum
@@ -73,11 +74,12 @@ CONTAINS
   !         real(dp) :: DDS(size(pini))         The parameters of the point which is estimated to minimize the function.
 
   !     INDENT(IN), OPTIONAL
-  !         real(dp)    :: r                    DDS perturbation parameter (default: 0.2)
   !         integer(i8) :: seed                 User seed to initialise the random number generator (default: None)
   !         integer(i8) :: maxiter              Maximum number of iteration or function evaluation (default: 1000)
   !         logical     :: maxit                Maximization (.True.) or minimization (.False.) of function
   !                                             (default: .False.)
+  !         ONLY DDS - in MDDS r starts at 0.3 and goes down to 0.05
+  !         real(dp)    :: r                    DDS perturbation parameter (default: 0.2)
 
   !     INDENT(INOUT), OPTIONAL
   !         None
@@ -100,12 +102,18 @@ CONTAINS
   !         Tolson, B. A., and C. A. Shoemaker (2007)
   !             Dynamically dimensioned search algorithm for computationally efficient watershed
   !             model calibration, Water Resour. Res., 43, W01413, doi:10.1029/2005WR004723.
+  !         Huang X-L and Xiong J (2010)
+  !             Parameter Optimization of Multi-tank Model with Modified Dynamically Dimensioned
+  !             Search Algorithm, Proceedings of the Third International Symposium on Computer
+  !             Science and Computational Technology(ISCSCT ''10), Jiaozuo, P. R. China,
+  !             14-15 August 2010, pp. 283-288
 
   !     HISTORY
   !         Written original Bryan Tolson, Feb 2007 - DDS v1.1
   !         Modified, Rohini Kumar, Feb 2008
-  !         Modified, Matthias Cuntz, Jul 2012 - module
-  !                   Juliane Mai,    Aug 2012 - optional argument funcbest added
+  !         Modified, Matthias Cuntz & Juliane Mai, Jul 2012 - module
+  !                   Juliane Mai,                  Aug 2012 - optional argument funcbest added
+  !                   Matthias Cuntz & Juliane Mai, Aug 2012 - MDDS
 
   function DDS(obj_func, pini, prange, r, seed, maxiter, maxit, funcbest)
 
