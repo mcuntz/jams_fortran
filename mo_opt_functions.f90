@@ -855,7 +855,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The Gaussian function, N = 3.
-  ! Search domain: −Pi <= xi <= Pi, i = 1, 2, 3.
+  ! Search domain: -Pi <= xi <= Pi, i = 1, 2, 3.
   ! Solution: 
   !     x(1:n) = (/ 0.39895613783875655_dp, 1.0000190844878036_dp, 0.0_dp /)
   !     found with Mathematica
@@ -1710,7 +1710,7 @@ CONTAINS
   !
   ! The Beale function, N = 2.
   ! Solution: x(1:2) = (/ 3.0_dp, 0.5_dp /)
-  ! Search domain: −4.5 <= xi <= 4.5, i = 1, 2.
+  ! Search domain: -4.5 <= xi <= 4.5, i = 1, 2.
   !
   !  Discussion:
   !
@@ -2376,18 +2376,17 @@ CONTAINS
     integer(i4), parameter :: k = 500
     real(dp), dimension(:), intent(in) :: x
 
-    fi = real ( k, dp )
+    fi = real(k,dp)
 
-    do j = 1, jroot * jroot
+    do j=1, jroot * jroot
 
-       j1 = mod ( j - 1, jroot ) + 1
-       a1 = - 32 + j1 * 16
+       j1 = mod(j-1_i4, jroot) + 1_i4
+       a1 = -32_i4 + j1 * 16_i4
 
-       j2 = ( j - 1 ) / jroot
-       a2 = - 32 + j2 * 16
+       j2 = (j-1_i4) / jroot
+       a2 = -32_i4 + j2 * 16_i4
 
-       fj = real ( j, dp ) + ( x(1) - real ( a1, dp ) )**6 &
-            + ( x(2) - real ( a2, dp ) )**6
+       fj = real(j,dp) + (x(1) - real(a1,dp))**6 + (x(2) - real(a2,dp))**6
 
        fi = fi + 1.0_dp / fj
 
@@ -3684,7 +3683,7 @@ CONTAINS
   !    very little information on the location of the global optimum).
   !    http://www.geatbx.com/docu/fcnindex-01.html#P150_6749
   !
-  !    http://www.scribd.com/doc/74351406/12/Michalewicz’s-function
+  !    http://www.scribd.com/doc/74351406/12/Michalewicz''s-function
   !
   !  Author:
   !
