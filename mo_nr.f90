@@ -2367,8 +2367,9 @@ MODULE mo_nr
      END SUBROUTINE qrdcmp
   END INTERFACE
   INTERFACE qromb
-     FUNCTION qromb_sp(func,a,b)
+     FUNCTION qromb_sp(func,a,b,prec)
        USE mo_kind
+       INTEGER(I4), INTENT(IN), optional :: prec
        REAL(SP), INTENT(IN) :: a,b
        REAL(SP) :: qromb_sp
        INTERFACE
@@ -2380,8 +2381,9 @@ MODULE mo_nr
        END INTERFACE
      END FUNCTION qromb_sp
      ! JM
-     FUNCTION qromb_dp(func,a,b)
+     FUNCTION qromb_dp(func,a,b, prec)
        USE mo_kind
+       INTEGER(i4), INTENT(in), optional :: prec
        REAL(DP), INTENT(IN) :: a,b
        REAL(DP) :: qromb_dp
        INTERFACE
