@@ -282,9 +282,9 @@ CONTAINS
     INTEGER(i4), INTENT(IN) :: dd, mm, yy
     INTEGER(i4) :: ndays
 
-    INTEGER(i4), PARAMETER :: IMSL = 2415021_i4
+    INTEGER(i4), PARAMETER :: IMSLday = 2415021_i4
 
-    ndays = julday(dd, mm, yy) - IMSL
+    ndays = julday(dd, mm, yy) - IMSLday
     
   END FUNCTION ndays
 
@@ -343,9 +343,9 @@ CONTAINS
     INTEGER(i4), INTENT(IN)  :: julian
     INTEGER(i4), INTENT(OUT) :: dd, mm, yy
 
-    INTEGER(i4), PARAMETER :: IMSL = 2415021_i4
+    INTEGER(i4), PARAMETER :: IMSLday = 2415021_i4
 
-    call caldat(julian+IMSL, dd, mm, yy)
+    call caldat(julian+IMSLday, dd, mm, yy)
     
   END SUBROUTINE ndyin
 
