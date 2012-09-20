@@ -181,8 +181,7 @@ contains
     !         The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives dydx at x.
 
     !     EXAMPLE
-    !         TO DO ... !!!
-    !         --> see also example in test directory --> test/test_mo_ode_solver
+    !         --> see example in test directory --> test/test_mo_ode_solver
 
     !     LITERATURE
     !        1) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 77 -
@@ -610,8 +609,7 @@ contains
     !         The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives dydx at x.
 
     !     EXAMPLE
-    !         TO DO ... !!!
-    !         --> see also example in test directory --> test/test_mo_ode_solver
+    !         --> see example in test directory --> test/test_mo_ode_solver
 
     !     LITERATURE
     !        1) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 77 -
