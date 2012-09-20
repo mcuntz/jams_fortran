@@ -950,12 +950,12 @@ CONTAINS
     allocate(dat(m1,m2),theta(m1),w(m1),wp(m1),temp(m2,m1))
     dat = reshape(data,shape(dat))
     call fourrow(dat,isign)
-    theta = arth(0,isign,m1)*TWOPI_dp/n
+    theta = arth(0,isign,m1)*TWOPI_dp/real(n,dp)
     wp    = cmplx(-2.0_dp*sin(0.5_dp*theta)**2,sin(theta),kind=dpc)
     w     = cmplx(1.0_dp,0.0_dp,kind=dpc)
     do j=2, m2
        w = w*wp+w
-       dat(:,j) = dat(:,j)*w
+       dat(:,j) = dat(:,j)*cmplx(w,kind=spc)
     end do
     temp=transpose(dat)
     call fourrow(temp,isign)
@@ -985,7 +985,7 @@ CONTAINS
     allocate(dat(m1,m2),theta(m1),w(m1),wp(m1),temp(m2,m1))
     dat = reshape(data,shape(dat))
     call fourrow(dat,isign)
-    theta = arth(0,isign,m1)*TWOPI_dp/n
+    theta = arth(0,isign,m1)*TWOPI_dp/real(n,dp)
     wp    = cmplx(-2.0_dp*sin(0.5_dp*theta)**2,sin(theta),kind=dpc)
     w     = cmplx(1.0_dp,0.0_dp,kind=dpc)
     do j=2, m2
@@ -1038,11 +1038,11 @@ CONTAINS
     do
        if (n <= mmax) exit
        istep = 2*mmax
-       theta = PI_dp/(isign*mmax)
+       theta = PI_dp/real(isign*mmax,dp)
        wp = cmplx(-2.0_dp*sin(0.5_dp*theta)**2,sin(theta),kind=dpc)
        w  = cmplx(1.0_dp,0.0_dp,kind=dpc)
        do m=1, mmax
-          ws = w
+          ws = cmplx(w,kind=spc)
           do i=m, n, istep
              j = i+mmax
              temp = ws*data(:,j)
@@ -1088,7 +1088,7 @@ CONTAINS
     do
        if (n <= mmax) exit
        istep = 2*mmax
-       theta = PI_dp/(isign*mmax)
+       theta = PI_dp/real(isign*mmax,dp)
        wp = cmplx(-2.0_dp*sin(0.5_dp*theta)**2,sin(theta),kind=dpc)
        w  = cmplx(1.0_dp,0.0_dp,kind=dpc)
        do m=1, mmax
@@ -1485,7 +1485,7 @@ CONTAINS
     k = 1
     do
        if (k >= nn) exit
-       zroots_unity_dp(k+1) = cmplx(cos(k*theta),sin(k*theta),dpc)
+       zroots_unity_dp(k+1) = cmplx(cos(k*theta),sin(k*theta),kind=dpc)
        zroots_unity_dp(k+2:min(2*k,nn)) = zroots_unity_dp(k+1) * &
             zroots_unity_dp(2:min(k,nn-k))
        k = 2*k
@@ -1506,7 +1506,7 @@ CONTAINS
     k = 1
     do
        if (k >= nn) exit
-       zroots_unity_sp(k+1) = cmplx(cos(k*theta),sin(k*theta),spc)
+       zroots_unity_sp(k+1) = cmplx(cos(k*theta),sin(k*theta),kind=spc)
        zroots_unity_sp(k+2:min(2*k,nn)) = zroots_unity_sp(k+1) * &
             zroots_unity_sp(2:min(k,nn-k))
        k = 2*k

@@ -34,13 +34,13 @@ program main_test_mo_ode_solver
     allocate( xi(nEq) )
     xi = (/ 1._sp, 1._sp /)         ! initial conditions
 
-    call EULERdumb( xi, x1, x2, h, LV_eqn_sp, Tout, xout, yout, 'EULER' )           ! EULER method
+    call EULERdumb( xi, x1, x2, h, LV_eqn_sp, Tout, xout, yout )           ! EULER method
     if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(:,2)*test) .ne. (/ 10000_i4, 13000_i4 /)) ) isgood = .false.    ! test
 
-    call RKdumb( xi, x1, x2, h, LV_eqn_sp, Tout, xout, yout, 'RK' )                 ! RUNGE-KUTTA method
+    call RKdumb( xi, x1, x2, h, LV_eqn_sp, Tout, xout, yout )                 ! RUNGE-KUTTA method
     if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(:,2)*test) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.     ! test
 
-    call RKas( xi, x1, x2, h, LV_eqn_sp, Tout, xout, yout, 'RK_ROCKS', hmin, eps )  ! RUNGE-KUTTA with adaptive stepsize control
+    call RKas( xi, x1, x2, h, LV_eqn_sp, Tout, xout, yout, hminIN=hmin, epsIN=eps )  ! RUNGE-KUTTA with adaptive stepsize control
     if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(:,2)*test) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.     ! test
 
     ! Is the program running properly?

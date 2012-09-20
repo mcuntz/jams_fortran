@@ -23,7 +23,6 @@ contains
     implicit none
 
     integer, parameter :: npar = 2
-    integer, parameter :: lwa = (npar*(3*npar+13))/2
     integer, parameter :: lr = (npar*(npar+1))/2
 
     integer :: ndata
@@ -101,7 +100,6 @@ contains
     if (debug) write(*,*) "qrinv:"
     if (debug) write(*,'(2F15.5)') fjac
 
-!    goto 666
 ! inverse matrix
     iflag = 2
     call minfun(2,t,fvec,fjac,2,iflag)
@@ -143,8 +141,6 @@ contains
     if (debug) write(*,*) " covariance matrix = "
     if (debug) write(*,'(2f15.5)') fjac
 
-
-666 continue
 
     sum1 = 0.0
     sum2 = 0.0
