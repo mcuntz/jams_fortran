@@ -107,7 +107,7 @@ module mo_ode_solver
     ! storage variables (MODULE VARIABLES)
     integer(i4) :: nok, nbad                            ! number of good and bad (but retried and fixed) steps taken
     integer(i4) :: kount                                ! total number of saved steps
-    logical(lgt), save :: dump = .false.                ! if set to true, then results are stored in a .txt file
+    logical(lgt), save :: dump = .false.                ! if set to true, then results are stored in a file
     logical(lgt), save :: save_steps = .false.          ! if set to true, then intermediate values are stored
                                                         ! in xp_sp/dp and yp_sp/dp at intervals greater than dxsav
     ! SINGLE PRECISION
@@ -161,7 +161,7 @@ contains
     !         none
 
     !     INDENT(IN), OPTIONAL
-    !         character(*)  ::  fileName    ... name of the .txt file in which all the results will be stored
+    !         character(*)  ::  fileName    ... name of the file in which all the results will be stored
     !                                           DEFAULT: no output files will be created
     !
     !     INDENT(INOUT), OPTIONAL
@@ -262,13 +262,13 @@ contains
         end if
 
         if(dump) then
-            open( unit = 10, file = trim(fileName)//'.txt', action = "write", status = "replace" )      ! dumping results
+            open( unit = 10, file = fileName, action = "write", status = "replace" )      ! dumping results
             do k=1, size(xx_sp)
                 write(10,*) xx_sp(k), yy_sp(:,k)
             end do
             close( unit = 10 )
             write(*,*) ''
-            write(*,*) fileName//'.txt', ' was successfully saved!'
+            write(*,*) fileName, ' was successfully saved!'
         end if
 
         if( present(xout) ) then
@@ -350,13 +350,13 @@ contains
         end if
 
         if(dump) then
-            open( unit = 10, file = trim(fileName)//'.txt', action = "write", status = "replace" )      ! dumping results
+            open( unit = 10, file = fileName, action = "write", status = "replace" )      ! dumping results
             do k=1, size(xx_dp)
                 write(10,*) xx_dp(k), yy_dp(:,k)
             end do
             close( unit = 10 )
             write(*,*) ''
-            write(*,*) fileName//'.txt', ' was successfully saved!'
+            write(*,*) fileName, ' was successfully saved!'
         end if
 
         if( present(xout) ) then
@@ -438,13 +438,13 @@ contains
         end if
 
         if(dump) then
-            open( unit = 10, file = trim(fileName)//'.txt', action = "write", status = "replace" )      ! dumping results
+            open( unit = 10, file = fileName, action = "write", status = "replace" )      ! dumping results
             do k=1, size(xx_sp)
                 write(10,*) xx_sp(k), yy_sp(:,k)
             end do
             close( unit = 10 )
             write(*,*) ''
-            write(*,*) fileName//'.txt', ' was successfully saved!'
+            write(*,*) fileName, ' was successfully saved!'
         end if
 
         if( present(xout) ) then
@@ -526,13 +526,13 @@ contains
         end if
 
         if(dump) then
-            open( unit = 10, file = trim(fileName)//'.txt', action = "write", status = "replace" )      ! dumping results
+            open( unit = 10, file = fileName, action = "write", status = "replace" )      ! dumping results
             do k=1, size(xx_dp)
                 write(10,*) xx_dp(k), yy_dp(:,k)
             end do
             close( unit = 10 )
             write(*,*) ''
-            write(*,*) fileName//'.txt', ' was successfully saved!'
+            write(*,*) fileName, ' was successfully saved!'
         end if
 
         if( present(xout) ) then
@@ -583,7 +583,7 @@ contains
     !         none
 
     !     INDENT(IN), OPTIONAL
-    !         character(*)  ::  fileName    ... name of the .txt file in which all the results will be stored
+    !         character(*)  ::  fileName    ... name of the file in which all the results will be stored
     !                                           DEFAULT: no output files will be created
     !
     !         real(sp/dp)   ::  hminIN      ... minimum allowed stepsize (can be zero)
@@ -741,13 +741,13 @@ contains
                     call save_a_step                    ! save final step
 
                     if( present(fileName) ) then
-                        open( unit = 10, file = trim(fileName)//'.txt', action = "write", status = "replace" )  ! dumping results
+                        open( unit = 10, file = fileName, action = "write", status = "replace" )  ! dumping results
                         do k=1, kount
                             write(10,*) xp_sp(k), yp_sp(:,k)
                         end do
                         close( unit = 10 )
                         write(*,*) ''
-                        write(*,*) fileName//'.txt', ' was successfully saved!'
+                        write(*,*) fileName, ' was successfully saved!'
                     end if
 
                     if( present(xout) ) then
@@ -904,13 +904,13 @@ contains
                     call save_a_step                    ! save final step
 
                     if( present(fileName) ) then
-                        open( unit = 10, file = trim(fileName)//'.txt', action = "write", status = "replace" )  ! dumping results
+                        open( unit = 10, file = fileName, action = "write", status = "replace" )  ! dumping results
                         do k=1, kount
                             write(10,*) xp_dp(k), yp_dp(:,k)
                         end do
                         close( unit = 10 )
                         write(*,*) ''
-                        write(*,*) fileName//'.txt', ' was successfully saved!'
+                        write(*,*) fileName, ' was successfully saved!'
                     end if
 
                     if( present(xout) ) then
