@@ -27,11 +27,12 @@ MODULE mo_string_utils
 
   PRIVATE
 
-  PUBLIC :: nonull    ! Check if string is still NULL
-  PUBLIC :: num2str   ! Convert a number to a string
-  PUBLIC :: separator ! Format string: '-----...-----'
-  PUBLIC :: tolower   ! Conversion   : 'ABCXYZ' -> 'abcxyz'   
-  PUBLIC :: toupper   ! Conversion   : 'abcxyz' -> 'ABCXYZ'
+  PUBLIC :: DIVIDE_STRING ! split string in substring with the help of delimiter
+  PUBLIC :: nonull        ! Check if string is still NULL
+  PUBLIC :: num2str       ! Convert a number to a string
+  PUBLIC :: separator     ! Format string: '-----...-----'
+  PUBLIC :: tolower       ! Conversion   : 'ABCXYZ' -> 'abcxyz'   
+  PUBLIC :: toupper       ! Conversion   : 'abcxyz' -> 'ABCXYZ'
 
   INTERFACE num2str
      MODULE PROCEDURE i42str, i82str, sp2str, dp2str, log2str
@@ -372,5 +373,96 @@ CONTAINS
 
   END FUNCTION toupper
 
-END MODULE mo_string_utils
+  ! ------------------------------------------------------------------
 
+  !     NAME
+  !         DIVIDE_STRING
+
+  !     PURPOSE
+  !         Divides a string in several substrings (array of strings) with the help of a user specified delimiter.
+
+  !     CALLING SEQUENCE
+  !         DIVIDE_STRING(string, delim, strArr(:))
+  
+  !     INDENT(IN)
+  !         CHARACTER(len=*), INTENT(IN)        :: string     - string to be divided
+  !         CHARACTER(len=*), INTENT(IN)        :: delim      - delimiter specifying places for division
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         CHARACTER(len=*), DIMENSION(:) ,   &
+  !                  ALLOCATABLE,  INTENT(OUT)  :: strArr     -  Array of substrings, has to be allocateable and is
+  !                                                              handed to the routine unallocated
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         only character types allowed
+  !         output array should be allocateable array, which is unallocated handed to the subroutine
+  !             allocation is done in in devide_string 
+
+  !     EXAMPLE
+  !        DIVIDE_STRING('I want to test this routine!', ' ', strArr(:))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written,  Matthias Zink, Oct 2012
+
+  SUBROUTINE DIVIDE_STRING(string, delim, strArr)
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(len=*)             , INTENT(IN)        :: string
+    CHARACTER(len=*)             , INTENT(IN)        :: delim
+    CHARACTER(len=*), DIMENSION(:) , ALLOCATABLE, &
+                                   INTENT(OUT)      :: strArr
+    !
+    CHARACTER(256)                                   :: stringDummy   ! string in fisrt place but cutted in pieces
+    CHARACTER(256), DIMENSION(:) , ALLOCATABLE       :: strDummyArr   ! Dummy arr until number of substrings is known 
+    INTEGER(i4)                                      :: pos           ! position of dilimiter
+    INTEGER(i4)                                      :: nosubstr      ! number of substrings in string
+    !
+    stringDummy = string
+    !
+    allocate(strDummyArr(len_trim(stringDummy)))
+    pos=999_i4; nosubstr=0_i4
+    ! search for substrings and theirs count
+    do
+       pos = index(trim(adjustl(stringDummy)), delim)
+       ! exit if no more delimiter is find and save the last part of the string
+       if (pos .EQ. 0_i4) then
+          nosubstr = nosubstr + 1_i4
+          StrDummyArr(nosubstr) = trim(stringDummy)
+          exit
+       end if
+       !
+       nosubstr = nosubstr + 1_i4
+       strDummyArr(nosubstr) = stringDummy(1:pos-1)
+       stringDummy = stringDummy(pos+1:len_trim(stringDummy))
+    end do
+    ! hand over results to strArr
+    if (nosubstr .EQ. 0_i4) then
+       print*, '***WARNING: string does not contain delimiter. There are no substrings. (subroutine DIVIDE_STRING)'
+       return
+    else
+       allocate(strArr(nosubstr))
+       strArr = StrDummyArr(1:nosubstr)
+    end if
+    !
+    deallocate(strDummyArr)
+    !
+  END SUBROUTINE DIVIDE_STRING
+
+END MODULE mo_string_utils

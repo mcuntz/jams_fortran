@@ -1,14 +1,15 @@
 PROGRAM main
   
   USE mo_kind,   ONLY: i4, i8, dp, sp
-  USE mo_string_utils, ONLY: tolower, toupper, separator, num2str, nonull
+  USE mo_string_utils, ONLY: tolower, toupper, separator, num2str, nonull, DIVIDE_STRING
 
   IMPLICIT NONE
   
-  CHARACTER(len=100) :: sout, sundef
+  CHARACTER(len=100)                        :: sout, sundef
+  CHARACTER(256), dimension(:), allocatable :: strArr
 
   LOGICAL :: isgood
-  
+
   Write(*,*) ''
   Write(*,*) 'Test mo_string_utils.f90'
 
@@ -31,6 +32,26 @@ PROGRAM main
   if (.not.(lle(trim(sout),'T') .and. lge(trim(sout),'T'))) isgood =.false.
   if (.not. nonull(sout)) isgood =.false.
   if (nonull(sundef)) isgood =.false.
+  call DIVIDE_STRING('I want to test this routine!', ' ', strArr)
+  isgood = isgood .and. (strArr(1) .EQ. 'I')
+  isgood = isgood .and. (strArr(2) .EQ. 'want')
+  isgood = isgood .and. (strArr(3) .EQ. 'to')
+  isgood = isgood .and. (strArr(4) .EQ. 'test')
+  isgood = isgood .and. (strArr(5) .EQ. 'this')
+  isgood = isgood .and. (strArr(6) .EQ. 'routine!')
+  call DIVIDE_STRING('I,want,to,test,this,routine!', ',', strArr)
+  isgood = isgood .and. (strArr(1) .EQ. 'I')
+  isgood = isgood .and. (strArr(2) .EQ. 'want')
+  isgood = isgood .and. (strArr(3) .EQ. 'to')
+  isgood = isgood .and. (strArr(4) .EQ. 'test')
+  isgood = isgood .and. (strArr(5) .EQ. 'this')
+  isgood = isgood .and. (strArr(6) .EQ. 'routine!')
+  call DIVIDE_STRING("w!hat_s-a+bout=-sp.eci,al-chara<cte>rs?", '-', strArr)
+  isgood = isgood .and. (strArr(1) .EQ. 'w!hat_s')
+  isgood = isgood .and. (strArr(2) .EQ. 'a+bout=')
+  isgood = isgood .and. (strArr(3) .EQ. 'sp.eci,al')
+  isgood = isgood .and. (strArr(4) .EQ. 'chara<cte>rs?')
+
 
   Write(*,*) ''
   if (isgood) then
