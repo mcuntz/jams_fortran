@@ -2782,14 +2782,20 @@ MODULE mo_nr
        REAL(SP), INTENT(IN) :: a,b
      END SUBROUTINE rotate
   END INTERFACE
-  INTERFACE
-     SUBROUTINE rsolv(a,d,b)
+  INTERFACE rsolv
+     SUBROUTINE rsolv_sp(a,d,b)
        USE mo_kind
        REAL(SP), DIMENSION(:,:), INTENT(IN) :: a
        REAL(SP), DIMENSION(:), INTENT(IN) :: d
        REAL(SP), DIMENSION(:), INTENT(INOUT) :: b
-     END SUBROUTINE rsolv
-  END INTERFACE
+     END SUBROUTINE rsolv_sp
+     SUBROUTINE rsolv_dp(a,d,b)
+       USE mo_kind
+       REAL(DP), DIMENSION(:,:), INTENT(IN) :: a
+       REAL(DP), DIMENSION(:), INTENT(IN) :: d
+       REAL(DP), DIMENSION(:), INTENT(INOUT) :: b
+     END SUBROUTINE rsolv_dp
+  END INTERFACE rsolv
   INTERFACE
      FUNCTION rstrct(uf)
        USE mo_kind
