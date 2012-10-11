@@ -634,7 +634,7 @@ contains
         implicit none
 
         real(sp), intent(in) :: x1, x2, h1
-        real(sp), dimension(:), intent(inout) :: ystart
+        real(sp), dimension(:), intent(in) :: ystart
         real(sp), intent(in), optional :: hminIN, epsIN
         character(*), intent(in), optional :: fileName
         real(sp), intent(out), optional :: Tout
@@ -736,7 +736,6 @@ contains
                     Tout = T2 - T1
                     write(*,*) 'Elapsed CPU time RUNGE KUTTA as = ', Tout
                 end if
-                ystart(:) = y(:)
                 if ( save_steps ) then
                     call save_a_step                    ! save final step
 
@@ -800,7 +799,7 @@ contains
         real(dp), intent(in), optional :: epsIN, hminIN
         character(*), intent(in), optional :: fileName
         real(dp), intent(out), optional :: Tout
-        real(dp), dimension(:), intent(inout) :: ystart
+        real(dp), dimension(:), intent(in) :: ystart
         real(dp), dimension(:), allocatable, intent(out), optional :: xout
         real(dp), dimension(:,:), allocatable, intent(out), optional :: yout
 
@@ -899,7 +898,6 @@ contains
                     Tout = T2 - T1
                     write(*,*) 'Elapsed CPU time RUNGE KUTTA as = ', Tout
                 end if
-                ystart(:) = y(:)
                 if ( save_steps ) then
                     call save_a_step                    ! save final step
 
@@ -1357,7 +1355,7 @@ contains
     subroutine header_sp( x1, x2, h, xi, MethodName, hmin, eps )
 
         real(sp), intent(in) :: x1, x2, h
-        real(sp), dimension(2), intent(in) :: xi
+        real(sp), dimension(:), intent(in) :: xi
         character(*), intent(in) :: MethodName
         real(sp), intent(in), optional :: hmin, eps
 
@@ -1382,7 +1380,7 @@ contains
     subroutine header_dp( x1, x2, h, xi, MethodName, hmin, eps )
 
         real(dp), intent(in) :: x1, x2, h
-        real(dp), dimension(2), intent(in) :: xi
+        real(dp), dimension(:), intent(in) :: xi
         character(*), intent(in) :: MethodName
         real(dp), intent(in), optional :: hmin, eps
 
