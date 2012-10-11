@@ -83,12 +83,12 @@ CONTAINS
 
 
   !     INDENT(IN)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE  
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE  
   !                                       :: input2 ... flexible kind, but same as input1
   !                                                     scalar, vector, or matrix
 
   !     INDENT(INOUT)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE  
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE  
   !                                       :: input1 ... flexible kind, but same as input2
   !                                                     vector, or matrix
   !                                                     has to be allocatable
@@ -543,8 +543,8 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
     implicit none
 
-    character(*), dimension(:), allocatable, intent(inout)   :: vec1
-    character(*),                            intent(in)      :: sca2
+    character(len=*), dimension(:), allocatable, intent(inout)   :: vec1
+    character(len=*),                            intent(in)      :: sca2
 
     ! local variables
     integer(i4)                               :: n1, n2
@@ -573,8 +573,8 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
   SUBROUTINE append_char_v_v(vec1, vec2)
 
-    character(*), dimension(:), allocatable, intent(inout)   :: vec1
-    character(*), dimension(:),              intent(in)      :: vec2
+    character(len=*), dimension(:), allocatable, intent(inout)   :: vec1
+    character(len=*), dimension(:),              intent(in)      :: vec2
 
     ! local variables
     integer(i4)                               :: n1, n2
@@ -605,8 +605,8 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
     implicit none
 
-    character(*), dimension(:,:), allocatable, intent(inout)   :: mat1
-    character(*), dimension(:,:),              intent(in)      :: mat2
+    character(len=*), dimension(:,:), allocatable, intent(inout)   :: mat1
+    character(len=*), dimension(:,:),              intent(in)      :: mat2
 
     ! local variables
     integer(i4)                                 :: m1, m2    ! dim1 of matrixes: rows
@@ -667,12 +667,12 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
 
   !     INDENT(IN)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE  
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE  
   !                                       :: input2 ... flexible kind, but same as input1
   !                                                     scalar, vector, or matrix
 
   !     INDENT(INOUT)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE  
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE  
   !                                       :: input1 ... flexible kind, but same as input2
   !                                                     vector, or matrix
   !                                                     has to be allocatable
@@ -1163,8 +1163,8 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
     implicit none
 
-    character(*), dimension(:,:), allocatable, intent(inout)   :: mat1
-    character(*),                              intent(in)      :: sca2
+    character(len=*), dimension(:,:), allocatable, intent(inout)   :: mat1
+    character(len=*),                              intent(in)      :: sca2
 
     ! local variables
     integer(i4)                                  :: m1    ! dim1 of matrix
@@ -1197,8 +1197,8 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
     implicit none
 
-    character(*), dimension(:,:), allocatable, intent(inout)   :: mat1
-    character(*), dimension(:),                intent(in)      :: vec2
+    character(len=*), dimension(:,:), allocatable, intent(inout)   :: mat1
+    character(len=*), dimension(:),                intent(in)      :: vec2
 
     ! local variables
     integer(i4)                                  :: m1, m2    ! dim1 of matrixes
@@ -1237,8 +1237,8 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
     implicit none
 
-    character(*), dimension(:,:), allocatable, intent(inout)   :: mat1
-    character(*), dimension(:,:),              intent(in)      :: mat2
+    character(len=*), dimension(:,:), allocatable, intent(inout)   :: mat1
+    character(len=*), dimension(:,:),              intent(in)      :: mat2
 
     ! local variables
     integer(i4)                                  :: m1, m2    ! dim1 of matrixes

@@ -62,6 +62,7 @@ MODULE mo_errormeasures
   INTERFACE RMSE                  
      MODULE PROCEDURE RMSE_sp_1d, RMSE_dp_1d, RMSE_sp_2d, RMSE_dp_2d, RMSE_sp_3d, RMSE_dp_3d
   END INTERFACE RMSE
+
   ! ------------------------------------------------------------------
 
 CONTAINS
@@ -947,11 +948,11 @@ CONTAINS
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
     REAL(sp)                                          :: NSE_sp_1d
 
-    INTEGER(i4)                                       :: n
-    INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
-    REAL(sp)                                          :: xmean
-    REAL(sp), DIMENSION(size(x))                      :: v1, v2
-    LOGICAL,  DIMENSION(size(x))                      :: maske
+    INTEGER(i4)                            :: n
+    INTEGER(i4), DIMENSION(size(shape(x))) :: shapemask
+    REAL(sp)                               :: xmean
+    REAL(sp), DIMENSION(size(x))           :: v1, v2
+    LOGICAL,  DIMENSION(size(x))           :: maske
 
     if (present(mask)) then
        shapemask = shape(mask)
@@ -972,10 +973,10 @@ CONTAINS
     ! mean of x
     xmean = average(x, mask=maske)
     !
-    v1 = merge(y - x    , 0.0_sp ,mask=maske)
-    v2 = merge(x - xmean, 0.0_sp ,mask=maske)
+    v1 = merge(y - x    , 0.0_sp, maske)
+    v2 = merge(x - xmean, 0.0_sp, maske)
     !
-     NSE_sp_1d = 1.0_sp - dot_product(v1,v1) / dot_product(v2,v2)
+    NSE_sp_1d = 1.0_sp - dot_product(v1,v1) / dot_product(v2,v2)
 
   END FUNCTION NSE_sp_1d
 
@@ -1014,8 +1015,8 @@ CONTAINS
     ! mean of x
     xmean = average(x, mask=maske)
     !
-    v1 = merge(y - x    , 0.0_dp ,mask=maske)
-    v2 = merge(x - xmean, 0.0_dp ,mask=maske)
+    v1 = merge(y - x    , 0.0_dp, maske)
+    v2 = merge(x - xmean, 0.0_dp, maske)
     !
     NSE_dp_1d = 1.0_dp - dot_product(v1,v1) / dot_product(v2,v2)
 

@@ -437,7 +437,8 @@ CONTAINS
     stringDummy = string
     !
     allocate(strDummyArr(len_trim(stringDummy)))
-    pos=999_i4; nosubstr=0_i4
+    pos=999_i4
+    nosubstr=0_i4
     ! search for substrings and theirs count
     do
        pos = index(trim(adjustl(stringDummy)), delim)

@@ -17,7 +17,8 @@ program test
   write(*,*) 'Test mo_errormeasures.f90'
   !
   ! read random mask - shape = (6,9,5)
-  open(unit=20, file='field_maskf90.dat', action='read', status='old')
+  !open(unit=20, file='field_maskf90.dat', action='read', status='old')
+  open(unit=20, file='../FORTRAN_chs_lib/test/test_mo_errormeasures/field_maskf90.dat', action='read', status='old')
   do k = 1, size(arr1, dim=3)
      do i = 1, size(arr1, dim=1)
         read(20,*) (mask(i,j,k), j=1, size(arr1, dim=2))
@@ -25,7 +26,8 @@ program test
   end do
   close(20)
   ! read random number array - shape = (6,9,5)
-  open(unit=20, file='field.dat', action='read', status='old')
+  !open(unit=20, file='field.dat', action='read', status='old')
+  open(unit=20, file='../FORTRAN_chs_lib/test/test_mo_errormeasures/field.dat', action='read', status='old')
   do k = 1, size(arr1, dim=3)
      do i = 1, size(arr1, dim=1)
         read(20,*) (arr1(i,j,k), j=1, size(arr1, dim=2))

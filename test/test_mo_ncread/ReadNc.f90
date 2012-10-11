@@ -27,8 +27,8 @@ integer(i4)                                   :: i
 integer(i4)   , dimension(5)                  :: dl
 LOGICAL                                       :: isgood
 !
-!Filename = '../FORTRAN_chs_lib/test/test_mo_ncread/pr_1961-2000.nc'
-Filename = 'pr_1961-2000.nc'
+Filename = '../FORTRAN_chs_lib/test/test_mo_ncread/pr_1961-2000.nc'
+!Filename = 'pr_1961-2000.nc'
 !
 ! Variable name can be retrieved by a "ncdump -h <filename>"
 Varname  = 'pr'
