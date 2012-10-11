@@ -1,6 +1,7 @@
 PROGRAM append_test
 
 use mo_kind,   only: i4
+#ifndef ABSOFT
 use mo_append, only: append, paste
 
 implicit none
@@ -9,11 +10,13 @@ integer(i4), dimension(:),   allocatable  :: vector1_i4, vector2_i4
 integer(i4), dimension(2)                 :: vector3_i4
 
 integer(i4), dimension(:,:), allocatable  :: matrix1_i4, matrix2_i4, matrix3_i4, matrix4_i4
+#endif
 
 logical                                   :: isgood
 
 isgood = .true.
 
+#ifndef ABSOFT
 ! ---------------------------------------------------------------------------
 !                           TEST APPEND
 ! ---------------------------------------------------------------------------
@@ -111,6 +114,7 @@ print*, ' '
 if ( any(matrix4_i4(1,:) .ne. (/ 2_i4,2_i4,2_i4, 5_i4 /)) ) isgood=.false.
 
 deallocate(matrix1_i4, matrix2_i4, matrix3_i4, matrix4_i4)
+#endif
 
 if (isgood) then
    write(*,*) 'mo_append o.k.'

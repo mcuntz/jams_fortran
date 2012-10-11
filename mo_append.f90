@@ -32,6 +32,7 @@ MODULE mo_append
 
   PRIVATE
 
+#ifndef ABSOFT
   PUBLIC :: append    ! Returns input1 appended with input2. (like bash cat)
   PUBLIC :: paste     ! Returns input1 pasted with input2.   (like bash paste)
 
@@ -1272,6 +1273,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
     end if
 
   END SUBROUTINE paste_char_m_m
+#endif
 
 
 END MODULE mo_append

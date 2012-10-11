@@ -1,12 +1,17 @@
 PROGRAM main
   
   USE mo_kind,   ONLY: i4, i8, dp, sp
-  USE mo_string_utils, ONLY: tolower, toupper, separator, num2str, nonull, DIVIDE_STRING
+  USE mo_string_utils, ONLY: tolower, toupper, separator, num2str, nonull
+#ifndef ABSOFT
+  USE mo_string_utils, ONLY: DIVIDE_STRING
+#endif
 
   IMPLICIT NONE
   
   CHARACTER(len=100)                        :: sout, sundef
+#ifndef ABSOFT
   CHARACTER(256), dimension(:), allocatable :: strArr
+#endif
 
   LOGICAL :: isgood
 
@@ -32,6 +37,7 @@ PROGRAM main
   if (.not.(lle(trim(sout),'T') .and. lge(trim(sout),'T'))) isgood =.false.
   if (.not. nonull(sout)) isgood =.false.
   if (nonull(sundef)) isgood =.false.
+#ifndef ABSOFT
   call DIVIDE_STRING('I want to test this routine!', ' ', strArr)
   isgood = isgood .and. (strArr(1) .EQ. 'I')
   isgood = isgood .and. (strArr(2) .EQ. 'want')
@@ -51,7 +57,7 @@ PROGRAM main
   isgood = isgood .and. (strArr(2) .EQ. 'a+bout=')
   isgood = isgood .and. (strArr(3) .EQ. 'sp.eci,al')
   isgood = isgood .and. (strArr(4) .EQ. 'chara<cte>rs?')
-
+#endif
 
   Write(*,*) ''
   if (isgood) then

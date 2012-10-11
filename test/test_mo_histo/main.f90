@@ -1,6 +1,7 @@
 PROGRAM histo_test
 
 use mo_kind, only: dp, i4
+#ifndef ABSOFT
 use mo_histo, only: histo
 
 implicit none
@@ -173,7 +174,9 @@ Has2Be_binx_dp_2d(2,:)  = (/5.025_dp, 3.000_dp, 3.500_dp/)
 Has2Be_bincount = (/3,2/)
 if ( all(bincount .eq. Has2Be_bincount) .and. &
      all(anint(binx_dp_2d*1000.0_dp) .eq. anint(Has2Be_binx_dp_2d*1000.0_dp))) then
+#endif
    print*, 'mo_histo: with averaging (default) o.k.'
+#ifndef ABSOFT
 else
    print*, 'mo_histo: with averaging (default) failed '
 end if
@@ -182,6 +185,7 @@ deallocate(Has2Be_bincount, Has2Be_binx_dp_2d)
 print*, '  '
 print*, '----------------------------'
 print*, '  '
+#endif
 
 
 END PROGRAM histo_test

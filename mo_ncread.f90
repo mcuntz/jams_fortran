@@ -27,16 +27,21 @@ module mo_NcRead
   use netcdf,  only: nf90_open, nf90_get_var, nf90_close, NF90_MAX_NAME , &
                      nf90_get_att,  nf90_inq_varid, nf90_inquire_variable, &
                      nf90_inquire_dimension, NF90_NOWRITE, &
-                     nf90_noerr, nf90_strerror, nf90_inquire_attribute, nf90_inq_type
+                     nf90_noerr, nf90_strerror, nf90_inquire_attribute
+#ifndef ABSOFT
+  use netcdf,  only: nf90_inq_type
+#endif
 
   implicit none
 
   private
 
   public :: Get_NcDim    ! get the dimensions of a Variable
+#ifndef ABSOFT
   public :: Get_NcDimAtt ! get the attributes of the dimensions
-  public :: Get_NcVar    ! get the data of a Variable in a nc file
   public :: Get_NcVarAtt ! get attributes of a variable
+#endif
+  public :: Get_NcVar    ! get the data of a Variable in a nc file
   public :: NcOpen       ! Open a file and get a handle back
   public :: NcClose      ! Close a file
 
@@ -119,6 +124,7 @@ contains
     !
   end function Get_NcDim
 
+#ifndef ABSOFT
   ! ------------------------------------------------------------------
 	
   !     NAME
@@ -314,6 +320,7 @@ contains
     if (.not. present(fid)) call check(nf90_close(ncid))
     !
   end subroutine Get_NcVarAtt
+#endif
 
   ! ------------------------------------------------------------------------------
 

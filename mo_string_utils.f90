@@ -27,7 +27,9 @@ MODULE mo_string_utils
 
   PRIVATE
 
+#ifndef ABSOFT
   PUBLIC :: DIVIDE_STRING ! split string in substring with the help of delimiter
+#endif
   PUBLIC :: nonull        ! Check if string is still NULL
   PUBLIC :: num2str       ! Convert a number to a string
   PUBLIC :: separator     ! Format string: '-----...-----'
@@ -373,6 +375,7 @@ CONTAINS
 
   END FUNCTION toupper
 
+#ifndef ABSOFT
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -465,5 +468,6 @@ CONTAINS
     deallocate(strDummyArr)
     !
   END SUBROUTINE DIVIDE_STRING
+#endif
 
 END MODULE mo_string_utils

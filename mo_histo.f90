@@ -1,4 +1,3 @@
-
 MODULE mo_histo
 
   ! This module calculates the Histogram of data
@@ -31,6 +30,7 @@ MODULE mo_histo
 
   PRIVATE
 
+#ifndef ABSOFT
   PUBLIC :: histo           ! Histogram of 1D data
   PUBLIC :: histo2d         ! Histogram of 2D data
 
@@ -906,5 +906,6 @@ CONTAINS
     width(:) = w(:)
 
   END SUBROUTINE histo2d_sp
+#endif
 
 END MODULE mo_histo

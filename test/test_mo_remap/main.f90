@@ -25,6 +25,7 @@ program main
   real(dp), dimension(:), allocatable :: src_1d
   real(dp), dimension(:), allocatable :: dst_1d
 
+  write(*,*) 'Start'
   !
   ! Ini timers
   call timers_init
