@@ -27,7 +27,8 @@ module mo_NcRead
   use netcdf,  only: nf90_open, nf90_get_var, nf90_close, NF90_MAX_NAME , &
                      nf90_get_att,  nf90_inq_varid, nf90_inquire_variable, &
                      nf90_inquire_dimension, NF90_NOWRITE, &
-                     nf90_noerr, nf90_strerror, nf90_inquire_attribute
+                     nf90_noerr, nf90_strerror, nf90_inquire_attribute, &
+                     nf90_float
 #ifndef ABSOFT
   use netcdf,  only: nf90_inq_type
 #endif
@@ -271,7 +272,7 @@ contains
     character(len=*),                        intent(in)    :: AttName
     character(len=*),                        intent(out)   :: AttValues
     integer(i4),                   optional, intent(in)    :: fid
-    character(len=*),              optional, intent(out)   :: dtype
+    integer(i4),                   optional, intent(out)   :: dtype
     !
     integer(i4)                                            :: ncid
     integer(i4)                                            :: varid  
@@ -303,16 +304,16 @@ contains
           call check(nf90_get_att(ncid, varid, trim(AttName), avfloat))
           write(AttValues,*)  avfloat
           AttValues = adjustl(trim(AttValues))
-          if (present(dtype)) dtype='sp'
+          if (present(dtype)) dtype=0
        case ('floa')
           call check(nf90_get_att(ncid, varid, trim(AttName), avfloat))
-          write(AttValues,*)  avfloat
+          write(AttValues,'(E14.7)')  avfloat
           AttValues = adjustl(trim(AttValues))
-          if (present(dtype)) dtype='dp'
+          if (present(dtype)) dtype=NF90_FLOAT
        case ('char')
           call check(nf90_get_att(ncid, varid, trim(AttName), avchar))
           AttValues = adjustl(trim(avchar))
-          if (present(dtype)) dtype='ch'
+          if (present(dtype)) dtype=1
     end select
     !
     !    call check(nf90_get_att(ncid, varid, trim(AttName), AttValues))

@@ -429,7 +429,7 @@ CONTAINS
     !
     CHARACTER(len=*)             , INTENT(IN)        :: string
     CHARACTER(len=*)             , INTENT(IN)        :: delim
-    CHARACTER(len=*), DIMENSION(:) , ALLOCATABLE, &
+    CHARACTER(len=*), DIMENSION(:), ALLOCATABLE, &
                                    INTENT(OUT)      :: strArr
     !
     CHARACTER(256)                                   :: stringDummy   ! string in fisrt place but cutted in pieces

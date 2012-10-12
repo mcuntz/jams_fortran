@@ -77,7 +77,7 @@ MODULE mo_opt_functions
   PUBLIC :: shekel_sqrn7                      ! The Shekel SQRN7 Function, N = 4. 
   PUBLIC :: shekel_sqrn10                     ! The Shekel SQRN10 Function, N = 4.
   PUBLIC :: six_hump_camel_back_polynomial    ! The Six-Hump Camel-Back Polynomial, N = 2.
-  PUBLIC :: shubert                          ! The Shubert Function, N = 2.
+  PUBLIC :: shubert                           ! The Shubert Function, N = 2.
   PUBLIC :: stuckman                          ! The Stuckman Function, N = 2.
   PUBLIC :: easom                             ! The Easom Function, N = 2.
   PUBLIC :: bohachevsky1                      ! The Bohachevsky Function #1, N = 2.

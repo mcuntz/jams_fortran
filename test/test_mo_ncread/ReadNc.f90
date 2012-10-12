@@ -97,7 +97,7 @@ call Get_NcVarAtt(FileName, trim(DimNames(3)), AttName, AttValues)
 isgood = isgood .and. (AttValues == 'days since 1950-01-01 00:00:00')
 !
 call Get_NcVarAtt(FileName, 'pr', '_FillValue', AttValues)
-isgood = isgood .and. (AttValues == '1.0000000E+30')
+isgood = isgood .and. (AttValues == '0.1000000E+31')
 #endif
 !
 if (isgood) then
