@@ -21,17 +21,13 @@ module mo_NcRead
 
   ! Copyright 2011-2012 Stephan Thober, Matthias Cuntz
 
-  use mo_kind, only: i4, sp, dp
+  use mo_kind, only: i4, i8, sp, dp
 
   ! functions and constants of netcdf4 library
   use netcdf,  only: nf90_open, nf90_get_var, nf90_close, NF90_MAX_NAME , &
                      nf90_get_att,  nf90_inq_varid, nf90_inquire_variable, &
                      nf90_inquire_dimension, NF90_NOWRITE, &
-                     nf90_noerr, nf90_strerror, nf90_inquire_attribute, &
-                     nf90_float
-#ifndef ABSOFT
-  use netcdf,  only: nf90_inq_type
-#endif
+                     nf90_noerr, nf90_strerror, nf90_inquire_attribute
 
   implicit none
 
@@ -237,7 +233,8 @@ contains
   !         character(len=*), intent(out)     :: AttValues - values of the Attribute
   
   !     INDENT(IN), OPTIONAL
-  !         integer(i4),o ptional, intent(in) :: fid   ! file handle of opened netcdf file
+  !         integer(i4), optional, intent(in) :: fid   ! file handle of opened netcdf file
+  !         integer(i4), optional, intent(in) :: dtype ! datatype (ineteger,float) see NetCDF convention (unidata.ucar)
 
   !     INDENT(INOUT), OPTIONAL
   !         None
@@ -278,12 +275,9 @@ contains
     integer(i4)                                            :: varid  
     !
     integer(i4)                                            :: type
-    real(sp)                                               :: avfloat
+    integer(i8)                                            :: avint
+    real(dp)                                               :: avfloat
     character(256)                                         :: avchar
-    character(4)                                           :: name
-    character(256)                                         :: dtypename
-    integer(i4)                                            :: size, nfields
-
     !
     if (present(fid)) then
        ncid = fid
@@ -295,28 +289,41 @@ contains
     call check(nf90_inq_varid(ncid, trim(VarName), varid))
     ! get type of the attribute
     call check(nf90_inquire_attribute(ncid, varid, trim(AttName), type))
-    call check(nf90_inq_type(ncid, type, dtypename, size, nfields))
-    name = dtypename(1:4)
     !
     ! read attribute by type
-    select case (trim(name))
-      case ('shor')
-          call check(nf90_get_att(ncid, varid, trim(AttName), avfloat))
-          write(AttValues,*)  avfloat
+    select case (type)
+    case (1) ! 1 = NF90_BYTE
+          call check(nf90_get_att(ncid, varid, trim(AttName), avint))
+          write(AttValues,'(i4)')  avfloat
           AttValues = adjustl(trim(AttValues))
-          if (present(dtype)) dtype=0
-       case ('floa')
-          call check(nf90_get_att(ncid, varid, trim(AttName), avfloat))
-          write(AttValues,'(E14.7)')  avfloat
-          AttValues = adjustl(trim(AttValues))
-          if (present(dtype)) dtype=NF90_FLOAT
-       case ('char')
+          if (present(dtype)) dtype=type
+       case (2) ! NF90_CHAR
           call check(nf90_get_att(ncid, varid, trim(AttName), avchar))
           AttValues = adjustl(trim(avchar))
-          if (present(dtype)) dtype=1
+          if (present(dtype)) dtype=type
+       case (3) ! NF90_SHORT
+          call check(nf90_get_att(ncid, varid, trim(AttName), avint))
+          write(AttValues,'(i6)')  avfloat
+          AttValues = adjustl(trim(AttValues))
+          if (present(dtype)) dtype=type
+       case (4) ! NF90_INT
+          call check(nf90_get_att(ncid, varid, trim(AttName), avint))
+          write(AttValues,'(i11)')  avfloat
+          AttValues = adjustl(trim(AttValues))
+          if (present(dtype)) dtype=type
+       case (5) ! NF90_FLOAT
+          call check(nf90_get_att(ncid, varid, trim(AttName), avfloat))
+          write(AttValues,'(E15.7)')  avfloat
+          AttValues = adjustl(trim(AttValues))
+          if (present(dtype)) dtype=type
+       case (6) ! NF90_DOUBLE
+          call check(nf90_get_att(ncid, varid, trim(AttName), avfloat))
+          write(AttValues,'(E24.15)')  avfloat
+          AttValues = adjustl(trim(AttValues))
+          if (present(dtype)) dtype=type
+       case DEFAULT
+          print*, '***ERROR: mo_ncread: Mismatch in attribute datatype!'
     end select
-    !
-    !    call check(nf90_get_att(ncid, varid, trim(AttName), AttValues))
     !
     if (.not. present(fid)) call check(nf90_close(ncid))
     !
