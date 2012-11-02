@@ -51,8 +51,7 @@ module mo_xor4096
   END INTERFACE get_timeseed
 
   INTERFACE xor4096
-     MODULE PROCEDURE   xor4096s_0d, & !xor4096s_1d, 
-                        xor4096f_0d, & !xor4096f_1d, &
+     MODULE PROCEDURE   xor4096s_0d, xor4096s_1d, xor4096f_0d, xor4096f_1d, &
                         xor4096l_0d, xor4096l_1d, xor4096d_0d, xor4096d_1d
   END INTERFACE xor4096
 
@@ -411,119 +410,119 @@ CONTAINS
 
 !******************************************************************************************
 
-!   subroutine xor4096s_1d(seed,SingleIntegerRN,iin,win,xin)
-!     implicit none
+  subroutine xor4096s_1d(seed,SingleIntegerRN,iin,win,xin)
+    implicit none
 
-!     integer(i4), dimension(:),          intent(in)     :: seed
-!     integer(i4), dimension(size(seed,1)), intent(out)    :: SingleIntegerRN
-!     integer(i4), optional, dimension(size(seed,1)),       intent(inout) :: iin
-!     integer(i4), optional, dimension(size(seed,1)),       intent(inout) :: win
-!     integer(i4), optional, dimension(size(seed,1),0:127), intent(inout) :: xin
+    integer(i4), dimension(:),          intent(in)     :: seed
+    integer(i4), dimension(size(seed,1)), intent(out)    :: SingleIntegerRN
+    integer(i4), optional, dimension(size(seed,1)),       intent(inout) :: iin
+    integer(i4), optional, dimension(size(seed,1)),       intent(inout) :: win
+    integer(i4), optional, dimension(size(seed,1),0:127), intent(inout) :: xin
 
-!     integer(i4)                        :: m
-!     integer(i4)                        :: wlen, r, s, a, b, c, d
-!     integer(i4)                        :: weyl = 1640531527_i4    !Z'61C88647'       ! Hexadecimal notation
-!     integer(i4)                        :: k, j
-!     integer(i4), dimension(size(seed,1)) :: t,v
-!     integer(i4), dimension(:,:), allocatable, save   :: x               ! x(0) ... x(r-1)
-!     integer(i4), dimension(:),   allocatable, save   :: i,w             ! i<0 indicates first call
+    integer(i4)                        :: m
+    integer(i4)                        :: wlen, r, s, a, b, c, d
+    integer(i4)                        :: weyl = 1640531527_i4    !Z'61C88647'       ! Hexadecimal notation
+    integer(i4)                        :: k, j
+    integer(i4), dimension(size(seed,1)) :: t,v
+    integer(i4), dimension(:,:), allocatable, save   :: x               ! x(0) ... x(r-1)
+    integer(i4), dimension(:),   allocatable, save   :: i,w             ! i<0 indicates first call
 
-! !$omp   threadprivate(x,i,w) 
+!$omp   threadprivate(x,i,w) 
 
-!     if ( present(iin) .and. (Any(seed .eq. 0)) ) i = iin
-!     if ( present(win) .and. (Any(seed .eq. 0)) ) w = win
-!     if ( present(xin) .and. (Any(seed .eq. 0)) ) x = xin
+    if ( present(iin) .and. (Any(seed .eq. 0)) ) i = iin
+    if ( present(win) .and. (Any(seed .eq. 0)) ) w = win
+    if ( present(xin) .and. (Any(seed .eq. 0)) ) x = xin
 
-!     m = size(seed,1)
-!     if (.not. allocated(i)) then
-!        allocate(i(m))
-!        i = -1
-!     end if
-!     if (.not. allocated(x)) then
-!        allocate(x(m,0:127))
-!     end if
-!     if (.not. allocated(w)) then
-!        allocate(w(m))
-!     end if
+    m = size(seed,1)
+    if (.not. allocated(i)) then
+       allocate(i(m))
+       i = -1
+    end if
+    if (.not. allocated(x)) then
+       allocate(x(m,0:127))
+    end if
+    if (.not. allocated(w)) then
+       allocate(w(m))
+    end if
 
-!     wlen = 32
-!     r = 128
-!     s = 95
-!     a = 17
-!     b = 12
-!     c = 13
-!     d = 15
+    wlen = 32
+    r = 128
+    s = 95
+    a = 17
+    b = 12
+    c = 13
+    d = 15
 
-!     Do j = 1, m
-!        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
-!           If (seed(j) .ne. 0) then                   ! v must be nonzero
-!              v(j) = seed(j)
-!           else
-!              v(j) = NOT(seed(j))
-!           end if
+    Do j = 1, m
+       If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
+          If (seed(j) .ne. 0) then                   ! v must be nonzero
+             v(j) = seed(j)
+          else
+             v(j) = NOT(seed(j))
+          end if
 
-!           do k=wlen,1,-1                          ! Avoid correlations for close seeds
-!              ! This recurrence has period of 2^32-1
-!              v(j) = IEOR(v(j),ISHFT(v(j),13))
-!              v(j) = IEOR(v(j),ISHFT(v(j),-17))
-!              v(j) = IEOR(v(j),ISHFT(v(j), 5))
-!           end do
+          do k=wlen,1,-1                          ! Avoid correlations for close seeds
+             ! This recurrence has period of 2^32-1
+             v(j) = IEOR(v(j),ISHFT(v(j),13))
+             v(j) = IEOR(v(j),ISHFT(v(j),-17))
+             v(j) = IEOR(v(j),ISHFT(v(j), 5))
+          end do
 
-!           ! Initialize circular array
-!           w(j) = v(j)
-!           do k=0,r-1
-!              w(j) = w(j) + weyl
-!              v(j) = IEOR(v(j),ISHFT(v(j),13))
-!              v(j) = IEOR(v(j),ISHFT(v(j),-17))
-!              v(j) = IEOR(v(j),ISHFT(v(j), 5))
-!              x(j,k) = v(j) + w(j)
-!           end do
+          ! Initialize circular array
+          w(j) = v(j)
+          do k=0,r-1
+             w(j) = w(j) + weyl
+             v(j) = IEOR(v(j),ISHFT(v(j),13))
+             v(j) = IEOR(v(j),ISHFT(v(j),-17))
+             v(j) = IEOR(v(j),ISHFT(v(j), 5))
+             x(j,k) = v(j) + w(j)
+          end do
 
-!           ! Discard first 4*r results (Gimeno)
-!           i(j) = r-1
-!           do k = 4*r,1,-1
-!              i(j) = IAND(i(j)+1,r-1)
-!              t(j) = x(j,i(j))
-!              v(j) = x(j,IAND(i(j)+(r-s),r-1))
-!              t(j) = IEOR(t(j),ISHFT(t(j),a))
-!              t(j) = IEOR(t(j),ISHFT(t(j),-b))
-!              v(j) = IEOR(v(j),ISHFT(v(j),c))
-!              v(j) = IEOR(v(j),IEOR(t(j),ISHFT(v(j),-d)))
-!              x(j,i(j)) = v(j)
-!           end do
-!        end if ! end of initialization
-!     end do
+          ! Discard first 4*r results (Gimeno)
+          i(j) = r-1
+          do k = 4*r,1,-1
+             i(j) = IAND(i(j)+1,r-1)
+             t(j) = x(j,i(j))
+             v(j) = x(j,IAND(i(j)+(r-s),r-1))
+             t(j) = IEOR(t(j),ISHFT(t(j),a))
+             t(j) = IEOR(t(j),ISHFT(t(j),-b))
+             v(j) = IEOR(v(j),ISHFT(v(j),c))
+             v(j) = IEOR(v(j),IEOR(t(j),ISHFT(v(j),-d)))
+             x(j,i(j)) = v(j)
+          end do
+       end if ! end of initialization
+    end do
 
-!     ! Apart from initialization (above), this is the generator
+    ! Apart from initialization (above), this is the generator
 
-!     do j=1,m
-!        i(j) = IAND(i(j)+1,r-1)
-!        t(j) = x(j,i(j))
-!        v(j) = x(j,IAND(i(j)+(r-s),r-1))
-!        t(j) = IEOR(t(j),ISHFT(t(j),a))
-!        t(j) = IEOR(t(j),ISHFT(t(j),-b))
-!        v(j) = IEOR(v(j),ISHFT(v(j),c))
-!        v(j) = IEOR(v(j),IEOR(t(j),ISHFT(v(j),-d)))
-!        x(j,i(j)) = v(j)
+    do j=1,m
+       i(j) = IAND(i(j)+1,r-1)
+       t(j) = x(j,i(j))
+       v(j) = x(j,IAND(i(j)+(r-s),r-1))
+       t(j) = IEOR(t(j),ISHFT(t(j),a))
+       t(j) = IEOR(t(j),ISHFT(t(j),-b))
+       v(j) = IEOR(v(j),ISHFT(v(j),c))
+       v(j) = IEOR(v(j),IEOR(t(j),ISHFT(v(j),-d)))
+       x(j,i(j)) = v(j)
 
-!        w(j) = w(j) + weyl
-!     end do
+       w(j) = w(j) + weyl
+    end do
 
-!     SingleIntegerRN = v+w
+    SingleIntegerRN = v+w
 
-!     if ( present(iin) ) then
-!         iin=i
-!     End if
+    if ( present(iin) ) then
+        iin=i
+    End if
 
-!     if ( present(win) ) then
-!         win=w
-!     End if
+    if ( present(win) ) then
+        win=w
+    End if
 
-!     If ( present(xin) ) then
-!         xin=x
-!     End if
+    If ( present(xin) ) then
+        xin=x
+    End if
 
-!   end subroutine xor4096s_1d
+  end subroutine xor4096s_1d
 
   !******************************************************************************************
 
@@ -634,130 +633,130 @@ CONTAINS
 
   end subroutine xor4096f_0d
 
-!   !******************************************************************************************
+  !******************************************************************************************
 
-!   subroutine xor4096f_1d(seed,SingleRealRN,iin,win,xin)
+  subroutine xor4096f_1d(seed,SingleRealRN,iin,win,xin)
 
-!     implicit none
+    implicit none
 
-!     integer(i4), dimension(:),          intent(in)  :: seed
-!     real(SP),     dimension(size(seed)), intent(out) :: SingleRealRN
-!     integer(i4), optional, dimension(size(seed)),       intent(inout) :: iin
-!     integer(i4), optional, dimension(size(seed)),       intent(inout) :: win
-!     integer(i4), optional, dimension(size(seed),0:127), intent(inout) :: xin
+    integer(i4), dimension(:),          intent(in)  :: seed
+    real(SP),     dimension(size(seed)), intent(out) :: SingleRealRN
+    integer(i4), optional, dimension(size(seed)),       intent(inout) :: iin
+    integer(i4), optional, dimension(size(seed)),       intent(inout) :: win
+    integer(i4), optional, dimension(size(seed),0:127), intent(inout) :: xin
 
-!     integer(i4)                         :: m
-!     integer(i4)                         :: wlen, r, s, a, b, c, d
-!     integer(i4)                         :: weyl =  1640531527_i4              !Z'61C88647' = Hexadecimal notation
-!     integer(i4)                         :: k, j
-!     real(SP), save                       :: t24 = 1.0_SP/16777216.0_SP      ! = 0.5^24 = 1/2^24
-!     integer(i4), dimension(size(seed))  :: t,v
-!     integer(i4), dimension(:,:), allocatable, save  :: x                   ! x(0) ... x(r-1)
-!     integer(i4), dimension(:),   allocatable, save  :: i,w                 ! i<0 indicates first call
+    integer(i4)                         :: m
+    integer(i4)                         :: wlen, r, s, a, b, c, d
+    integer(i4)                         :: weyl =  1640531527_i4              !Z'61C88647' = Hexadecimal notation
+    integer(i4)                         :: k, j
+    real(SP), save                       :: t24 = 1.0_SP/16777216.0_SP      ! = 0.5^24 = 1/2^24
+    integer(i4), dimension(size(seed))  :: t,v
+    integer(i4), dimension(:,:), allocatable, save  :: x                   ! x(0) ... x(r-1)
+    integer(i4), dimension(:),   allocatable, save  :: i,w                 ! i<0 indicates first call
 
-! !$omp   threadprivate(x,i,w) 
+!$omp   threadprivate(x,i,w) 
 
-!     m= size(seed)
+    m= size(seed)
 
-!     if ( present(iin) .and. (Any(seed .eq. 0)) ) i = iin
-!     if ( present(win) .and. (Any(seed .eq. 0)) ) w = win
-!     if ( present(xin) .and. (Any(seed .eq. 0)) ) x = xin
+    if ( present(iin) .and. (Any(seed .eq. 0)) ) i = iin
+    if ( present(win) .and. (Any(seed .eq. 0)) ) w = win
+    if ( present(xin) .and. (Any(seed .eq. 0)) ) x = xin
 
-!     ! produces a 24bit Integer Random Number (0...16777216) and
-!     ! scales it afterwards to (0.0,1.0)
+    ! produces a 24bit Integer Random Number (0...16777216) and
+    ! scales it afterwards to (0.0,1.0)
 
-!     if (.not. allocated(i)) then
-!        allocate(i(m))
-!        i = -1
-!     end if
-!     if (.not. allocated(x)) then
-!        allocate(x(m,0:127))
-!     end if
-!     if (.not. allocated(w)) then
-!        allocate(w(m))
-!     end if
+    if (.not. allocated(i)) then
+       allocate(i(m))
+       i = -1
+    end if
+    if (.not. allocated(x)) then
+       allocate(x(m,0:127))
+    end if
+    if (.not. allocated(w)) then
+       allocate(w(m))
+    end if
 
-!     wlen = 32
-!     r = 128
-!     s = 95
-!     a = 17
-!     b = 12
-!     c = 13
-!     d = 15
+    wlen = 32
+    r = 128
+    s = 95
+    a = 17
+    b = 12
+    c = 13
+    d = 15
 
-!     Do j = 1,m !Loop over every stream
-!        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
-!           If (seed(j) .ne. 0) then                   ! v must be nonzero
-!              v(j) = seed(j)
-!           else
-!              v(j) = NOT(seed(j))
-!           end if
+    Do j = 1,m !Loop over every stream
+       If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
+          If (seed(j) .ne. 0) then                   ! v must be nonzero
+             v(j) = seed(j)
+          else
+             v(j) = NOT(seed(j))
+          end if
 
-!           do k=wlen,1,-1                          ! Avoid correlations for close seeds
-!              ! This recurrence has period of 2^32-1
-!              v(j) = IEOR(v(j),ISHFT(v(j),13))
-!              v(j) = IEOR(v(j),ISHFT(v(j),-17))
-!              v(j) = IEOR(v(j),ISHFT(v(j), 5))
-!           end do
+          do k=wlen,1,-1                          ! Avoid correlations for close seeds
+             ! This recurrence has period of 2^32-1
+             v(j) = IEOR(v(j),ISHFT(v(j),13))
+             v(j) = IEOR(v(j),ISHFT(v(j),-17))
+             v(j) = IEOR(v(j),ISHFT(v(j), 5))
+          end do
 
-!           ! Initialize circular array
-!           w(j) = v(j)
-!           do k=0,r-1
-!              w(j) = w(j) + weyl
-!              v(j) = IEOR(v(j),ISHFT(v(j),13))
-!              v(j) = IEOR(v(j),ISHFT(v(j),-17))
-!              v(j) = IEOR(v(j),ISHFT(v(j), 5))
-!              x(j,k) = v(j) + w(j)
-!           end do
+          ! Initialize circular array
+          w(j) = v(j)
+          do k=0,r-1
+             w(j) = w(j) + weyl
+             v(j) = IEOR(v(j),ISHFT(v(j),13))
+             v(j) = IEOR(v(j),ISHFT(v(j),-17))
+             v(j) = IEOR(v(j),ISHFT(v(j), 5))
+             x(j,k) = v(j) + w(j)
+          end do
 
-!           ! Discard first 4*r results (Gimeno)
-!           i(j) = r-1
-!           do k = 4*r,1,-1
-!              i(j) = IAND(i(j)+1,r-1)
-!              t(j) = x(j,i(j))
-!              v(j) = x(j,IAND(i(j)+(r-s),r-1))
-!              t(j) = IEOR(t(j),ISHFT(t(j),a))
-!              t(j) = IEOR(t(j),ISHFT(t(j),-b))
-!              v(j) = IEOR(v(j),ISHFT(v(j),c))
-!              v(j) = IEOR(v(j),IEOR(t(j),ISHFT(v(j),-d)))
-!              x(j,i(j)) = v(j)
-!           end do
-!        end if ! end of initialization
-!     end do
+          ! Discard first 4*r results (Gimeno)
+          i(j) = r-1
+          do k = 4*r,1,-1
+             i(j) = IAND(i(j)+1,r-1)
+             t(j) = x(j,i(j))
+             v(j) = x(j,IAND(i(j)+(r-s),r-1))
+             t(j) = IEOR(t(j),ISHFT(t(j),a))
+             t(j) = IEOR(t(j),ISHFT(t(j),-b))
+             v(j) = IEOR(v(j),ISHFT(v(j),c))
+             v(j) = IEOR(v(j),IEOR(t(j),ISHFT(v(j),-d)))
+             x(j,i(j)) = v(j)
+          end do
+       end if ! end of initialization
+    end do
 
-!     ! Apart from initialization (above), this is the generator
-!     v = 0_i4
-!     Do j=1,m
-!        Do While (v(j) .eq. 0_i4)
-!           i(j) = IAND(i(j)+1,r-1)
-!           t(j) = x(j,i(j))
-!           v(j) = x(j,IAND(i(j)+(r-s),r-1))
-!           t(j) = IEOR(t(j),ISHFT(t(j),a))
-!           t(j) = IEOR(t(j),ISHFT(t(j),-b))
-!           v(j) = IEOR(v(j),ISHFT(v(j),c))
-!           v(j) = IEOR(v(j),IEOR(t(j),ISHFT(v(j),-d)))
-!           x(j,i(j)) = v(j)
-!           w(j) = w(j) + weyl
-!           v(j) = v(j) + w(j)
-!           v(j) = ISHFT(v(j),-8)
-!        End Do
-!     End Do
+    ! Apart from initialization (above), this is the generator
+    v = 0_i4
+    Do j=1,m
+       Do While (v(j) .eq. 0_i4)
+          i(j) = IAND(i(j)+1,r-1)
+          t(j) = x(j,i(j))
+          v(j) = x(j,IAND(i(j)+(r-s),r-1))
+          t(j) = IEOR(t(j),ISHFT(t(j),a))
+          t(j) = IEOR(t(j),ISHFT(t(j),-b))
+          v(j) = IEOR(v(j),ISHFT(v(j),c))
+          v(j) = IEOR(v(j),IEOR(t(j),ISHFT(v(j),-d)))
+          x(j,i(j)) = v(j)
+          w(j) = w(j) + weyl
+          v(j) = v(j) + w(j)
+          v(j) = ISHFT(v(j),-8)
+       End Do
+    End Do
 
-!     SingleRealRN = t24*v
+    SingleRealRN = t24*v
 
-!     if ( present(iin) ) then
-!         iin=i
-!     End if
+    if ( present(iin) ) then
+        iin=i
+    End if
 
-!     if ( present(win) ) then
-!         win=w
-!     End if
+    if ( present(win) ) then
+        win=w
+    End if
 
-!     If ( present(xin) ) then
-!         xin=x
-!     End if
+    If ( present(xin) ) then
+        xin=x
+    End if
 
-!   end subroutine xor4096f_1d
+  end subroutine xor4096f_1d
 
 !******************************************************************************************
 
