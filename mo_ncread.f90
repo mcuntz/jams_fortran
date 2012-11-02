@@ -381,6 +381,7 @@ contains
   !        Modified, Matthias Cuntz, Jan 2012 - unified routines for different dimensions and data types
   !        Modified, Stephan Thober, Mar 2012 - corrected dynamical read of data
   !        Modified, Stephan Thober, May 2012 - fid
+  !        Modified, Stephan Thober, Nov 2012 - write out Varname, when vartype is incorrect
   ! ------------------------------------------------------------------------------
   subroutine Get_NcVar_0d_sp(Filename, VarName, Dat, fid)
     !
@@ -407,7 +408,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat))
@@ -442,7 +447,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat))
@@ -504,7 +513,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -567,7 +580,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -630,7 +647,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -693,7 +714,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -756,7 +781,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -819,7 +848,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -882,7 +915,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -945,7 +982,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -1008,7 +1049,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -1070,7 +1115,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -1105,7 +1154,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat))
@@ -1165,7 +1218,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -1225,7 +1282,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -1285,7 +1346,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -1345,7 +1410,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
@@ -1405,7 +1474,11 @@ contains
     ! Inquire file, check if VarName exists and get the id
     call Get_Info(Varname,ncid,varid,vartype)
     ! check variable type ( 5 equals float type, 6 equals double )
-    if (vartype /= itype) stop 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+    if (vartype /= itype) then
+       print *, 'Variable name: ', trim(Varname)
+       print *, 'ERROR*** type of variable does not match argument type. subroutine Get_NcVar'
+       stop
+    end if
     !
     ! get values by varid
     call check(nf90_get_var(ncid, varid, Dat, Rstart, Rcount))
