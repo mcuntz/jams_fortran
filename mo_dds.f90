@@ -114,6 +114,7 @@ CONTAINS
   !         Modified, Matthias Cuntz & Juliane Mai, Jul 2012 - module
   !                   Juliane Mai,                  Aug 2012 - optional argument funcbest added
   !                   Matthias Cuntz & Juliane Mai, Aug 2012 - MDDS
+  !                   Juliane Mai,                  Nov 2012 - masked parameter
 
   function DDS(obj_func, pini, prange, r, seed, maxiter, maxit, mask, funcbest)
 
