@@ -74,10 +74,12 @@ MODULE mo_corr
   PUBLIC :: crosscorr    ! Crosscorrelation coefficient at lag k = crosscoeffk(k)/crosscoeffk(0)
 
   INTERFACE autocoeffk
-     MODULE PROCEDURE autocoeffk_sp, autocoeffk_dp
+     MODULE PROCEDURE autocoeffk_sp, autocoeffk_dp, &
+          autocoeffk_1d_dp, autocoeffk_1d_sp
   END INTERFACE autocoeffk
   INTERFACE autocorr
-     MODULE PROCEDURE autocorr_sp, autocorr_dp
+     MODULE PROCEDURE autocorr_sp, autocorr_dp, &
+          autocorr_1d_sp, autocorr_1d_dp
   END INTERFACE autocorr
   INTERFACE corr
      MODULE PROCEDURE corr_sp, corr_dp
@@ -247,13 +249,13 @@ CONTAINS
   
   !     INDENT(IN)
   !         real(sp/dp) :: x(:)        Time series
-  !         integer(i4) :: k           Lag for autocorrelation
+  !         integer(i4) :: k[(:)]      Lag for autocorrelation
 
   !     INDENT(INOUT)
   !         None
 
   !     INDENT(OUT)
-  !         real(sp/dp) :: ak          coefficient so that ak/autocoeffk(x,0) is the autocorrelation coefficient at lag k
+  !         real(sp/dp) :: ak[(:)]     coefficient so that ak/autocoeffk(x,0) is the autocorrelation coefficient at lag k
 
   !     INDENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(vec).
@@ -280,6 +282,7 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Nov 2011
+  !         Modified, Stephan Thober, Nov 2012 - added 1d version
 
   FUNCTION autocoeffk_dp(x, k, mask)
 
@@ -318,6 +321,53 @@ CONTAINS
 
   END FUNCTION autocoeffk_sp
 
+  FUNCTION autocoeffk_1d_dp(x, k, mask) result(acf)
+
+    IMPLICIT NONE
+
+    REAL(dp),    DIMENSION(:),           INTENT(IN)  :: x
+    INTEGER(i4), DIMENSION(:),           INTENT(IN)  :: k
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    INTEGER(i4)                                      :: i
+    REAL(dp),    DIMENSION(size(k))                  :: acf
+
+    if (present(mask)) then
+       if (size(mask) /= size(x)) stop 'Error autocoeffk_1d_dp: size(mask) /= size(x)'
+       do i = 1, size(k)
+          acf(i) = crosscoeffk(x, x, k(i), mask)
+       end do
+    else
+       do i = 1, size(k)
+          acf(i) = crosscoeffk(x, x, k(i))
+       end do
+    endif
+
+  END FUNCTION autocoeffk_1d_dp
+
+
+  FUNCTION autocoeffk_1d_sp(x, k, mask) result(acf)
+
+    IMPLICIT NONE
+
+    REAL(sp),    DIMENSION(:),           INTENT(IN)  :: x
+    INTEGER(i4), DIMENSION(:),           INTENT(IN)  :: k
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    INTEGER(i4)                                      :: i
+    REAL(sp),    DIMENSION(size(k))                  :: acf
+
+    if (present(mask)) then
+       if (size(mask) /= size(x)) stop 'Error autocoeffk_1d_sp: size(mask) /= size(x)'
+       do i = 1, size(k)
+          acf(i) = crosscoeffk(x, x, k(i), mask)
+       end do
+    else
+       do i = 1, size(k)
+          acf(i) = crosscoeffk(x, x, k(i))
+       end do
+    endif
+
+  END FUNCTION autocoeffk_1d_sp
+
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -336,13 +386,13 @@ CONTAINS
   
   !     INDENT(IN)
   !         real(sp/dp) :: x(:)        Time series
-  !         integer(i4) :: k           Lag for autocorrelation
+  !         integer(i4) :: k[(:)]      Lag for autocorrelation
 
   !     INDENT(INOUT)
   !         None
 
   !     INDENT(OUT)
-  !         real(sp/dp) :: ak          Coefficient of autocorrelation function at lag k
+  !         real(sp/dp) :: ak[(:)]     Coefficient of autocorrelation function at lag k
 
   !     INDENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(vec).
@@ -369,6 +419,7 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Nov 2011
+  !         Modified, Stephan Thober, Nov 2012 - added 1d version
 
   FUNCTION autocorr_dp(x, k, mask)
 
@@ -380,7 +431,7 @@ CONTAINS
     REAL(dp)                                      :: autocorr_dp
 
     if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocorr_dp: size(mask) /= size(x)'
+       if (size(mask) /= size(x)) stop 'Error autocorr_1d_dp: size(mask) /= size(x)'
        autocorr_dp = crosscoeffk(x, x, k, mask) / crosscoeffk(x, x, 0, mask)
     else
        autocorr_dp = crosscoeffk(x, x, k) / crosscoeffk(x, x, 0)
@@ -399,13 +450,59 @@ CONTAINS
     REAL(sp)                                      :: autocorr_sp
 
     if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocorr_sp: size(mask) /= size(x)'
+       if (size(mask) /= size(x)) stop 'Error autocorr_1d_sp: size(mask) /= size(x)'
        autocorr_sp = crosscoeffk(x, x, k, mask) / crosscoeffk(x, x, 0, mask)
     else
        autocorr_sp = crosscoeffk(x, x, k) / crosscoeffk(x, x, 0)
     endif
 
   END FUNCTION autocorr_sp
+
+  FUNCTION autocorr_1d_dp(x, k, mask) result(acf)
+
+    IMPLICIT NONE
+
+    REAL(dp),   DIMENSION(:),           INTENT(IN)  :: x
+    INTEGER(i4),DIMENSION(:),           INTENT(IN)  :: k
+    LOGICAL,    DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    INTEGER(i4)                                     :: i
+    REAL(dp),   DIMENSION(size(k))                  :: acf
+
+    if (present(mask)) then
+       if (size(mask) /= size(x)) stop 'Error autocorr_dp: size(mask) /= size(x)'
+       do i = 1, size(k)
+          acf(i) = crosscoeffk(x, x, k(i), mask) / crosscoeffk(x, x, 0, mask)
+       end do
+    else
+       do i = 1, size(k)
+          acf(i) = crosscoeffk(x, x, k(i)) / crosscoeffk(x, x, 0, mask)
+       end do
+    endif
+
+  END FUNCTION autocorr_1d_dp
+
+  FUNCTION autocorr_1d_sp(x, k, mask) result(acf)
+
+    IMPLICIT NONE
+
+    REAL(sp),   DIMENSION(:),           INTENT(IN)  :: x
+    INTEGER(i4),DIMENSION(:),           INTENT(IN)  :: k
+    LOGICAL,    DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    INTEGER(i4)                                     :: i
+    REAL(sp),   DIMENSION(size(k))                  :: acf
+
+    if (present(mask)) then
+       if (size(mask) /= size(x)) stop 'Error autocorr_sp: size(mask) /= size(x)'
+       do i = 1, size(k)
+          acf(i) = crosscoeffk(x, x, k(i), mask) / crosscoeffk(x, x, 0, mask)
+       end do
+    else
+       do i = 1, size(k)
+          acf(i) = crosscoeffk(x, x, k(i)) / crosscoeffk(x, x, 0, mask)
+       end do
+    endif
+
+  END FUNCTION autocorr_1d_sp
 
   ! ------------------------------------------------------------------
 
