@@ -344,7 +344,7 @@ contains
   !        be filled with ones.
 
   !    CALLING SEQUENCE
-  !        call Get_NcVar(Filename, VarName, Dat, start=jdate, count=Nvalues, fid)
+  !        call Get_NcVar(Filename, VarName, Dat, start=jdate, count=Nvalues, fid=fid)
 
   !    INTENT(IN)
   !        character(len=*) :: Filename - Name of the nc file

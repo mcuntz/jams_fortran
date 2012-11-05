@@ -1,6 +1,6 @@
-module mo_ncWrite
+module mo_ncwrite
   !
-  ! This module provides a structure and subroutines for writing a netcdf file using the netcdf library
+  ! This module provides a structure and subroutines for writing netcdf files.
 
   ! License
   ! -------
@@ -34,12 +34,26 @@ module mo_ncWrite
 
   private
 
-  ! definition of parameters
-  integer(i4), parameter                    :: nMaxDim = 5         ! nr. max dimensions
-  integer(i4), parameter                    :: nMaxAtt = 20        ! nr. max attributes
-  integer(i4), parameter                    :: maxLen  = 256       ! nr. string length
-  integer(i4), parameter                    :: nGAtt   = 20        ! nr. global attributes
-  integer(i4), parameter                    :: nAttDim = 2         ! dim array of attribute values
+  ! public routines -------------------------------------------------------------------
+  public :: close_netcdf         ! save and close the netcdf file
+  public :: create_netcdf        ! create the nc file with variables and their attributes, after they were set
+  public :: dump_netcdf          ! simple dump of variable into a netcdf file
+  public :: write_dynamic_netcdf ! write dynamically (one record after the other) in the file
+  public :: write_static_netcdf  ! write static data in the file
+
+  ! public parameters
+  integer(i4), parameter :: nMaxDim = 5         ! nr. max dimensions
+  integer(i4), parameter :: nMaxAtt = 20        ! nr. max attributes
+  integer(i4), parameter :: maxLen  = 256       ! nr. string length
+  integer(i4), parameter :: nGAtt   = 20        ! nr. global attributes
+  integer(i4), parameter :: nAttDim = 2         ! dim array of attribute values
+
+  ! public types -----------------------------------------------------------------
+  type dims
+     character (len=maxLen)                 :: name                ! dim. name
+     integer(i4)                            :: len                 ! dim. lenght, undefined time => NF90_UNLIMITED
+     integer(i4)                            :: dimId               ! dim. Id
+  end type dims
 
   type attribute
     character (len=maxLen)                  :: name                ! attribute name
@@ -60,8 +74,8 @@ module mo_ncWrite
      integer(i4), dimension(nMaxDim)        :: dimTypes            ! type of dimensions
      integer(i4)                            :: nAtt                ! nr. attributes     
      type(attribute), dimension(nMaxAtt)    :: att                 ! var. attributes   
-     integer(i4), dimension(nMaxDim)        :: start               ! starting indices for netCDF
-     integer(i4), dimension(nMaxDim)        :: count               ! counter          for netCDF
+     integer(i4), dimension(nMaxDim)        :: start               ! starting indices for netcdf
+     integer(i4), dimension(nMaxDim)        :: count               ! counter          for netcdf
      logical                                :: wFlag               ! write flag
      integer(i4),                     pointer :: G0_i              ! array pointing model variables
      integer(i4), dimension(:      ), pointer :: G1_i              ! array pointing model variables
@@ -80,36 +94,76 @@ module mo_ncWrite
      real(dp),    dimension(:,:,:,:), pointer :: G4_d              ! array pointing model variables
   end type variable
 
-  type dims
-     character (len=maxLen)                 :: name                ! dim. name
-     integer(i4)                            :: len                 ! dim. lenght, undefined time => NF90_UNLIMITED
-     integer(i4)                            :: dimId               ! dim. Id
-  end type dims
-
-  ! public types -----------------------------------------------------------------
-  public :: attribute
-  public :: variable
   public :: dims
+  public :: variable
+  public :: attribute
 
   ! public variables -----------------------------------------------------------------
-  integer(i4),    public                            :: nVars   ! nr. variables
-  integer(i4),    public                            :: nDims   ! nr. dimensions 
-  type (dims),    public, dimension(:), allocatable :: Dnc     ! dimensions list 
-  type(variable), public, dimension(:), allocatable :: V       ! variable list, THIS STRUCTURE WILL BE WRITTEN IN THE FILE
-  type(attribute), public, dimension(nGAtt)         :: gatt    ! global attributes for netCDF
+  integer(i4),     public                            :: nVars   ! nr. variables
+  integer(i4),     public                            :: nDims   ! nr. dimensions 
+  type (dims),     public, dimension(:), allocatable :: Dnc     ! dimensions list 
+  type(variable),  public, dimension(:), allocatable :: V       ! variable list, THIS STRUCTURE WILL BE WRITTEN IN THE FILE
+  type(attribute), public, dimension(nGAtt)          :: gatt    ! global attributes for netcdf
 
-  ! public routines -------------------------------------------------------------------
-  public :: create_netCDF        ! create the nc file with variables and their attributes, after they were set
-  public :: write_static_netcdf  ! write static data in the file
-  public :: write_dynamic_netcdf ! write dynamically (one record after the other) in the file
-  public :: close_netcdf         ! save and close the netcdf file
+  interface dump_netcdf
+     module procedure dump_netcdf_1d_sp, dump_netcdf_2d_sp, dump_netcdf_3d_sp, &
+          dump_netcdf_4d_sp, dump_netcdf_5d_sp, &
+          dump_netcdf_1d_dp, dump_netcdf_2d_dp, dump_netcdf_3d_dp, &
+          dump_netcdf_4d_dp, dump_netcdf_5d_dp
+  end interface dump_netcdf
 
 contains
+  
+  ! ----------------------------------------------------------------------------
+  !
+  ! NAME
+  !     close_netcdf
+  !
+  ! PURPOSE
+  !     closes a stream of an open netcdf file and saves the file.
+  !
+  ! CALLING SEQUENCE
+  !     call close_netcdf(nc, Info=Info)
+  !
+  ! INTENT(IN)
+  !     integer(i4) :: nc - stream id of an open netcdf file which shall be closed
+  !
+  ! INTENT(IN), OPTIONAL
+  !     logical :: Info - if given and true, progress information will be written
+  !
+  ! RESTRICTIONS
+  !     closes only an already open stream
+  !
+  ! EXAMPLE
+  !     see test_mo_ncwrite
+  !
+  ! LITERATURE
+  !     http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
+  !
+  ! HISTORY
+  !     Written  Luis Samaniego  Feb 2011
+  !     Modified Stephan Thober  Dec 2011 - added comments and generalized
+  !              Matthias Cuntz  Jan 2012 - Info
+
+  subroutine close_netcdf(ncId,Info)
+    !
+    implicit none
+    ! 
+    integer(i4), intent(in)           :: ncId
+    logical,     intent(in), optional :: Info
+    !
+    ! close: save new netcdf dataset
+    call check(nf90_close( ncId ))
+    if (present(Info)) then
+       if (Info) write(*,*) "NetCDF file was saved."
+    end if
+    !
+  end subroutine close_netcdf
 
   ! ------------------------------------------------------------------------------
   !
   ! NAME
-  !     create_netCDF
+  !     create_netcdf
   !
   ! PURPOSE
   !     This subroutine will open a new netcdf file and write the variable
@@ -118,7 +172,7 @@ contains
   !     for an example.
   !
   ! CALLING SEQUENCE
-  !     call create_netCDF(File, nc, Info=Info)
+  !     call create_netcdf(File, nc, Info=Info)
   !
   ! INTENT(IN)
   !     character(len=maxLen) :: File ! Filename of File to be written
@@ -144,7 +198,7 @@ contains
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
 
-  subroutine create_netCDF(Filename,ncid,Info)
+  subroutine create_netcdf(Filename,ncid,Info)
     !
     implicit none
     !
@@ -158,7 +212,7 @@ contains
     real(sp),    dimension(nAttDim)           :: att_FLOAT
     character(len=maxLen), dimension(nAttDim) :: att_CHAR
     !
-    ! 1  Create netCDF dataset: enter define mode     ->  get ncId
+    ! 1  Create netcdf dataset: enter define mode     ->  get ncId
     call check(nf90_create(trim(Filename), NF90_CLOBBER, ncId ))
     !
     ! 2  Define dimensions                                 -> get dimId
@@ -167,7 +221,7 @@ contains
     end do
     !
     ! 3 Define dimids array, which is used to pass the dimids of the dimensions of
-    ! the netCDF variables
+    ! the netcdf variables
     do i = 1, nVars
        V(i)%unlimited = .false.
        V(i)%dimids  = 0
@@ -186,7 +240,7 @@ contains
        end if
     end do
     !
-    ! 4 Define the netCDF variables and atributes                            -> get varId
+    ! 4 Define the netcdf variables and atributes                            -> get varId
     do i=1, nVars
        if ( .not. V(i)%wFlag ) cycle
        call check(nf90_def_var(ncId, V(i)%name, V(i)%xtype, V(i)%dimids(1:V(i)%nDims), V(i)%varId ))
@@ -219,12 +273,784 @@ contains
        if (Info) write(*,*) "NetCDF file was created", ncId
     end if
     ! 
-  end subroutine create_netCDF
+  end subroutine create_netcdf
+
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         dump_netcdf
+
+  !     PURPOSE
+  !         Simple write of a variable in a netcdf file.
+
+  !         The variabel can be 1 to 5 dimensional and single or double precision.
+
+  !         1D and 2D are dumped as static variables. From 3 to 5 dimension, the last
+  !         dimension will be defined as time.
+  !         The Variable will be called var.
+
+  !     CALLING SEQUENCE
+  !         call dump_netcdf(filename, arr)
+  
+  !     INDENT(IN)
+  !         character(len=*) :: filename                  name of netcdf output file
+  !         real(sp/dp) ::      arr(:[,:[,:[,:[,:]]]])    1D to 5D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         None
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         If dimension 
+
+  !     EXAMPLE
+  !         call dump_netcdf('test.nc, myarray)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2012
+
+  subroutine dump_netcdf_1d_sp(filename, arr)
+
+    implicit none
+
+    character(len=*),               intent(in) :: filename ! netcdf file name
+    real(sp),         dimension(:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 1 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    !
+    ! define dim variables
+    do i=1, ndim
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_FLOAT, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write variable
+    start = 1
+    count = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_1d_sp
+
+
+  subroutine dump_netcdf_2d_sp(filename, arr)
+
+    implicit none
+
+    character(len=*),                 intent(in) :: filename ! netcdf file name
+    real(sp),         dimension(:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 2 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    !
+    ! define dim variables
+    do i=1, ndim
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_FLOAT, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write variable
+    start = 1
+    count = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_2d_sp
+
+
+  subroutine dump_netcdf_3d_sp(filename, arr)
+
+    implicit none
+
+    character(len=*),                   intent(in) :: filename ! netcdf file name
+    real(sp),         dimension(:,:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 3 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim-1
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    ! define dim time
+    call check(nf90_def_dim(ncid, 'time', NF90_UNLIMITED, dimid(ndim)))
+    !
+    ! define dim variables
+    do i=1, ndim-1
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    ! define time variable
+    call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_FLOAT, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim-1
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write time and variable
+    start = 1
+    count = dims
+    count(ndim) = 1
+    do i=1, dims(ndim)
+       start(ndim) = i
+       call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,i), start, count))
+    end do
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_3d_sp
+
+
+  subroutine dump_netcdf_4d_sp(filename, arr)
+
+    implicit none
+
+    character(len=*),                     intent(in) :: filename ! netcdf file name
+    real(sp),         dimension(:,:,:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 4 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim-1
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    ! define dim time
+    call check(nf90_def_dim(ncid, 'time', NF90_UNLIMITED, dimid(ndim)))
+    !
+    ! define dim variables
+    do i=1, ndim-1
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    ! define time variable
+    call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_FLOAT, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim-1
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write time and variable
+    start = 1
+    count = dims
+    count(ndim) = 1
+    do i=1, dims(ndim)
+       start(ndim) = i
+       call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,i), start, count))
+    end do
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_4d_sp
+
+
+  subroutine dump_netcdf_5d_sp(filename, arr)
+
+    implicit none
+
+    character(len=*),                       intent(in) :: filename ! netcdf file name
+    real(sp),         dimension(:,:,:,:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 5 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim-1
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    ! define dim time
+    call check(nf90_def_dim(ncid, 'time', NF90_UNLIMITED, dimid(ndim)))
+    !
+    ! define dim variables
+    do i=1, ndim-1
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    ! define time variable
+    call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_FLOAT, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim-1
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write time and variable
+    start = 1
+    count = dims
+    count(ndim) = 1
+    do i=1, dims(ndim)
+       start(ndim) = i
+       call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,:,i), start, count))
+    end do
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_5d_sp
+
+
+  subroutine dump_netcdf_1d_dp(filename, arr)
+
+    implicit none
+
+    character(len=*),               intent(in) :: filename ! netcdf file name
+    real(dp),         dimension(:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 1 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    !
+    ! define dim variables
+    do i=1, ndim
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write variable
+    start = 1
+    count = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_1d_dp
+
+
+  subroutine dump_netcdf_2d_dp(filename, arr)
+
+    implicit none
+
+    character(len=*),                 intent(in) :: filename ! netcdf file name
+    real(dp),         dimension(:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 2 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    !
+    ! define dim variables
+    do i=1, ndim
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write variable
+    start = 1
+    count = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_2d_dp
+
+
+  subroutine dump_netcdf_3d_dp(filename, arr)
+
+    implicit none
+
+    character(len=*),                   intent(in) :: filename ! netcdf file name
+    real(dp),         dimension(:,:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 3 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim-1
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    ! define dim time
+    call check(nf90_def_dim(ncid, 'time', NF90_UNLIMITED, dimid(ndim)))
+    !
+    ! define dim variables
+    do i=1, ndim-1
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    ! define time variable
+    call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim-1
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write time and variable
+    start = 1
+    count = dims
+    count(ndim) = 1
+    do i=1, dims(ndim)
+       start(ndim) = i
+       call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,i), start, count))
+    end do
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_3d_dp
+
+
+  subroutine dump_netcdf_4d_dp(filename, arr)
+
+    implicit none
+
+    character(len=*),                     intent(in) :: filename ! netcdf file name
+    real(dp),         dimension(:,:,:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 4 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim-1
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    ! define dim time
+    call check(nf90_def_dim(ncid, 'time', NF90_UNLIMITED, dimid(ndim)))
+    !
+    ! define dim variables
+    do i=1, ndim-1
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    ! define time variable
+    call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim-1
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write time and variable
+    start = 1
+    count = dims
+    count(ndim) = 1
+    do i=1, dims(ndim)
+       start(ndim) = i
+       call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,i), start, count))
+    end do
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_4d_dp
+
+
+  subroutine dump_netcdf_5d_dp(filename, arr)
+
+    implicit none
+
+    character(len=*),                       intent(in) :: filename ! netcdf file name
+    real(dp),         dimension(:,:,:,:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 5 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim-1
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    ! define dim time
+    call check(nf90_def_dim(ncid, 'time', NF90_UNLIMITED, dimid(ndim)))
+    !
+    ! define dim variables
+    do i=1, ndim-1
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    ! define time variable
+    call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim-1
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write time and variable
+    start = 1
+    count = dims
+    count(ndim) = 1
+    do i=1, dims(ndim)
+       start(ndim) = i
+       call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,:,i), start, count))
+    end do
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_5d_dp
 
   ! ----------------------------------------------------------------------------
   !
   ! NAME
-  !     write_static_netCDF
+  !     write_dynamic_netcdf
+  !
+  ! PURPOSE
+  !     This routine writes data, where one dimension has the unlimited attribute.
+  !     Therefore, the number of the record which should be written has to be
+  !     specified.
+  !
+  ! CALLING SEQUENCE
+  !     call write_dynamic_netcdf(nc, rec, Info=Info)
+  !
+  ! INTENT(IN)
+  !     integer(i4) :: nc - stream id of an open netcdf file where data should be written
+  !                         can be obtained by an create_netcdf call
+  !
+  ! INTENT(IN)
+  !     integer(i4) :: rec - record id of record which will be written in the file
+  !
+  ! INTENT(IN), OPTIONAL
+  !     logical :: Info - if given and true, progress information will be written
+  !
+  ! RESTRICTIONS
+  !     Writes only data, where the data pointers of the structure V are assigned
+  !     and where one dimension has the unlimited attribute. Moreover only one
+  !     record will be written.
+  !     Writes only 1 to 4 dim arrays, integer, single or double precision.
+  !
+  ! EXAMPLE
+  !     see test_mo_ncwrite
+  !
+  ! LITERATURE
+  !     http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
+  !
+  ! HISTORY
+  !     Written  Luis Samaniego  Feb 2011
+  !     Modified Stephan Thober  Dec 2011 - added comments and generalized
+  !              Matthias Cuntz  Jan 2012 - Info
+  !              Stephan Thober  Jan 2012 - iRec is not optional
+
+  subroutine write_dynamic_netcdf(ncId, irec, Info)
+    !
+    implicit none
+    !
+    ! netcdf related variables
+    integer(i4), intent(in)           :: ncId
+    integer(i4), intent(in)           :: iRec
+    logical,     intent(in), optional :: Info
+    !
+    integer(i4)                       :: i
+    ! NOTES: 1) netcdf file must be on *** data mode ***
+    !        2) start and end of the data chuck is controled by
+    !           V(:)%start and  V(:)%count
+    !
+    ! set values for variables (one scalar or grid at a time)
+    !
+    do i = 1, nVars
+       if ( .not. V(i)%unlimited     ) cycle
+       if ( .not. V(i)%wFlag   ) cycle
+       if (present(Info)) then
+          if ((iRec ==1) .and. Info) write(*,*) "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
+       end if
+       V(i)%start ( V(i)%nDims ) = iRec
+       select case (V(i)%xtype)
+       case (NF90_INT)
+          select case (V(i)%nDims-1)
+          case (0)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_i, V(i)%start )) 
+          case (1)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_i, V(i)%start, V(i)%count ))
+          case (2)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_i, V(i)%start, V(i)%count ))
+          case (3)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_i, V(i)%start, V(i)%count ))
+          case (4)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_i, V(i)%start, V(i)%count ))
+          end select
+       case (NF90_FLOAT)
+          select case (V(i)%nDims-1)
+          case (0)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_f, V(i)%start )) 
+          case (1)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_f, V(i)%start, V(i)%count ))
+          case (2)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_f, V(i)%start, V(i)%count ))
+          case (3)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_f, V(i)%start, V(i)%count ))
+          case (4)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_f, V(i)%start, V(i)%count ))
+          end select
+       case (NF90_DOUBLE)
+          select case (V(i)%nDims-1)
+          case (0)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_d, V(i)%start )) 
+          case (1)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_d, V(i)%start, V(i)%count ))
+          case (2)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_d, V(i)%start, V(i)%count ))
+          case (3)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_d, V(i)%start, V(i)%count ))
+          case (4)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_d, V(i)%start, V(i)%count ))
+          end select
+       end select
+    end do
+
+  end subroutine write_dynamic_netcdf
+
+  ! ----------------------------------------------------------------------------
+  !
+  ! NAME
+  !     write_static_netcdf
   !
   ! PURPOSE
   !     This routines writes static data in the netcdf file that is data
@@ -255,7 +1081,7 @@ contains
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
 
-  subroutine write_static_netCDF(ncId, Info)
+  subroutine write_static_netcdf(ncId, Info)
     !
     implicit none
     !
@@ -315,162 +1141,7 @@ contains
        end select
     end do
 
-  end subroutine write_static_netCDF
-
-  ! ----------------------------------------------------------------------------
-  !
-  ! NAME
-  !     write_dynamic_netCDF
-  !
-  ! PURPOSE
-  !     This routine writes data, where one dimension has the unlimited attribute.
-  !     Therefore, the number of the record which should be written has to be
-  !     specified.
-  !
-  ! CALLING SEQUENCE
-  !     call write_dynamic_netCDF(nc, rec, Info=Info)
-  !
-  ! INTENT(IN)
-  !     integer(i4) :: nc - stream id of an open netcdf file where data should be written
-  !                         can be obtained by an create_netcdf call
-  !
-  ! INTENT(IN)
-  !     integer(i4) :: rec - record id of record which will be written in the file
-  !
-  ! INTENT(IN), OPTIONAL
-  !     logical :: Info - if given and true, progress information will be written
-  !
-  ! RESTRICTIONS
-  !     Writes only data, where the data pointers of the structure V are assigned
-  !     and where one dimension has the unlimited attribute. Moreover only one
-  !     record will be written.
-  !     Writes only 1 to 4 dim arrays, integer, single or double precision.
-  !
-  ! EXAMPLE
-  !     see test_mo_ncwrite
-  !
-  ! LITERATURE
-  !     http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
-  !
-  ! HISTORY
-  !     Written  Luis Samaniego  Feb 2011
-  !     Modified Stephan Thober  Dec 2011 - added comments and generalized
-  !              Matthias Cuntz  Jan 2012 - Info
-  !              Stephan Thober  Jan 2012 - iRec is not optional
-
-  subroutine write_dynamic_netCDF(ncId, irec, Info)
-    !
-    implicit none
-    !
-    ! netcdf related variables
-    integer(i4), intent(in)           :: ncId
-    integer(i4), intent(in)           :: iRec
-    logical,     intent(in), optional :: Info
-    !
-    integer(i4)                       :: i
-    ! NOTES: 1) netCDF file must be on *** data mode ***
-    !        2) start and end of the data chuck is controled by
-    !           V(:)%start and  V(:)%count
-    !
-    ! set values for variables (one scalar or grid at a time)
-    !
-    do i = 1, nVars
-       if ( .not. V(i)%unlimited     ) cycle
-       if ( .not. V(i)%wFlag   ) cycle
-       if (present(Info)) then
-          if ((iRec ==1) .and. Info) write(*,*) "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-       end if
-       V(i)%start ( V(i)%nDims ) = iRec
-       select case (V(i)%xtype)
-       case (NF90_INT)
-          select case (V(i)%nDims-1)
-          case (0)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_i, V(i)%start )) 
-          case (1)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_i, V(i)%start, V(i)%count ))
-          case (2)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_i, V(i)%start, V(i)%count ))
-          case (3)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_i, V(i)%start, V(i)%count ))
-          case (4)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_i, V(i)%start, V(i)%count ))
-          end select
-       case (NF90_FLOAT)
-          select case (V(i)%nDims-1)
-          case (0)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_f, V(i)%start )) 
-          case (1)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_f, V(i)%start, V(i)%count ))
-          case (2)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_f, V(i)%start, V(i)%count ))
-          case (3)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_f, V(i)%start, V(i)%count ))
-          case (4)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_f, V(i)%start, V(i)%count ))
-          end select
-       case (NF90_DOUBLE)
-          select case (V(i)%nDims-1)
-          case (0)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_d, V(i)%start )) 
-          case (1)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_d, V(i)%start, V(i)%count ))
-          case (2)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_d, V(i)%start, V(i)%count ))
-          case (3)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_d, V(i)%start, V(i)%count ))
-          case (4)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_d, V(i)%start, V(i)%count ))
-          end select
-       end select
-    end do
-
-  end subroutine write_dynamic_netCDF
-  
-  ! ----------------------------------------------------------------------------
-  !
-  ! NAME
-  !     close_netcdf
-  !
-  ! PURPOSE
-  !     closes a stream of an open netcdf file and saves the file.
-  !
-  ! CALLING SEQUENCE
-  !     call close_netcdf(nc, Info=Info)
-  !
-  ! INTENT(IN)
-  !     integer(i4) :: nc - stream id of an open netcdf file which shall be closed
-  !
-  ! INTENT(IN), OPTIONAL
-  !     logical :: Info - if given and true, progress information will be written
-  !
-  ! RESTRICTIONS
-  !     closes only an already open stream
-  !
-  ! EXAMPLE
-  !     see test_mo_ncwrite
-  !
-  ! LITERATURE
-  !     http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
-  !
-  ! HISTORY
-  !     Written  Luis Samaniego  Feb 2011
-  !     Modified Stephan Thober  Dec 2011 - added comments and generalized
-  !              Matthias Cuntz  Jan 2012 - Info
-
-  subroutine close_netCDF(ncId,Info)
-    !
-    implicit none
-    ! 
-    integer(i4), intent(in)           :: ncId
-    logical,     intent(in), optional :: Info
-    !
-    ! close: save new netCDF dataset
-    call check(nf90_close( ncId ))
-    if (present(Info)) then
-       if (Info) write(*,*) "NetCDF file was saved."
-    end if
-    !
-  end subroutine close_netCDF
+  end subroutine write_static_netcdf
 
   ! -----------------------------------------------------------------------------
   !  private error checking routine
@@ -487,5 +1158,4 @@ contains
     !
   end subroutine check
 
-end module mo_ncWrite
-
+end module mo_ncwrite
