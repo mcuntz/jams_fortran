@@ -467,15 +467,18 @@ CONTAINS
     LOGICAL,    DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     INTEGER(i4)                                     :: i
     REAL(dp),   DIMENSION(size(k))                  :: acf
+    REAL(dp)                                        :: c0
 
     if (present(mask)) then
        if (size(mask) /= size(x)) stop 'Error autocorr_dp: size(mask) /= size(x)'
+       c0 = crosscoeffk(x, x, 0, mask)
        do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i), mask) / crosscoeffk(x, x, 0, mask)
+          acf(i) = crosscoeffk(x, x, k(i), mask) / c0
        end do
     else
+       c0 = crosscoeffk(x, x, 0)
        do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i)) / crosscoeffk(x, x, 0, mask)
+          acf(i) = crosscoeffk(x, x, k(i)) / c0
        end do
     endif
 
@@ -490,15 +493,18 @@ CONTAINS
     LOGICAL,    DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     INTEGER(i4)                                     :: i
     REAL(sp),   DIMENSION(size(k))                  :: acf
+    REAL(sp)                                        :: c0
 
     if (present(mask)) then
        if (size(mask) /= size(x)) stop 'Error autocorr_sp: size(mask) /= size(x)'
+       c0 = crosscoeffk(x, x, 0, mask)
        do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i), mask) / crosscoeffk(x, x, 0, mask)
+          acf(i) = crosscoeffk(x, x, k(i), mask) / c0
        end do
     else
+       c0 = crosscoeffk(x, x, 0)
        do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i)) / crosscoeffk(x, x, 0, mask)
+          acf(i) = crosscoeffk(x, x, k(i)) / c0
        end do
     endif
 
