@@ -109,7 +109,9 @@ module mo_ncwrite
      module procedure dump_netcdf_1d_sp, dump_netcdf_2d_sp, dump_netcdf_3d_sp, &
           dump_netcdf_4d_sp, dump_netcdf_5d_sp, &
           dump_netcdf_1d_dp, dump_netcdf_2d_dp, dump_netcdf_3d_dp, &
-          dump_netcdf_4d_dp, dump_netcdf_5d_dp
+          dump_netcdf_4d_dp, dump_netcdf_5d_dp, &
+          dump_netcdf_1d_i4, dump_netcdf_2d_i4, dump_netcdf_3d_i4, &
+          dump_netcdf_4d_i4, dump_netcdf_5d_i4
   end interface dump_netcdf
 
 contains
@@ -324,6 +326,7 @@ contains
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Nov 2012
+  !         Modified, Stephan Thober, Nov 2012 - added functions for i4 variables
 
   subroutine dump_netcdf_1d_sp(filename, arr)
 
@@ -937,6 +940,281 @@ contains
     call check(nf90_close(ncid))
 
   end subroutine dump_netcdf_5d_dp
+
+  subroutine dump_netcdf_1d_i4(filename, arr)
+
+    implicit none
+
+    character(len=*),               intent(in) :: filename ! netcdf file name
+    integer(i4),      dimension(:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 1 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    !
+    ! define dim variables
+    do i=1, ndim
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_INT, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write variable
+    start = 1
+    count = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+    !
+  end subroutine dump_netcdf_1d_i4
+
+  subroutine dump_netcdf_2d_i4(filename, arr)
+
+    implicit none
+
+    character(len=*),                 intent(in) :: filename ! netcdf file name
+    integer(i4),      dimension(:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 2 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    !
+    ! define dim variables
+    do i=1, ndim
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_INT, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write variable
+    start = 1
+    count = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+    !
+  end subroutine dump_netcdf_2d_i4
+
+  subroutine dump_netcdf_3d_i4(filename, arr)
+
+    implicit none
+
+    character(len=*),                   intent(in) :: filename ! netcdf file name
+    integer(i4),      dimension(:,:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 3 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    !
+    ! define dim variables
+    do i=1, ndim
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_INT, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write variable
+    start = 1
+    count = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+    !
+  end subroutine dump_netcdf_3d_i4
+
+  subroutine dump_netcdf_4d_i4(filename, arr)
+
+    implicit none
+
+    character(len=*),                     intent(in) :: filename ! netcdf file name
+    integer(i4),      dimension(:,:,:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 4 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    !
+    ! define dim variables
+    do i=1, ndim
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_INT, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write variable
+    start = 1
+    count = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+    !
+  end subroutine dump_netcdf_4d_i4
+
+  subroutine dump_netcdf_5d_i4(filename, arr)
+
+    implicit none
+
+    character(len=*),                       intent(in) :: filename ! netcdf file name
+    integer(i4),      dimension(:,:,:,:,:), intent(in) :: arr      ! input array
+
+    integer(i4),      parameter         :: ndim = 5 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    ! open file
+    call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+    !
+    ! define dims
+    dims = shape(arr)
+    do i=1, ndim
+       call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+    end do
+    !
+    ! define dim variables
+    do i=1, ndim
+       call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+    end do
+    !
+    ! define variable
+    call check(nf90_def_var(ncid, 'var', NF90_INT, dimid, varid(ndim+1)))
+    !
+    ! end define mode
+    call check(nf90_enddef(ncid))
+    !
+    ! write dimensions
+    do i=1, ndim
+       call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+    end do
+    !
+    ! write variable
+    start = 1
+    count = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+    !
+  end subroutine dump_netcdf_5d_i4
 
   ! ----------------------------------------------------------------------------
   !
