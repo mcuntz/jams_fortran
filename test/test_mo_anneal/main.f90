@@ -21,11 +21,6 @@ PROGRAM anneal_test
   REAL(DP)                          :: Tstart, Tend
   REAL(DP), DIMENSION(:,:), ALLOCATABLE :: history
 
-  write(*,*) exp(-220.0_sp)
-  write(*,*) exp(-230.0_sp)
-  write(*,*) exp(-241.0_sp)
-  write(*,*) exp(-1000.0_sp)
-
   ! time dependent seeds
   call get_timeseed(seeds)
   print*, 'time dependent seeds would be: ', seeds
