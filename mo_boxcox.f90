@@ -188,7 +188,6 @@ CONTAINS
        maske = mask
     endif
     if (any((x <= 0.0_dp) .and. maske)) then
-       print*, x
        stop 'Error boxcox_dp: x <= 0'
     end if
     if (lmbda == 0.0_dp) then
@@ -472,7 +471,6 @@ CONTAINS
     allocate(xx(nn))
     xx = pack(x, mask=maske)
     if (any(xx <= 0.0_dp)) then
-       print*, xx
        stop 'Error get_boxcox_dp: x <= 0'
     end if
     ax = -5.0_dp
@@ -677,13 +675,17 @@ CONTAINS
     REAL(sp)                           :: llf_boxcox_sp
 
     REAL(sp), DIMENSION(size(x)) :: y
-    REAL(sp)                     :: N, my, f
+    REAL(sp)                     :: N, my, f, s
 
     N             = real(size(x),sp)
     y             = boxcox_sp(x, lmbda)
     my            = sum(y) / N
     f             = (lmbda-1.0_sp) * sum(log(x))
-    f             = f - 0.5_sp*N * log(sum((y-my)*(y-my))/N)
+
+    ! f = f - 0.5_dp*N * log(sum((y-my)*(y-my))/N)
+    s             = Min( huge(1.0_sp)/N , Max( N*tiny(1.0_sp) , sum((y-my)*(y-my)) ) )
+    f             = f - 0.5_sp*N * log(s/N) 
+
     llf_boxcox_sp = -f
 
   END FUNCTION llf_boxcox_sp
@@ -700,16 +702,15 @@ CONTAINS
     REAL(dp), DIMENSION(size(x)) :: y
     REAL(dp)                     :: N, my, f, s
 
-    !print*, 'start'
     N             = real(size(x),dp)
     y             = boxcox_dp(x, lmbda)
     my            = sum(y) / N
-    !print*, 'my=', my --> sometimes really high!!!
     f             = (lmbda-1.0_dp) * sum(log(x))
-    !print*, 'sum = ',sum((y-my)*(y-my))
+
+    ! f = f - 0.5_dp*N * log(sum((y-my)*(y-my))/N)
     s             = Min( huge(1.0_dp)/N , Max( N*tiny(1.0_dp) , sum((y-my)*(y-my)) ) )
-    !print*, 's = ',s
     f             = f - 0.5_dp*N * log(s/N) 
+
     llf_boxcox_dp = -f
 
   END FUNCTION llf_boxcox_dp
