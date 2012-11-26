@@ -16,6 +16,7 @@ PROGRAM main
   USE mo_julian
   USE mo_kind
   USE mo_mad
+  USE mo_mcmc
   USE mo_message
   USE mo_minpack
   USE mo_moment
