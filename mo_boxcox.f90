@@ -187,7 +187,10 @@ CONTAINS
        if (size(mask) /= size(x)) stop 'Error boxcox_dp: size(mask) /= size(x)'
        maske = mask
     endif
-    if (any((x <= 0.0_dp) .and. maske)) stop 'Error boxcox_dp: x <= 0'
+    if (any((x <= 0.0_dp) .and. maske)) then
+       print*, x
+       stop 'Error boxcox_dp: x <= 0'
+    end if
     if (lmbda == 0.0_dp) then
        where (maske)
           boxcox_dp = log(x)
@@ -468,6 +471,10 @@ CONTAINS
     if (allocated(xx)) deallocate(xx)
     allocate(xx(nn))
     xx = pack(x, mask=maske)
+    if (any(xx <= 0.0_dp)) then
+       print*, xx
+       stop 'Error get_boxcox_dp: x <= 0'
+    end if
     ax = -5.0_dp
     bx = 5.0_dp
     call mnbrak_dp(ax, bx, cx, fa, fb, fc, llf_boxcox_dp, xx)
@@ -691,13 +698,18 @@ CONTAINS
     REAL(dp)                           :: llf_boxcox_dp
 
     REAL(dp), DIMENSION(size(x)) :: y
-    REAL(dp)                     :: N, my, f
+    REAL(dp)                     :: N, my, f, s
 
+    !print*, 'start'
     N             = real(size(x),dp)
     y             = boxcox_dp(x, lmbda)
     my            = sum(y) / N
+    !print*, 'my=', my --> sometimes really high!!!
     f             = (lmbda-1.0_dp) * sum(log(x))
-    f             = f - 0.5_dp*N * log(sum((y-my)*(y-my))/N)
+    !print*, 'sum = ',sum((y-my)*(y-my))
+    s             = Min( huge(1.0_dp)/N , Max( N*tiny(1.0_dp) , sum((y-my)*(y-my)) ) )
+    !print*, 's = ',s
+    f             = f - 0.5_dp*N * log(s/N) 
     llf_boxcox_dp = -f
 
   END FUNCTION llf_boxcox_dp

@@ -13,6 +13,8 @@ MODULE mo_anneal
   !                                    - using new module get_timeseed as default for seeding
   !                                    - new optional for minimization or maximization
   !                                    - fixed parameter ranges possible instead of interface range
+  !          Juliane Mai, Nov   2012 : history of achieved objective function values as optional out
+  !                                    only in anneal but not anneal_valid
 
   ! License
   ! -------
@@ -144,7 +146,7 @@ CONTAINS
   !
   !         REAL(SP/DP)    :: eps_in         ... Stopping criteria of epsilon decreement of 
   !                                              cost function
-  !                                              DEFAULT: 0.01
+  !                                              DEFAULT: 0.0001
   !
   !         REAL(SP/DP)    :: acc_in         ... Stopping criteria for Acceptance Ratio
   !                                              acc_in <= 0.1
@@ -178,7 +180,10 @@ CONTAINS
   !         None
 
   !     INDENT(OUT), OPTIONAL
-  !         REAL(SP/DP)    :: costbest ... minimized value of cost function
+  !         REAL(SP/DP)                            :: funcbest ... minimized value of cost function
+  !         REAL(DP), DIMENSION(:,:), ALLOCATABLE  :: history  ... returns a vector of achieved objective 
+  !                                                                after ith model evaluation
+  !
 
   !     RESTRICTIONS
   !         Needs a user defined:
@@ -213,7 +218,7 @@ CONTAINS
                        temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
                        seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN 
                        maxit_in,                                                      &   ! optional IN
-                       funcbest &                                                         ! optional OUT
+                       funcbest, history                                              &   ! optional OUT
                     ) &
            result(parabest)
 
@@ -273,6 +278,9 @@ CONTAINS
                                                                      ! maximization = .true., minimization = .false.
                                                                      ! DEFAULT = .false.
     REAL(DP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
+    REAL(DP),    OPTIONAL, DIMENSION(:,:), ALLOCATABLE, &
+                                 INTENT(OUT) :: history              ! returns a vector of achieved objective 
+                                                                     ! after ith model evaluation
 
     ! local variables
     INTEGER(I4)                            :: n           ! Number of parameters
@@ -293,6 +301,8 @@ CONTAINS
     REAL(DP),    DIMENSION(size(para,1))   :: weightUni   ! uniform CDF of parameter chosen for optimization
     REAL(DP)                               :: maxit       ! maximization = -1._dp, minimization = 1._dp
     REAL(DP)                               :: costbest    ! minimized value of cost function
+    REAL(DP),    DIMENSION(:,:), ALLOCATABLE  :: history_out ! vector of best cost function value after k iterations
+    REAL(DP),    DIMENSION(:,:), ALLOCATABLE  :: history_out_tmp ! helper vector
     
     type paramLim
        real(DP)                                 :: min                 !            minimum value
@@ -314,6 +324,7 @@ CONTAINS
     integer(I4)            :: idummy,i
     real(DP)               :: NormPhi
     real(DP)               :: ac_ratio, pa
+    integer(i4), dimension(:,:), allocatable :: iPos_iNeg_history    ! stores iPos and iNeg of nST last Markov Chains
     real(DP)               :: fo, fn, df, fBest, rho, fInc, fbb, dr
     real(DP)               :: T0, DT0
     real(DP),  parameter   :: small = -700._DP
@@ -355,7 +366,6 @@ CONTAINS
 
     if (present(LEN_in)) then
        if (LEN_in .lt. Max(20_i4*n,250_i4)) then
-          !stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
           print*, 'WARNING: Input argument LEN should be greater than Max(250,20*N), N=number of parameters'
           LEN = LEN_in
        else
@@ -364,6 +374,11 @@ CONTAINS
     else
        LEN = Max(20_i4*n,250_i4)
     endif
+
+    idummy = nITERmax/LEN+1_i4
+    ! to allow storage of the last objective function value in case nITERmax is no multiple of LEN
+    if (Mod(nITERmax,LEN) .ne. 0_i4) idummy=idummy+1_i4
+    allocate(history_out(idummy,2))
 
     if (present(nST_in)) then
        if (nST_in .lt. 0_i4) then
@@ -375,6 +390,9 @@ CONTAINS
        nST = 5_i4
     endif
 
+    allocate(iPos_iNeg_history(nST,2))
+    iPos_iNeg_history = 0_i4
+
     if (present(eps_in)) then
        if (eps_in .le. 0.0_dp) then
           stop 'Input argument eps must be greater than 0'
@@ -382,7 +400,7 @@ CONTAINS
           eps = eps_in
        end if
     else
-       eps = 0.01_dp
+       eps = 0.0001_dp
     endif
 
     if (present(acc_in)) then
@@ -486,8 +504,6 @@ CONTAINS
     seeds = 0_i8
 
     ! Start Simulated Annealing routine
-    !gamma(:)%min = para(:,2)
-    !gamma(:)%max = para(:,3)
     gamma(:)%dmult = 1.0_dp
     gamma(:)%new = para(:)
     gamma(:)%old = para(:)
@@ -495,7 +511,6 @@ CONTAINS
     NormPhi = -9999.9_dp
     T0=      T
     DT0=     DT
-    !nITER =  2_i4*N
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
@@ -515,7 +530,6 @@ CONTAINS
     !T=      T0
     DT=     DT0
     ! Storing the best solution so far
-    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     NormPhi = fo * maxit
     fo      = fo/NormPhi
     fBest   = 1.0_dp * maxit !fo/NormPhi
@@ -530,7 +544,6 @@ CONTAINS
     ! chains (LEN) of the objective function (f) <= epsilon
     ! ******************************************************
     loopTest: do while (iStop)
-       ! loopTest: do iter = 1, nIter
        iter = iter + 1_i4    
        Ipos= 0_i4
        Ineg= 0_i4
@@ -539,12 +552,8 @@ CONTAINS
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
-          !print*, 'iPar: ',j
           iTotalCounterR =  iTotalCounterR + 1_i4
           iTotalCounter = iTotalCounter + 1_i4
-          !if (mod(iTotalCounter,1000_i4) == 0_i4) then
-          !  call writeresults_o(4,fn) 
-          !end if
           !
           ! Generate a random subsequent state and evaluate its objective function
           ! (1) Generate new parameter set
@@ -595,11 +604,9 @@ CONTAINS
           !   iPar = iPar + 1_i4
           !end do 
           !
-
-          !print*, 'iPar=',iPar !
           ! (1b) Generate new value of selected parameter
           call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
-          call range(gamma(:)%old, iPar, iParRange )
+          call range(gamma(:)%old, iPar, iParRange)
           gamma(iPar)%min = iParRange(1)
           gamma(iPar)%max = iParRange(2)
           gamma(iPar)%new = parGen_dp( gamma(iPar)%old, gamma(iPar)%dMult*dR, &
@@ -619,10 +626,8 @@ CONTAINS
                 !
                 ! accept the new state
                 Ipos=Ipos+1_i4
-                !print*, 'Ipos=',Ipos
                 fo = fn
                 gamma(:)%old   = gamma(:)%new 
-                !print*, gamma(:)%new
                 !
                 ! keep best solution
                 if (fo < fBest) then
@@ -636,24 +641,17 @@ CONTAINS
                       pa=0.0_DP
                    else
                       pa=EXP(rho)
-                   end if
-                   !print*, 'rho=',rho,'  pa=',pa                 
+                   end if              
   	           !
                    call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
-                   !print*, RN1
                    !
                    if (pa > RN1) then
                       ! accept new state with certain probability
                       Ineg=Ineg+1_i4
-                      !print*, 'Ineg=',Ineg
-                      !pause
                       fo = fn
                       ! save old state
                       gamma(:)%old   = gamma(:)%new 
-                      !print*, gamma(:)%new
                    end if
-                   !else
-                   !print*,'NO CHANGE IN OBJ FUNCTION',gamma(:)%new
                 end if
              end if
              j=j+1
@@ -665,6 +663,16 @@ CONTAINS
        !
        ! estimate acceptance ratio
        ac_ratio=(real(Ipos,dp) + real(Ineg,dp))/real(LEN,dp)
+       if (modulo(iTotalCounter,LEN*nST)/LEN .gt. 0_i4) then
+          idummy = modulo(iTotalCounter,LEN*nST)/LEN
+       else
+          idummy = nST
+       end if
+       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /) 
+
+       ! store current best in history vector
+       history_out(iTotalCounter/LEN,1) = real(iTotalCounter,dp)
+       history_out(iTotalCounter/LEN,2) = maxit * fBest*normPhi
        !    
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
@@ -710,25 +718,44 @@ CONTAINS
        else
           iConL=0_i4
        end if
-       if ((iConL > nST) .and. (ac_ratio < acc) .and. (iConR > 2_i4) ) iStop=.FALSE.
+       if ( (iConL > nST) .and. (ac_ratio < acc) .and. (iConR > 2_i4) .and. &
+            (sum(iPos_iNeg_history(:,:)) .lt. 1_i4 ) ) then
+          iStop=.FALSE.
+       end if
        ! a way out maximum
-       if ( iTotalCounter > nITERmax .and. ac_ratio > acc) then
-          nITERmax = int(real(nITERmax,dp)* 1.10_dp,i4)
+       if ( (iTotalCounter > nITERmax) .and. & !(ac_ratio > acc) .and. &
+            (sum(iPos_iNeg_history(:,:)) .ge. 1_i4 )) then
+
+          ! store so far achieved history
+          allocate(history_out_tmp(size(history_out,1),size(history_out,2)))
+          history_out_tmp = history_out
+          deallocate(history_out)
+
+          nITERmax = max(nITERmax+LEN,int(real(nITERmax,dp)* 1.10_dp,i4))
           if (printflag) then
              print *,                       'nITERmax changed to =', nITERmax
           end if
+
+          ! increase lenght of history vecor
+          idummy = nITERmax/LEN+1_i4
+          ! to allow storage of the last objective function value in case nITERmax is no multiple of LEN
+          if (Mod(nITERmax,LEN) .ne. 0_i4) idummy=idummy+1_i4
+          allocate(history_out(idummy,2))
+
+          do j=1,size(history_out_tmp,1)
+             history_out(j,:) = history_out_tmp(j,:)
+          end do
+
+          deallocate(history_out_tmp)
+          
        end if
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
-          !print*, 'iStop = .false.'
           iStop=.FALSE.          
        end if
        !
     end do loopTest
     !
-    ! heuristic *glopbal* minimum (end solution)
-    !
-    ! write final results
     !
     ! calculate cost function again (only for check and return values)  
     parabest = gamma(:)%best
@@ -740,7 +767,6 @@ CONTAINS
 
     if (printflag) then
        print *, '   '
-       !print '(A15,E15.7,A4,E15.7,A4)',       ' end cost    = ', fBest , '  ( ',fBest*normPhi,' )  '
        print '(A15,E15.7)',                   ' end cost    = ', maxit * fBest*normPhi
        print *,           'end parameter: '
        do kk = 1,N
@@ -750,7 +776,13 @@ CONTAINS
        print *, 'Final check:    ', (fo - fBest)
     end if
 
+    if (present(history)) then
+       allocate(history(size(history_out,1)-1,size(history_out,2)))
+       history(:,:) = history_out(1:size(history_out,1)-1,:)
+    end if
+
     deallocate(truepara)
+    deallocate(history_out)
 
     return
 
@@ -760,7 +792,7 @@ CONTAINS
                        temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
                        seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN 
                        maxit_in,                                                      &   ! optional IN
-                       funcbest &                                                         ! optional OUT
+                       funcbest, history                                              &   ! optional OUT
                     ) &
            result(parabest)
 
@@ -820,6 +852,9 @@ CONTAINS
                                                                      ! maximization = .true., minimization = .false.
                                                                      ! DEFAULT = .false.
     REAL(SP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
+    REAL(DP),    OPTIONAL, DIMENSION(:,:), ALLOCATABLE, &
+                                 INTENT(OUT) :: history              ! returns a vector of achieved objective 
+                                                                     ! after ith model evaluation
 
     ! local variables
     INTEGER(I4)                            :: n           ! Number of parameters
@@ -840,6 +875,8 @@ CONTAINS
     REAL(SP),    DIMENSION(size(para,1))   :: weightUni   ! uniform CDF of parameter chosen for optimization
     REAL(SP)                               :: maxit       ! maximization = -1._sp, minimization = 1._sp
     REAL(SP)                               :: costbest    ! minimized value of cost function
+    REAL(SP),    DIMENSION(:,:), ALLOCATABLE  :: history_out ! vector of best cost function value after k iterations
+    REAL(SP),    DIMENSION(:,:), ALLOCATABLE  :: history_out_tmp ! helper vector
     
     type paramLim
        real(SP)                                 :: min                 !            minimum value
@@ -861,6 +898,7 @@ CONTAINS
     integer(I4)            :: idummy,i
     real(SP)               :: NormPhi
     real(SP)               :: ac_ratio, pa
+    integer(i4), dimension(:,:), allocatable :: iPos_iNeg_history    ! stores iPos and iNeg of nST last Markov Chains
     real(SP)               :: fo, fn, df, fBest, rho, fInc, fbb, dr
     real(SP)               :: T0, DT0
     real(SP),  parameter   :: small = -700._SP
@@ -902,7 +940,6 @@ CONTAINS
 
     if (present(LEN_in)) then
        if (LEN_in .lt. Max(20_i4*n,250_i4)) then
-          !stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
           print*, 'WARNING: Input argument LEN should be greater than Max(250,20*N), N=number of parameters'
           LEN = LEN_in
        else
@@ -911,6 +948,11 @@ CONTAINS
     else
        LEN = Max(20_i4*n,250_i4)
     endif
+
+    idummy = nITERmax/LEN+1_i4
+    ! to allow storage of the last objective function value in case nITERmax is no multiple of LEN
+    if (Mod(nITERmax,LEN) .ne. 0_i4) idummy=idummy+1_i4
+    allocate(history_out(idummy,2))
 
     if (present(nST_in)) then
        if (nST_in .lt. 0_i4) then
@@ -922,6 +964,9 @@ CONTAINS
        nST = 5_i4
     endif
 
+    allocate(iPos_iNeg_history(nST,2))
+    iPos_iNeg_history = 0_i4
+
     if (present(eps_in)) then
        if (eps_in .le. 0.0_sp) then
           stop 'Input argument eps must be greater than 0'
@@ -929,7 +974,7 @@ CONTAINS
           eps = eps_in
        end if
     else
-       eps = 0.01_sp
+       eps = 0.0001_sp
     endif
 
     if (present(acc_in)) then
@@ -986,7 +1031,7 @@ CONTAINS
     else
        T = GetTemperature( para, cost, range, 0.95_sp, &
             maskpara_in=maskpara, samplesize_in=2_i4*LEN, &
-            seeds_in=seeds(1:2), printflag_in=printflag , &
+            seeds_in=seeds(1:2), printflag_in=printflag, &
             maxit_in=ldummy)
     endif
 
@@ -1033,8 +1078,6 @@ CONTAINS
     seeds = 0_i4
 
     ! Start Simulated Annealing routine
-    !gamma(:)%min = para(:,2)
-    !gamma(:)%max = para(:,3)
     gamma(:)%dmult = 1.0_sp
     gamma(:)%new = para(:)
     gamma(:)%old = para(:)
@@ -1042,11 +1085,10 @@ CONTAINS
     NormPhi = -9999.9_sp
     T0=      T
     DT0=     DT
-    !nITER =  2_i4*N
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
-    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
+    if ( abs(fo) .lt. tiny(0.0_sp) ) fo = 0.0000001_sp * maxit
     !
     ! initialize counters /var for new SA    
     iConL=           0_i4
@@ -1076,7 +1118,6 @@ CONTAINS
     ! chains (LEN) of the objective function (f) <= epsilon
     ! ******************************************************
     loopTest: do while (iStop)
-       ! loopTest: do iter = 1, nIter
        iter = iter + 1_i4    
        Ipos= 0_i4
        Ineg= 0_i4
@@ -1085,12 +1126,8 @@ CONTAINS
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
-          !print*, 'iPar: ',j
           iTotalCounterR =  iTotalCounterR + 1_i4
           iTotalCounter = iTotalCounter + 1_i4
-          !if (mod(iTotalCounter,1000_i4) == 0_i4) then
-          !  call writeresults_o(4,fn) 
-          !end if
           !
           ! Generate a random subsequent state and evaluate its objective function
           ! (1) Generate new parameter set
@@ -1141,11 +1178,10 @@ CONTAINS
           !   iPar = iPar + 1_i4
           !end do 
           !
-
-          !print*, 'iPar=',iPar !
+          !
           ! (1b) Generate new value of selected parameter
           call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
-          call range(gamma(:)%old, iPar, iParRange )
+          call range(gamma(:)%old, iPar,iParRange)
           gamma(iPar)%min = iParRange(1)
           gamma(iPar)%max = iParRange(2)
           gamma(iPar)%new = parGen_sp( gamma(iPar)%old, gamma(iPar)%dMult*dR, &
@@ -1165,10 +1201,8 @@ CONTAINS
                 !
                 ! accept the new state
                 Ipos=Ipos+1_i4
-                !print*, 'Ipos=',Ipos
                 fo = fn
                 gamma(:)%old   = gamma(:)%new 
-                !print*, gamma(:)%new
                 !
                 ! keep best solution
                 if (fo < fBest) then
@@ -1183,23 +1217,14 @@ CONTAINS
                    else
                       pa=EXP(rho)
                    end if
-                   !print*, 'rho=',rho,'  pa=',pa                 
-  	           !
                    call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
-                   !print*, RN1
-                   !
                    if (pa > RN1) then
                       ! accept new state with certain probability
                       Ineg=Ineg+1_i4
-                      !print*, 'Ineg=',Ineg
-                      !pause
                       fo = fn
                       ! save old state
                       gamma(:)%old   = gamma(:)%new 
-                      !print*, gamma(:)%new
                    end if
-                   !else
-                   !print*,'NO CHANGE IN OBJ FUNCTION',gamma(:)%new
                 end if
              end if
              j=j+1
@@ -1211,6 +1236,16 @@ CONTAINS
        !
        ! estimate acceptance ratio
        ac_ratio=(real(Ipos,sp) + real(Ineg,sp))/real(LEN,sp)
+       if (modulo(iTotalCounter,LEN*nST)/LEN .gt. 0_i4) then
+          idummy = modulo(iTotalCounter,LEN*nST)/LEN
+       else
+          idummy = nST
+       end if
+       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /) 
+
+       ! store current best in history vector
+       history_out(iTotalCounter/LEN,1) = real(iTotalCounter,sp)
+       history_out(iTotalCounter/LEN,2) = maxit * fBest*normPhi
        !    
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
@@ -1256,25 +1291,44 @@ CONTAINS
        else
           iConL=0_i4
        end if
-       if ((iConL > nST) .and. (ac_ratio < acc) .and. (iConR > 2_i4) ) iStop=.FALSE.
+       if ( (iConL > nST) .and. (ac_ratio < acc) .and. (iConR > 2_i4) .and. &
+            (sum(iPos_iNeg_history(:,:)) .lt. 1_i4 ) ) then
+          iStop=.FALSE.
+       end if
        ! a way out maximum
-       if ( iTotalCounter > nITERmax .and. ac_ratio > acc) then
-          nITERmax = int(real(nITERmax,sp)* 1.10_sp,i4)
+       if ( (iTotalCounter > nITERmax) .and. & !(ac_ratio > acc) .and. &
+            (sum(iPos_iNeg_history(:,:)) .ge. 1_i4 )) then
+
+          ! store so far achieved history
+          allocate(history_out_tmp(size(history_out,1),size(history_out,2)))
+          history_out_tmp = history_out
+          deallocate(history_out)
+
+          nITERmax = max(nITERmax+LEN,int(real(nITERmax,sp)* 1.10_sp,i4))
           if (printflag) then
              print *,                       'nITERmax changed to =', nITERmax
           end if
+
+          ! increase lenght of history vecor
+          idummy = nITERmax/LEN+1_i4
+          ! to allow storage of the last objective function value in case nITERmax is no multiple of LEN
+          if (Mod(nITERmax,LEN) .ne. 0_i4) idummy=idummy+1_i4
+          allocate(history_out(idummy,2))
+
+          do j=1,size(history_out_tmp,1)
+             history_out(j,:) = history_out_tmp(j,:)
+          end do
+
+          deallocate(history_out_tmp)
+          
        end if
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
-          !print*, 'iStop = .false.'
           iStop=.FALSE.          
        end if
        !
     end do loopTest
     !
-    ! heuristic *glopbal* minimum (end solution)
-    !
-    ! write final results
     !
     ! calculate cost function again (only for check and return values)  
     parabest = gamma(:)%best
@@ -1286,7 +1340,6 @@ CONTAINS
 
     if (printflag) then
        print *, '   '
-       !print '(A15,E15.7,A4,E15.7,A4)',       ' end cost    = ', fBest , '  ( ',fBest*normPhi,' )  '
        print '(A15,E15.7)',                   ' end cost    = ', maxit * fBest*normPhi
        print *,           'end parameter: '
        do kk = 1,N
@@ -1296,7 +1349,13 @@ CONTAINS
        print *, 'Final check:    ', (fo - fBest)
     end if
 
+    if (present(history)) then
+       allocate(history(size(history_out,1)-1,size(history_out,2)))
+       history(:,:) = history_out(1:size(history_out,1)-1,:)
+    end if
+
     deallocate(truepara)
+    deallocate(history_out)
 
     return
 
@@ -1306,7 +1365,7 @@ CONTAINS
                        temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
                        seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN 
                        maxit_in,                                                      &   ! optional IN
-                       funcbest &                                                         ! optional OUT
+                       funcbest, history &                                                ! optional OUT
                     ) &
            result(parabest)
 
@@ -1357,26 +1416,31 @@ CONTAINS
                                                                      ! maximization = .true., minimization = .false.
                                                                      ! DEFAULT = .false.
     REAL(DP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
+    REAL(DP),    OPTIONAL, DIMENSION(:,:), ALLOCATABLE, &
+                                 INTENT(OUT) :: history              ! returns a vector of achieved objective 
+                                                                     ! after ith model evaluation
 
     ! local variables
-    INTEGER(I4)                            :: n           ! Number of parameters
-    REAL(DP)                               :: T           ! Temperature
-    REAL(DP)                               :: DT          ! Temperature decreement
-    INTEGER(I4)                            :: nITERmax    ! maximal number of iterations
-    INTEGER(I4)                            :: LEN         ! Length of Markov Chain
-    INTEGER(I4)                            :: nST         ! Number of consecutive LEN steps
-    REAL(DP)                               :: eps         ! epsilon decreement of cost function
-    REAL(DP)                               :: acc         ! Acceptance Ratio, <0.1 stopping criteria
-    INTEGER(I8)                            :: seeds(3)    ! Seeds of random numbers
-    LOGICAL                                :: printflag   ! If command line output is written
-    LOGICAL                                :: coststatus  ! Checks status of cost function value, 
-                                                          ! i.e. is parameter set is feasible
-    LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
-    INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
-    REAL(DP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter chosen for optimization
-    REAL(DP),    DIMENSION(size(para,1))   :: weightUni   ! uniform CDF of parameter chosen for optimization
-    REAL(DP)                               :: maxit       ! maximization = -1._dp, minimization = 1._dp
-    REAL(DP)                               :: costbest    ! minimized value of cost function
+    INTEGER(I4)                               :: n           ! Number of parameters
+    REAL(DP)                                  :: T           ! Temperature
+    REAL(DP)                                  :: DT          ! Temperature decreement
+    INTEGER(I4)                               :: nITERmax    ! maximal number of iterations
+    INTEGER(I4)                               :: LEN         ! Length of Markov Chain
+    INTEGER(I4)                               :: nST         ! Number of consecutive LEN steps
+    REAL(DP)                                  :: eps         ! epsilon decreement of cost function
+    REAL(DP)                                  :: acc         ! Acceptance Ratio, <0.1 stopping criteria
+    INTEGER(I8)                               :: seeds(3)    ! Seeds of random numbers
+    LOGICAL                                   :: printflag   ! If command line output is written
+    LOGICAL                                   :: coststatus  ! Checks status of cost function value, 
+                                                             ! i.e. is parameter set is feasible
+    LOGICAL,     DIMENSION(size(para,1))      :: maskpara    ! true if parameter will be optimized
+    INTEGER(I4), DIMENSION(:), ALLOCATABLE    :: truepara    ! indexes of parameters to be optimized
+    REAL(DP),    DIMENSION(size(para,1))      :: weight      ! CDF of parameter chosen for optimization
+    REAL(DP),    DIMENSION(size(para,1))      :: weightUni   ! uniform CDF of parameter chosen for optimization
+    REAL(DP)                                  :: maxit       ! maximization = -1._dp, minimization = 1._dp
+    REAL(DP)                                  :: costbest    ! minimized value of cost function
+    REAL(DP),    DIMENSION(:,:), ALLOCATABLE  :: history_out ! vector of best cost function value after k iterations
+    REAL(DP),    DIMENSION(:,:), ALLOCATABLE  :: history_out_tmp ! helper vector
     
     type paramLim
        real(DP)                                 :: min                 !            minimum value
@@ -1398,6 +1462,7 @@ CONTAINS
     integer(I4)            :: idummy,i
     real(DP)               :: NormPhi
     real(DP)               :: ac_ratio, pa
+    integer(i4), dimension(:,:), allocatable :: iPos_iNeg_history    ! stores iPos and iNeg of nST last Markov Chains
     real(DP)               :: fo, fn, df, fBest, rho, fInc, fbb, dr
     real(DP)               :: T0, DT0
     real(DP),  parameter   :: small = -700._DP
@@ -1438,7 +1503,6 @@ CONTAINS
 
     if (present(LEN_in)) then
        if (LEN_in .lt. Max(20_i4*n,250_i4)) then
-          !stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
           print*, 'WARNING: Input argument LEN should be greater than Max(250,20*N), N=number of parameters'
           LEN = LEN_in
        else
@@ -1447,6 +1511,11 @@ CONTAINS
     else
        LEN = Max(20_i4*n,250_i4)
     endif
+
+    idummy = nITERmax/LEN+1_i4
+    ! to allow storage of the last objective function value in case nITERmax is no multiple of LEN
+    if (Mod(nITERmax,LEN) .ne. 0_i4) idummy=idummy+1_i4
+    allocate(history_out(idummy,2))
 
     if (present(nST_in)) then
        if (nST_in .lt. 0_i4) then
@@ -1458,6 +1527,9 @@ CONTAINS
        nST = 5_i4
     endif
 
+    allocate(iPos_iNeg_history(nST,2))
+    iPos_iNeg_history = 0_i4
+
     if (present(eps_in)) then
        if (eps_in .le. 0.0_dp) then
           stop 'Input argument eps must be greater than 0'
@@ -1465,7 +1537,7 @@ CONTAINS
           eps = eps_in
        end if
     else
-       eps = 0.01_dp
+       eps = 0.0001_dp
     endif
 
     if (present(acc_in)) then
@@ -1569,8 +1641,6 @@ CONTAINS
     seeds = 0_i8
 
     ! Start Simulated Annealing routine
-    !gamma(:)%min = para(:,2)
-    !gamma(:)%max = para(:,3)
     gamma(:)%dmult = 1.0_dp
     gamma(:)%new = para(:)
     gamma(:)%old = para(:)
@@ -1578,7 +1648,6 @@ CONTAINS
     NormPhi = -9999.9_dp
     T0=      T
     DT0=     DT
-    !nITER =  2_i4*N
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
@@ -1612,7 +1681,6 @@ CONTAINS
     ! chains (LEN) of the objective function (f) <= epsilon
     ! ******************************************************
     loopTest: do while (iStop)
-       ! loopTest: do iter = 1, nIter
        iter = iter + 1_i4    
        Ipos= 0_i4
        Ineg= 0_i4
@@ -1621,12 +1689,8 @@ CONTAINS
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
-          !print*, 'iPar: ',j
           iTotalCounterR =  iTotalCounterR + 1_i4
           iTotalCounter = iTotalCounter + 1_i4
-          !if (mod(iTotalCounter,1000_i4) == 0_i4) then
-          !  call writeresults_o(4,fn) 
-          !end if
           !
           ! Generate a random subsequent state and evaluate its objective function
           ! (1) Generate new parameter set
@@ -1677,8 +1741,6 @@ CONTAINS
           !   iPar = iPar + 1_i4
           !end do 
           !
-
-          !print*, 'iPar=',iPar !
           ! (1b) Generate new value of selected parameter
           call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
           gamma(iPar)%min = prange(iPar,1)
@@ -1700,10 +1762,8 @@ CONTAINS
                 !
                 ! accept the new state
                 Ipos=Ipos+1_i4
-                !print*, 'Ipos=',Ipos
                 fo = fn
                 gamma(:)%old   = gamma(:)%new 
-                !print*, gamma(:)%new
                 !
                 ! keep best solution
                 if (fo < fBest) then
@@ -1717,24 +1777,17 @@ CONTAINS
                       pa=0.0_DP
                    else
                       pa=EXP(rho)
-                   end if
-                   !print*, 'rho=',rho,'  pa=',pa                 
+                   end if              
   	           !
                    call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
-                   !print*, RN1
                    !
                    if (pa > RN1) then
                       ! accept new state with certain probability
                       Ineg=Ineg+1_i4
-                      !print*, 'Ineg=',Ineg
-                      !pause
                       fo = fn
                       ! save old state
                       gamma(:)%old   = gamma(:)%new 
-                      !print*, gamma(:)%new
                    end if
-                   !else
-                   !print*,'NO CHANGE IN OBJ FUNCTION',gamma(:)%new
                 end if
              end if
              j=j+1
@@ -1746,6 +1799,16 @@ CONTAINS
        !
        ! estimate acceptance ratio
        ac_ratio=(real(Ipos,dp) + real(Ineg,dp))/real(LEN,dp)
+       if (modulo(iTotalCounter,LEN*nST)/LEN .gt. 0_i4) then
+          idummy = modulo(iTotalCounter,LEN*nST)/LEN
+       else
+          idummy = nST
+       end if
+       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /) 
+
+       ! store current best in history vector
+       history_out(iTotalCounter/LEN,1) = real(iTotalCounter,dp)
+       history_out(iTotalCounter/LEN,2) = maxit * fBest*normPhi
        !    
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
@@ -1791,25 +1854,44 @@ CONTAINS
        else
           iConL=0_i4
        end if
-       if ((iConL > nST) .and. (ac_ratio < acc) .and. (iConR > 2_i4) ) iStop=.FALSE.
+       if ( (iConL > nST) .and. (ac_ratio < acc) .and. (iConR > 2_i4) .and. &
+            (sum(iPos_iNeg_history(:,:)) .lt. 1_i4 ) ) then
+          iStop=.FALSE.
+       end if
        ! a way out maximum
-       if ( iTotalCounter > nITERmax .and. ac_ratio > acc) then
-          nITERmax = int(real(nITERmax,dp)* 1.10_dp,i4)
+       if ( (iTotalCounter > nITERmax) .and. & !(ac_ratio > acc) .and. &
+            (sum(iPos_iNeg_history(:,:)) .ge. 1_i4 )) then
+
+          ! store so far achieved history
+          allocate(history_out_tmp(size(history_out,1),size(history_out,2)))
+          history_out_tmp = history_out
+          deallocate(history_out)
+
+          nITERmax = max(nITERmax+LEN,int(real(nITERmax,dp)* 1.10_dp,i4))
           if (printflag) then
              print *,                       'nITERmax changed to =', nITERmax
           end if
+
+          ! increase lenght of history vecor
+          idummy = nITERmax/LEN+1_i4
+          ! to allow storage of the last objective function value in case nITERmax is no multiple of LEN
+          if (Mod(nITERmax,LEN) .ne. 0_i4) idummy=idummy+1_i4
+          allocate(history_out(idummy,2))
+
+          do j=1,size(history_out_tmp,1)
+             history_out(j,:) = history_out_tmp(j,:)
+          end do
+
+          deallocate(history_out_tmp)
+          
        end if
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
-          !print*, 'iStop = .false.'
           iStop=.FALSE.          
        end if
        !
     end do loopTest
     !
-    ! heuristic *glopbal* minimum (end solution)
-    !
-    ! write final results
     !
     ! calculate cost function again (only for check and return values)  
     parabest = gamma(:)%best
@@ -1821,7 +1903,6 @@ CONTAINS
 
     if (printflag) then
        print *, '   '
-       !print '(A15,E15.7,A4,E15.7,A4)',       ' end cost    = ', fBest , '  ( ',fBest*normPhi,' )  '
        print '(A15,E15.7)',                   ' end cost    = ', maxit * fBest*normPhi
        print *,           'end parameter: '
        do kk = 1,N
@@ -1831,7 +1912,13 @@ CONTAINS
        print *, 'Final check:    ', (fo - fBest)
     end if
 
+    if (present(history)) then
+       allocate(history(size(history_out,1)-1,size(history_out,2)))
+       history(:,:) = history_out(1:size(history_out,1)-1,:)
+    end if
+
     deallocate(truepara)
+    deallocate(history_out)
 
     return
 
@@ -1841,7 +1928,7 @@ CONTAINS
                        temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
                        seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN 
                        maxit_in,                                                      &   ! optional IN
-                       funcbest &                                                         ! optional OUT
+                       funcbest, history &                                                ! optional OUT
                     ) &
            result(parabest)
 
@@ -1892,26 +1979,31 @@ CONTAINS
                                                                      ! maximization = .true., minimization = .false.
                                                                      ! DEFAULT = .false.
     REAL(SP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
+    REAL(SP),    OPTIONAL, DIMENSION(:,:), ALLOCATABLE, &
+                                 INTENT(OUT) :: history              ! returns a vector of achieved objective 
+                                                                     ! after ith model evaluation
 
     ! local variables
-    INTEGER(I4)                            :: n           ! Number of parameters
-    REAL(SP)                               :: T           ! Temperature
-    REAL(SP)                               :: DT          ! Temperature decreement
-    INTEGER(I4)                            :: nITERmax    ! maximal number of iterations
-    INTEGER(I4)                            :: LEN         ! Length of Markov Chain
-    INTEGER(I4)                            :: nST         ! Number of consecutive LEN steps
-    REAL(SP)                               :: eps         ! epsilon decreement of cost function
-    REAL(SP)                               :: acc         ! Acceptance Ratio, <0.1 stopping criteria
-    INTEGER(I4)                            :: seeds(3)    ! Seeds of random numbers
-    LOGICAL                                :: printflag   ! If command line output is written
-    LOGICAL                                :: coststatus  ! Checks status of cost function value, 
-                                                          ! i.e. is parameter set is feasible
-    LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
-    INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
-    REAL(SP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter chosen for optimization
-    REAL(SP),    DIMENSION(size(para,1))   :: weightUni   ! uniform CDF of parameter chosen for optimization
-    REAL(SP)                               :: maxit       ! maximization = -1._sp, minimization = 1._sp
-    REAL(SP)                               :: costbest    ! minimized value of cost function
+    INTEGER(I4)                               :: n           ! Number of parameters
+    REAL(SP)                                  :: T           ! Temperature
+    REAL(SP)                                  :: DT          ! Temperature decreement
+    INTEGER(I4)                               :: nITERmax    ! maximal number of iterations
+    INTEGER(I4)                               :: LEN         ! Length of Markov Chain
+    INTEGER(I4)                               :: nST         ! Number of consecutive LEN steps
+    REAL(SP)                                  :: eps         ! epsilon decreement of cost function
+    REAL(SP)                                  :: acc         ! Acceptance Ratio, <0.1 stopping criteria
+    INTEGER(I4)                               :: seeds(3)    ! Seeds of random numbers
+    LOGICAL                                   :: printflag   ! If command line output is written
+    LOGICAL                                   :: coststatus  ! Checks status of cost function value, 
+                                                             ! i.e. is parameter set is feasible
+    LOGICAL,     DIMENSION(size(para,1))      :: maskpara    ! true if parameter will be optimized
+    INTEGER(I4), DIMENSION(:), ALLOCATABLE    :: truepara    ! indexes of parameters to be optimized
+    REAL(SP),    DIMENSION(size(para,1))      :: weight      ! CDF of parameter chosen for optimization
+    REAL(SP),    DIMENSION(size(para,1))      :: weightUni   ! uniform CDF of parameter chosen for optimization
+    REAL(SP)                                  :: maxit       ! maximization = -1._sp, minimization = 1._sp
+    REAL(SP)                                  :: costbest    ! minimized value of cost function
+    REAL(SP),    DIMENSION(:,:), ALLOCATABLE  :: history_out ! vector of best cost function value after k iterations
+    REAL(SP),    DIMENSION(:,:), ALLOCATABLE  :: history_out_tmp ! helper vector
     
     type paramLim
        real(SP)                                 :: min                 !            minimum value
@@ -1933,6 +2025,7 @@ CONTAINS
     integer(I4)            :: idummy,i
     real(SP)               :: NormPhi
     real(SP)               :: ac_ratio, pa
+    integer(i4), dimension(:,:), allocatable :: iPos_iNeg_history    ! stores iPos and iNeg of nST last Markov Chains
     real(SP)               :: fo, fn, df, fBest, rho, fInc, fbb, dr
     real(SP)               :: T0, DT0
     real(SP),  parameter   :: small = -700._SP
@@ -1973,7 +2066,6 @@ CONTAINS
 
     if (present(LEN_in)) then
        if (LEN_in .lt. Max(20_i4*n,250_i4)) then
-          !stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
           print*, 'WARNING: Input argument LEN should be greater than Max(250,20*N), N=number of parameters'
           LEN = LEN_in
        else
@@ -1982,6 +2074,11 @@ CONTAINS
     else
        LEN = Max(20_i4*n,250_i4)
     endif
+
+    idummy = nITERmax/LEN+1_i4
+    ! to allow storage of the last objective function value in case nITERmax is no multiple of LEN
+    if (Mod(nITERmax,LEN) .ne. 0_i4) idummy=idummy+1_i4
+    allocate(history_out(idummy,2))
 
     if (present(nST_in)) then
        if (nST_in .lt. 0_i4) then
@@ -1993,6 +2090,9 @@ CONTAINS
        nST = 5_i4
     endif
 
+    allocate(iPos_iNeg_history(nST,2))
+    iPos_iNeg_history = 0_i4
+
     if (present(eps_in)) then
        if (eps_in .le. 0.0_sp) then
           stop 'Input argument eps must be greater than 0'
@@ -2000,7 +2100,7 @@ CONTAINS
           eps = eps_in
        end if
     else
-       eps = 0.01_sp
+       eps = 0.0001_sp
     endif
 
     if (present(acc_in)) then
@@ -2104,8 +2204,6 @@ CONTAINS
     seeds = 0_i4
 
     ! Start Simulated Annealing routine
-    !gamma(:)%min = para(:,2)
-    !gamma(:)%max = para(:,3)
     gamma(:)%dmult = 1.0_sp
     gamma(:)%new = para(:)
     gamma(:)%old = para(:)
@@ -2113,11 +2211,10 @@ CONTAINS
     NormPhi = -9999.9_sp
     T0=      T
     DT0=     DT
-    !nITER =  2_i4*N
     !
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit   
-    if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
+    if ( abs(fo) .lt. tiny(0.0_sp) ) fo = 0.0000001_sp * maxit
     !
     ! initialize counters /var for new SA    
     iConL=           0_i4
@@ -2147,7 +2244,6 @@ CONTAINS
     ! chains (LEN) of the objective function (f) <= epsilon
     ! ******************************************************
     loopTest: do while (iStop)
-       ! loopTest: do iter = 1, nIter
        iter = iter + 1_i4    
        Ipos= 0_i4
        Ineg= 0_i4
@@ -2156,12 +2252,8 @@ CONTAINS
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
-          !print*, 'iPar: ',j
           iTotalCounterR =  iTotalCounterR + 1_i4
           iTotalCounter = iTotalCounter + 1_i4
-          !if (mod(iTotalCounter,1000_i4) == 0_i4) then
-          !  call writeresults_o(4,fn) 
-          !end if
           !
           ! Generate a random subsequent state and evaluate its objective function
           ! (1) Generate new parameter set
@@ -2212,8 +2304,7 @@ CONTAINS
           !   iPar = iPar + 1_i4
           !end do 
           !
-
-          !print*, 'iPar=',iPar !
+          !
           ! (1b) Generate new value of selected parameter
           call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
           gamma(iPar)%min = prange(iPar,1)
@@ -2235,10 +2326,8 @@ CONTAINS
                 !
                 ! accept the new state
                 Ipos=Ipos+1_i4
-                !print*, 'Ipos=',Ipos
                 fo = fn
                 gamma(:)%old   = gamma(:)%new 
-                !print*, gamma(:)%new
                 !
                 ! keep best solution
                 if (fo < fBest) then
@@ -2253,23 +2342,14 @@ CONTAINS
                    else
                       pa=EXP(rho)
                    end if
-                   !print*, 'rho=',rho,'  pa=',pa                 
-  	           !
                    call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
-                   !print*, RN1
-                   !
                    if (pa > RN1) then
                       ! accept new state with certain probability
                       Ineg=Ineg+1_i4
-                      !print*, 'Ineg=',Ineg
-                      !pause
                       fo = fn
                       ! save old state
                       gamma(:)%old   = gamma(:)%new 
-                      !print*, gamma(:)%new
                    end if
-                   !else
-                   !print*,'NO CHANGE IN OBJ FUNCTION',gamma(:)%new
                 end if
              end if
              j=j+1
@@ -2281,6 +2361,16 @@ CONTAINS
        !
        ! estimate acceptance ratio
        ac_ratio=(real(Ipos,sp) + real(Ineg,sp))/real(LEN,sp)
+       if (modulo(iTotalCounter,LEN*nST)/LEN .gt. 0_i4) then
+          idummy = modulo(iTotalCounter,LEN*nST)/LEN
+       else
+          idummy = nST
+       end if
+       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /) 
+
+       ! store current best in history vector
+       history_out(iTotalCounter/LEN,1) = real(iTotalCounter,sp)
+       history_out(iTotalCounter/LEN,2) = maxit * fBest*normPhi
        !    
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
@@ -2326,25 +2416,44 @@ CONTAINS
        else
           iConL=0_i4
        end if
-       if ((iConL > nST) .and. (ac_ratio < acc) .and. (iConR > 2_i4) ) iStop=.FALSE.
+       if ( (iConL > nST) .and. (ac_ratio < acc) .and. (iConR > 2_i4) .and. &
+            (sum(iPos_iNeg_history(:,:)) .lt. 1_i4 ) ) then
+          iStop=.FALSE.
+       end if
        ! a way out maximum
-       if ( iTotalCounter > nITERmax .and. ac_ratio > acc) then
-          nITERmax = int(real(nITERmax,sp)* 1.10_sp,i4)
+       if ( (iTotalCounter > nITERmax) .and. & !(ac_ratio > acc) .and. &
+            (sum(iPos_iNeg_history(:,:)) .ge. 1_i4 )) then
+
+          ! store so far achieved history
+          allocate(history_out_tmp(size(history_out,1),size(history_out,2)))
+          history_out_tmp = history_out
+          deallocate(history_out)
+
+          nITERmax = max(nITERmax+LEN,int(real(nITERmax,sp)* 1.10_sp,i4))
           if (printflag) then
              print *,                       'nITERmax changed to =', nITERmax
           end if
+
+          ! increase lenght of history vecor
+          idummy = nITERmax/LEN+1_i4
+          ! to allow storage of the last objective function value in case nITERmax is no multiple of LEN
+          if (Mod(nITERmax,LEN) .ne. 0_i4) idummy=idummy+1_i4
+          allocate(history_out(idummy,2))
+
+          do j=1,size(history_out_tmp,1)
+             history_out(j,:) = history_out_tmp(j,:)
+          end do
+
+          deallocate(history_out_tmp)
+          
        end if
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
-          !print*, 'iStop = .false.'
           iStop=.FALSE.          
        end if
        !
     end do loopTest
     !
-    ! heuristic *glopbal* minimum (end solution)
-    !
-    ! write final results
     !
     ! calculate cost function again (only for check and return values)  
     parabest = gamma(:)%best
@@ -2356,7 +2465,6 @@ CONTAINS
 
     if (printflag) then
        print *, '   '
-       !print '(A15,E15.7,A4,E15.7,A4)',       ' end cost    = ', fBest , '  ( ',fBest*normPhi,' )  '
        print '(A15,E15.7)',                   ' end cost    = ', maxit * fBest*normPhi
        print *,           'end parameter: '
        do kk = 1,N
@@ -2366,7 +2474,13 @@ CONTAINS
        print *, 'Final check:    ', (fo - fBest)
     end if
 
+    if (present(history)) then
+       allocate(history(size(history_out,1)-1,size(history_out,2)))
+       history(:,:) = history_out(1:size(history_out,1)-1,:)
+    end if
+
     deallocate(truepara)
+    deallocate(history_out)
 
     return
 
@@ -2480,7 +2594,7 @@ CONTAINS
   !         None
 
   !     INDENT(OUT), OPTIONAL
-  !         REAL(SP/DP)    :: costbest ... minimized value of cost function
+  !         REAL(SP/DP)    :: funcbest ... minimized value of cost function
 
   !     RESTRICTIONS
   !         Needs a user defined:
@@ -2691,7 +2805,7 @@ CONTAINS
           eps = eps_in
        end if
     else
-       eps = 0.01_dp
+       eps = 0.0001_dp
     endif
 
     if (present(acc_in)) then
@@ -3805,7 +3919,7 @@ CONTAINS
           eps = eps_in
        end if
     else
-       eps = 0.01_dp
+       eps = 0.0001_dp
     endif
 
     if (present(acc_in)) then
@@ -5546,6 +5660,7 @@ CONTAINS
        gamma(iPar)%new = parGen_dp( gamma(iPar)%old, gamma(iPar)%dMult*dR, &
             gamma(iPar)%min, gamma(iPar)%max, 8_i4, 1_i4,RN2)
        ! (2)  Calculate new objective function value and normalize it
+       !fo = cost(gamma(:)%old) * maxit
        fn = cost(gamma(:)%new) * maxit
        coststatus = .true.
 
@@ -5555,21 +5670,29 @@ CONTAINS
           ! for adaption of optimal initial temperature
           ! Walid Ben-Ameur: "Comput. the Initial Temperature of Sim. Annealing"
           ! Comput. Opt. and App. 2004
-          Energy(j,2) = fn     ! E_max_t
-          Energy(j,1) = fo     ! E_min_t
-          j=j+1 
+          if (fn > fo) then
+             Energy(j,2) = fn     ! E_max_t
+             Energy(j,1) = fo     ! E_min_t
+             !print*, 'Energy: ', Energy(j,1),'  ', Energy(j,2)
+             j=j+1 
+          end if          
        end if feasible !valid parameter set
     end do loopSamplesize
 
     ! estimation of the acceptance probability based on the random set ||<Samplesize>||
     ! only if actual temperature (T) equals initial temperature (temp)
-    T = maxval(abs(Energy))  !1.0_dp
+    ! T = maxval(abs(Energy))*2.0_dp*samplesize  !1.0_dp
+    ! Walid Ben-Ameur: "Comput. the Initial Temperature of Sim. Annealing"
+    ! Comput. Opt. and App. 2004
+    ! Equation (7)
+    T = -sum(Energy(:,2)-Energy(:,1))/(samplesize*Log(acc_goal))
 
     acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
     if (printflag) then
        print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
     end if
-    Do While ( (acc_estim .lt. 1.0_dp) .and. (abs(acc_estim - acc_goal) .gt. 0.0001_dp))
+    Do While ( & !(acc_estim .lt. 1.0_dp) .and. 
+       (abs(acc_estim - acc_goal) .gt. 0.0001_dp))
        T = T * (Log(acc_estim)/Log(acc_goal))**(0.5_dp) ! **(1.0/p)  with p=1.0
        if ( all(T .gt. Energy(:,1)/709._dp) .and. all(T .gt. Energy(:,2)/709._dp) ) then
           acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))

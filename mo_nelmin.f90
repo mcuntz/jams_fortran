@@ -270,11 +270,11 @@ CONTAINS
        !  Define the initial simplex.
        !
        do j = 1, n
-          x        = ipstart(j)
+          x          = ipstart(j)
           ipstart(j) = ipstart(j) + istep(j) * del
-          p(1:n,j) = ipstart(1:n)
-          y(j)     = func(ipstart)
-          ineval    = ineval + 1
+          p(1:n,j)   = ipstart(1:n)
+          y(j)       = func(ipstart)
+          ineval     = ineval + 1
           ipstart(j) = x
        end do
        !

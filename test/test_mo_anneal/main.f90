@@ -1,8 +1,9 @@
 PROGRAM anneal_test
 
-  use mo_kind,    only: dp, i4, i8
-  use mo_anneal,  only: anneal_valid, GetTemperature_valid
-  use mo_cost,    only: cost_dp, range_dp
+  use mo_kind,    only: dp, i4, i8, sp
+  use mo_anneal,  only: anneal            !, anneal_valid
+  use mo_anneal,  only: GetTemperature    !, GetTemperature_valid
+  use mo_cost,    only: cost_dp, range_dp !, cost_valid_dp
   use mo_xor4096, only: get_timeseed
 
   IMPLICIT NONE
@@ -18,6 +19,12 @@ PROGRAM anneal_test
   INTEGER(I4)                       :: i, runs
   INTEGER(I8), DIMENSION(3)         :: seeds
   REAL(DP)                          :: Tstart, Tend
+  REAL(DP), DIMENSION(:,:), ALLOCATABLE :: history
+
+  write(*,*) exp(-220.0_sp)
+  write(*,*) exp(-230.0_sp)
+  write(*,*) exp(-241.0_sp)
+  write(*,*) exp(-1000.0_sp)
 
   ! time dependent seeds
   call get_timeseed(seeds)
@@ -42,11 +49,10 @@ PROGRAM anneal_test
   print*, '   INITIAL TEMPERATURE             '
   print*, '-----------------------------------'
   print*, 'Estimation of Initial Temperature: '
-  !temperature = 10.0_dp
   seeds(1) = 854_i8
   seeds(2) = seeds(1) + 1000_i8
   print*, 'seeds used:                        ', seeds(1:2)
-  temperature = GetTemperature_valid( para, cost_dp, range_dp, 0.95_dp, samplesize_in=500_i4, &
+  temperature = GetTemperature( para, cost_dp, range_dp, 0.95_dp, samplesize_in=500_i4, &
        seeds_in=seeds(1:2), printflag_in=.true.)
 
   print*, '-----------------------------------'
@@ -54,8 +60,6 @@ PROGRAM anneal_test
   print*, '-----------------------------------'
 
   ! Run Simulated Annealing <runs> times
-  open(unit=1, file='Anneal.out',   status='unknown')
-  write (1, *) 'cost           para(1)        para(2)        para(3)        para(4)        '
   do i=1,runs
      ! Setting the seeds: Only used to generate comparable results for test case
      seeds(1) = int(i,i8)*259_i8
@@ -64,20 +68,18 @@ PROGRAM anneal_test
      print*, 'seeds used: ', seeds(1:3)
      !
      call cpu_time(Tstart)
-     parabest = anneal_valid(cost_dp, para, range_dp, maxit_in=.false., &
+     parabest = anneal(cost_dp, para, range_dp, maxit_in=.false., &
           temp_in=temperature, seeds_in=seeds,&
           LEN_in=250_i4,nITERmax_in=150000_i4,eps_in=0.00001_dp,&
           printflag_in=.false., &
-          funcbest=costbest)
+          funcbest=costbest, history=history)
      call cpu_time(Tend)
      if (costbestAll .gt. costbest) then
         costbestAll = costbest
         parabestAll = parabest
      end if
      print*,'Run ',i,':   cost = ',costbest,'  (CPU time = ',Tend-Tstart,' sec)'
-     write (1, '(F15.7,4(F15.7))') costbest, parabest
   end do
-  close(unit=1,  status='keep')
 
   ! Print best overall solutions
   print*, '-----------------------------------'
@@ -85,9 +87,9 @@ PROGRAM anneal_test
   print*, '   costbest = ', costbestAll
   print*, '   parabest = ', parabestAll
 
-  ! Is program running properly?   costbestAll = 8.4057185000218151E-02
+  ! Is program running properly?   costbestAll = 1.5875139874607314E-02
   print*, '-----------------------------------'
-  if ( anint(costbestAll*100000) .eq. 8406._dp ) then
+  if ( anint(costbestAll*100000) .eq. 1588._dp ) then
      print*, 'mo_anneal: o.k.'
   else
      print*, 'mo_anneal: failed '

@@ -3939,7 +3939,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
   !
-  !  Sphere model, N >= 1.
+  !  Sphere model, N = 1.
   !  Solution: x(1:n) = 0.0_dp
   !
   !  Author:
@@ -3973,6 +3973,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The sphere model
+  !  N = 2
   !  Solution: x(1:n) = 1.0_dp
   !
   !  Discussion:
