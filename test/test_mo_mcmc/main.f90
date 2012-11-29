@@ -4,7 +4,6 @@ program test_mcmc
   use mo_likelihood, only: setmeas, loglikelihood_dp, stdev_data_dp
   use mo_mcmc,       only: mcmc
   use mo_moment,     only: mean, stddev
-  use IEEE_exceptions
 
   ! for running mcmc
   real(dp)                              :: p
@@ -17,8 +16,6 @@ program test_mcmc
   integer(i8), dimension(5,3)           :: seeds
   ! for result handling
   integer(i4)                           :: i, samples
-
-  call IEEE_set_halting_mode(IEEE_underflow, .true.)
 
   ! loading the data points observed
   call setmeas()
@@ -50,6 +47,7 @@ program test_mcmc
   !     (2) posterior distribution of the parameters at the minimum (best parameterset) 
   !         will be sampled by MCMC
   call mcmc(loglikelihood_dp, stdev_data_dp, parabest, rangePar, mcmc_paras, burnin_paras, &
+            ParaSelectMode_in=2_i4,tmp_file='tmp_parasets.nc', &
             seeds_in=seeds, loglike_in=.true., maskpara_in=maskpara, printflag_in=.true.)
 
   print*,''

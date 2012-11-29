@@ -23,13 +23,18 @@ MODULE mo_mcmc
 
   ! Copyright 2012 
 
-  USE mo_kind,    only: i4, i8, dp
+  USE mo_kind,    only: i4, i8, dp, sp
   USE mo_xor4096, only: xor4096, xor4096g, get_timeseed
   USE mo_append,  only: append
   USE mo_moment,  only: stddev
 #ifdef OPENMP
   USE omp_lib,    only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
 #endif
+  ! functions and constants of netcdf4 library
+  use netcdf,  only: nf90_create, nf90_def_dim, NF90_UNLIMITED, nf90_def_var, &
+                     nf90_int, nf90_float, nf90_double, nf90_enddef, nf90_put_var, &
+                     nf90_open, NF90_close, nf90_noerr, nf90_strerror, nf90_clobber, &
+                     nf90_write, nf90_inq_dimid, nf90_inquire_dimension, nf90_inq_varid
 
   IMPLICIT NONE
 
@@ -41,6 +46,10 @@ MODULE mo_mcmc
   INTERFACE mcmc
      MODULE PROCEDURE mcmc_dp
   END INTERFACE mcmc
+
+  INTERFACE dump_netcdf_3d
+     MODULE PROCEDURE dump_netcdf_3d_dp, dump_netcdf_3d_sp
+  END INTERFACE
 
   !-----------------------------------------------------------------------------------------------
 
@@ -161,6 +170,7 @@ CONTAINS
   !         character(len=*) :: tmp_file             filename for temporal data saving:
   !                                                  every iter_mcmc_in iterations parameter sets are appended to this file
   !                                                  the number of the chain will be prepended to filename
+  !                                                  output format: netcdf
   !                                                  (default: no file writing)
   !         logical     :: loglike_in                true if loglikelihood function is given instead of likelihood function
   !                                                  (default: .false.)
@@ -230,6 +240,7 @@ CONTAINS
   !                                             - different modes of parameter selection
   !                                             OpenMP for chains of MCMC
   !                                             optional file for temporal output
+  !                              Nov. 2012    : Temporary file writing as NetCDF
 
 
   SUBROUTINE mcmc_dp(likelihood, stddev_function, para, rangePar,     &   ! obligatory IN
@@ -427,7 +438,7 @@ CONTAINS
           iter_mcmc = iter_mcmc_in
        end if
     else
-       iter_mcmc = 1000 * n
+       iter_mcmc = 1000_i4 * n
     endif
 
     if (present(chains_in)) then
@@ -703,19 +714,6 @@ CONTAINS
     ! if all parameters converged: Sqrt(R_i) < 1.1 (see Gelman et. al: Baysian Data Analysis, p. 331ff
     converged = .False.       
 
-    ! temporal file to store parameter sets sampled so far
-    if (present (tmp_file)) then
-       do chain=1,chains
-          write(str,*) chain
-          write(outputfile,*) trim(adjustl(str)) , '_' , trim(adjustl(tmp_file))
-          open(unit=20, file=trim(adjustl(outputfile)), status='unknown', action='write')
-          write(20,*) 'chain     = ',chain
-          write(20,*) 'chains    = ',chains
-          write(20,*) 'iter_mcmc = ',iter_mcmc
-          close(20)
-       end do
-    end if
-
     convergedMCMC: do while (.not. converged)
 
        if (.not. allocated(mcmc_paras_3d)) then
@@ -733,7 +731,6 @@ CONTAINS
           allocate(mcmc_paras_3d(iter_mcmc,size(para),chains))
           mcmc_paras_3d(1:idummy,:,:) = tmp(:,:,:)
           deallocate(tmp)
-
        end if
 
 !$OMP parallel default(shared) &
@@ -790,7 +787,6 @@ CONTAINS
                 if (likelinew .gt. likelibest) then
                    parabest   = paranew
                    likelibest = likelinew
-                   parabestChanged = .true.
                    if (printflag) then
                       print*, ''
                       print*, 'best para changed: ',paranew
@@ -843,27 +839,30 @@ CONTAINS
           do chain=1,chains
              write(str,*) chain
              write(outputfile,*) trim(adjustl(str)), '_' , trim(adjustl(tmp_file))
-             open(unit=20, file=trim(adjustl(outputfile)), position='append', action='write')
              if (present(iter_mcmc_in)) then
-                do iPar=iter_mcmc-iter_mcmc_in+1_i4,iter_mcmc
-                   write(20,*) mcmc_paras_3d(iPar,:,chain)
-                end do
+                allocate(tmp(iter_mcmc_in,n,1))
+                tmp(:,:,1) = mcmc_paras_3d(iter_mcmc-iter_mcmc_in+1_i4:iter_mcmc,:,chain)
+                if (iter_mcmc .ne. iter_mcmc_in) then
+                   ! append
+                   call dump_netcdf_3d(trim(adjustl(outputfile)), tmp,.true.)
+                else
+                   ! first time of writing
+                   call dump_netcdf_3d(trim(adjustl(outputfile)), tmp,.false.)
+                end if
+                deallocate(tmp)
              else
-                do iPar=iter_mcmc-(1000_i4*n)+1_i4,iter_mcmc
-                   write(20,*) mcmc_paras_3d(iPar,:,chain)
-                end do
+                allocate(tmp(1000_i4*n,n,1))
+                tmp(:,:,1) = mcmc_paras_3d(iter_mcmc-(1000_i4*n)+1_i4:iter_mcmc,:,chain)
+                if (iter_mcmc .ne. 1000_i4*n) then
+                   ! append
+                   call dump_netcdf_3d(trim(adjustl(outputfile)), tmp,.true.)
+                else
+                   ! first time of writing
+                   call dump_netcdf_3d(trim(adjustl(outputfile)), tmp,.false.)
+                end if
+                deallocate(tmp)
              end if
-             close(20)
           end do
-       end if
-
-       if (printflag) then
-          if (parabestChanged) then
-             print*, ' '
-             print*, 'better parameter set was found: ',parabest
-             print*, 'with likelihood: ',likelibest
-             print*, ' '
-          end if
        end if
 
        ! test for convergence: Gelman et. al: Baysian Data Analysis, p. 331ff
@@ -1089,5 +1088,225 @@ CONTAINS
     end select
 
   end subroutine GenerateNewParameterset_dp
+
+  subroutine dump_netcdf_3d_dp(filename, arr, addTimeSlice)
+
+    implicit none
+
+    character(len=*),                   intent(in) :: filename        ! netcdf file name
+    real(dp),         dimension(:,:,:), intent(in) :: arr             ! input array
+    logical, optional,                  intent(in) :: addTimeSlice    ! false: new file generated (DEFAULT), 
+                                                                      ! true: add time slice to existing file
+
+    integer(i4),      parameter         :: ndim = 3 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+    logical     :: newTimeSlice
+
+    if (present(addTimeSlice)) then
+       newTimeSlice = addTimeSlice
+    else
+       newTimeSlice = .false.
+    end if
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    if (.not. newTimeSlice) then
+       ! ------------------------------------
+       ! Generate new nc file
+       ! ------------------------------------
+
+       ! open file
+       call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+       !
+       ! define dims
+       dims = shape(arr)
+       do i=1, ndim-1
+          call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+       end do
+       ! define dim time
+       call check(nf90_def_dim(ncid, 'time', NF90_UNLIMITED, dimid(ndim)))
+       !
+       ! define dim variables
+       do i=1, ndim-1
+          call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+       end do
+       ! define time variable
+       call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
+       !
+       ! define variable
+       call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+1)))
+       !
+       ! end define mode
+       call check(nf90_enddef(ncid))
+       !
+       ! write dimensions
+       do i=1, ndim-1
+          call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+       end do
+       !
+       ! write time and variable
+       start(:) = 1
+       counter(:) = dims
+       counter(ndim) = 1
+       do i=1, dims(ndim)
+          start(ndim) = i
+          call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
+          call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,i), start, counter))
+       end do
+    else
+       ! ------------------------------------
+       ! Add time slice to existing nc file
+       ! ------------------------------------
+       ! open file
+       call check(nf90_open(trim(filename), NF90_WRITE, ncid))
+
+       ! get dim & var id of time (unlimited dimension)
+       call check(nf90_inq_dimid(ncid, 'time', dimid(ndim)))
+       call check(nf90_inq_varid(ncid, 'time', varid(ndim)))
+       call check(nf90_inquire_dimension(ncid, dimid(ndim), len=dims(ndim)))
+       ! set new value in time vector
+       call check(nf90_put_var(ncid, varid(ndim), (/dims(ndim)+1/), (/dims(ndim)+1/)))
+       
+       ! get dim & var id of array
+       call check(nf90_inq_varid(ncid, 'var', varid(ndim+1)))
+
+       ! increase start point for writing next slice
+       start(:)    = 1
+       start(ndim) = dims(ndim)+1
+       counter     = (/ size(arr,1), size(arr,2), 1 /)
+       ! add the values of new time slice to array
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,1), start, counter))
+       
+    end if
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_3d_dp
+
+  subroutine dump_netcdf_3d_sp(filename, arr, addTimeSlice)
+
+    implicit none
+
+    character(len=*),                   intent(in) :: filename        ! netcdf file name
+    real(sp),         dimension(:,:,:), intent(in) :: arr             ! input array
+    logical, optional,                  intent(in) :: addTimeSlice    ! false: new file generated (DEFAULT), 
+                                                                      ! true: add time slice to existing file
+
+    integer(i4),      parameter         :: ndim = 3 ! Routine for ndim dimensional array
+    character(len=1), dimension(4)      :: dnames   ! Common dimension names
+    integer(i4),      dimension(ndim)   :: dims     ! Size of each dimension
+    integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
+    integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
+    integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
+    integer(i4) :: ncid                             ! netcdf file id
+    integer(i4) :: i, j
+    logical     :: newTimeSlice
+
+    if (present(addTimeSlice)) then
+       newTimeSlice = addTimeSlice
+    else
+       newTimeSlice = .false.
+    end if
+
+    ! dimension names
+    dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
+    !
+    if (.not. newTimeSlice) then
+       ! ------------------------------------
+       ! Generate new nc file
+       ! ------------------------------------
+
+       ! open file
+       call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+       !
+       ! define dims
+       dims = shape(arr)
+       do i=1, ndim-1
+          call check(nf90_def_dim(ncid, dnames(i), dims(i), dimid(i)))
+       end do
+       ! define dim time
+       call check(nf90_def_dim(ncid, 'time', NF90_UNLIMITED, dimid(ndim)))
+       !
+       ! define dim variables
+       do i=1, ndim-1
+          call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
+       end do
+       ! define time variable
+       call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
+       !
+       ! define variable
+       call check(nf90_def_var(ncid, 'var', NF90_FLOAT, dimid, varid(ndim+1)))
+       !
+       ! end define mode
+       call check(nf90_enddef(ncid))
+       !
+       ! write dimensions
+       do i=1, ndim-1
+          call check(nf90_put_var(ncid, varid(i), (/ (j, j=1,dims(i)) /)))
+       end do
+       !
+       ! write time and variable
+       start(:) = 1
+       counter(:) = dims
+       counter(ndim) = 1
+       do i=1, dims(ndim)
+          start(ndim) = i
+          call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
+          call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,i), start, counter))
+       end do
+    else
+       ! ------------------------------------
+       ! Add time slice to existing nc file
+       ! ------------------------------------
+       ! open file
+       call check(nf90_open(trim(filename), NF90_WRITE, ncid))
+
+       ! get dim & var id of time (unlimited dimension)
+       call check(nf90_inq_dimid(ncid, 'time', dimid(ndim)))
+       call check(nf90_inquire_dimension(ncid, dimid(ndim), len=dims(ndim)))
+       
+       ! get dim & var id of array
+       call check(nf90_inq_varid(ncid, 'var', varid(ndim+1)))
+
+       ! increase start point for writing next slice
+       start(:)    = 1
+       start(ndim) = dims(ndim)+1
+       counter     = (/ size(arr,1), size(arr,2), 1 /)
+       ! set new value in time vector
+       call check(nf90_put_var(ncid, varid(ndim), (/dims(ndim)+1/), (/dims(ndim)+1/)))
+       ! add the values of new time slice to array
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,dims(ndim)+1), start, counter))
+       
+    end if
+    !
+    ! close netcdf file
+    call check(nf90_close(ncid))
+
+  end subroutine dump_netcdf_3d_sp
+
+  ! -----------------------------------------------------------------------------
+  !  private error checking routine
+  subroutine check(status)
+    !
+    implicit none
+    !
+    integer(i4), intent(in) :: status
+    !
+    if (status /= nf90_noerr) then
+       write(*,*) trim(nf90_strerror(status))
+       stop
+    end if
+    !
+  end subroutine check
 
 END MODULE mo_mcmc
