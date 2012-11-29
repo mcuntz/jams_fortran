@@ -341,7 +341,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -375,8 +375,8 @@ contains
     !
     ! write variable
     start = 1
-    count = dims
-    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    counter = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, counter))
     !
     ! close netcdf file
     call check(nf90_close(ncid))
@@ -397,7 +397,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -431,8 +431,8 @@ contains
     !
     ! write variable
     start = 1
-    count = dims
-    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    counter = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, counter))
     !
     ! close netcdf file
     call check(nf90_close(ncid))
@@ -453,7 +453,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -490,13 +490,13 @@ contains
     end do
     !
     ! write time and variable
-    start = 1
-    count = dims
-    count(ndim) = 1
+    start(:) = 1
+    counter(:) = dims
+    counter(ndim) = 1
     do i=1, dims(ndim)
        start(ndim) = i
        call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
-       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,i), start, count))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,i), start, counter))
     end do
     !
     ! close netcdf file
@@ -518,7 +518,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -556,12 +556,12 @@ contains
     !
     ! write time and variable
     start = 1
-    count = dims
-    count(ndim) = 1
+    counter = dims
+    counter(ndim) = 1
     do i=1, dims(ndim)
        start(ndim) = i
        call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
-       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,i), start, count))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,i), start, counter))
     end do
     !
     ! close netcdf file
@@ -583,7 +583,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -621,12 +621,12 @@ contains
     !
     ! write time and variable
     start = 1
-    count = dims
-    count(ndim) = 1
+    counter = dims
+    counter(ndim) = 1
     do i=1, dims(ndim)
        start(ndim) = i
        call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
-       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,:,i), start, count))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,:,i), start, counter))
     end do
     !
     ! close netcdf file
@@ -648,7 +648,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -682,8 +682,8 @@ contains
     !
     ! write variable
     start = 1
-    count = dims
-    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    counter = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, counter))
     !
     ! close netcdf file
     call check(nf90_close(ncid))
@@ -704,7 +704,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -738,8 +738,8 @@ contains
     !
     ! write variable
     start = 1
-    count = dims
-    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    counter = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, counter))
     !
     ! close netcdf file
     call check(nf90_close(ncid))
@@ -760,7 +760,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -797,13 +797,13 @@ contains
     end do
     !
     ! write time and variable
-    start = 1
-    count = dims
-    count(ndim) = 1
+    start(:)   = 1
+    counter(:) = dims
+    counter(ndim) = 1
     do i=1, dims(ndim)
        start(ndim) = i
        call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
-       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,i), start, count))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,i), start, counter))
     end do
     !
     ! close netcdf file
@@ -825,7 +825,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -863,12 +863,12 @@ contains
     !
     ! write time and variable
     start = 1
-    count = dims
-    count(ndim) = 1
+    counter = dims
+    counter(ndim) = 1
     do i=1, dims(ndim)
        start(ndim) = i
        call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
-       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,i), start, count))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,i), start, counter))
     end do
     !
     ! close netcdf file
@@ -890,7 +890,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -928,12 +928,12 @@ contains
     !
     ! write time and variable
     start = 1
-    count = dims
-    count(ndim) = 1
+    counter = dims
+    counter(ndim) = 1
     do i=1, dims(ndim)
        start(ndim) = i
        call check(nf90_put_var(ncid, varid(ndim), (/i/), (/i/)))
-       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,:,i), start, count))
+       call check(nf90_put_var(ncid, varid(ndim+1), arr(:,:,:,:,i), start, counter))
     end do
     !
     ! close netcdf file
@@ -954,7 +954,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -988,8 +988,8 @@ contains
     !
     ! write variable
     start = 1
-    count = dims
-    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    counter = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, counter))
     !
     ! close netcdf file
     call check(nf90_close(ncid))
@@ -1009,7 +1009,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -1043,8 +1043,8 @@ contains
     !
     ! write variable
     start = 1
-    count = dims
-    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    counter = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, counter))
     !
     ! close netcdf file
     call check(nf90_close(ncid))
@@ -1064,7 +1064,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -1098,8 +1098,8 @@ contains
     !
     ! write variable
     start = 1
-    count = dims
-    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    counter = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, counter))
     !
     ! close netcdf file
     call check(nf90_close(ncid))
@@ -1119,7 +1119,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -1153,8 +1153,8 @@ contains
     !
     ! write variable
     start = 1
-    count = dims
-    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    counter = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, counter))
     !
     ! close netcdf file
     call check(nf90_close(ncid))
@@ -1174,7 +1174,7 @@ contains
     integer(i4),      dimension(ndim)   :: dimid    ! netcdf IDs of each dimension
     integer(i4),      dimension(ndim+1) :: varid    ! dimension variables and var id
     integer(i4),      dimension(ndim)   :: start    ! start array for write of each time step
-    integer(i4),      dimension(ndim)   :: count    ! length array for write of each time step
+    integer(i4),      dimension(ndim)   :: counter    ! length array for write of each time step
     integer(i4) :: ncid                             ! netcdf file id
     integer(i4) :: i, j
 
@@ -1208,8 +1208,8 @@ contains
     !
     ! write variable
     start = 1
-    count = dims
-    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, count))
+    counter = dims
+    call check(nf90_put_var(ncid, varid(ndim+1), arr, start, counter))
     !
     ! close netcdf file
     call check(nf90_close(ncid))
