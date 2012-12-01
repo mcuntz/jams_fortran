@@ -7,6 +7,6 @@ PROGRAM main
   Write(*,*) ''
   Write(*,*) 'Test mo_finish.f90'
 
-  call finish('mo_finish',' o.k.')
+  call finish(' mo_finish',' o.k.')
 
 END PROGRAM main

@@ -1,6 +1,6 @@
 PROGRAM anneal_test
 
-  use mo_kind,    only: dp, i4, i8, sp
+  use mo_kind,    only: dp, i4, i8
   use mo_anneal,  only: anneal            !, anneal_valid
   use mo_anneal,  only: GetTemperature    !, GetTemperature_valid
   use mo_cost,    only: cost_dp, range_dp !, cost_valid_dp

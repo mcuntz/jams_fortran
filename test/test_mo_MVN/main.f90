@@ -20,7 +20,7 @@ program main
   isgood = .true.
   !
   ! read lower cholesky factor
-  call Get_NcVar( 'CholeskyFactor.nc', 'B', B)
+  call Get_NcVar( '../FORTRAN_chs_lib/test/test_mo_MVN/CholeskyFactor.nc', 'B', B)
   B_sp = real( B, sp )
   !
   ! do not initialize with time seed to compare results
@@ -32,12 +32,12 @@ program main
   end do
   !
   ! read result of above loop from txt file
-  open( unit = 250, file = 'Result.txt', action= 'read')
+  open( unit = 250, file = '../FORTRAN_chs_lib/test/test_mo_MVN/Result.txt', action= 'read')
   do i = 1, size(rand,2)
      read(250, *) res(:,i)
   end do
   close(250)
-  open( unit = 250, file = 'Result_sp.txt', action= 'read')
+  open( unit = 250, file = '../FORTRAN_chs_lib/test/test_mo_MVN/Result_sp.txt', action= 'read')
   do i = 1, size(rand_sp,2)
      read(250, *) res_sp(:,i)
   end do

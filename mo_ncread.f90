@@ -75,7 +75,7 @@ contains
   !                                  and their lengths will be printed to standard output
   !
   ! INTENT(OUT)
-  !     integer(i4), dimension(5) :: Get_NcDim - dimension length, 1 if dimension does not exist
+  !     integer(i4), dimension(5) :: Get_NcDim - dimension length, -1 if dimension does not exist
   !
   ! INTENT(OUT), OPTIONAL
   !     integer(i4) :: ndims - # of dimensions
@@ -86,7 +86,6 @@ contains
   ! HISTORY
   !     Written,  Stephan Thober, Dec 2011
   !     Modified, Matthias Cuntz, Jan 2012 - ndims
-  ! ------------------------------------------------------------------------------
 
   function Get_NcDim(Filename, Variable, PrintInfo, ndims)
     !
@@ -382,7 +381,7 @@ contains
   !        Modified, Stephan Thober, Mar 2012 - corrected dynamical read of data
   !        Modified, Stephan Thober, May 2012 - fid
   !        Modified, Stephan Thober, Nov 2012 - write out Varname, when vartype is incorrect
-  ! ------------------------------------------------------------------------------
+
   subroutine Get_NcVar_0d_sp(Filename, VarName, Dat, fid)
     !
     implicit none
@@ -1062,7 +1061,8 @@ contains
     if (.not. present(fid)) call check(nf90_close(ncid))
     !
   end subroutine Get_NcVar_5d_sp
-  !
+
+
   subroutine Get_NcVar_5d_dp(Filename, VarName, Dat, start, count, fid)
     !
     implicit none
@@ -1129,6 +1129,7 @@ contains
     !
   end subroutine Get_NcVar_5d_dp
 
+
   subroutine Get_NcVar_0d_i4(Filename, VarName, Dat, fid)
     !
     implicit none
@@ -1167,6 +1168,7 @@ contains
     if (.not. present(fid)) call check(nf90_close(ncid))
     !
   end subroutine Get_NcVar_0d_i4
+
   
   subroutine Get_NcVar_1d_i4(Filename, VarName, Dat, start, count, fid)
     !
@@ -1232,6 +1234,7 @@ contains
     !
   end subroutine Get_NcVar_1d_i4
 
+
   subroutine Get_NcVar_2d_i4(Filename, VarName, Dat, start, count, fid)
     !
     implicit none
@@ -1295,6 +1298,7 @@ contains
     if (.not. present(fid)) call check(nf90_close(ncid))
     !
   end subroutine Get_NcVar_2d_i4
+
 
   subroutine Get_NcVar_3d_i4(Filename, VarName, Dat, start, count, fid)
     !
@@ -1360,6 +1364,7 @@ contains
     !
   end subroutine Get_NcVar_3d_i4
 
+
   subroutine Get_NcVar_4d_i4(Filename, VarName, Dat, start, count, fid)
     !
     implicit none
@@ -1424,6 +1429,7 @@ contains
     !
   end subroutine Get_NcVar_4d_i4
 
+
   subroutine Get_NcVar_5d_i4(Filename, VarName, Dat, start, count, fid)
     !
     implicit none
@@ -1487,6 +1493,7 @@ contains
     if (.not. present(fid)) call check(nf90_close(ncid))
     !
   end subroutine Get_NcVar_5d_i4
+
   ! ------------------------------------------------------------------------------
   !
   ! NAME
@@ -1509,8 +1516,7 @@ contains
   !
   ! HISTORY
   !     Written,  Stephan Thober, May 2012
-  !
-  ! ------------------------------------------------------------------------------
+
   function NcOpen(Fname)
     !
     implicit none
@@ -1521,6 +1527,7 @@ contains
     call check(nf90_open(trim(Fname),NF90_NOWRITE, NcOpen))
     !
   end function NcOpen
+
   ! ------------------------------------------------------------------------------
   !
   ! NAME
@@ -1540,7 +1547,7 @@ contains
   ! HISTORY
   !     Written,  Stephan Thober, May 2012
   !
-  ! ------------------------------------------------------------------------------
+
   subroutine NcClose(ncid)
     !
     implicit none
@@ -1550,6 +1557,7 @@ contains
     call check(nf90_close(ncid))
     !
   end subroutine NcClose
+
   ! ------------------------------------------------------------------------------
   !
   ! SUBROUTINE GET_INFO
@@ -1563,7 +1571,8 @@ contains
   ! See: http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90/ -> NF90-INQUIRE
   ! for detailed information.
   !
-  ! ------------------------------------------------------------------------------
+  ! Modified, Matthias Cuntz, Nov 2012 - default dimension length -1
+
   subroutine Get_Info(Varname, ncid, varid, xtype, dl, Info, ndims)
     !
     implicit none
@@ -1596,7 +1605,7 @@ contains
        if ( NumDims > size(dl) ) &
             stop 'ERROR*** Dimension size of Variable is greater than dims of array. subroutine Get_Info'
        ! go through dimension ids and get its length
-       dl(:) = 1 ! initialise
+       dl(:) = -1 ! initialise
        dimloop: do n = 1, NumDims
           call check(nf90_inquire_dimension(ncid, DimId(n), name, itmp))
           dl(n) = itmp
@@ -1612,6 +1621,7 @@ contains
     end if
     !
   end subroutine Get_Info
+
   ! -----------------------------------------------------------------------------
   !  private error checking routine
   subroutine check(status)
@@ -1626,5 +1636,5 @@ contains
     end if
     !
   end subroutine check
-  !
+
 end module mo_NcRead

@@ -13,8 +13,10 @@ PROGRAM elemeffects_test
   integer(i4), parameter              :: nx = 10                         ! number of variable values
 
   ! Data Files
-  character(200) :: fileParasets    = 'data/Morris_parasets.dat'         ! file: Morris samples
-  character(200) :: fileChangedPara = 'data/Morris_changedpara.dat'      ! file: changed parameter in Morris samples
+  ! file: Morris samples
+  character(len=*), parameter :: fileParasets    = '../FORTRAN_chs_lib/test/test_mo_elemeffects/data/Morris_parasets.dat'
+  ! file: changed parameter in Morris samples
+  character(len=*), parameter :: fileChangedPara = '../FORTRAN_chs_lib/test/test_mo_elemeffects/data/Morris_changedpara.dat'
 
   ! Samples and Model Output
   real(dp),    dimension(nsets,npara) :: MorrisSample                    ! array: Morris samples

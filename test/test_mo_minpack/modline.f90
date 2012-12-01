@@ -18,7 +18,7 @@ contains
 
   subroutine line(ndata,xdata,ydata,t,dt,s0)
 
-    use mo_minpack, only: hybrj, qrfac, covar, qrfac, qform, qrinv
+    use mo_minpack, only: hybrj, qrfac, covar, qrfac, qform !, qrinv
 
     implicit none
 
@@ -96,9 +96,11 @@ contains
     if (debug) write(*,*) "eigrn values"
     if (debug) write(*,'(2F15.5)') w
 
-    call qrinv(2,2,v,w,2,fjac)
-    if (debug) write(*,*) "qrinv:"
-    if (debug) write(*,'(2F15.5)') fjac
+    ! MC: commented because w is dimension(2) but w is return value of qrinv with dimension(2,2)
+    ! MC: fja is input into qrinv
+    ! call qrinv(2,2,v,w,2,fjac)
+    ! if (debug) write(*,*) "qrinv:"
+    ! if (debug) write(*,'(2F15.5)') fjac
 
 ! inverse matrix
     iflag = 2

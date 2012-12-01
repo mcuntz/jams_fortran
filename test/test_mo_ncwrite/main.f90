@@ -2,10 +2,10 @@
 !
 ! Test Program for writing nc files using the netcdf4 library.
 !
-! author: Stephan Thober
+! author: Stephan Thober & Matthias Cuntz
 !
 ! created: 04.11.2011
-! last update: 21.11.2011
+! last update: 30.11.2012
 !
 ! ------------------------------------------------------------------------------
 program ReadNc
@@ -23,12 +23,13 @@ integer(i4), dimension(5)               :: dimlen
 character(256)                          :: Filename
 character(256)                          :: Varname
 LOGICAL :: isgood
-real(sp), dimension(:,:,:),     allocatable :: data1, data2
+real(sp), dimension(:,:,:),     allocatable :: data1, data2, data11, data12
 real(sp), dimension(:,:,:,:),   allocatable :: data3, data4
-real(sp), dimension(:,:),       allocatable :: data5, data6
+real(sp), dimension(:,:),       allocatable :: data5, data6, data13, data14
 real(sp), dimension(:),         allocatable :: data7, data8
 real(sp), dimension(:,:,:,:,:), allocatable :: data9, data10
 real(dp), dimension(:,:,:),     allocatable :: ddata2
+integer(i4), dimension(:,:,:),  allocatable :: idata2
 !
 Filename = '../FORTRAN_chs_lib/test/test_mo_ncwrite/pr_1961-2000.nc'
 !
@@ -98,6 +99,10 @@ allocate(data8(dimlen(1)))
 call Get_NcVar(Filename,Varname,data8)
 if (any(abs(data7-data8) > epsilon(1.0_sp))) isgood = .false.
 
+allocate(data14(dimlen(1),dimlen(2)))
+call Get_NcVar(Filename,Varname,data14)
+if (any(abs(data7-data14(:,1)) > epsilon(1.0_sp))) isgood = .false.
+
 ! 2D
 allocate(data5(size(data,1),size(data,2)))
 data5(:,:) = data(:,:,1)
@@ -145,7 +150,42 @@ dimlen = Get_NcDim(Filename,Varname)
 allocate(ddata2(dimlen(1),dimlen(2),dimlen(3)))
 call Get_NcVar(Filename,Varname,ddata2)
 if (any(abs(real(data,dp)-ddata2) > epsilon(1.0_dp))) isgood = .false.
-!
+
+! 3D - i4
+call dump_netcdf(Filename, int(data,i4))
+dimlen = Get_NcDim(Filename,Varname)
+allocate(idata2(dimlen(1),dimlen(2),dimlen(3)))
+call Get_NcVar(Filename,Varname,idata2)
+if (any(abs(int(data,i4)-idata2) > 0_i4)) isgood = .false.
+
+! 1D - append
+call dump_netcdf(Filename, data7)
+call dump_netcdf(Filename, data7, append=.true.)
+call dump_netcdf(Filename, data7, append=.true.)
+dimlen = Get_NcDim(Filename,Varname)
+allocate(data13(dimlen(1),dimlen(2)))
+call Get_NcVar(Filename,Varname,data13)
+if (any(abs(data7-data13(:,1)) > epsilon(1.0_sp))) isgood = .false.
+if (any(abs(data7-data13(:,2)) > epsilon(1.0_sp))) isgood = .false.
+if (any(abs(data7-data13(:,3)) > epsilon(1.0_sp))) isgood = .false.
+
+! 2D - append
+call dump_netcdf(Filename, data5)
+call dump_netcdf(Filename, data5, append=.true.)
+dimlen = Get_NcDim(Filename,Varname)
+allocate(data12(dimlen(1),dimlen(2),dimlen(3)))
+call Get_NcVar(Filename,Varname,data12)
+if (any(abs(data5-data12(:,:,1)) > epsilon(1.0_sp))) isgood = .false.
+if (any(abs(data5-data12(:,:,2)) > epsilon(1.0_sp))) isgood = .false.
+
+! 3D - append
+call dump_netcdf(Filename, data(:,:,1:size(data,3)/2))
+call dump_netcdf(Filename, data(:,:,size(data,3)/2+1:), append=.true.)
+dimlen = Get_NcDim(Filename,Varname)
+allocate(data11(dimlen(1),dimlen(2),dimlen(3)))
+call Get_NcVar(Filename,Varname,data11)
+if (any(abs(data-data11) > epsilon(1.0_sp))) isgood = .false.
+
 if (isgood) then
    write(*,*) 'mo_ncwrite o.k.'
 else
