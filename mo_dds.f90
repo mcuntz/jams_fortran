@@ -86,6 +86,7 @@ CONTAINS
 
   !     INDENT(OUT), OPTIONAL
   !         real(dp)    :: funcbest             the best value of the function.
+  !         real(dp)    :: history(maxiter)     the history of best function values, history(maxiter)=funcbest
 
   !     RESTRICTIONS
   !         None.
@@ -115,8 +116,9 @@ CONTAINS
   !                   Juliane Mai,                  Aug 2012 - optional argument funcbest added
   !                   Matthias Cuntz & Juliane Mai, Aug 2012 - MDDS
   !                   Juliane Mai,                  Nov 2012 - masked parameter
+  !                   Juliane Mai,                  Dec 2012 - history output
 
-  function DDS(obj_func, pini, prange, r, seed, maxiter, maxit, mask, funcbest)
+  function DDS(obj_func, pini, prange, r, seed, maxiter, maxit, mask, funcbest, history)
 
     use mo_kind,    only: i4, i8, dp
     use mo_xor4096, only: xor4096, xor4096g
@@ -131,15 +133,16 @@ CONTAINS
          real(dp) :: obj_func
        end function obj_func
     END INTERFACE
-    real(dp),    dimension(:),   intent(in)      :: pini     ! inital value of decision variables 
-    real(dp),    dimension(:,:), intent(in)      :: prange   ! Min/max values of decision variables 
-    real(dp),              optional, intent(in)  :: r        ! DDS perturbation parameter (-> 0.2 by default)
-    integer(i8),           optional, intent(in)  :: seed     ! User seed to initialise the random number generator
-    integer(i8),           optional, intent(in)  :: maxiter  ! Maximum number of iteration or function evaluation
-    logical,               optional, intent(in)  :: maxit    ! Maximization or minimization of function
-    logical, dimension(:), optional, intent(in)  :: mask     ! parameter to be optimized (true or false)
-    real(dp),              optional, intent(out) :: funcbest ! Best value of the function.
-    real(dp), dimension(size(pini))              :: DDS      ! Best value of decision variables
+    real(dp),    dimension(:),   intent(in)            :: pini     ! inital value of decision variables 
+    real(dp),    dimension(:,:), intent(in)            :: prange   ! Min/max values of decision variables 
+    real(dp),                    optional, intent(in)  :: r        ! DDS perturbation parameter (-> 0.2 by default)
+    integer(i8),                 optional, intent(in)  :: seed     ! User seed to initialise the random number generator
+    integer(i8),                 optional, intent(in)  :: maxiter  ! Maximum number of iteration or function evaluation
+    logical,                     optional, intent(in)  :: maxit    ! Maximization or minimization of function
+    logical,     dimension(:),   optional, intent(in)  :: mask     ! parameter to be optimized (true or false)
+    real(dp),                    optional, intent(out) :: funcbest ! Best value of the function.
+    real(dp),    dimension(:),   optional, intent(out) :: history  ! History of objective function values
+    real(dp),    dimension(size(pini))                 :: DDS      ! Best value of decision variables
 
     ! Local variables
     integer(i4)                             :: pnum                   ! Total number of decision variables  
@@ -171,6 +174,10 @@ CONTAINS
     imaxiter = 1000
     if (present(maxiter)) imaxiter = maxiter
     if (imaxiter < 6) stop 'Error DDS: max function evals must be minimum 6'
+    ! history output
+     if (present(history)) then
+       if (size(history) .ne. imaxiter) stop 'Error DDS: size of history /= maxiter'
+    end if
     ! Min or max objective function
     imaxit = 1.0_dp
     if (present(maxit)) then
@@ -215,9 +222,10 @@ CONTAINS
     ! Evaluate initial solution and return objective function value
     ! and Initialise the other variables (e.g. of_best)
     ! imaxit is 1.0 for MIN problems, -1 for MAX problems
-    DDS     = pini
-    of_new  = imaxit * obj_func(pini)
-    of_best = of_new
+    DDS        = pini
+    of_new     = imaxit * obj_func(pini)
+    of_best    = of_new
+    if (present(history)) history(1) = of_new
     !
     ! Code below is now the DDS algorithm as presented in Figure 1 of Tolson and Shoemaker (2007)
     !
@@ -256,6 +264,7 @@ CONTAINS
           of_best = of_new
           DDS     = pnew
        end if
+       if (present(history)) history(i+1) = of_best
     end do
     if (present(funcbest)) funcbest = of_best
     !
@@ -263,7 +272,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  function MDDS(obj_func, pini, prange, seed, maxiter, maxit, mask, funcbest)
+  function MDDS(obj_func, pini, prange, seed, maxiter, maxit, mask, funcbest, history)
 
     use mo_kind,    only: i4, i8, dp
     use mo_xor4096, only: xor4096, xor4096g
@@ -278,14 +287,15 @@ CONTAINS
          real(dp) :: obj_func
        end function obj_func
     END INTERFACE
-    real(dp),    dimension(:),       intent(in)  :: pini     ! inital value of decision variables 
-    real(dp),    dimension(:,:),     intent(in)  :: prange   ! Min/max values of decision variables 
-    integer(i8),           optional, intent(in)  :: seed     ! User seed to initialise the random number generator
-    integer(i8),           optional, intent(in)  :: maxiter  ! Maximum number of iteration or function evaluation
-    logical,               optional, intent(in)  :: maxit    ! Maximization or minimization of function
-    logical, dimension(:), optional, intent(in)  :: mask     ! parameter to be optimized (true or false)
-    real(dp),              optional, intent(out) :: funcbest ! Best value of the function.
-    real(dp), dimension(size(pini))              :: MDDS     ! Best value of decision variables
+    real(dp),    dimension(:),           intent(in)  :: pini     ! inital value of decision variables 
+    real(dp),    dimension(:,:),         intent(in)  :: prange   ! Min/max values of decision variables 
+    integer(i8),               optional, intent(in)  :: seed     ! User seed to initialise the random number generator
+    integer(i8),               optional, intent(in)  :: maxiter  ! Maximum number of iteration or function evaluation
+    logical,                   optional, intent(in)  :: maxit    ! Maximization or minimization of function
+    logical,     dimension(:), optional, intent(in)  :: mask     ! parameter to be optimized (true or false)
+    real(dp),                  optional, intent(out) :: funcbest ! Best value of the function.
+    real(dp),    dimension(:), optional, intent(out) :: history  ! History of objective function values
+    real(dp),    dimension(size(pini))               :: MDDS     ! Best value of decision variables
 
     ! Local variables
     integer(i4)                             :: pnum                   ! Total number of decision variables  
@@ -313,6 +323,10 @@ CONTAINS
     imaxiter = 1000
     if (present(maxiter)) imaxiter = maxiter
     if (imaxiter < 6) stop 'Error MDDS: max function evals must be minimum 6'
+    ! history output
+     if (present(history)) then
+       if (size(history) .ne. imaxiter) stop 'Error MDDS: size of history /= maxiter'
+    end if
     ! Min or max objective function
     imaxit = 1.0_dp
     if (present(maxit)) then
@@ -361,7 +375,7 @@ CONTAINS
     MDDS     = pini
     of_new  = imaxit * obj_func(pini)
     of_best = of_new
-
+    if (present(history)) history(1) = of_new
     !
     ! Code below is now the MDDS algorithm as presented in Figure 1 of Tolson and Shoemaker (2007)
     !
@@ -409,6 +423,7 @@ CONTAINS
              MDDS    = pnew
           endif
        end if
+       if (present(history)) history(i+1) = of_best
     end do
     if (present(funcbest)) funcbest = of_best
     !
