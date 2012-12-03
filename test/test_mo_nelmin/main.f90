@@ -53,6 +53,8 @@ program main
   real(dp) :: ynewlo
   real(dp) :: xx(1)
   real(dp) :: yy(1)
+  real(dp), allocatable :: history(:)
+  integer(i4) :: i
 
 
   LOGICAL :: isgood
@@ -66,8 +68,12 @@ program main
   step(1:n) = (/ 1.0_dp, 1.0_dp /)
   konvge = 10
   kcount = 500
-  xmin = nelmin( rosenbrock, start, ynewlo, reqmin, step, &
-       konvge, kcount, icount, numres, ifault)
+  xmin = nelmin( rosenbrock, start, funcmin=ynewlo, varmin=reqmin, step=step, &
+       konvge=konvge, maxeval=kcount, neval=icount, numrestart=numres, ierror=ifault, history=history)
+  do i=50, icount, 50
+     write(*,'(A15,I3,A24,F12.7)') ' Minimum after ', i, ' function evaluations:  ', history(i)
+  end do
+  write(*,'(A16,I3,A23,F12.7)')    ' Minimum found (',icount,' iterations):            ',ynewlo
   write(*,*) 'Call 1: ', xmin, anint(100._dp*xmin)
   isgood = isgood .and. (anint(100._dp*xmin(1)) == 100._dp)
   isgood = isgood .and. (anint(100._dp*xmin(2)) == 100._dp)
@@ -115,7 +121,12 @@ program main
   start(1:n) = (/ -12.0_dp, 10.0_dp /)
   xx(1) = 1.0_dp
   yy(1) = 100.0_dp
-  xmin = nelminxy(rosenbrockxy, start, xx, yy)
+  xmin = nelminxy(rosenbrockxy, start, xx, yy, &
+                neval=icount, history=history)
+  do i=50, icount, 50
+     write(*,'(A15,I3,A24,F12.7)') ' Minimum after ', i, ' function evaluations:  ', history(i)
+  end do
+  write(*,'(A16,I3,A23,F12.7)')           ' Minimum found (',icount,' iterations):            ',ynewlo
   write(*,*) 'Call 7: ', xmin, anint(100._dp*xmin)
   isgood = isgood .and. (anint(100._dp*xmin(1)) == 100._dp)
   isgood = isgood .and. (anint(100._dp*xmin(2)) == 100._dp)

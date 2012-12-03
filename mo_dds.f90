@@ -175,7 +175,7 @@ CONTAINS
     if (present(maxiter)) imaxiter = maxiter
     if (imaxiter < 6) stop 'Error DDS: max function evals must be minimum 6'
     ! history output
-     if (present(history)) then
+    if (present(history)) then
        if (size(history) .ne. imaxiter) stop 'Error DDS: size of history /= maxiter'
     end if
     ! Min or max objective function

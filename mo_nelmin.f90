@@ -106,6 +106,7 @@ CONTAINS
   !         integer(i4) :: konvge        the convergence check is carried out every konvge iterations.
   !                                      konvge>0 is required.
   !         integer(i4) :: maxeval       the maximum number of function evaluations.
+  !                                      default: 1000
 
   !     INDENT(INOUT), OPTIONAL
   !         None
@@ -118,6 +119,8 @@ CONTAINS
   !                                            0: no errors detected.
   !                                            1: varmin or konvge have an illegal value.
   !                                            2: iteration terminated because maxeval was exceeded without convergence.
+  !         real(dp), allocatable 
+  !                     :: history(:)          the history of best function values, history(neval)=funcmin
 
   !     RESTRICTIONS
   !         None.
@@ -147,9 +150,10 @@ CONTAINS
   !                                             - function, optional
   !                                             - nelminxy
   !                    Juliane Mai,    Aug 2012 - nelminrange
+  !                    Juliane Mai,    Dec 2012 - history output
 
-  function nelmin(func, pstart, funcmin, varmin, step, konvge, maxeval, &
-       neval, numrestart, ierror)
+  function nelmin(func, pstart, varmin, step, konvge, maxeval, &
+       funcmin, neval, numrestart, ierror, history)
 
     implicit none
 
@@ -162,14 +166,15 @@ CONTAINS
        END FUNCTION func
     END INTERFACE
     real(dp),              intent(IN)  :: pstart(:)
-    real(dp),    optional, intent(OUT) :: funcmin
     real(dp),    optional, intent(IN)  :: varmin
     real(dp),    optional, intent(IN)  :: step(:)
     integer(i4), optional, intent(IN)  :: konvge
     integer(i4), optional, intent(IN)  :: maxeval
+    real(dp),    optional, intent(OUT) :: funcmin
     integer(i4), optional, intent(OUT) :: neval
     integer(i4), optional, intent(OUT) :: numrestart
     integer(i4), optional, intent(OUT) :: ierror
+    real(dp),    optional, intent(OUT), allocatable :: history(:)  ! History of objective function values
     real(dp) :: nelmin(size(pstart))
 
     real(dp), parameter :: ccoeff = 0.5_dp
@@ -206,28 +211,35 @@ CONTAINS
     real(dp) :: z
     real(dp) :: dn, dnn
     real(dp) :: p0(size(pstart)), y0
+    real(dp), allocatable :: history_tmp(:)
     !
     ! Defaults
     !
     nelmin(:) = 0.
     if (present(varmin)) then
-       if (varmin <= 0.0_dp) stop 'Error nelim: varmin<0'
+       if (varmin <= 0.0_dp) stop 'Error nelmin: varmin<0'
        ivarmin = varmin
     else
        ivarmin = 1.0e-9_dp
     endif
+    ! maximal number of function evaluations
     if (present(maxeval)) then
-       if (maxeval <= 1) stop 'Error nelim: maxeval<=1'
+       if (maxeval <= 1) stop 'Error nelmin: maxeval<=1'
        imaxeval = maxeval
     else
        imaxeval = 1000
     endif
+    ! history output
+    if (present(history)) then
+       ! worst case length
+       allocate(history_tmp(imaxeval+3*size(ipstart)+1))
+    end if
     if (present(konvge)) then
        ikonvge = konvge
     else
        ikonvge = imaxeval / 10
     endif
-    if (ikonvge < 1) stop 'Error nelim: konvg<1'
+    if (ikonvge < 1) stop 'Error nelmin: konvg<1'
     !
     if (present(step)) then
        istep = step
@@ -266,6 +278,7 @@ CONTAINS
        p(1:n,nn) = ipstart(1:n)
        y(nn)     = func(ipstart)
        ineval     = ineval + 1
+       if (present(history)) history_tmp(ineval) = y(nn)
        !
        !  Define the initial simplex.
        !
@@ -276,6 +289,7 @@ CONTAINS
           y(j)       = func(ipstart)
           ineval     = ineval + 1
           ipstart(j) = x
+          if (present(history)) history_tmp(ineval) = Min( y(j),  history_tmp(ineval-1) )
        end do
        !
        !  Find highest and lowest Y values.  FUNCMIN = Y(IHI) indicates
@@ -305,6 +319,7 @@ CONTAINS
           pstar(1:n) = pbar(1:n) + rcoeff * ( pbar(1:n) - p(1:n,ihi) )
           ystar      = func(pstar)
           ineval      = ineval + 1
+          if (present(history)) history_tmp(ineval) = Min( ystar, history_tmp(ineval-1) )
           !
           !  Successful reflection, so extension.
           !
@@ -313,6 +328,7 @@ CONTAINS
              p2star(1:n) = pbar(1:n) + ecoeff * ( pstar(1:n) - pbar(1:n) )
              y2star      = func(p2star)
              ineval       = ineval + 1
+             if (present(history)) history_tmp(ineval) = Min( y2star, history_tmp(ineval-1) )
              !
              !  Retain extension or contraction.
              !
@@ -342,6 +358,7 @@ CONTAINS
                 p2star(1:n) = pbar(1:n) + ccoeff * ( p(1:n,ihi) - pbar(1:n) )
                 y2star      = func(p2star)
                 ineval       = ineval + 1
+                if (present(history)) history_tmp(ineval) = Min( y2star, history_tmp(ineval-1) )
                 !
                 !  Contract the whole simplex.
                 !
@@ -351,6 +368,7 @@ CONTAINS
                       nelmin(1:n) = p(1:n,j)
                       y(j)      = func(nelmin)
                       ineval     = ineval + 1
+                      if (present(history)) history_tmp(ineval) = Min( y(j), history_tmp(ineval-1) )
                    end do
                    ilo = minloc(y(1:n+1), 1)
                    ylo = y(ilo)
@@ -371,6 +389,7 @@ CONTAINS
                 p2star(1:n) = pbar(1:n) + ccoeff * ( pstar(1:n) - pbar(1:n) )
                 y2star      = func(p2star)
                 ineval       = ineval + 1
+                if (present(history)) history_tmp(ineval) = Min( y2star, history_tmp(ineval-1) )
                 !
                 !  Retain reflection?
                 !
@@ -425,6 +444,7 @@ CONTAINS
           nelmin(i) = nelmin(i) + del
           z       = func(nelmin)
           ineval  = ineval + 1
+          if (present(history)) history_tmp(ineval) = Min( z, history_tmp(ineval-1) )
           if ( z < ifuncmin ) then
              iierror = 2
              exit
@@ -432,6 +452,7 @@ CONTAINS
           nelmin(i) = nelmin(i) - del - del
           z       = func(nelmin)
           ineval  = ineval + 1
+          if (present(history)) history_tmp(ineval) = Min( z, history_tmp(ineval-1) )
           if ( z < ifuncmin ) then
              iierror = 2
              exit
@@ -461,12 +482,16 @@ CONTAINS
     if (present(ierror)) then
        ierror = iierror
     endif
+    if (present(history)) then
+       allocate(history(ineval))
+       history(:) = history_tmp(1:ineval)
+    end if
 
   end function nelmin
 
 
-  function nelminxy(func, pstart, xx, yy, funcmin, varmin, step, konvge, maxeval, &
-       neval, numrestart, ierror)
+  function nelminxy(func, pstart, xx, yy, varmin, step, konvge, maxeval, &
+       funcmin, neval, numrestart, ierror, history)
 
     implicit none
 
@@ -491,6 +516,7 @@ CONTAINS
     integer(i4), optional, intent(OUT) :: neval
     integer(i4), optional, intent(OUT) :: numrestart
     integer(i4), optional, intent(OUT) :: ierror
+    real(dp),    optional, intent(OUT), allocatable :: history(:)  ! History of objective function values
     real(dp) :: nelminxy(size(pstart))
 
     real(dp), parameter :: ccoeff = 0.5_dp
@@ -527,29 +553,36 @@ CONTAINS
     real(dp) :: z
     real(dp) :: dn, dnn
     real(dp) :: p0(size(pstart)), y0
+    real(dp), allocatable :: history_tmp(:)
     !
     ! Defaults
     !
     nelminxy(:) = 0.
     if (present(varmin)) then
-       if (varmin <= 0.0_dp) stop 'Error nelimxy: varmin<0'
+       if (varmin <= 0.0_dp) stop 'Error nelminxy: varmin<0'
        ivarmin = varmin
     else
        ivarmin = 1.0e-9_dp
     endif
+    ! maximal number of function evaluations
     if (present(maxeval)) then
-       if (maxeval <= 1) stop 'Error nelimxy: maxeval<=1'
+       if (maxeval <= 1) stop 'Error nelminxy: maxeval<=1'
        imaxeval = maxeval
     else
        imaxeval = 1000
     endif
+    ! history output
+    if (present(history)) then
+       ! worst case length
+       allocate(history_tmp(imaxeval+3*size(ipstart)+1))
+    end if
     if (present(konvge)) then
        ikonvge = konvge
     else
        ikonvge = imaxeval / 10
     endif
-    if (ikonvge < 1) stop 'Error nelimxy: konvg<1'
-    if (size(xx) /= size(yy)) stop 'Error nelimxy: size(xx) /= size(yy)'
+    if (ikonvge < 1) stop 'Error nelminxy: konvg<1'
+    if (size(xx) /= size(yy)) stop 'Error nelminxy: size(xx) /= size(yy)'
     !
     if (present(step)) then
        istep = step
@@ -588,6 +621,7 @@ CONTAINS
        p(1:n,nn) = ipstart(1:n)
        y(nn)     = func(ipstart, xx, yy)
        ineval     = ineval + 1
+       if (present(history)) history_tmp(ineval) = y(nn)
        !
        !  Define the initial simplex.
        !
@@ -598,6 +632,7 @@ CONTAINS
           y(j)     = func(ipstart, xx, yy)
           ineval    = ineval + 1
           ipstart(j) = x
+          if (present(history)) history_tmp(ineval) = Min( y(j),  history_tmp(ineval-1) )
        end do
        !
        !  Find highest and lowest Y values.  FUNCMIN = Y(IHI) indicates
@@ -627,6 +662,7 @@ CONTAINS
           pstar(1:n) = pbar(1:n) + rcoeff * ( pbar(1:n) - p(1:n,ihi) )
           ystar      = func(pstar, xx, yy)
           ineval      = ineval + 1
+          if (present(history)) history_tmp(ineval) = Min( ystar,  history_tmp(ineval-1) )
           !
           !  Successful reflection, so extension.
           !
@@ -635,6 +671,7 @@ CONTAINS
              p2star(1:n) = pbar(1:n) + ecoeff * ( pstar(1:n) - pbar(1:n) )
              y2star      = func(p2star, xx, yy)
              ineval       = ineval + 1
+             if (present(history)) history_tmp(ineval) = Min( y2star,  history_tmp(ineval-1) )
              !
              !  Retain extension or contraction.
              !
@@ -664,6 +701,7 @@ CONTAINS
                 p2star(1:n) = pbar(1:n) + ccoeff * ( p(1:n,ihi) - pbar(1:n) )
                 y2star      = func(p2star, xx, yy)
                 ineval       = ineval + 1
+                if (present(history)) history_tmp(ineval) = Min( y2star,  history_tmp(ineval-1) )
                 !
                 !  Contract the whole simplex.
                 !
@@ -673,6 +711,7 @@ CONTAINS
                       nelminxy(1:n) = p(1:n,j)
                       y(j)      = func(nelminxy, xx, yy)
                       ineval     = ineval + 1
+                      if (present(history)) history_tmp(ineval) = Min( y(j),  history_tmp(ineval-1) )
                    end do
                    ilo = minloc(y(1:n+1), 1)
                    ylo = y(ilo)
@@ -693,6 +732,7 @@ CONTAINS
                 p2star(1:n) = pbar(1:n) + ccoeff * ( pstar(1:n) - pbar(1:n) )
                 y2star      = func(p2star, xx, yy)
                 ineval       = ineval + 1
+                if (present(history)) history_tmp(ineval) = Min( y2star,  history_tmp(ineval-1) )
                 !
                 !  Retain reflection?
                 !
@@ -747,6 +787,7 @@ CONTAINS
           nelminxy(i) = nelminxy(i) + del
           z       = func(nelminxy, xx, yy)
           ineval  = ineval + 1
+          if (present(history)) history_tmp(ineval) = Min( z,  history_tmp(ineval-1) )
           if ( z < ifuncmin ) then
              iierror = 2
              exit
@@ -754,6 +795,7 @@ CONTAINS
           nelminxy(i) = nelminxy(i) - del - del
           z       = func(nelminxy, xx, yy)
           ineval  = ineval + 1
+          if (present(history)) history_tmp(ineval) = Min( z,  history_tmp(ineval-1) )
           if ( z < ifuncmin ) then
              iierror = 2
              exit
@@ -783,11 +825,15 @@ CONTAINS
     if (present(ierror)) then
        ierror = iierror
     endif
+    if (present(history)) then
+       allocate(history(ineval))
+       history(:) = history_tmp(1:ineval)
+    end if
 
   end function nelminxy
 
-  function nelminrange(func, pstart, prange, funcmin, varmin, step, konvge, maxeval, &
-       neval, numrestart, ierror)
+  function nelminrange(func, pstart, prange, varmin, step, konvge, maxeval, &
+       funcmin, neval, numrestart, ierror, history)
 
     implicit none
 
@@ -801,14 +847,15 @@ CONTAINS
     END INTERFACE
     real(dp),              intent(IN)  :: pstart(:)
     real(dp),              intent(IN)  :: prange(:,:)
-    real(dp),    optional, intent(OUT) :: funcmin
     real(dp),    optional, intent(IN)  :: varmin
     real(dp),    optional, intent(IN)  :: step(:)
     integer(i4), optional, intent(IN)  :: konvge
     integer(i4), optional, intent(IN)  :: maxeval
+    real(dp),    optional, intent(OUT) :: funcmin
     integer(i4), optional, intent(OUT) :: neval
     integer(i4), optional, intent(OUT) :: numrestart
     integer(i4), optional, intent(OUT) :: ierror
+    real(dp),    optional, intent(OUT), allocatable :: history(:)  ! History of objective function values
     real(dp)                           :: nelminrange(size(pstart))
 
     real(dp), parameter :: ccoeff = 0.5_dp
@@ -845,29 +892,36 @@ CONTAINS
     real(dp) :: z
     real(dp) :: dn, dnn
     real(dp) :: p0(size(pstart)), y0
+    real(dp), allocatable :: history_tmp(:)
     !
     ! Defaults
     !
     nelminrange(:) = 0.5_dp * ( prange(:,1) + prange(:,2) )
 
     if (present(varmin)) then
-       if (varmin <= 0.0_dp) stop 'Error nelim: varmin<0'
+       if (varmin <= 0.0_dp) stop 'Error nelmin: varmin<0'
        ivarmin = varmin
     else
        ivarmin = 1.0e-9_dp
     endif
+    ! maximal number of function evaluations
     if (present(maxeval)) then
-       if (maxeval <= 1) stop 'Error nelim: maxeval<=1'
+       if (maxeval <= 1) stop 'Error nelmin: maxeval<=1'
        imaxeval = maxeval
     else
        imaxeval = 1000
     endif
+    ! history output
+    if (present(history)) then
+       ! worst case length
+       allocate(history_tmp(imaxeval+3*size(ipstart)+1))
+    end if
     if (present(konvge)) then
        ikonvge = konvge
     else
        ikonvge = imaxeval / 10
     endif
-    if (ikonvge < 1) stop 'Error nelim: konvg<1'
+    if (ikonvge < 1) stop 'Error nelmin: konvg<1'
     !
     if (present(step)) then
        istep = step
@@ -913,6 +967,7 @@ CONTAINS
        p(1:n,nn) = ipstart(1:n)
        y(nn)     = func(ipstart)
        ineval     = ineval + 1
+       if (present(history)) history_tmp(ineval) = y(nn)
        !
        !  Define the initial simplex.
        !
@@ -924,6 +979,7 @@ CONTAINS
           y(j)       = func(ipstart)
           ineval     = ineval + 1
           ipstart(j) = x
+          if (present(history)) history_tmp(ineval) = Min( y(j),  history_tmp(ineval-1) )
        end do
        !
        !  Find highest and lowest Y values.  FUNCMIN = Y(IHI) indicates
@@ -954,6 +1010,7 @@ CONTAINS
           pstar(1:n) = min( prange(1:n,2) , max( prange(1:n,1) , pbar(1:n) + rcoeff * ( pbar(1:n) - p(1:n,ihi) ) ) )  
           ystar      = func(pstar)
           ineval      = ineval + 1
+          if (present(history)) history_tmp(ineval) = Min( ystar,  history_tmp(ineval-1) )
           !
           !  Successful reflection, so extension.
           !
@@ -963,6 +1020,7 @@ CONTAINS
              p2star(1:n) = min( prange(1:n,2) , max( prange(1:n,1) , pbar(1:n) + ecoeff * ( pstar(1:n) - pbar(1:n) ) ) )
              y2star      = func(p2star)
              ineval       = ineval + 1
+             if (present(history)) history_tmp(ineval) = Min( y2star,  history_tmp(ineval-1) )
              !
              !  Retain extension or contraction.
              !
@@ -993,6 +1051,7 @@ CONTAINS
                 p2star(1:n)  = min( prange(1:n,2) , max( prange(1:n,1) , pbar(1:n) + ccoeff * ( p(1:n,ihi) - pbar(1:n) ) ) )  
                 y2star       = func(p2star)
                 ineval       = ineval + 1
+                if (present(history)) history_tmp(ineval) = Min( y2star,  history_tmp(ineval-1) )
                 !
                 !  Contract the whole simplex.
                 !
@@ -1003,6 +1062,7 @@ CONTAINS
                       nelminrange(1:n) = p(1:n,j)
                       y(j)      = func(nelminrange)
                       ineval     = ineval + 1
+                      if (present(history)) history_tmp(ineval) = Min( y(j),  history_tmp(ineval-1) )
                    end do
                    ilo = minloc(y(1:n+1), 1)
                    ylo = y(ilo)
@@ -1024,6 +1084,7 @@ CONTAINS
                 p2star(1:n) =  min( prange(1:n,2) , max( prange(1:n,1) , pbar(1:n) + ccoeff * ( pstar(1:n) - pbar(1:n) ) ) ) 
                 y2star      = func(p2star)
                 ineval      = ineval + 1
+                if (present(history)) history_tmp(ineval) = Min( y2star,  history_tmp(ineval-1) )
                 !
                 !  Retain reflection?
                 !
@@ -1080,6 +1141,7 @@ CONTAINS
           nelminrange(i) = min( prange(i,2) , max( prange(i,1) , nelminrange(i) + del ) ) 
           z       = func(nelminrange)
           ineval  = ineval + 1
+          if (present(history)) history_tmp(ineval) = Min( z,  history_tmp(ineval-1) )
           if ( z < ifuncmin ) then
              iierror = 2
              exit
@@ -1088,6 +1150,7 @@ CONTAINS
           nelminrange(i) = min( prange(i,2) , max( prange(i,1) , nelminrange(i) - del - del ) ) 
           z       = func(nelminrange)
           ineval  = ineval + 1
+          if (present(history)) history_tmp(ineval) = Min( z,  history_tmp(ineval-1) )
           if ( z < ifuncmin ) then
              iierror = 2
              exit
@@ -1119,6 +1182,10 @@ CONTAINS
     if (present(ierror)) then
        ierror = iierror
     endif
+    if (present(history)) then
+       allocate(history(ineval))
+       history(:) = history_tmp(1:ineval)
+    end if
 
   end function nelminrange
 
