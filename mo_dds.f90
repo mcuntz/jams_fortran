@@ -85,8 +85,9 @@ CONTAINS
   !         None
 
   !     INDENT(OUT), OPTIONAL
-  !         real(dp)    :: funcbest             the best value of the function.
-  !         real(dp)    :: history(maxiter)     the history of best function values, history(maxiter)=funcbest
+  !         real(dp)              :: funcbest       the best value of the function.
+  !         real(dp), allocatable :: history(:)     the history of best function values, history(maxiter)=funcbest
+  !                                                 allocatable only to be in correspondance with other optimization routines
 
   !     RESTRICTIONS
   !         None.
@@ -141,7 +142,8 @@ CONTAINS
     logical,                     optional, intent(in)  :: maxit    ! Maximization or minimization of function
     logical,     dimension(:),   optional, intent(in)  :: mask     ! parameter to be optimized (true or false)
     real(dp),                    optional, intent(out) :: funcbest ! Best value of the function.
-    real(dp),    dimension(:),   optional, intent(out) :: history  ! History of objective function values
+    real(dp),    dimension(:),   &
+                 allocatable,    optional, intent(out) :: history  ! History of objective function values
     real(dp),    dimension(size(pini))                 :: DDS      ! Best value of decision variables
 
     ! Local variables
@@ -176,7 +178,7 @@ CONTAINS
     if (imaxiter < 6) stop 'Error DDS: max function evals must be minimum 6'
     ! history output
     if (present(history)) then
-       if (size(history) .ne. imaxiter) stop 'Error DDS: size of history /= maxiter'
+       allocate(history(imaxiter))
     end if
     ! Min or max objective function
     imaxit = 1.0_dp
@@ -294,7 +296,8 @@ CONTAINS
     logical,                   optional, intent(in)  :: maxit    ! Maximization or minimization of function
     logical,     dimension(:), optional, intent(in)  :: mask     ! parameter to be optimized (true or false)
     real(dp),                  optional, intent(out) :: funcbest ! Best value of the function.
-    real(dp),    dimension(:), optional, intent(out) :: history  ! History of objective function values
+    real(dp),    dimension(:),   &
+                 allocatable,  optional, intent(out) :: history  ! History of objective function values
     real(dp),    dimension(size(pini))               :: MDDS     ! Best value of decision variables
 
     ! Local variables
@@ -325,7 +328,7 @@ CONTAINS
     if (imaxiter < 6) stop 'Error MDDS: max function evals must be minimum 6'
     ! history output
      if (present(history)) then
-       if (size(history) .ne. imaxiter) stop 'Error MDDS: size of history /= maxiter'
+       allocate(history(imaxiter))
     end if
     ! Min or max objective function
     imaxit = 1.0_dp
@@ -423,7 +426,7 @@ CONTAINS
              MDDS    = pnew
           endif
        end if
-       if (present(history)) history(i+1) = of_best
+       if (present(history)) history(i+1) = min(history(i),of_best)
     end do
     if (present(funcbest)) funcbest = of_best
     !
