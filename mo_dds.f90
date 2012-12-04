@@ -427,11 +427,16 @@ CONTAINS
           endif
        end if
        if (present(history)) then
-          if (imaxit) then
-             history(i+1) = max(history(i),of_best)
+          if (present(maxit)) then
+             if (maxit) then
+                history(i+1) = max(history(i),of_best)
+             else
+                history(i+1) = min(history(i),of_best)
+             end if
           else
              history(i+1) = min(history(i),of_best)
           end if
+       end if
     end do
     if (present(funcbest)) funcbest = of_best
     !
