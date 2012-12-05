@@ -54,7 +54,7 @@ MODULE mo_julian
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
 
-  USE mo_kind, ONLY: i4, sp
+  USE mo_kind, ONLY: i4, dp
 
   IMPLICIT NONE
 
@@ -131,21 +131,21 @@ CONTAINS
     INTEGER(i4), PARAMETER :: IGREG = 2299161_i4
 
     if (julian >= IGREG) then
-       jalpha=int(((julian-1867216_i4)-0.25_sp)/36524.25_sp)
-       ja=julian+1+jalpha-int(0.25_sp*jalpha)
+       jalpha = int((real(julian-1867216_i4,dp)-0.25_dp)/36524.25_dp, i4)
+       ja     = julian + 1 + jalpha - int(0.25_dp*real(jalpha,dp), i4)
     else
-       ja=julian
+       ja     = julian
     end if
-    jb=ja+1524_i4
-    jc=int(6680.0_sp+((jb-2439870_i4)-122.1_sp)/365.25_sp)
-    jd=365*jc+int(0.25_sp*jc)
-    je=int((jb-jd)/30.6001_sp)
-    dd=jb-jd-int(30.6001_sp*je)
-    mm=je-1
-    if (mm > 12) mm=mm-12
-    yy=jc-4715_i4
-    if (mm > 2) yy=yy-1
-    if (yy <= 0) yy=yy-1
+    jb = ja + 1524_i4
+    jc = int(6680.0_dp+(real(jb-2439870_i4,dp)-122.1_dp)/365.25_dp, i4)
+    jd = 365*jc + int(0.25_dp*real(jc,dp), i4)
+    je = int(real(jb-jd,dp)/30.6001_dp, i4)
+    dd = jb - jd - int(30.6001_dp*real(je,dp), i4)
+    mm = je - 1
+    if (mm > 12) mm = mm - 12
+    yy = jc - 4715_i4
+    if (mm > 2)  yy = yy - 1
+    if (yy <= 0) yy = yy - 1
     
   END SUBROUTINE caldat
 
@@ -218,11 +218,12 @@ CONTAINS
        jy=jy-1
        jm=mm+13
     end if
-    !Bug julday=int(365.25_sp*jy)+int(30.6001_sp*jm)+dd+1720995_i4
-    julday=365*jy+int(0.25*jy+2000.)+int(30.6001*jm)+dd+1718995_i4
+
+    !Bug julday=int(365.25_dp*jy)+int(30.6001_dp*jm)+dd+1720995_i4
+    julday = 365*jy + int(0.25_dp*real(jy,dp)+2000._dp, i4) + int(30.6001_dp*real(jm,dp), i4) + dd + 1718995_i4
     if (dd+31*(mm+12*yy) >= IGREG) then
-       ja=int(0.01_sp*jy)
-       julday=julday+2-ja+int(0.25_sp*ja)
+       ja = int(0.01_dp*jy, i4)
+       julday=julday + 2 - ja + int(0.25_dp*ja, i4)
     end if
     
   END FUNCTION julday
