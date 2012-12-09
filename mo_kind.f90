@@ -1,4 +1,6 @@
 
+!> \file mo_kind.f90
+
 !> \brief Define number representations
 
 !> \details This module declares the desired ranges and precisions of the number representations,
