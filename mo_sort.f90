@@ -61,7 +61,7 @@ MODULE mo_sort
   ! Single-User Licenses, may permanently assign those licenses, in the
   ! number acquired, to individual employees. Such an assignment must be
   ! made before the code is first used and, once made, it is irrevocable
-  ! and can not be transferred. 
+  ! and can not be transferred.
 
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
@@ -71,18 +71,112 @@ MODULE mo_sort
 
   IMPLICIT NONE
 
-  PRIVATE
-
   PUBLIC :: sort       ! Quicksorts one array
   PUBLIC :: sort_index ! Returns indeces that sort the input array
 
+  ! ------------------------------------------------------------------
 
+  !     NAME
+  !         sort
+
+  !     PURPOSE
+  !         Sorts the input array in ascending order.
+
+  !     CALLING SEQUENCE
+  !         call sort(arr)
+
+  !     INDENT(IN)
+  !         None
+
+  !     INDENT(INOUT)
+  !         real(sp/dp) :: arr(:)     On input:  unsorted 1D-array
+  !                                   On output: ascendingly sorted input array
+
+  !     INDENT(OUT)
+  !         None
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         No mask or undefined value provided.
+
+  !     EXAMPLE
+  !         vec = (/ 3., 2, 1., 4., 6., 5. /)
+  !         call sort(vec)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011 - adapted routine sort from numerical recipes
   INTERFACE sort
      MODULE PROCEDURE sort_sp, sort_dp
   END INTERFACE sort
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         sort_index
+
+  !     PURPOSE
+  !         Gives the indeces that would sort an array in ascending order.
+
+  !     CALLING SEQUENCE
+  !         ii = sort_index(arr)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: arr(:)     Unsorted 1D-array
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         integer(i4)               Indeces that would sort arr in ascending order
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         No mask or undefined value provided.
+
+  !     EXAMPLE
+  !         vec = (/ 3., 2, 1., 4., 6., 5. /)
+  !         ii = sort_index(arr)
+  !         arr = arr(ii)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011 - adapted routine indexx from numerical recipes
   INTERFACE sort_index
      MODULE PROCEDURE sort_index_i4, sort_index_sp, sort_index_dp
   END INTERFACE sort_index
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
 
   ! Local routine for indeces exchange, from numerical recipes
   INTERFACE icomp_xchg
@@ -152,50 +246,6 @@ CONTAINS
   END SUBROUTINE icomp_xchg_dp
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         sort
-
-  !     PURPOSE
-  !         Sorts the input array in ascending order.
-
-  !     CALLING SEQUENCE
-  !         call sort(arr)
-  
-  !     INDENT(IN)
-  !         None
-
-  !     INDENT(INOUT)
-  !         real(sp/dp) :: arr(:)     On input:  unsorted 1D-array
-  !                                   On output: ascendingly sorted input array
-
-  !     INDENT(OUT)
-  !         None
-
-  !     INDENT(IN), OPTIONAL
-  !         None
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         No mask or undefined value provided.
-
-  !     EXAMPLE
-  !         vec = (/ 3., 2, 1., 4., 6., 5. /)
-  !         call sort(vec)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011 - adapted routine sort from numerical recipes
 
   SUBROUTINE sort_sp(arr)
 
@@ -338,50 +388,6 @@ CONTAINS
 
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         sort_index
-
-  !     PURPOSE
-  !         Gives the indeces that would sort an array in ascending order.
-
-  !     CALLING SEQUENCE
-  !         ii = sort_index(arr)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: arr(:)     Unsorted 1D-array
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         integer(i4)               Indeces that would sort arr in ascending order
-
-  !     INDENT(IN), OPTIONAL
-  !         None
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         No mask or undefined value provided.
-
-  !     EXAMPLE
-  !         vec = (/ 3., 2, 1., 4., 6., 5. /)
-  !         ii = sort_index(arr)
-  !         arr = arr(ii)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011 - adapted routine indexx from numerical recipes
 
   FUNCTION sort_index_sp(arr)
 

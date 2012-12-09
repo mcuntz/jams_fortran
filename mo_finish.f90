@@ -47,7 +47,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         call finish(name, text=text, unit=unit)
-  
+
   !     INDENT(IN)
   !         character(len=*) :: name         First string separated from otional second by :
 
@@ -89,19 +89,19 @@ CONTAINS
     INTEGER,          INTENT(IN), OPTIONAL :: unit
 
     INTEGER :: nunit
-    
+
     IF (PRESENT(unit)) THEN
        nunit = unit
     ELSE
        nunit = nerr
     ENDIF
-    
+
     WRITE (nunit,'(a)') separator
 
     IF (PRESENT(text)) THEN
-      WRITE (nunit,'(a,a,a)') name, ': ', text
+       WRITE (nunit,'(a,a,a)') name, ': ', text
     ELSE
-      WRITE (nunit,'(a)') name
+       WRITE (nunit,'(a)') name
     END IF
 
     WRITE (nunit,'(a)') separator

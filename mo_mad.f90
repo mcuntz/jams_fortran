@@ -28,17 +28,7 @@ MODULE mo_mad
 
   Implicit NONE
 
-  PRIVATE
-
   PUBLIC :: mad             ! Mean absolute deviation test
-
-  INTERFACE mad
-     MODULE PROCEDURE mad_sp, mad_dp
-  END INTERFACE mad
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
 
   ! ------------------------------------------------------------------
 
@@ -55,7 +45,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         out = mad(vec, z=z, mask=mask, deriv=deriv)
-  
+
   !     INDENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
 
@@ -99,6 +89,19 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Mar 2011
+  INTERFACE mad
+     MODULE PROCEDURE mad_sp, mad_dp
+  END INTERFACE mad
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
+
+  ! ------------------------------------------------------------------
 
   FUNCTION mad_dp(arr, z, mask, deriv)
 
@@ -204,7 +207,7 @@ CONTAINS
 
     select case(ideriv)
     case(0) ! pure values
-       !m       = count(maske) 
+       !m       = count(maske)
        med     = median(arr,mask=maske)
        mabsdev = median(abs(arr-med),mask=maske)
        thresh  = mabsdev * iz/0.6745_sp

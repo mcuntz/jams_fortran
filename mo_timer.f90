@@ -9,12 +9,12 @@ module mo_timer
   !
   !     CVS:$Id: timers.f,v 1.2 2000/04/19 21:56:26 pwjones Exp $
   !
-  !     Copyright (c) 1997, 1998 the Regents of the University of 
+  !     Copyright (c) 1997, 1998 the Regents of the University of
   !       California.
   !
-  !     This software and ancillary information (herein called software) 
-  !     called SCRIP is made available under the terms described here.  
-  !     The software has been approved for release with associated 
+  !     This software and ancillary information (herein called software)
+  !     called SCRIP is made available under the terms described here.
+  !     The software has been approved for release with associated
   !     LA-CC Number 98-45.
   !
   !     Unless otherwise indicated, this software has been authored
@@ -29,7 +29,7 @@ module mo_timer
   !     any liability or responsibility for the use of this software.
   !
   !     If software is modified to produce derivative works, such modified
-  !     software should be clearly marked, so as not to confuse it with 
+  !     software should be clearly marked, so as not to confuse it with
   !     the version available from Los Alamos National Laboratory.
   !
   ! -----------------------------------------------------------------------
@@ -133,7 +133,7 @@ contains
   !-----------------------------------------------------------------------
   !
   !     This routine returns the result of a given timer.  This can be
-  !     called instead of timer_print so that the calling routine can 
+  !     called instead of timer_print so that the calling routine can
   !     print it in desired format.
   !
   !-----------------------------------------------------------------------
@@ -168,8 +168,8 @@ contains
 
     integer(i4), intent(in) :: timer            ! timer number
 
-    !--- 
-    !--- print the cputime accumulated for timer 
+    !---
+    !--- print the cputime accumulated for timer
     !--- make sure timer is stopped
     !---
 

@@ -67,14 +67,14 @@ MODULE mo_opt_functions
   PUBLIC :: de_jong_f1                        ! The De Jong Function F1, N = 3.
   PUBLIC :: de_jong_f2                        ! The De Jong Function F2, N = 2.
   PUBLIC :: de_jong_f3                        ! The De Jong Function F3 (discontinuous), N = 5.
-  PUBLIC :: de_jong_f4                        ! The De Jong Function F4 (Gaussian noise), N = 30. 
+  PUBLIC :: de_jong_f4                        ! The De Jong Function F4 (Gaussian noise), N = 30.
   PUBLIC :: de_jong_f5                        ! The De Jong Function F5, N = 2.
   PUBLIC :: schaffer_f6                       ! The Schaffer Function F6, N = 2.
-  PUBLIC :: schaffer_f7                       ! The Schaffer Function F7, N = 2. 
-  PUBLIC :: goldstein_price_polynomial        ! The Goldstein Price Polynomial, N = 2. 
+  PUBLIC :: schaffer_f7                       ! The Schaffer Function F7, N = 2.
+  PUBLIC :: goldstein_price_polynomial        ! The Goldstein Price Polynomial, N = 2.
   PUBLIC :: branin_rcos                       ! The Branin RCOS Function, N = 2.
-  PUBLIC :: shekel_sqrn5                      ! The Shekel SQRN5 Function, N = 4.  
-  PUBLIC :: shekel_sqrn7                      ! The Shekel SQRN7 Function, N = 4. 
+  PUBLIC :: shekel_sqrn5                      ! The Shekel SQRN5 Function, N = 4.
+  PUBLIC :: shekel_sqrn7                      ! The Shekel SQRN7 Function, N = 4.
   PUBLIC :: shekel_sqrn10                     ! The Shekel SQRN10 Function, N = 4.
   PUBLIC :: six_hump_camel_back_polynomial    ! The Six-Hump Camel-Back Polynomial, N = 2.
   PUBLIC :: shubert                           ! The Shubert Function, N = 2.
@@ -249,7 +249,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  Steep valley, e^x + 1/(100x)
-  !  Solution: 
+  !  Solution:
   !       if x >  0.0 :   x = 0.95344636E-01
   !       if x < -0.1 :   x = -8.99951
   !  Search domain: x <= -0.1
@@ -261,7 +261,7 @@ CONTAINS
   !  Discussion:
   !
   !    This function has a pole at x = 0,
-  !    near which 
+  !    near which
   !       f -> negative infinity for x -> 0-0 (left) and
   !       f -> positive infinity for x -> 0+0 (right)
   !    f has a local maximum at x ~ -0.105412 .
@@ -307,9 +307,9 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  Steep valley2, e^x - 2x + 1/(100x) - 1/(1000000x^2)
-  !  
-  !  Solution: x = 0.70320487     
-  !  Search domain: 0.001 <= x 
+  !
+  !  Solution: x = 0.70320487
+  !  Search domain: 0.001 <= x
   !
   !  With Brent method:
   !   A,  X*,  B:  0.70320453      0.70320487      0.70320521
@@ -401,8 +401,8 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The "Thin Pole", 3x^2+1+log((pi-x)^2)/pi^4
-  !  Solution: 
-  !     x    = 0.00108963  
+  !  Solution:
+  !     x    = 0.00108963
   !     f(x) = 1.0235
   !
   !  With Brent method:
@@ -460,9 +460,9 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The oscillatory parabola x^2 - 10*sin(x^2-3x+2)
-  !  Solution: 
+  !  Solution:
   !     x    = 0.146623
-  !     f(x) = -9.97791 
+  !     f(x) = -9.97791
   !  With Brent method:
   !   A,  X*,  B:  -1.3384524      -1.3384521      -1.3384517
   !  FA, FX*, FB:  -8.1974224      -8.1974224      -8.1974224
@@ -506,7 +506,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The cosine combo cos(x)+5cos(1.6x)-2cos(2x)+5cos(4.5x)+7cos(9x)
-  !  Solution: 
+  !  Solution:
   !     x    = -21.9443 + 62.831853 * k   , k = Integer
   !     x    =  21.9443 - 62.831853 * k   , k = Integer
   !     f(x) = -14.6772
@@ -522,7 +522,7 @@ CONTAINS
   !    The function has a local minimum at 1.0167817.
   !
   !    The global optimum which function value -14.6772
-  !    appears infinite times. 
+  !    appears infinite times.
   !
   !  Licensing:
   !
@@ -856,7 +856,7 @@ CONTAINS
   !
   ! The Gaussian function, N = 3.
   ! Search domain: -Pi <= xi <= Pi, i = 1, 2, 3.
-  ! Solution: 
+  ! Solution:
   !     x(1:n) = (/ 0.39895613783875655_dp, 1.0000190844878036_dp, 0.0_dp /)
   !     found with Mathematica
   !
@@ -1160,7 +1160,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The penalty function #1, 1 <= N.
-  ! Solution: 
+  ! Solution:
   !    with Mathematica (numerical results)
   !    x(1:1) = 0.5000049998750047_dp
   !    f(x)   = 0.000002499975000499985_dp
@@ -1228,7 +1228,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The penalty function #2, 1 <= N.
-  ! Solution: 
+  ! Solution:
   !    with Mathematica (numerical results)
   !
   !    x(1:1) = (/ 0.7914254791661984_dp /)
@@ -1361,7 +1361,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The Brown and Dennis function, N = 4.
-  ! Solution: 
+  ! Solution:
   !    x(1:4) = (/ -11.5944399230_dp, 13.2036300657_dp, &
   !                -0.4034395329_dp,   0.2367787297_dp /)
   !
@@ -2201,7 +2201,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The De Jong Function F3 (discontinuous), N = 5.
-  ! Solution: 
+  ! Solution:
   !    x(1:n) depends on search space
   !           = sum of integer part of left boundary values
   !
@@ -2233,7 +2233,7 @@ CONTAINS
   !
 
   function de_jong_f3(x)
-   
+
     implicit none
 
     integer(i4) :: n
@@ -2511,7 +2511,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The Goldstein Price Polynomial, N = 2.
-  ! Solution:   
+  ! Solution:
   !    x(1:n) = (/ 0.0_dp, -1.0_dp /)
   !    f(x)   = 3.0_dp
   !    http://www.pg.gda.pl/~mkwies/dyd/geadocu/fcngold.html
@@ -3085,7 +3085,7 @@ CONTAINS
     real(dp), dimension(:), intent(in) :: x
 
     arg = - ( x(1) - pi_dp )**2 - ( x(2) - pi_dp )**2
-    easom = - cos ( x(1) ) * cos ( x(2) ) * exp ( arg ) 
+    easom = - cos ( x(1) ) * cos ( x(2) ) * exp ( arg )
     easom = easom + 1.0_dp
 
   end function easom
@@ -3191,7 +3191,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   ! The Bohachevsky Function #3, N = 2.
-  ! Solution: 
+  ! Solution:
   !     x(1:2) = (/ 0.0_dp, 0.0_dp /)
   !     f(x)   = 0.0_dp
   !
@@ -3243,7 +3243,7 @@ CONTAINS
 
     bohachevsky3 = x(1)**2 + 2.0_dp * x(2)**2 &
          - 0.3_dp * cos ( 3.0_dp * pi_dp * x(1)  &
-                        + 4.0_dp * pi_dp * x(2) ) + 0.3_dp
+         + 4.0_dp * pi_dp * x(2) ) + 0.3_dp
 
   end function bohachevsky3
 
@@ -3541,7 +3541,7 @@ CONTAINS
     n = size(x)
     sphere_model = 0.0_dp
     do j=1, n
-       sphere_model = sphere_model + x(j)**2 
+       sphere_model = sphere_model + x(j)**2
     enddo
 
   end function sphere_model
@@ -3576,7 +3576,7 @@ CONTAINS
     n = size(x)
     rastrigin = 0.0_dp
     do j=1, n
-       rastrigin = rastrigin+ (x(j)**2 - 10.0_dp*cos(2.0_dp*pi_dp*x(j))) 
+       rastrigin = rastrigin+ (x(j)**2 - 10.0_dp*cos(2.0_dp*pi_dp*x(j)))
     enddo
     rastrigin = rastrigin + 10.0_dp * real(n,dp)
 
@@ -3655,8 +3655,8 @@ CONTAINS
   !
   !  The Michalewicz function, N >= 2.
   !  Search domain: x restricted to (0, Pi)
-  !  Solution: 
-  !     numerical, so far best found       
+  !  Solution:
+  !     numerical, so far best found
   !     x(1:2)  = (/ 2.2029262967_dp, 1.5707721052_dp /)
   !     f(x)    = -1.8013033793_dp
   !
@@ -3677,9 +3677,9 @@ CONTAINS
   !
   !  Discussion:
   !    The Michalewicz function is a multimodal test function (n! local optima).
-  !    The parameter p defines the "steepness" of the valleys or edges. Larger p leads to 
-  !    more difficult search. For very large p the function behaves like a needle in the 
-  !    haystack (the function values for points in the space outside the narrow peaks give 
+  !    The parameter p defines the "steepness" of the valleys or edges. Larger p leads to
+  !    more difficult search. For very large p the function behaves like a needle in the
+  !    haystack (the function values for points in the space outside the narrow peaks give
   !    very little information on the location of the global optimum).
   !    http://www.geatbx.com/docu/fcnindex-01.html#P150_6749
   !
@@ -3717,7 +3717,7 @@ CONTAINS
        tmp = sin(tmp)
        if (abs(tmp) .lt. 1E-15) then
           tmp = 0.0_dp
-       else 
+       else
           tmp = tmp**p
        end if
        tmp = sin(x(j)) * tmp
@@ -3726,10 +3726,10 @@ CONTAINS
     michalewicz = -michalewicz
 
     select case(n)
-       case(2_i4)
-          michalewicz = michalewicz + 1.8013033793_dp
-       case(5_i4)
-          michalewicz = michalewicz + 4.6876581791_dp
+    case(2_i4)
+       michalewicz = michalewicz + 1.8013033793_dp
+    case(5_i4)
+       michalewicz = michalewicz + 4.6876581791_dp
     end select
 
   end function michalewicz
@@ -3767,7 +3767,7 @@ CONTAINS
   !  Search Domain:
   !     -5.0_dp <= xi <= 5.0_dp
   !
-  !  Solution: 
+  !  Solution:
   !     x(1:2) = (/ 0.08984201310031806_dp , -0.7126564030207396_dp /)     OR
   !     x(1:2) = (/ -0.08984201310031806_dp , 0.7126564030207396_dp /)
   !     f(x)   = 0.0_dp
@@ -3903,7 +3903,7 @@ CONTAINS
   ! ------------------------------------------------------------------
   !
   !  The Power sum function, N = 4.
-  !  Solution: 
+  !  Solution:
   !      x    = (/ 1.0000653551_dp, 2.0087089520_dp, 1.9912589253_dp, 2.9999732609_dp /)
   !      f(x) = 0.0000000001
   !
@@ -3965,7 +3965,7 @@ CONTAINS
     n = size(x)
     sphere = 0.0_dp
     do j=1, n
-       sphere = sphere + x(j)**2 
+       sphere = sphere + x(j)**2
     enddo
 
   end function sphere

@@ -54,7 +54,7 @@ MODULE mo_percentile
   ! Single-User Licenses, may permanently assign those licenses, in the
   ! number acquired, to individual employees. Such an assignment must be
   ! made before the code is first used and, once made, it is irrevocable
-  ! and can not be transferred. 
+  ! and can not be transferred.
 
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
@@ -63,44 +63,10 @@ MODULE mo_percentile
 
   Implicit NONE
 
-  PRIVATE
-
   PUBLIC :: ksmallest       ! The kth smallest value in an array
   PUBLIC :: median          ! Median
   PUBLIC :: percentile      ! The value below which a certain percent of the input fall
   PUBLIC :: qmedian         ! Quick median calculation, rearranges input
-
-  ! Public
-  INTERFACE ksmallest
-     MODULE PROCEDURE ksmallest_sp, ksmallest_dp
-  END INTERFACE ksmallest
-  INTERFACE median
-     MODULE PROCEDURE median_sp, median_dp
-  END INTERFACE median
-  INTERFACE percentile
-     MODULE PROCEDURE percentile_0d_sp, percentile_0d_dp
-     MODULE PROCEDURE percentile_1d_sp, percentile_1d_dp
-  END INTERFACE percentile
-  INTERFACE qmedian
-     MODULE PROCEDURE qmedian_sp, qmedian_dp
-  END INTERFACE qmedian
-
-  ! Private
-  INTERFACE swap
-     MODULE PROCEDURE swap_i4, &
-          swap_sp, swap_1d_sp, &
-          swap_dp, swap_1d_dp, &
-          swap_spc, swap_1d_spc, &
-          swap_dpc, swap_1d_dpc, &
-          masked_swap_sp, masked_swap_1d_sp, masked_swap_2d_sp, &
-          masked_swap_dp, masked_swap_1d_dp, masked_swap_2d_dp, &
-          masked_swap_spc, masked_swap_1d_spc, masked_swap_2d_spc, &
-          masked_swap_dpc, masked_swap_1d_dpc, masked_swap_2d_dpc
-  END INTERFACE swap
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
 
   ! ------------------------------------------------------------------
 
@@ -117,7 +83,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         out = ksmallest(vec,k,mask=mask,before=before,previous=previous,after=after,next=next)
-  
+
   !     INTENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
 
@@ -156,6 +122,212 @@ CONTAINS
   !     HISTORY
   !         Written,  Matthias Cuntz, Mar 2011
   !         Modified, Matthias Cuntz, Juliane Mai, Jul 2012 - next/previous
+  INTERFACE ksmallest
+     MODULE PROCEDURE ksmallest_sp, ksmallest_dp
+  END INTERFACE ksmallest
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         median
+
+  !     PURPOSE
+  !         Returns the median of the values in an array.
+  !         If size is even, then the mean of the size/2 and size/2+1 element is the median.
+  !
+  !         If an optinal mask is given, values only on those locations that correspond
+  !         to true values in the mask are used.
+
+  !     CALLING SEQUENCE
+  !         out = median(vec,mask=mask)
+
+  !     INTENT(IN)
+  !         real(sp/dp) :: vec(:)     1D-array with input numbers
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         real(sp/dp) :: out        median of values in input array
+
+  !     INTENT(IN), OPTIONAL
+  !         logical     :: mask(:)    1D-array of logical values with size(vec).
+  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
+  !         ! Returns 5.5
+  !         out = median(vec)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Mar 2011
+  !         Modified, Matthias Cuntz, Juliane Mai, Jul 2012 - uses previous of ksmallest to half execution time
+  INTERFACE median
+     MODULE PROCEDURE median_sp, median_dp
+  END INTERFACE median
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         percentile
+
+  !     PURPOSE
+  !         Returns the value below which a certain percent of array values fall.
+  !
+  !         If an optinal mask is given, values only on those locations that correspond
+  !         to true values in the mask are used.
+  !
+  !         Different definitions can be applied to interpolate the stepwise CDF of the given data.
+  !         (1) Inverse empirical CDF (no interpolation, default MATHEMATICA)
+  !         (2) Linear interpolation (California method)
+  !         (3) Element numbered closest
+  !         (4) Linear interpolation (hydrologist method)
+  !         (5) Mean-based estimate (Weibull method, default IMSL)
+  !         (6) Mode-based estimate
+  !         (7) Median-based estimate
+  !         (8) normal distribution estimate
+  !
+  !         See: http://reference.wolfram.com/mathematica/tutorial/BasicStatistics.html
+
+  !     CALLING SEQUENCE
+  !         out = percentile(vec,k,mask=mask,mode_in=mode)
+
+  !     INTENT(IN)
+  !         real(sp/dp) :: vec(:)     1D-array with input numbers
+  !         real(sp/dp) :: k[(:)]     Percentage of percentile, can be 1 dimensional
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         real(sp/dp) :: out[(size(k))]   k-th percentile of values in input array, can be
+  !                                         1 dimensional corresponding to k
+
+  !     INTENT(IN), OPTIONAL
+  !         logical     :: mask(:)    1D-array of logical values with size(vec).
+  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
+  !         integer(i4) :: mode_in    Specifies the interpolation scheme applied.
+  !                                   Default:
+  !                                       Inverse empirical CDF (no interpolation, default Mathematica)
+  !                                       mode_in = 1_i4
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
+  !         ! Returns 10.
+  !         out = percentile(vec,95.)
+  !         ! Returns (10.,8)
+  !         out = percentile(vec,(/95.,80./))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Mar  2011
+  !         Modified, Stephan Thober, Dec  2011 - added 1 dimensional version
+  !                   Juliane Mai,    July 2012 - different interpolation schemes
+  !         Modified, Matthias Cuntz, Juliane Mai, Jul 2012 - uses previous of ksmallest to half execution time
+  INTERFACE percentile
+     MODULE PROCEDURE percentile_0d_sp, percentile_0d_dp
+     MODULE PROCEDURE percentile_1d_sp, percentile_1d_dp
+  END INTERFACE percentile
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         qmedian
+
+  !     PURPOSE
+  !         Quick calculation of the median thereby rearranging the input array.
+
+  !     CALLING SEQUENCE
+  !         out = qmedian(vec)
+
+  !     INTENT(IN)
+  !         None
+
+  !     INTENT(INOUT)
+  !         real(sp/dp) :: vec(:)     1D-array with input numbers.
+  !                                   Wil be rearranged on output.
+
+  !     INTENT(OUT)
+  !         real(sp/dp) :: out        median of values in input array
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
+  !         ! Returns 5.5
+  !         out = qmedian(vec)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Niklaus Wirth. "Algorithms and Data Structures". Prentice-Hall, Inc., 1985. ISBN 0-13-022005-1.
+
+  !     HISTORY
+  !         Written, Filip Hroch as part of Munipack: http://munipack.physics.muni.cz
+  !         Modified, Matthias Cuntz, Jul 2012 - function, k=n/2+1
+  !         Modified, Matthias Cuntz, Juliane Mai, Jul 2012 - real median for even n
+  INTERFACE qmedian
+     MODULE PROCEDURE qmedian_sp, qmedian_dp
+  END INTERFACE qmedian
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
+
+  ! Private
+  INTERFACE swap
+     MODULE PROCEDURE swap_i4, &
+          swap_sp, swap_1d_sp, &
+          swap_dp, swap_1d_dp, &
+          swap_spc, swap_1d_spc, &
+          swap_dpc, swap_1d_dpc, &
+          masked_swap_sp, masked_swap_1d_sp, masked_swap_2d_sp, &
+          masked_swap_dp, masked_swap_1d_dp, masked_swap_2d_dp, &
+          masked_swap_spc, masked_swap_1d_spc, masked_swap_2d_spc, &
+          masked_swap_dpc, masked_swap_1d_dpc, masked_swap_2d_dpc
+  END INTERFACE swap
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
+
+  ! ------------------------------------------------------------------
 
   FUNCTION ksmallest_dp(arrin,k,mask,before,after,previous,next)
 
@@ -318,54 +490,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         median
-
-  !     PURPOSE
-  !         Returns the median of the values in an array.
-  !         If size is even, then the mean of the size/2 and size/2+1 element is the median.
-  !
-  !         If an optinal mask is given, values only on those locations that correspond
-  !         to true values in the mask are used.
-
-  !     CALLING SEQUENCE
-  !         out = median(vec,mask=mask)
-  
-  !     INTENT(IN)
-  !         real(sp/dp) :: vec(:)     1D-array with input numbers
-
-  !     INTENT(INOUT)
-  !         None
-
-  !     INTENT(OUT)
-  !         real(sp/dp) :: out        median of values in input array
-
-  !     INTENT(IN), OPTIONAL
-  !         logical     :: mask(:)    1D-array of logical values with size(vec).
-  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
-
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-
-  !     INTENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
-  !         ! Returns 5.5
-  !         out = median(vec)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         None
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Mar 2011
-  !         Modified, Matthias Cuntz, Juliane Mai, Jul 2012 - uses previous of ksmallest to half execution time
-
   FUNCTION median_dp(arrin,mask)
 
     IMPLICIT NONE
@@ -384,7 +508,7 @@ CONTAINS
        arr = pack(arrin,mask)
 
        if (n < 2) stop 'median_dp: n < 2'
-    
+
        if (mod(n,2) == 0) then ! Even
           median_dp = ksmallest(arr,n/2+1,previous=tmp)
           median_dp = 0.5_dp*(median_dp+tmp)
@@ -396,7 +520,7 @@ CONTAINS
     else
        n = size(arrin)
        if (n < 2) stop 'median_dp: n < 2'
-    
+
        if (mod(n,2) == 0) then ! Even
           median_dp = ksmallest(arrin,n/2+1,previous=tmp)
           median_dp = 0.5_dp*(median_dp+tmp)
@@ -426,7 +550,7 @@ CONTAINS
        arr = pack(arrin,mask)
 
        if (n < 2) stop 'median_sp: n < 2'
-    
+
        if (mod(n,2) == 0) then ! Even
           median_sp = ksmallest(arr,n/2+1,previous=tmp)
           median_sp = 0.5_sp*(median_sp+tmp)
@@ -438,7 +562,7 @@ CONTAINS
     else
        n = size(arrin)
        if (n < 2) stop 'median_sp: n < 2'
-    
+
        if (mod(n,2) == 0) then ! Even
           median_sp = ksmallest(arrin,n/2+1,previous=tmp)
           median_sp = 0.5_sp*(median_sp+tmp)
@@ -451,75 +575,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         percentile
-
-  !     PURPOSE
-  !         Returns the value below which a certain percent of array values fall.
-  !
-  !         If an optinal mask is given, values only on those locations that correspond
-  !         to true values in the mask are used.
-  !
-  !         Different definitions can be applied to interpolate the stepwise CDF of the given data.
-  !         (1) Inverse empirical CDF (no interpolation, default MATHEMATICA)
-  !         (2) Linear interpolation (California method)
-  !         (3) Element numbered closest
-  !         (4) Linear interpolation (hydrologist method)
-  !         (5) Mean-based estimate (Weibull method, default IMSL)
-  !         (6) Mode-based estimate
-  !         (7) Median-based estimate
-  !         (8) normal distribution estimate
-  !         
-  !         See: http://reference.wolfram.com/mathematica/tutorial/BasicStatistics.html
-
-  !     CALLING SEQUENCE
-  !         out = percentile(vec,k,mask=mask,mode_in=mode)
-  
-  !     INTENT(IN)
-  !         real(sp/dp) :: vec(:)     1D-array with input numbers
-  !         real(sp/dp) :: k[(:)]     Percentage of percentile, can be 1 dimensional 
-
-  !     INTENT(INOUT)
-  !         None
-
-  !     INTENT(OUT)
-  !         real(sp/dp) :: out[(size(k))]   k-th percentile of values in input array, can be 
-  !                                         1 dimensional corresponding to k
-
-  !     INTENT(IN), OPTIONAL
-  !         logical     :: mask(:)    1D-array of logical values with size(vec).
-  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
-  !         integer(i4) :: mode_in    Specifies the interpolation scheme applied.
-  !                                   Default: 
-  !                                       Inverse empirical CDF (no interpolation, default Mathematica)
-  !                                       mode_in = 1_i4
-
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-
-  !     INTENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
-  !         ! Returns 10.
-  !         out = percentile(vec,95.)
-  !         ! Returns (10.,8)
-  !         out = percentile(vec,(/95.,80./))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         None
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Mar  2011
-  !         Modified, Stephan Thober, Dec  2011 - added 1 dimensional version
-  !                   Juliane Mai,    July 2012 - different interpolation schemes
-  !         Modified, Matthias Cuntz, Juliane Mai, Jul 2012 - uses previous of ksmallest to half execution time
-
   FUNCTION percentile_0d_dp(arrin,k,mask,mode_in)
 
     IMPLICIT NONE
@@ -527,7 +582,7 @@ CONTAINS
     REAL(dp),    DIMENSION(:),           INTENT(IN) :: arrin
     REAL(dp),                            INTENT(IN) :: k
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
-    INTEGER(i4),               OPTIONAL, INTENT(IN) :: mode_in                
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: mode_in
     REAL(dp)                                        :: percentile_0d_dp
 
     INTEGER(i4)                         :: n, nn1, nn2
@@ -549,59 +604,59 @@ CONTAINS
     end if
 
     if (n < 2) stop 'percentile_0d_dp: n < 2'
-    
+
     select case (mode)
        ! Inverse empirical CDF: Mathematica default
-       case(1_i4) 
-          kk = k/100._dp*real(n,dp)
-          nn1 = min(n, max(1_i4,ceiling(kk,kind=i4)))
-          nn2 = nn1
+    case(1_i4)
+       kk = k/100._dp*real(n,dp)
+       nn1 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+       nn2 = nn1
 
        ! Linear interpolation (California method)
-       case(2_i4)
-          kk  = k/100._dp*real(n,dp)
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(2_i4)
+       kk  = k/100._dp*real(n,dp)
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! Element numbered closest
-       case(3_i4)
-          kk = 0.5_dp+k/100._dp*real(n,dp)
-          nn1 = min(n, max(1_i4,floor(kk,kind=i4)))
-          nn2 = nn1
+    case(3_i4)
+       kk = 0.5_dp+k/100._dp*real(n,dp)
+       nn1 = min(n, max(1_i4,floor(kk,kind=i4)))
+       nn2 = nn1
 
        ! Linear interpolation (hydrologist method)
-       case(4_i4)
-          kk  = 0.5_dp+k/100._dp*(real(n,dp))
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(4_i4)
+       kk  = 0.5_dp+k/100._dp*(real(n,dp))
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! Mean-based estimate (Weibull method): IMSL default
-       case(5_i4)
-          kk  = k/100._dp*(real(n,dp)+1._dp)
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(5_i4)
+       kk  = k/100._dp*(real(n,dp)+1._dp)
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! Mode-based estimate
-       case(6_i4)
-          kk  = 1.0_dp+k/100._dp*(real(n,dp)-1._dp)
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(6_i4)
+       kk  = 1.0_dp+k/100._dp*(real(n,dp)-1._dp)
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! Median-based estimate
-       case(7_i4)
-          kk  = 1.0_dp/3.0_dp+k/100._dp*(real(n,dp)+1.0_dp/3.0_dp)
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(7_i4)
+       kk  = 1.0_dp/3.0_dp+k/100._dp*(real(n,dp)+1.0_dp/3.0_dp)
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! Normal distribution estimate
-       case(8_i4)
-          kk  = 3.0_dp/8.0_dp+k/100._dp*(real(n,dp)+1.0_dp/4.0_dp)
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(8_i4)
+       kk  = 3.0_dp/8.0_dp+k/100._dp*(real(n,dp)+1.0_dp/4.0_dp)
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! No valid mode
-       case default
-          stop 'percentile_0d_dp: mode > 8 not implemented'
+    case default
+       stop 'percentile_0d_dp: mode > 8 not implemented'
 
     end select
 
@@ -638,7 +693,7 @@ CONTAINS
     REAL(sp),    DIMENSION(:),           INTENT(IN) :: arrin
     REAL(sp),                            INTENT(IN) :: k
     LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
-    INTEGER(i4),               OPTIONAL, INTENT(IN) :: mode_in                
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: mode_in
     REAL(sp)                                        :: percentile_0d_sp
 
     INTEGER(i4)                         :: n, nn1, nn2
@@ -660,59 +715,59 @@ CONTAINS
     end if
 
     if (n < 2) stop 'percentile_0d_sp: n < 2'
-    
+
     select case (mode)
        ! Inverse empirical CDF: Mathematica default
-       case(1_i4) 
-          kk = k/100._sp*real(n,sp)
-          nn1 = min(n, max(1_i4,ceiling(kk,kind=i4)))
-          nn2 = nn1
+    case(1_i4)
+       kk = k/100._sp*real(n,sp)
+       nn1 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+       nn2 = nn1
 
        ! Linear interpolation (California method)
-       case(2_i4)
-          kk  = k/100._sp*real(n,sp)
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(2_i4)
+       kk  = k/100._sp*real(n,sp)
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! Element numbered closest
-       case(3_i4)
-          kk = 0.5_sp+k/100._sp*real(n,sp)
-          nn1 = min(n, max(1_i4,floor(kk,kind=i4)))
-          nn2 = nn1
+    case(3_i4)
+       kk = 0.5_sp+k/100._sp*real(n,sp)
+       nn1 = min(n, max(1_i4,floor(kk,kind=i4)))
+       nn2 = nn1
 
        ! Linear interpolation (hydrologist method)
-       case(4_i4)
-          kk  = 0.5_sp+k/100._sp*(real(n,sp))
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(4_i4)
+       kk  = 0.5_sp+k/100._sp*(real(n,sp))
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! Mean-based estimate (Weibull method): IMSL default
-       case(5_i4)
-          kk  = k/100._sp*(real(n,sp)+1._sp)
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(5_i4)
+       kk  = k/100._sp*(real(n,sp)+1._sp)
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! Mode-based estimate
-       case(6_i4)
-          kk  = 1.0_sp+k/100._sp*(real(n,sp)-1._sp)
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(6_i4)
+       kk  = 1.0_sp+k/100._sp*(real(n,sp)-1._sp)
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! Median-based estimate
-       case(7_i4)
-          kk  = 1.0_sp/3.0_sp+k/100._sp*(real(n,sp)+1.0_sp/3.0_sp)
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(7_i4)
+       kk  = 1.0_sp/3.0_sp+k/100._sp*(real(n,sp)+1.0_sp/3.0_sp)
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! Normal distribution estimate
-       case(8_i4)
-          kk  = 3.0_sp/8.0_sp+k/100._sp*(real(n,sp)+1.0_sp/4.0_sp)
-          nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
-          nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
+    case(8_i4)
+       kk  = 3.0_sp/8.0_sp+k/100._sp*(real(n,sp)+1.0_sp/4.0_sp)
+       nn1 = min(n, max(1_i4,  floor(kk,kind=i4)))
+       nn2 = min(n, max(1_i4,ceiling(kk,kind=i4)))
 
        ! No valid mode
-       case default
-          stop 'percentile_0d_sp: mode > 8 not implemented'
+    case default
+       stop 'percentile_0d_sp: mode > 8 not implemented'
 
     end select
 
@@ -779,56 +834,56 @@ CONTAINS
 
     select case (mode)
        ! Inverse empirical CDF: Mathematica default
-       case(1_i4)   
-          kk(:) = k(:)/100._dp*real(n,dp)
-          nn1(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
-          nn2 = nn1
+    case(1_i4)
+       kk(:) = k(:)/100._dp*real(n,dp)
+       nn1(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+       nn2 = nn1
 
-      ! Linear interpolation (California method)
-       case(2_i4)
-          kk(:)  = k(:)/100._dp*real(n,dp)
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+       ! Linear interpolation (California method)
+    case(2_i4)
+       kk(:)  = k(:)/100._dp*real(n,dp)
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! Element numbered closest
-       case(3_i4)
-          kk(:) = 0.5_dp+k(:)/100._dp*real(n,dp)
-          nn1(:) = min(n, max(1_i4,floor(kk(:),kind=i4)))
-          nn2 = nn1
+    case(3_i4)
+       kk(:) = 0.5_dp+k(:)/100._dp*real(n,dp)
+       nn1(:) = min(n, max(1_i4,floor(kk(:),kind=i4)))
+       nn2 = nn1
 
        ! Linear interpolation (hydrologist method)
-       case(4_i4)
-          kk(:)  = 0.5_dp+k(:)/100._dp*(real(n,dp))
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+    case(4_i4)
+       kk(:)  = 0.5_dp+k(:)/100._dp*(real(n,dp))
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! Mean-based estimate (Weibull method): IMSL default
-       case(5_i4)
-          kk(:)  = k(:)/100._dp*(real(n,dp)+1._dp)
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+    case(5_i4)
+       kk(:)  = k(:)/100._dp*(real(n,dp)+1._dp)
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! Mode-based estimate
-       case(6_i4)
-          kk(:)  = 1.0_dp+k(:)/100._dp*(real(n,dp)-1._dp)
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+    case(6_i4)
+       kk(:)  = 1.0_dp+k(:)/100._dp*(real(n,dp)-1._dp)
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! Median-based estimate
-       case(7_i4)
-          kk(:)  = 1.0_dp/3.0_dp+k(:)/100._dp*(real(n,dp)+1.0_dp/3.0_dp)
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+    case(7_i4)
+       kk(:)  = 1.0_dp/3.0_dp+k(:)/100._dp*(real(n,dp)+1.0_dp/3.0_dp)
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! Normal distribution estimate
-       case(8_i4)
-          kk(:)  = 3.0_dp/8.0_dp+k(:)/100._dp*(real(n,dp)+1.0_dp/4.0_dp)
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+    case(8_i4)
+       kk(:)  = 3.0_dp/8.0_dp+k(:)/100._dp*(real(n,dp)+1.0_dp/4.0_dp)
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! No valid mode
-       case default
-          stop 'percentile_1d_dp: mode > 8 not implemented'
+    case default
+       stop 'percentile_1d_dp: mode > 8 not implemented'
 
     end select
 
@@ -899,56 +954,56 @@ CONTAINS
 
     select case (mode)
        ! Inverse empirical CDF: Mathematica default
-       case(1_i4)   
-          kk(:) = k(:)/100._sp*real(n,sp)
-          nn1(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
-          nn2 = nn1
+    case(1_i4)
+       kk(:) = k(:)/100._sp*real(n,sp)
+       nn1(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+       nn2 = nn1
 
-      ! Linear interpolation (California method)
-       case(2_i4)
-          kk(:)  = k(:)/100._sp*real(n,sp)
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+       ! Linear interpolation (California method)
+    case(2_i4)
+       kk(:)  = k(:)/100._sp*real(n,sp)
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! Element numbered closest
-       case(3_i4)
-          kk(:) = 0.5_sp+k(:)/100._sp*real(n,sp)
-          nn1(:) = min(n, max(1_i4,floor(kk(:),kind=i4)))
-          nn2 = nn1
+    case(3_i4)
+       kk(:) = 0.5_sp+k(:)/100._sp*real(n,sp)
+       nn1(:) = min(n, max(1_i4,floor(kk(:),kind=i4)))
+       nn2 = nn1
 
        ! Linear interpolation (hydrologist method)
-       case(4_i4)
-          kk(:)  = 0.5_sp+k(:)/100._sp*(real(n,sp))
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+    case(4_i4)
+       kk(:)  = 0.5_sp+k(:)/100._sp*(real(n,sp))
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! Mean-based estimate (Weibull method): IMSL default
-       case(5_i4)
-          kk(:)  = k(:)/100._sp*(real(n,sp)+1._sp)
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+    case(5_i4)
+       kk(:)  = k(:)/100._sp*(real(n,sp)+1._sp)
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! Mode-based estimate
-       case(6_i4)
-          kk(:)  = 1.0_sp+k(:)/100._sp*(real(n,sp)-1._sp)
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+    case(6_i4)
+       kk(:)  = 1.0_sp+k(:)/100._sp*(real(n,sp)-1._sp)
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! Median-based estimate
-       case(7_i4)
-          kk(:)  = 1.0_sp/3.0_sp+k(:)/100._sp*(real(n,sp)+1.0_sp/3.0_sp)
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+    case(7_i4)
+       kk(:)  = 1.0_sp/3.0_sp+k(:)/100._sp*(real(n,sp)+1.0_sp/3.0_sp)
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! Normal distribution estimate
-       case(8_i4)
-          kk(:)  = 3.0_sp/8.0_sp+k(:)/100._sp*(real(n,sp)+1.0_sp/4.0_sp)
-          nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
-          nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
+    case(8_i4)
+       kk(:)  = 3.0_sp/8.0_sp+k(:)/100._sp*(real(n,sp)+1.0_sp/4.0_sp)
+       nn1(:) = min(n, max(1_i4,  floor(kk(:),kind=i4)))
+       nn2(:) = min(n, max(1_i4,ceiling(kk(:),kind=i4)))
 
        ! No valid mode
-       case default
-          stop 'percentile_1d_sp: mode > 8 not implemented'
+    case default
+       stop 'percentile_1d_sp: mode > 8 not implemented'
 
     end select
 
@@ -982,51 +1037,6 @@ CONTAINS
   END function percentile_1d_sp
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         qmedian
-
-  !     PURPOSE
-  !         Quick calculation of the median thereby rearranging the input array.
-
-  !     CALLING SEQUENCE
-  !         out = qmedian(vec)
-  
-  !     INTENT(IN)
-  !         None
-
-  !     INTENT(INOUT)
-  !         real(sp/dp) :: vec(:)     1D-array with input numbers.
-  !                                   Wil be rearranged on output.
-
-  !     INTENT(OUT)
-  !         real(sp/dp) :: out        median of values in input array
-
-  !     INTENT(IN), OPTIONAL
-  !         None
-
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-
-  !     INTENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         vec = (/ 1.,2.,3.,4.,5.,6.,7.,8.,9.,10. /)
-  !         ! Returns 5.5
-  !         out = qmedian(vec)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Niklaus Wirth. "Algorithms and Data Structures". Prentice-Hall, Inc., 1985. ISBN 0-13-022005-1.
-
-  !     HISTORY
-  !         Written, Filip Hroch as part of Munipack: http://munipack.physics.muni.cz
-  !         Modified, Matthias Cuntz, Jul 2012 - function, k=n/2+1
-  !         Modified, Matthias Cuntz, Juliane Mai, Jul 2012 - real median for even n
 
   function qmedian_dp(dat)
 

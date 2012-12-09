@@ -414,15 +414,14 @@ module mo_minpack
 
   end interface
 
-
 contains
 
   !----------------------------------------------------------------------
   !
-  ! add-ons 
+  ! add-ons
   !
   !----------------------------------------------------------------------
-  
+
   subroutine qrinv(m,n,a,a1,lda,diag)
 
     ! compute inverse matrix in least-quare sense by the use
@@ -448,7 +447,7 @@ contains
     endif
 
     ! form the r matrix, r is upper trinagle (without diagonal)
-    ! of the factorized a, diagonal is presented in rdiag 
+    ! of the factorized a, diagonal is presented in rdiag
 
     call qrfac(m,n,a,lda,.true.,ipvt,n,rdiag,acnorm,wa)
     if(dbg) then
@@ -466,11 +465,11 @@ contains
        write(*,fmt) r
     endif
 
-    ! form the q matrix 
+    ! form the q matrix
 
     call qform(m,n,a,lda,wa)
 
-    if(dbg) then 
+    if(dbg) then
        write(*,*) 'qform:'
        write(*,fmt) a,rdiag,acnorm
        write(*,*) 'ipvt:'
@@ -489,7 +488,6 @@ contains
 
   end subroutine qrinv
 
-
   !---------------------------------------------------------------------
   !
   ! Fortran 90 interfaces
@@ -500,14 +498,12 @@ contains
   !      integer, intent(in) :: mode
   !      real(dp) :: x(:),fvec(:),fjac(:,:),xp(:),fvecp(:),err(:)
   !      integer :: m,n,ldfjac
-  !      
+  !
   !      m = size(fvec)
   !      n = size(x)
   !      ldfjac = size(fjac,1)
-  !      
+  !
   !      call chkder(m,n,x,fvec,fjac,ldfjac,xp,fvecp,mode,err)
   !    end subroutine chkder_8
-
-
 
 end module mo_minpack

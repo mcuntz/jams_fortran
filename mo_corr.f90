@@ -55,7 +55,7 @@ MODULE mo_corr
   ! Single-User Licenses, may permanently assign those licenses, in the
   ! number acquired, to individual employees. Such an assignment must be
   ! made before the code is first used and, once made, it is irrevocable
-  ! and can not be transferred. 
+  ! and can not be transferred.
 
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
@@ -65,31 +65,312 @@ MODULE mo_corr
 
   Implicit NONE
 
-  PRIVATE
-
   PUBLIC :: autocoeffk   ! coeff_k so that autocorr = coeff_k/coeff_0
   PUBLIC :: autocorr     ! Autocorrelation coefficient at lag k = autocoeffk(k)/autocoeffk(0)
   PUBLIC :: corr         ! Correlation (function) with optional highpass filtering: covariance=correlation(1)/n
   PUBLIC :: crosscoeffk  ! coeff_k so that crosscorr = coeff_k/coeff_0, crosscoeffk(0) = covariance
   PUBLIC :: crosscorr    ! Crosscorrelation coefficient at lag k = crosscoeffk(k)/crosscoeffk(0)
 
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         autocoeffk
+
+  !     PURPOSE
+  !         Coefficient at lag k so that autocorrelation coefficient at lag k
+  !         is autocoeffk(x,k)/autocoeffk(x,0).
+  !
+  !         If an optinal mask is given, the calculations are only over those locations that correspond
+  !         to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         ak = autocoeffk(x, k, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)        Time series
+  !         integer(i4) :: k[(:)]      Lag for autocorrelation
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: ak[(:)]     coefficient so that ak/autocoeffk(x,0) is the autocorrelation coefficient at lag k
+
+  !     INDENT(IN), OPTIONAL
+  !         logical     :: mask(:)     1D-array of logical values with size(vec).
+  !                                    If present, only those locations in vec corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! Variance = autocoeffk(0)
+  !         var = autocoeffk(x,0)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
+  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
+  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  !         Modified, Stephan Thober, Nov 2012 - added 1d version
   INTERFACE autocoeffk
      MODULE PROCEDURE autocoeffk_sp, autocoeffk_dp, &
           autocoeffk_1d_dp, autocoeffk_1d_sp
   END INTERFACE autocoeffk
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         autocorr
+
+  !     PURPOSE
+  !         Element at lag k of autocorrelation function
+  !             autocorr(x,k) = autocoeffk(x,k)/autocoeffk(x,0).
+  !
+  !         If an optinal mask is given, the calculations are only over those locations that correspond
+  !         to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         ak = autocorr(x, k, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)        Time series
+  !         integer(i4) :: k[(:)]      Lag for autocorrelation
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: ak[(:)]     Coefficient of autocorrelation function at lag k
+
+  !     INDENT(IN), OPTIONAL
+  !         logical     :: mask(:)     1D-array of logical values with size(vec).
+  !                                    If present, only those locations in vec corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! Last autocorrelation element
+  !         acorr = autocorr(x,size(x)/2)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
+  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
+  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  !         Modified, Stephan Thober, Nov 2012 - added 1d version
   INTERFACE autocorr
      MODULE PROCEDURE autocorr_sp, autocorr_dp, &
           autocorr_1d_sp, autocorr_1d_dp
   END INTERFACE autocorr
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         corr
+
+  !     PURPOSE
+  !         Computes the correlation of two real data sets data1 and data2 of length N (includ-
+  !         ing any user-supplied zero padding) with Fast Fourier Transform (FFT). N must be an integer
+  !         power of 2 for the FFT routine. Corr takes only the elements up to the last power of 2 and
+  !         returns the number of elements used in nadjust.
+  !         The answer is returned as the function corr, an array of length N (nadjust).
+  !         The answer is stored in wrap-around order, i.e., correlations at increasingly negative lags
+  !         are in corr(N) on down to corr(N/2+1), while correlations at increasingly positive lags are
+  !         in correl(1) (zero lag) on up to correl(N/2). Sign convention of this routine: if data1 lags
+  !         data2, i.e., is shifted to the right of it, then correl will show a peak at positive lags.
+  !
+  !         Optional high-pass filtering of the time series in Fourier space is implemented.
+  !
+  !         Note covariance(x,y) = corr(x,y)/n
+
+  !     CALLING SEQUENCE
+  !         cfunc = corr(data1,data2,nadjust=nadjust,nhigh=nhigh,nwin=nwin)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: data1(:)             1st time series
+  !         real(sp/dp) :: data2(:)             2nd time series
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: corr(size(data1))    Correlation function between data1 and data2 in wrap-around order
+
+  !     INDENT(IN), OPTIONAL
+  !         integer(i4) :: nhigh                If >0 then nhigh upper frequencies are filtered. nwin then defines
+  !                                             the used window function for filtering. (default: 0)
+  !         integer(i4) :: nwin                 Window function for highpass filtering (default: 1)
+  !                                             0: no filtering
+  !                                             1: ideal highpass, i.e. cut out the nhigh upper frequencies
+  !                                             2: linear interpolation of 0 to 1 from highest to highest-nhigh
+  !                                                frequency; similar Bartlett window
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         integer(i4) :: nadjust              Actual used number of elements.
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! Covariance function: covariance(x,y) = corr(x,y)/n
+  !         wT = corr(w, T, nadjust=nwT)
+  !         wT(1:nwT) = wT(1:nwT) / real(nwT,dp)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
+  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
+  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
   INTERFACE corr
      MODULE PROCEDURE corr_sp, corr_dp
   END INTERFACE corr
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         crosscoeffk
+
+  !     PURPOSE
+  !         Coefficient at lag k so that crosscorrelation coefficient at lag k
+  !         is crosscoeffk(x,y,k)/crosscoeffk(x,y,0).
+  !         -> crosscoeffk(x,y,0) = covariance(x,y)
+  !
+  !         If an optinal mask is given, the calculations are only over those locations that correspond
+  !         to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         ck = crosscoeffk(x, y, k, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)        1st time series
+  !         real(sp/dp) :: y(:)        2nd time series
+  !         integer(i4) :: k           Lag for crosscorrelation
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: ck          coefficient so that ck/crosscoeffk(x,0) is the crosscorrelation coefficient at lag k
+
+  !     INDENT(IN), OPTIONAL
+  !         logical     :: mask(:)     1D-array of logical values with size(vec).
+  !                                    If present, only those locations in vec corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! covariance = crosscoeffk(0)
+  !         cov = crosscoeffk(x,y,0)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
+  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
+  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
   INTERFACE crosscoeffk
      MODULE PROCEDURE crosscoeffk_sp, crosscoeffk_dp
   END INTERFACE crosscoeffk
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         crosscorr
+
+  !     PURPOSE
+  !         Element at lag k of crosscorrelation function
+  !             crosscorr(x,y,k) = crosscoeffk(x,y,k)/crosscoeffk(x,y,0).
+  !
+  !         If an optinal mask is given, the calculations are only over those locations that correspond
+  !         to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         ck = crosscorr(x, y, k, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)        1st time series
+  !         real(sp/dp) :: y(:)        2nd time series
+  !         integer(i4) :: k           Lag for crosscorrelation
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: ck          Coefficient of crosscorrelation function at lag k
+
+  !     INDENT(IN), OPTIONAL
+  !         logical     :: mask(:)     1D-array of logical values with size(vec).
+  !                                    If present, only those locations in vec corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! Last crosscorrelation element
+  !         ccorr = crosscorr(x,y,size(x)/2)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
+  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
+  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
   INTERFACE crosscorr
      MODULE PROCEDURE crosscorr_sp, crosscorr_dp
   END INTERFACE crosscorr
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
 
   ! Private routines, mostly from numerical recipes
   INTERFACE arth
@@ -128,9 +409,9 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   ! From numerical recipes documentation
-  ! Returns an array of length n containing an arithmetic progression whose 
-  ! first value is first and whose increment is increment. If first and 
-  ! increment have rank greater than zero, returns an array of one larger rank, 
+  ! Returns an array of length n containing an arithmetic progression whose
+  ! first value is first and whose increment is increment. If first and
+  ! increment have rank greater than zero, returns an array of one larger rank,
   ! with the last subscript having size n and indexing the progressions.
   FUNCTION arth_sp(first,increment,n)
 
@@ -233,57 +514,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         autocoeffk
-
-  !     PURPOSE
-  !         Coefficient at lag k so that autocorrelation coefficient at lag k
-  !         is autocoeffk(x,k)/autocoeffk(x,0).
-  !
-  !         If an optinal mask is given, the calculations are only over those locations that correspond
-  !         to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         ak = autocoeffk(x, k, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:)        Time series
-  !         integer(i4) :: k[(:)]      Lag for autocorrelation
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: ak[(:)]     coefficient so that ak/autocoeffk(x,0) is the autocorrelation coefficient at lag k
-
-  !     INDENT(IN), OPTIONAL
-  !         logical     :: mask(:)     1D-array of logical values with size(vec).
-  !                                    If present, only those locations in vec corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         ! Variance = autocoeffk(0)
-  !         var = autocoeffk(x,0)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
-  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
-  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
-  !         Modified, Stephan Thober, Nov 2012 - added 1d version
-
   FUNCTION autocoeffk_dp(x, k, mask)
 
     IMPLICIT NONE
@@ -369,57 +599,6 @@ CONTAINS
   END FUNCTION autocoeffk_1d_sp
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         autocorr
-
-  !     PURPOSE
-  !         Element at lag k of autocorrelation function
-  !             autocorr(x,k) = autocoeffk(x,k)/autocoeffk(x,0).
-  !
-  !         If an optinal mask is given, the calculations are only over those locations that correspond
-  !         to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         ak = autocorr(x, k, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:)        Time series
-  !         integer(i4) :: k[(:)]      Lag for autocorrelation
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: ak[(:)]     Coefficient of autocorrelation function at lag k
-
-  !     INDENT(IN), OPTIONAL
-  !         logical     :: mask(:)     1D-array of logical values with size(vec).
-  !                                    If present, only those locations in vec corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         ! Last autocorrelation element
-  !         acorr = autocorr(x,size(x)/2)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
-  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
-  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
-  !         Modified, Stephan Thober, Nov 2012 - added 1d version
 
   FUNCTION autocorr_dp(x, k, mask)
 
@@ -512,69 +691,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         corr
-
-  !     PURPOSE
-  !         Computes the correlation of two real data sets data1 and data2 of length N (includ- 
-  !         ing any user-supplied zero padding) with Fast Fourier Transform (FFT). N must be an integer
-  !         power of 2 for the FFT routine. Corr takes only the elements up to the last power of 2 and
-  !         returns the number of elements used in nadjust.
-  !         The answer is returned as the function corr, an array of length N (nadjust).
-  !         The answer is stored in wrap-around order, i.e., correlations at increasingly negative lags
-  !         are in corr(N) on down to corr(N/2+1), while correlations at increasingly positive lags are
-  !         in correl(1) (zero lag) on up to correl(N/2). Sign convention of this routine: if data1 lags
-  !         data2, i.e., is shifted to the right of it, then correl will show a peak at positive lags.
-  !
-  !         Optional high-pass filtering of the time series in Fourier space is implemented.
-  !
-  !         Note covariance(x,y) = corr(x,y)/n
-
-  !     CALLING SEQUENCE
-  !         cfunc = corr(data1,data2,nadjust=nadjust,nhigh=nhigh,nwin=nwin)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: data1(:)             1st time series
-  !         real(sp/dp) :: data2(:)             2nd time series
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: corr(size(data1))    Correlation function between data1 and data2 in wrap-around order
-
-  !     INDENT(IN), OPTIONAL
-  !         integer(i4) :: nhigh                If >0 then nhigh upper frequencies are filtered. nwin then defines
-  !                                             the used window function for filtering. (default: 0)
-  !         integer(i4) :: nwin                 Window function for highpass filtering (default: 1)
-  !                                             0: no filtering
-  !                                             1: ideal highpass, i.e. cut out the nhigh upper frequencies
-  !                                             2: linear interpolation of 0 to 1 from highest to highest-nhigh
-  !                                                frequency; similar Bartlett window
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         integer(i4) :: nadjust              Actual used number of elements.
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         ! Covariance function: covariance(x,y) = corr(x,y)/n
-  !         wT = corr(w, T, nadjust=nwT)
-  !         wT(1:nwT) = wT(1:nwT) / real(nwT,dp)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
-  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
-  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
-
   FUNCTION corr_dp(data1,data2,nadjust,nhigh,nwin)
 
     IMPLICIT NONE
@@ -607,7 +723,7 @@ CONTAINS
        ihigh = 0
     endif
 
-    if (iand(n,n-1) /= 0) then       
+    if (iand(n,n-1) /= 0) then
        if (present(nadjust)) then
           n = 2**floor(log(real(n,dp))/log(2.0_dp))
           nadjust = n
@@ -715,7 +831,7 @@ CONTAINS
        ihigh = 0
     endif
 
-    if (iand(n,n-1) /= 0) then       
+    if (iand(n,n-1) /= 0) then
        if (present(nadjust)) then
           n = 2**floor(log(real(n,sp))/log(2.0_sp))
           nadjust = n
@@ -791,58 +907,6 @@ CONTAINS
   END FUNCTION corr_sp
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         crosscoeffk
-
-  !     PURPOSE
-  !         Coefficient at lag k so that crosscorrelation coefficient at lag k
-  !         is crosscoeffk(x,y,k)/crosscoeffk(x,y,0).
-  !         -> crosscoeffk(x,y,0) = covariance(x,y)
-  !
-  !         If an optinal mask is given, the calculations are only over those locations that correspond
-  !         to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         ck = crosscoeffk(x, y, k, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:)        1st time series
-  !         real(sp/dp) :: y(:)        2nd time series
-  !         integer(i4) :: k           Lag for crosscorrelation
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: ck          coefficient so that ck/crosscoeffk(x,0) is the crosscorrelation coefficient at lag k
-
-  !     INDENT(IN), OPTIONAL
-  !         logical     :: mask(:)     1D-array of logical values with size(vec).
-  !                                    If present, only those locations in vec corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         ! covariance = crosscoeffk(0)
-  !         cov = crosscoeffk(x,y,0)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
-  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
-  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
 
   FUNCTION crosscoeffk_dp(x, y, k, mask)
 
@@ -933,57 +997,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         crosscorr
-
-  !     PURPOSE
-  !         Element at lag k of crosscorrelation function
-  !             crosscorr(x,y,k) = crosscoeffk(x,y,k)/crosscoeffk(x,y,0).
-  !
-  !         If an optinal mask is given, the calculations are only over those locations that correspond
-  !         to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         ck = crosscorr(x, y, k, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:)        1st time series
-  !         real(sp/dp) :: y(:)        2nd time series
-  !         integer(i4) :: k           Lag for crosscorrelation
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: ck          Coefficient of crosscorrelation function at lag k
-
-  !     INDENT(IN), OPTIONAL
-  !         logical     :: mask(:)     1D-array of logical values with size(vec).
-  !                                    If present, only those locations in vec corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         ! Last crosscorrelation element
-  !         ccorr = crosscorr(x,y,size(x)/2)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
-  !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
-  !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
-
   FUNCTION crosscorr_dp(x, y, k, mask)
 
     IMPLICIT NONE
@@ -1027,10 +1040,10 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   ! From numerical recipes documentation
-  ! Replaces a complex array data by its discrete Fourier transform, if isign is input as 1; 
-  ! or replaces data by its inverse discrete Fourier transform times the size of data, if isign 
-  ! is input as -1. The size of data must be an integer power of 2. Parallelismis achieved 
-  ! by internally reshaping the input array to two dimensions. (Use this version if fourrow is 
+  ! Replaces a complex array data by its discrete Fourier transform, if isign is input as 1;
+  ! or replaces data by its inverse discrete Fourier transform times the size of data, if isign
+  ! is input as -1. The size of data must be an integer power of 2. Parallelismis achieved
+  ! by internally reshaping the input array to two dimensions. (Use this version if fourrow is
   ! faster than fourcol on your machine.)
 
   SUBROUTINE four1_sp(data,isign)
@@ -1212,15 +1225,15 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   ! From numerical recipes documentation
-  ! When isign=1, calculates the Fourier transform of a set of N real-valued data points, 
-  ! input in the array data. If the optional argument zdata is not present, the data are replaced 
-  ! by the positive frequency half of its complex Fourier transform. There al-valued first and 
-  ! last components of the complex transform are returned as elements data(1) and data(2), 
-  ! respectively. If the complex array zdata of lengthN/2 ispresent, data is unchanged and 
-  ! the transform is returned in zdata. N must be a power of 2. If isign=-1, this routine 
-  ! calculates the inverse transform of a complex data array if it is the transform of real data. 
-  ! (Result in this case must be multiplied by 2/N.) The data can be supplied either in data, 
-  ! with zdata absent, or inzdata. 
+  ! When isign=1, calculates the Fourier transform of a set of N real-valued data points,
+  ! input in the array data. If the optional argument zdata is not present, the data are replaced
+  ! by the positive frequency half of its complex Fourier transform. There al-valued first and
+  ! last components of the complex transform are returned as elements data(1) and data(2),
+  ! respectively. If the complex array zdata of lengthN/2 ispresent, data is unchanged and
+  ! the transform is returned in zdata. N must be a power of 2. If isign=-1, this routine
+  ! calculates the inverse transform of a complex data array if it is the transform of real data.
+  ! (Result in this case must be multiplied by 2/N.) The data can be supplied either in data,
+  ! with zdata absent, or inzdata.
   SUBROUTINE realft_dp(data,isign,zdata)
 
     IMPLICIT NONE
@@ -1342,11 +1355,11 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  ! From numerical recipes documentation 
-  ! Swaps the corresponding elements of a and b. If mask is present, performs 
-  ! the swap only where mask is true. (Following code is the unmasked case. 
-  ! For speed at runtime, the masked case is implemented by overloading, not 
-  ! by testing for the optional argument.) 
+  ! From numerical recipes documentation
+  ! Swaps the corresponding elements of a and b. If mask is present, performs
+  ! the swap only where mask is true. (Following code is the unmasked case.
+  ! For speed at runtime, the masked case is implemented by overloading, not
+  ! by testing for the optional argument.)
   SUBROUTINE swap_i4(a,b)
     INTEGER(i4), INTENT(INOUT) :: a,b
     INTEGER(i4) :: dum
@@ -1573,8 +1586,8 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  ! From numerical recipes documentation 
-  ! Returns a complex array containing nn consecutive powers of the nth 
+  ! From numerical recipes documentation
+  ! Returns a complex array containing nn consecutive powers of the nth
   ! complex root of unity.
   FUNCTION zroots_unity_dp(n,nn)
 

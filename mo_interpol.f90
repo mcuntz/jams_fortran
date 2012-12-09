@@ -56,7 +56,7 @@ MODULE mo_interpol
   ! Single-User Licenses, may permanently assign those licenses, in the
   ! number acquired, to individual employees. Such an assignment must be
   ! made before the code is first used and, once made, it is irrevocable
-  ! and can not be transferred. 
+  ! and can not be transferred.
 
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
@@ -65,22 +65,7 @@ MODULE mo_interpol
 
   Implicit NONE
 
-  PRIVATE
-
   PUBLIC :: interpol        ! Linearly interpolate vectors with an irregular grid
-
-  INTERFACE interpol
-     MODULE PROCEDURE interpol_sp, interpol_dp
-  END INTERFACE interpol
-
-  ! Private function, from numerical recipes
-  INTERFACE locate
-     MODULE PROCEDURE locate_0d_sp, locate_1d_sp, locate_0d_dp, locate_1d_dp
-  END INTERFACE locate
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
 
   ! ------------------------------------------------------------------
 
@@ -95,7 +80,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         yout = interpol(yin, xin, xout)
-  
+
   !     INDENT(IN)
   !         real(sp/dp) :: yin(:)      1D-array with input values to interpolate
   !         real(sp/dp) :: xin(:)      1D-array with position of yin values
@@ -132,6 +117,26 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE interpol
+     MODULE PROCEDURE interpol_sp, interpol_dp
+  END INTERFACE interpol
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
+
+  ! Private function, from numerical recipes
+  INTERFACE locate
+     MODULE PROCEDURE locate_0d_sp, locate_1d_sp, locate_0d_dp, locate_1d_dp
+  END INTERFACE locate
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
+
+  ! ------------------------------------------------------------------
 
   FUNCTION interpol_dp(v, x, u)
 
@@ -219,8 +224,8 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   ! From numerical recipes documentation
-  ! Given an array xx(1:N), and given a value x, returns a value j such that x is between 
-  !  xx(j) and xx(j+1). xx must be monotonic, either increasing or decreasing. j=0 or 
+  ! Given an array xx(1:N), and given a value x, returns a value j such that x is between
+  !  xx(j) and xx(j+1). xx must be monotonic, either increasing or decreasing. j=0 or
   ! j=N is returned to indicate that x is out of range.
   FUNCTION locate_0d_dp(xx,x)
 

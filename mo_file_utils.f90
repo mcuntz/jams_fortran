@@ -43,7 +43,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         iout = find_next_unit(istart,istop)
-  
+
   !     INDENT(IN)
   !         integer :: istart         Starting unit
   !         integer :: istop          Last checked unit

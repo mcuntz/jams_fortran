@@ -73,7 +73,7 @@ MODULE mo_fit
   ! Single-User Licenses, may permanently assign those licenses, in the
   ! number acquired, to individual employees. Such an assignment must be
   ! made before the code is first used and, once made, it is irrevocable
-  ! and can not be transferred. 
+  ! and can not be transferred.
 
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
@@ -81,8 +81,6 @@ MODULE mo_fit
   USE mo_kind, ONLY: i4, sp, dp
 
   Implicit NONE
-
-  PRIVATE
 
   PUBLIC :: fitfun                        ! Wrapper of svdfit and svdvar
   PUBLIC :: fpoly, fpoly_dp, fpoly_sp     ! Routine to fit polynomial with fitfun or svdfit
@@ -92,52 +90,6 @@ MODULE mo_fit
   PUBLIC :: svdvar                        ! Variance of fitted parameters with svdfit
 
   ! Public interfaces
-  INTERFACE fitfun
-     MODULE PROCEDURE fitfun_sp, fitfun_dp
-  END INTERFACE fitfun
-  INTERFACE fpoly
-     MODULE PROCEDURE fpoly_sp, fpoly_dp
-  END INTERFACE fpoly
-  INTERFACE linfit
-     MODULE PROCEDURE linfit_sp, linfit_dp
-  END INTERFACE linfit
-  INTERFACE polyfit
-     MODULE PROCEDURE polyfit_sp, polyfit_dp
-  END INTERFACE polyfit
-  INTERFACE svdfit
-     MODULE PROCEDURE svdfit_sp, svdfit_dp
-  END INTERFACE svdfit
-  INTERFACE svdvar
-     MODULE PROCEDURE svdvar_sp, svdvar_dp
-  END INTERFACE svdvar
-
-  ! Private interfaces, mostly from numerical recipes
-  INTERFACE geop
-     MODULE PROCEDURE geop_dp, geop_i4, geop_sp, geop_v_dp, geop_v_sp
-  END INTERFACE geop
-  INTERFACE outerprod
-     MODULE PROCEDURE outerprod_dp, outerprod_sp
-  END INTERFACE outerprod
-  INTERFACE pythag
-     MODULE PROCEDURE pythag_dp, pythag_sp
-  END INTERFACE pythag
-  INTERFACE svbksb
-     MODULE PROCEDURE svbksb_dp, svbksb_sp
-  END INTERFACE svbksb
-  INTERFACE svdcmp
-     MODULE PROCEDURE svdcmp_dp, svdcmp_sp
-  END INTERFACE svdcmp
-  INTERFACE vabs
-     MODULE PROCEDURE vabs_dp, vabs_sp
-  END INTERFACE vabs
-
-  ! for geop
-  INTEGER(i4), PARAMETER :: NPAR_GEOP=4, NPAR2_GEOP=2
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
-
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -161,12 +113,12 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         call fitfun(xin, yin, sigin, a, func, mask=mask, fit=fit, chisq=chisq, siga=siga)
-  
+
   !     INDENT(IN)
   !         real(sp/dp) :: xin(:)                1D-array with input x
   !         real(sp/dp) :: yin(:)                1D-array with input y
   !         real(sp/dp) :: sigin(:)              1D-array with input sigma on y
-  !         real(sp/dp), dimension(M) :: FUNCTION func(x,n)    Function that outputs the n basis functions  
+  !         real(sp/dp), dimension(M) :: FUNCTION func(x,n)    Function that outputs the n basis functions
 
   !     INDENT(INOUT)
   !         None
@@ -213,6 +165,355 @@ CONTAINS
 
   !     HISTORY
   !         Written, Matthias Cuntz, Mar 2011
+  INTERFACE fitfun
+     MODULE PROCEDURE fitfun_sp, fitfun_dp
+  END INTERFACE fitfun
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         fpoly
+
+  !     PURPOSE
+  !         Fitting routine for a polynomial of degree n-1, i.e. with n coefficients.
+  !         Returns vector with [1,x,x**2,x**3,...,x**(n-1)].
+  !         To use with fitfun or svdfit.
+
+  !     CALLING SEQUENCE
+  !         vec = func(x,n)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x          x
+  !         real(sp/dp) :: n          n-1 powers of x
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp), dimension(n) :: func       vec with [1,x,x**2,x**3,...,x**(n-1)]
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         -> see example at fitfun
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written, Matthias Cuntz, Mar 2011
+  INTERFACE fpoly
+     MODULE PROCEDURE fpoly_sp, fpoly_dp
+  END INTERFACE fpoly
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         linfit
+
+  !     PURPOSE
+  !         Fits a straight line to input data by minimizing chi^2.
+
+  !         Given a set of data points x(1:ndata), y(1:ndata), fit them to a straight liney = a+bx
+  !         by minimizing chi2.
+  !         Model I minimizes y vs. x while Model II takes the geometric mean of y vs. x and x vs. y.
+  !         Returned is the fitted line at x.
+  !         Optional returns are a, b and their respective probable uncertainties siga and sigb,
+  !         and the chi-square chi2.
+
+  !     CALLING SEQUENCE
+  !         out = linfit(x, y, a=a, b=b, siga=siga, sigb=sigb, chi2=chi2, model2=model2)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)                1D-array with input x
+  !         real(sp/dp) :: y(:)                1D-array with input y
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp), dimension(size(x)) :: out     fitted values
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: model2                  If present, use geometric mean regression instead of ordinary least square
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         real(sp/dp), dimension(M) :: a      intercept
+  !         real(sp/dp), dimension(M) :: b      slope
+  !         real(sp/dp), dimension(M) :: siga   error on intercept
+  !         real(sp/dp), dimension(M) :: sigb   error on slope
+  !         real(sp/dp)               :: chisq  Minimum chi^2
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ytmp = linfit(x,y, a=inter, b=slope, model2=.true.)
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written, Matthias Cuntz, Mar 2011
+  INTERFACE linfit
+     MODULE PROCEDURE linfit_sp, linfit_dp
+  END INTERFACE linfit
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         polyfit
+
+  !     PURPOSE
+  !         Find an approximating polynom of known degree for a given data.
+
+  !         The function polyfit implements least squares approximation of a function
+  !         defined in the points as specified by the arrays xi and yi.
+  !         The basis dj is xj, j=0,1,..,N. The implementation is straightforward.
+  !         First the plane matrix A is created. Aji=dj(xi). Then the linear problem
+  !         AATc=Ay is solved. The result cj are the coefficients. Constraint_Error
+  !         is propagated when dimensions of X and Y differ or else when the problem is ill-defined.
+
+  !         If an optinal mask is given, the function is only fit at those locations that correspond to true values in the mask.
+
+  !     CALLING SEQUENCE
+  !         out = polyfit(x, y, d, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)                x
+  !         real(sp/dp) :: y(:)                y
+  !         integer     :: d                   d+1 parameters = polynom of degree d
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp), dimension(d+1) :: polyfit       fitted d+1 parameters for x^0, x^1, ..., x^d
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(x)
+  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         integer, parameter      :: degree = 2
+  !         integer                 :: i
+  !         real(dp), dimension(11) :: x = (/ (i,i=0,10) /)
+  !         real(dp), dimension(11) :: y = (/ 1,   6,  17,  34, 57,  86, 121, 162, 209, 262, 321 /)
+  !         real(dp), dimension(degree+1) :: a
+  !         a = polyfit(x, y, degree)
+  !         write (*, '(F9.4)') a
+  !         -> gives 1.0, 2.0, 3.0
+
+  !     LITERATURE
+  !         http://rosettacode.org/wiki/Polynomial_regression#Fortran
+
+  !     HISTORY
+  !         Written, Matthias Cuntz, Mar 2011
+  INTERFACE polyfit
+     MODULE PROCEDURE polyfit_sp, polyfit_dp
+  END INTERFACE polyfit
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         svdfit
+
+  !     PURPOSE
+  !         Fits a given function func with the parameters a to the input data by using singular value decomposition.
+
+  !         The function func must give a vector of the base functions for a given x.
+  !         For example func for a polynomial should return the vector [1,x,x**2,x**3,x**4,...].
+
+  !         From the numerical recipes documentation:
+  !         Given a set of datapoints x(1:ndata), y(1:ndata) with individual standard deviations
+  !         sig(1:ndata), use chi2 minimization to determine the ma coefficients a of the fitting function
+  !         y=sum(ai*afunci(x))). Here we solve the fitting equations using singular value decomposition
+  !         of the n data by ma matrix, as in paragraph 2.6. Arrays u(1:mp,1:np), v(1:np,1:np),
+  !         w(1:np) provide workspace on input; on output they define the singular value decomposition,
+  !         and can be used to obtain the covariance matrix. mp,np are the physical dimensions
+  !         of the matrices u,v,w, as indicated above. It is necessary that mp>=ndata, np>=ma. The
+  !         program returns values for the ma fit parameters a, and chi2, chisq. The user supplies a
+  !         subroutine funcs(x,afunc,ma) that returns them a basis functions evaluated at x=x
+  !         in the array afunc.
+
+  !     CALLING SEQUENCE
+  !         call svdfit(x, y, sig, a, v, w, chisq, func)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)                1D-array with input x
+  !         real(sp/dp) :: y(:)                1D-array with input y
+  !         real(sp/dp) :: sig(:)              1D-array with input sigma on y
+  !         real(sp/dp), dimension(M) :: FUNCTION func(x,n)    Function that outputs the n basis functions
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp), dimension(M)   :: a       fitted M parameters
+  !         real(sp/dp)                 :: chisq   Minimum chi^2
+  !         real(sp/dp), dimension(M,M) :: v       output for svdvar
+  !         real(sp/dp), dimension(M)   :: w       output for svdvar
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! fit polynomial with degree 5
+  !         integer(i4b), parameter :: npt=100, npol=5
+  !         integer(i4b) :: i
+  !         real(dp) :: chisq
+  !         real(dp), dimension(npol)      :: a, w
+  !         real(dp), dimension(npt)       :: x, y, sig
+  !         real(dp), dimension(npol,npol) :: cvm, v
+  !         call svdfit(x, y, sig, a, v, w, chisq, fpoly_dp)
+  !         call svdvar(v, w, cvm)
+  !         do i=1, npol
+  !            write(*,'(1x,f12.6,a,f10.6)') a(i), '  +-', sqrt(cvm(i,i))
+  !         end do
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written, Matthias Cuntz, Mar 2011
+  INTERFACE svdfit
+     MODULE PROCEDURE svdfit_sp, svdfit_dp
+  END INTERFACE svdfit
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         svdfit
+
+  !     PURPOSE
+  !         Calculates the variance/covariance for the singular value decomposition estimates.
+
+  !         From the numerical recipes documentation:
+  !         To evaluate the covariance matrix cvm of the fit for ma parameters obtained by svdfit,
+  !         call this routine with matrices v,w as returned from svdfit. np,ncvm give the physical
+  !         dimensions of v,w,cvm as indicated.
+
+  !     CALLING SEQUENCE
+  !         call svdvar(v, w, cvm)
+
+  !     INDENT(IN)
+  !         real(sp/dp), dimension(M,M) :: v       output from svdfit
+  !         real(sp/dp), dimension(M)   :: w       output from svdfit
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp), dimension(M,M)   :: cvm     covariance matrix for M fitted parameters
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! fit polynomial with degree 5
+  !         integer(i4b), parameter :: npt=100, npol=5
+  !         integer(i4b) :: i
+  !         real(dp) :: chisq
+  !         real(dp), dimension(npol)      :: a, w
+  !         real(dp), dimension(npt)       :: x, y, sig
+  !         real(dp), dimension(npol,npol) :: cvm, v
+  !         call svdfit(x, y, sig, a, v, w, chisq, fpoly_dp)
+  !         call svdvar(v, w, cvm)
+  !         do i=1, npol
+  !            write(*,'(1x,f12.6,a,f10.6)') a(i), '  +-', sqrt(cvm(i,i))
+  !         end do
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written, Matthias Cuntz, Mar 2011
+  INTERFACE svdvar
+     MODULE PROCEDURE svdvar_sp, svdvar_dp
+  END INTERFACE svdvar
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
+
+  ! Private interfaces, mostly from numerical recipes
+  INTERFACE geop
+     MODULE PROCEDURE geop_dp, geop_i4, geop_sp, geop_v_dp, geop_v_sp
+  END INTERFACE geop
+  INTERFACE outerprod
+     MODULE PROCEDURE outerprod_dp, outerprod_sp
+  END INTERFACE outerprod
+  INTERFACE pythag
+     MODULE PROCEDURE pythag_dp, pythag_sp
+  END INTERFACE pythag
+  INTERFACE svbksb
+     MODULE PROCEDURE svbksb_dp, svbksb_sp
+  END INTERFACE svbksb
+  INTERFACE svdcmp
+     MODULE PROCEDURE svdcmp_dp, svdcmp_sp
+  END INTERFACE svdcmp
+  INTERFACE vabs
+     MODULE PROCEDURE vabs_dp, vabs_sp
+  END INTERFACE vabs
+
+  ! for geop
+  INTEGER(i4), PARAMETER :: NPAR_GEOP=4, NPAR2_GEOP=2
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
+
+  ! ------------------------------------------------------------------
 
   SUBROUTINE fitfun_dp(xin, yin, sigin, a, func, mask, fit, chisq, siga)
 
@@ -243,7 +544,7 @@ CONTAINS
     REAL(dp), DIMENSION(:), ALLOCATABLE  :: out
     REAL(dp) :: ichisq
     INTEGER :: i, nmask, na
-    
+
     if (size(xin) /= size(yin))   stop 'Error fitfun_dp: size(x) /= size(y)'
     if (size(sigin) /= size(yin)) stop 'Error fitfun_dp: size(sig) /= size(y)'
     maske(:) = .true.
@@ -314,7 +615,7 @@ CONTAINS
     REAL(sp), DIMENSION(:), ALLOCATABLE  :: out
     REAL(sp) :: ichisq
     INTEGER :: i, nmask, na
-    
+
     if (size(xin) /= size(yin))   stop 'Error fitfun_sp: size(x) /= size(y)'
     if (size(sigin) /= size(yin)) stop 'Error fitfun_sp: size(sig) /= size(y)'
     maske(:) = .true.
@@ -357,50 +658,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         fpoly
-
-  !     PURPOSE
-  !         Fitting routine for a polynomial of degree n-1, i.e. with n coefficients.
-  !         Returns vector with [1,x,x**2,x**3,...,x**(n-1)].
-  !         To use with fitfun or svdfit.
-
-  !     CALLING SEQUENCE
-  !         vec = func(x,n)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x          x
-  !         real(sp/dp) :: n          n-1 powers of x
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp), dimension(n) :: func       vec with [1,x,x**2,x**3,...,x**(n-1)]
-
-  !     INDENT(IN), OPTIONAL
-  !         None
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         -> see example at fitfun
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written, Matthias Cuntz, Mar 2011
-
   FUNCTION fpoly_dp(x,n)
 
     IMPLICIT NONE
@@ -429,9 +686,9 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   ! From numerical recipes documentation
-  ! Returns an array of length n containing a geometric progression whose first 
-  ! value is first and whose multiplier is factor. If first and factor 
-  ! have rank greater than zero, returns an array of one larger rank, with the 
+  ! Returns an array of length n containing a geometric progression whose first
+  ! value is first and whose multiplier is factor. If first and factor
+  ! have rank greater than zero, returns an array of one larger rank, with the
   ! last subscript having size n and indexing the progression.
   FUNCTION geop_dp(first,factor,n)
 
@@ -594,59 +851,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         linfit
-
-  !     PURPOSE
-  !         Fits a straight line to input data by minimizing chi^2.
-
-  !         Given a set of data points x(1:ndata), y(1:ndata), fit them to a straight liney = a+bx 
-  !         by minimizing chi2.
-  !         Model I minimizes y vs. x while Model II takes the geometric mean of y vs. x and x vs. y.
-  !         Returned is the fitted line at x.
-  !         Optional returns are a, b and their respective probable uncertainties siga and sigb,
-  !         and the chi-square chi2.
-
-  !     CALLING SEQUENCE
-  !         out = linfit(x, y, a=a, b=b, siga=siga, sigb=sigb, chi2=chi2, model2=model2)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:)                1D-array with input x
-  !         real(sp/dp) :: y(:)                1D-array with input y
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp), dimension(size(x)) :: out     fitted values
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: model2                  If present, use geometric mean regression instead of ordinary least square
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         real(sp/dp), dimension(M) :: a      intercept
-  !         real(sp/dp), dimension(M) :: b      slope
-  !         real(sp/dp), dimension(M) :: siga   error on intercept
-  !         real(sp/dp), dimension(M) :: sigb   error on slope
-  !         real(sp/dp)               :: chisq  Minimum chi^2
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         ytmp = linfit(x,y, a=inter, b=slope, model2=.true.)
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written, Matthias Cuntz, Mar 2011
-
   FUNCTION linfit_dp(x, y, a, b, siga, sigb, chi2, model2)
 
     IMPLICIT NONE
@@ -669,7 +873,7 @@ CONTAINS
     else
        mod2 = .false.
     endif
-    
+
     if (mod2) then
        nx = real(size(x),dp)
        mx = sum(x)/nx
@@ -682,7 +886,7 @@ CONTAINS
        aa = my - bb*mx
        linfit_dp(:) = aa + bb*x(:)
        if (present(a)) a = aa
-       if (present(b)) b = bb       
+       if (present(b)) b = bb
        if (present(chi2)) then
           t(:) = y(:)-linfit_dp(:)
           chi2 = dot_product(t,t)
@@ -755,7 +959,7 @@ CONTAINS
     else
        mod2 = .false.
     endif
-    
+
     if (mod2) then
        nx = real(size(x),sp)
        mx = sum(x)/nx
@@ -768,7 +972,7 @@ CONTAINS
        aa = my - bb*mx
        linfit_sp(:) = aa + bb*x(:)
        if (present(a)) a = aa
-       if (present(b)) b = bb       
+       if (present(b)) b = bb
        if (present(chi2)) then
           t(:) = y(:)-linfit_sp(:)
           chi2 = dot_product(t,t)
@@ -821,7 +1025,7 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   ! From numerical recipes documentation
-  ! Returns a matrix that is the outer product of two vectors. 
+  ! Returns a matrix that is the outer product of two vectors.
   ! a*b with size(a)/=size(b)
   FUNCTION outerprod_dp(a,b)
 
@@ -895,64 +1099,6 @@ CONTAINS
   END FUNCTION pythag_sp
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         polyfit
-
-  !     PURPOSE
-  !         Find an approximating polynom of known degree for a given data.
-
-  !         The function polyfit implements least squares approximation of a function
-  !         defined in the points as specified by the arrays xi and yi.
-  !         The basis dj is xj, j=0,1,..,N. The implementation is straightforward.
-  !         First the plane matrix A is created. Aji=dj(xi). Then the linear problem
-  !         AATc=Ay is solved. The result cj are the coefficients. Constraint_Error
-  !         is propagated when dimensions of X and Y differ or else when the problem is ill-defined.
-
-  !         If an optinal mask is given, the function is only fit at those locations that correspond to true values in the mask.
-
-  !     CALLING SEQUENCE
-  !         out = polyfit(x, y, d, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:)                x
-  !         real(sp/dp) :: y(:)                y
-  !         integer     :: d                   d+1 parameters = polynom of degree d
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp), dimension(d+1) :: polyfit       fitted d+1 parameters for x^0, x^1, ..., x^d
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(x)
-  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         integer, parameter      :: degree = 2
-  !         integer                 :: i
-  !         real(dp), dimension(11) :: x = (/ (i,i=0,10) /)
-  !         real(dp), dimension(11) :: y = (/ 1,   6,  17,  34, 57,  86, 121, 162, 209, 262, 321 /)
-  !         real(dp), dimension(degree+1) :: a
-  !         a = polyfit(x, y, degree)            
-  !         write (*, '(F9.4)') a
-  !         -> gives 1.0, 2.0, 3.0
-
-  !     LITERATURE
-  !         http://rosettacode.org/wiki/Polynomial_regression#Fortran
-
-  !     HISTORY
-  !         Written, Matthias Cuntz, Mar 2011
 
   FUNCTION polyfit_dp(vxin, vyin, d, mask)
 
@@ -1096,10 +1242,10 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   ! From Numerical Recipes in F77 book
-  ! Solves A*X=B for a vector X, where A is specified by the arrays u, w, v as returned by 
-  ! svdcmp. m and n are the logical dimensions of a, and will be equal for square matrices. mp 
-  ! and np are the physical dimensions of a. b(1:m) is the input right-handside. x(1:n) is 
-  ! the output solution vector. No input quantities are destroyed, so the routine may be called 
+  ! Solves A*X=B for a vector X, where A is specified by the arrays u, w, v as returned by
+  ! svdcmp. m and n are the logical dimensions of a, and will be equal for square matrices. mp
+  ! and np are the physical dimensions of a. b(1:m) is the input right-handside. x(1:n) is
+  ! the output solution vector. No input quantities are destroyed, so the routine may be called
   ! sequentially with different bs.
   SUBROUTINE svbksb_dp(u,w,v,b,x)
 
@@ -1153,9 +1299,9 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   ! From Numerical Recipes in F77 book
-  ! Given a matrix a(1:m,1:n), with physical dimensions mp by np, this routine computes its 
-  ! singular value decomposition, A=U*W*VT. The matrix U replaces a on output. The 
-  ! diagonal matrix of singular values W is output as a vector w(1:n). The matrix V (not the 
+  ! Given a matrix a(1:m,1:n), with physical dimensions mp by np, this routine computes its
+  ! singular value decomposition, A=U*W*VT. The matrix U replaces a on output. The
+  ! diagonal matrix of singular values W is output as a vector w(1:n). The matrix V (not the
   ! transpose VT) is output as v(1:n,1:n).
   SUBROUTINE svdcmp_dp(a,w,v)
 
@@ -1498,79 +1644,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         svdfit
-
-  !     PURPOSE
-  !         Fits a given function func with the parameters a to the input data by using singular value decomposition.
-
-  !         The function func must give a vector of the base functions for a given x.
-  !         For example func for a polynomial should return the vector [1,x,x**2,x**3,x**4,...].
-
-  !         From the numerical recipes documentation:
-  !         Given a set of datapoints x(1:ndata), y(1:ndata) with individual standard deviations
-  !         sig(1:ndata), use chi2 minimization to determine the ma coefficients a of the fitting function
-  !         y=sum(ai*afunci(x))). Here we solve the fitting equations using singular value decomposition
-  !         of the n data by ma matrix, as in paragraph 2.6. Arrays u(1:mp,1:np), v(1:np,1:np),
-  !         w(1:np) provide workspace on input; on output they define the singular value decomposition,
-  !         and can be used to obtain the covariance matrix. mp,np are the physical dimensions
-  !         of the matrices u,v,w, as indicated above. It is necessary that mp>=ndata, np>=ma. The
-  !         program returns values for the ma fit parameters a, and chi2, chisq. The user supplies a
-  !         subroutine funcs(x,afunc,ma) that returns them a basis functions evaluated at x=x
-  !         in the array afunc.
-
-  !     CALLING SEQUENCE
-  !         call svdfit(x, y, sig, a, v, w, chisq, func)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:)                1D-array with input x
-  !         real(sp/dp) :: y(:)                1D-array with input y
-  !         real(sp/dp) :: sig(:)              1D-array with input sigma on y
-  !         real(sp/dp), dimension(M) :: FUNCTION func(x,n)    Function that outputs the n basis functions  
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp), dimension(M)   :: a       fitted M parameters
-  !         real(sp/dp)                 :: chisq   Minimum chi^2
-  !         real(sp/dp), dimension(M,M) :: v       output for svdvar
-  !         real(sp/dp), dimension(M)   :: w       output for svdvar
-
-  !     INDENT(IN), OPTIONAL
-  !         None
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         ! fit polynomial with degree 5
-  !         integer(i4b), parameter :: npt=100, npol=5
-  !         integer(i4b) :: i
-  !         real(dp) :: chisq
-  !         real(dp), dimension(npol)      :: a, w
-  !         real(dp), dimension(npt)       :: x, y, sig
-  !         real(dp), dimension(npol,npol) :: cvm, v
-  !         call svdfit(x, y, sig, a, v, w, chisq, fpoly_dp)
-  !         call svdvar(v, w, cvm)
-  !         do i=1, npol
-  !            write(*,'(1x,f12.6,a,f10.6)') a(i), '  +-', sqrt(cvm(i,i))
-  !         end do
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written, Matthias Cuntz, Mar 2011
-
   SUBROUTINE svdfit_dp(ix, iy, isig, oa, ov, ow, ochisq, func)
 
     IMPLICIT NONE
@@ -1698,64 +1771,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         svdfit
-
-  !     PURPOSE
-  !         Calculates the variance/covariance for the singular value decomposition estimates.
-
-  !         From the numerical recipes documentation:
-  !         To evaluate the covariance matrix cvm of the fit for ma parameters obtained by svdfit,
-  !         call this routine with matrices v,w as returned from svdfit. np,ncvm give the physical
-  !         dimensions of v,w,cvm as indicated.
-
-  !     CALLING SEQUENCE
-  !         call svdvar(v, w, cvm)
-  
-  !     INDENT(IN)
-  !         real(sp/dp), dimension(M,M) :: v       output from svdfit
-  !         real(sp/dp), dimension(M)   :: w       output from svdfit
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp), dimension(M,M)   :: cvm     covariance matrix for M fitted parameters
-
-  !     INDENT(IN), OPTIONAL
-  !         None
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         ! fit polynomial with degree 5
-  !         integer(i4b), parameter :: npt=100, npol=5
-  !         integer(i4b) :: i
-  !         real(dp) :: chisq
-  !         real(dp), dimension(npol)      :: a, w
-  !         real(dp), dimension(npt)       :: x, y, sig
-  !         real(dp), dimension(npol,npol) :: cvm, v
-  !         call svdfit(x, y, sig, a, v, w, chisq, fpoly_dp)
-  !         call svdvar(v, w, cvm)
-  !         do i=1, npol
-  !            write(*,'(1x,f12.6,a,f10.6)') a(i), '  +-', sqrt(cvm(i,i))
-  !         end do
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written, Matthias Cuntz, Mar 2011
-
   SUBROUTINE svdvar_dp(v, w, cvm)
 
     IMPLICIT NONE
@@ -1814,7 +1829,7 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   ! From numerical recipes documentation
-  ! Returns the length of a vector v in L2 norm, that is,the square root of the sum 
+  ! Returns the length of a vector v in L2 norm, that is,the square root of the sum
   ! of the squares of the components. (For complex types, t should be between the vector and its complex conjugate.)
   FUNCTION vabs_dp(v)
 

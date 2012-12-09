@@ -3,7 +3,7 @@ MODULE mo_append
   ! This module is appending and pasting scalars, vectors, and matrixes into one.
   ! and is part of the UFZ CHS Fortran library.
 
-  ! 
+  !
   ! Written  Juliane Mai, Aug 2012
   ! Modified Juliane Mai, Aug 2012 : character append & paste
 
@@ -30,35 +30,9 @@ MODULE mo_append
 
   IMPLICIT NONE
 
-  PRIVATE
-
 #ifndef ABSOFT
   PUBLIC :: append    ! Returns input1 appended with input2. (like bash cat)
   PUBLIC :: paste     ! Returns input1 pasted with input2.   (like bash paste)
-
-  ! Interfaces for single and double precision routines; sort alphabetically
-  INTERFACE append
-     MODULE PROCEDURE append_i4_v_s, append_i4_v_v, append_i4_m_m, &
-                      append_i8_v_s, append_i8_v_v, append_i8_m_m, &
-                      append_sp_v_s, append_sp_v_v, append_sp_m_m, &
-                      append_dp_v_s, append_dp_v_v, append_dp_m_m, &
-                      append_char_v_s, append_char_v_v, append_char_m_m
-                     
-  END INTERFACE append
-
-  INTERFACE paste
-     MODULE PROCEDURE paste_i4_m_s, paste_i4_m_v, paste_i4_m_m, &
-                      paste_i8_m_s, paste_i8_m_v, paste_i8_m_m, &
-                      paste_sp_m_s, paste_sp_m_v, paste_sp_m_m, &
-                      paste_dp_m_s, paste_dp_m_v, paste_dp_m_m, &
-                      paste_char_m_s, paste_char_m_v, paste_char_m_m
-                     
-  END INTERFACE paste
-
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
 
   ! ------------------------------------------------------------------
 
@@ -68,10 +42,10 @@ CONTAINS
   !     PURPOSE
   !         appends one input to another input
   !         The input might be a scalar, a vector or a matrix.
-  !         Possibilities: 
+  !         Possibilities:
   !         (1)     append scalar to vector
   !         (2)     append vector to vector
-  !         (3)     append matrix to matrix    
+  !         (3)     append matrix to matrix
 
   !     CALLING SEQUENCE
   !         input1 = (/ 1.0_dp , 2.0_dp /)
@@ -84,12 +58,12 @@ CONTAINS
 
 
   !     INDENT(IN)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE  
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE
   !                                       :: input2 ... flexible kind, but same as input1
   !                                                     scalar, vector, or matrix
 
   !     INDENT(INOUT)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE  
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE
   !                                       :: input1 ... flexible kind, but same as input2
   !                                                     vector, or matrix
   !                                                     has to be allocatable
@@ -119,8 +93,95 @@ CONTAINS
 
   !     HISTORY
   !        Written  Juliane Mai, Aug   2012
+  INTERFACE append
+     MODULE PROCEDURE append_i4_v_s, append_i4_v_v, append_i4_m_m, &
+          append_i8_v_s, append_i8_v_v, append_i8_m_m, &
+          append_sp_v_s, append_sp_v_v, append_sp_m_m, &
+          append_dp_v_s, append_dp_v_v, append_dp_m_m, &
+          append_char_v_s, append_char_v_v, append_char_m_m
 
-SUBROUTINE append_i4_v_s(vec1, sca2)
+  END INTERFACE append
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         paste
+
+  !     PURPOSE
+  !         Pastes one input to another input
+  !         The input might be a scalar, a vector or a matrix.
+  !         Possibilities:
+  !         (1)     paste scalar to one-line matrix
+  !         (3)     paste vector to a matrix
+  !         (5)     paste matrix to matrix
+
+  !     CALLING SEQUENCE
+  !         input1 = (/ 1.0_dp , 2.0_dp /)
+  !         input2 = (/ 3.0_dp , 4.0_dp /)
+  !
+  !         call paste (input1, input2)
+  !         --> input1(1,:) = (/ 1.0_dp , 3.0_dp /)
+  !             input1(2,:) = (/ 2.0_dp , 4.0_dp /)
+  !
+  !         see also test folder for a detailed example
+
+
+  !     INDENT(IN)
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE
+  !                                       :: input2 ... flexible kind, but same as input1
+  !                                                     scalar, vector, or matrix
+
+  !     INDENT(INOUT)
+  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE
+  !                                       :: input1 ... flexible kind, but same as input2
+  !                                                     vector, or matrix
+  !                                                     has to be allocatable
+
+  !     INDENT(OUT)
+  !         None
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Size of input1 and input2 have to fit together,
+  !         i.e. number of rows input1 = number of rows input2
+  !
+  !         Strings have to be less or equal 256 characters in length.
+
+  !     EXAMPLE
+  !         see test/test_mo_append/
+
+  !     LITERATURE
+
+  !     HISTORY
+  !        Written  Juliane Mai, Aug   2012
+  INTERFACE paste
+     MODULE PROCEDURE paste_i4_m_s, paste_i4_m_v, paste_i4_m_m, &
+          paste_i8_m_s, paste_i8_m_v, paste_i8_m_m, &
+          paste_sp_m_s, paste_sp_m_v, paste_sp_m_m, &
+          paste_dp_m_s, paste_dp_m_v, paste_dp_m_m, &
+          paste_char_m_s, paste_char_m_v, paste_char_m_m
+
+  END INTERFACE paste
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
+
+  ! ------------------------------------------------------------------
+
+  SUBROUTINE append_i4_v_s(vec1, sca2)
 
     implicit none
 
@@ -205,7 +266,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
        if (n1 .ne. n2) then
           print*, 'append: columns of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
 
        ! save mat1
@@ -310,7 +371,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
        if (n1 .ne. n2) then
           print*, 'append: columns of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
 
        ! save mat1
@@ -415,7 +476,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
        if (n1 .ne. n2) then
           print*, 'append: columns of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
 
        ! save mat1
@@ -520,7 +581,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
        if (n1 .ne. n2) then
           print*, 'append: columns of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
 
        ! save mat1
@@ -623,7 +684,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
        if (n1 .ne. n2) then
           print*, 'append: columns of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
 
        ! save mat1
@@ -645,65 +706,6 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         paste
-
-  !     PURPOSE
-  !         Pastes one input to another input
-  !         The input might be a scalar, a vector or a matrix.
-  !         Possibilities: 
-  !         (1)     paste scalar to one-line matrix
-  !         (3)     paste vector to a matrix
-  !         (5)     paste matrix to matrix    
-
-  !     CALLING SEQUENCE
-  !         input1 = (/ 1.0_dp , 2.0_dp /)
-  !         input2 = (/ 3.0_dp , 4.0_dp /)
-  !
-  !         call paste (input1, input2)
-  !         --> input1(1,:) = (/ 1.0_dp , 3.0_dp /)
-  !             input1(2,:) = (/ 2.0_dp , 4.0_dp /)
-  !
-  !         see also test folder for a detailed example
-
-
-  !     INDENT(IN)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE  
-  !                                       :: input2 ... flexible kind, but same as input1
-  !                                                     scalar, vector, or matrix
-
-  !     INDENT(INOUT)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE  
-  !                                       :: input1 ... flexible kind, but same as input2
-  !                                                     vector, or matrix
-  !                                                     has to be allocatable
-
-  !     INDENT(OUT)
-  !         None
-
-  !     INDENT(IN), OPTIONAL
-  !         None
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Size of input1 and input2 have to fit together,
-  !         i.e. number of rows input1 = number of rows input2
-  !
-  !         Strings have to be less or equal 256 characters in length.
-
-  !     EXAMPLE
-  !         see test/test_mo_append/
-
-  !     LITERATURE
-
-  !     HISTORY
-  !        Written  Juliane Mai, Aug   2012
-
   SUBROUTINE paste_i4_m_s(mat1, sca2)
 
     implicit none
@@ -721,7 +723,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. 1_i4) then
           print*, 'paste: scalar paste to matrix only works with one-line matrix'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -737,7 +739,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
     end if
 
   END SUBROUTINE paste_i4_m_s
-  
+
   SUBROUTINE paste_i4_m_v(mat1, vec2)
 
     implicit none
@@ -758,7 +760,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. m2) then
           print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -798,7 +800,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. m2) then
           print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -835,7 +837,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. 1_i4) then
           print*, 'paste: scalar paste to matrix only works with one-line matrix'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -851,7 +853,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
     end if
 
   END SUBROUTINE paste_i8_m_s
-  
+
   SUBROUTINE paste_i8_m_v(mat1, vec2)
 
     implicit none
@@ -872,7 +874,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. m2) then
           print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -912,7 +914,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. m2) then
           print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -949,7 +951,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. 1_i4) then
           print*, 'paste: scalar paste to matrix only works with one-line matrix'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -965,7 +967,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
     end if
 
   END SUBROUTINE paste_sp_m_s
-  
+
   SUBROUTINE paste_sp_m_v(mat1, vec2)
 
     implicit none
@@ -986,7 +988,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. m2) then
           print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -1026,7 +1028,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. m2) then
           print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -1063,7 +1065,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. 1_i4) then
           print*, 'paste: scalar paste to matrix only works with one-line matrix'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -1079,7 +1081,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
     end if
 
   END SUBROUTINE paste_dp_m_s
-  
+
   SUBROUTINE paste_dp_m_v(mat1, vec2)
 
     implicit none
@@ -1100,7 +1102,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. m2) then
           print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -1140,7 +1142,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. m2) then
           print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -1177,7 +1179,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. 1_i4) then
           print*, 'paste: scalar paste to matrix only works with one-line matrix'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -1193,7 +1195,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
     end if
 
   END SUBROUTINE paste_char_m_s
-  
+
   SUBROUTINE paste_char_m_v(mat1, vec2)
 
     implicit none
@@ -1214,7 +1216,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. m2) then
           print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))
@@ -1254,7 +1256,7 @@ SUBROUTINE append_i4_v_s(vec1, sca2)
        n1 = size(mat1,2)   ! columns
        if (m1 .ne. m2) then
           print*, 'paste: rows of matrix1 and matrix2 are unequal : (',m1,',',n1,')  and  (',m2,',',n2,')'
-          STOP 
+          STOP
        end if
        ! save mat1
        allocate(tmp(m1,n1))

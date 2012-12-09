@@ -32,7 +32,6 @@ module mo_dds
   PUBLIC :: DDS    ! Dynamically Dimensioned Search (DDS)
   PUBLIC :: MDDS   ! Modified Dynamically Dimensioned Search (DDS)
 
-
   ! ------------------------------------------------------------------
 
 CONTAINS
@@ -134,8 +133,8 @@ CONTAINS
          real(dp) :: obj_func
        end function obj_func
     END INTERFACE
-    real(dp),    dimension(:),   intent(in)            :: pini     ! inital value of decision variables 
-    real(dp),    dimension(:,:), intent(in)            :: prange   ! Min/max values of decision variables 
+    real(dp),    dimension(:),   intent(in)            :: pini     ! inital value of decision variables
+    real(dp),    dimension(:,:), intent(in)            :: prange   ! Min/max values of decision variables
     real(dp),                    optional, intent(in)  :: r        ! DDS perturbation parameter (-> 0.2 by default)
     integer(i8),                 optional, intent(in)  :: seed     ! User seed to initialise the random number generator
     integer(i8),                 optional, intent(in)  :: maxiter  ! Maximum number of iteration or function evaluation
@@ -143,11 +142,11 @@ CONTAINS
     logical,     dimension(:),   optional, intent(in)  :: mask     ! parameter to be optimized (true or false)
     real(dp),                    optional, intent(out) :: funcbest ! Best value of the function.
     real(dp),    dimension(:),   &
-                 allocatable,    optional, intent(out) :: history  ! History of objective function values
+         allocatable,    optional, intent(out) :: history  ! History of objective function values
     real(dp),    dimension(size(pini))                 :: DDS      ! Best value of decision variables
 
     ! Local variables
-    integer(i4)                             :: pnum                   ! Total number of decision variables  
+    integer(i4)                             :: pnum                   ! Total number of decision variables
     integer(i8)                             :: iseed                  ! User given seed
     integer(i8)                             :: imaxiter               ! Maximum number of iteration or function evaluation
     real(dp)                                :: ir                     ! DDS perturbation parameter
@@ -244,15 +243,15 @@ CONTAINS
           if (ranval < Pn) then                               ! jth DV selected for perturbation
              dvn_count = dvn_count + 1
              ! call 1-D perturbation function to get new DV value (new_value)
-             call neigh_value(DDS(truepara(j)), prange(truepara(j),1), prange(truepara(j),2), ir, new_value) 
-             pnew(truepara(j)) = new_value 
+             call neigh_value(DDS(truepara(j)), prange(truepara(j),1), prange(truepara(j),2), ir, new_value)
+             pnew(truepara(j)) = new_value
           end if
        end do
        !
        ! Step 3 of Fig 1 of Tolson and Shoemaker (2007) in case {N} empty
        if (dvn_count == 0) then                               ! no DVs selected at random, so select one
-          call xor4096(0_i8,ranval)                           ! selects next uniform random number in sequence              
-          dv = truepara(int(( ranval * real(size(truepara),dp))  + 1.0_dp, i4 ))  ! index for one DV 
+          call xor4096(0_i8,ranval)                           ! selects next uniform random number in sequence
+          dv = truepara(int(( ranval * real(size(truepara),dp))  + 1.0_dp, i4 ))  ! index for one DV
           ! call 1-D perturbation function to get new DV value (new_value):
           call neigh_value(DDS(dv), prange(dv,1), prange(dv,2), ir, new_value)
           pnew(dv) = new_value                                ! change relevant DV value in stest
@@ -260,9 +259,9 @@ CONTAINS
        !
        ! Step 5 of Fig 1 of Tolson and Shoemaker (2007)
        ! Evaluate obj function value for test
-       of_new = imaxit * obj_func(pnew)                       ! imaxit handles min(=1) and max(=-1) problems 
+       of_new = imaxit * obj_func(pnew)                       ! imaxit handles min(=1) and max(=-1) problems
        ! update current best solution
-       if (of_new <= of_best) then                                               
+       if (of_new <= of_best) then
           of_best = of_new
           DDS     = pnew
        end if
@@ -289,19 +288,19 @@ CONTAINS
          real(dp) :: obj_func
        end function obj_func
     END INTERFACE
-    real(dp),    dimension(:),           intent(in)  :: pini     ! inital value of decision variables 
-    real(dp),    dimension(:,:),         intent(in)  :: prange   ! Min/max values of decision variables 
+    real(dp),    dimension(:),           intent(in)  :: pini     ! inital value of decision variables
+    real(dp),    dimension(:,:),         intent(in)  :: prange   ! Min/max values of decision variables
     integer(i8),               optional, intent(in)  :: seed     ! User seed to initialise the random number generator
     integer(i8),               optional, intent(in)  :: maxiter  ! Maximum number of iteration or function evaluation
     logical,                   optional, intent(in)  :: maxit    ! Maximization or minimization of function
     logical,     dimension(:), optional, intent(in)  :: mask     ! parameter to be optimized (true or false)
     real(dp),                  optional, intent(out) :: funcbest ! Best value of the function.
     real(dp),    dimension(:),   &
-                 allocatable,  optional, intent(out) :: history  ! History of objective function values
+         allocatable,  optional, intent(out) :: history  ! History of objective function values
     real(dp),    dimension(size(pini))               :: MDDS     ! Best value of decision variables
 
     ! Local variables
-    integer(i4)                             :: pnum                   ! Total number of decision variables  
+    integer(i4)                             :: pnum                   ! Total number of decision variables
     integer(i8)                             :: iseed                  ! User given seed
     integer(i8)                             :: imaxiter               ! Maximum number of iteration or function evaluation
     real(dp)                                :: ir                     ! MDDS perturbation parameter
@@ -327,7 +326,7 @@ CONTAINS
     if (present(maxiter)) imaxiter = maxiter
     if (imaxiter < 6) stop 'Error MDDS: max function evals must be minimum 6'
     ! history output
-     if (present(history)) then
+    if (present(history)) then
        allocate(history(imaxiter))
     end if
     ! Min or max objective function
@@ -398,15 +397,15 @@ CONTAINS
           if (ranval < Pn) then                               ! jth DV selected for perturbation
              dvn_count = dvn_count + 1
              ! call 1-D perturbation function to get new DV value (new_value)
-             call neigh_value(MDDS(truepara(j)), prange(truepara(j),1), prange(truepara(j),2), ir, new_value) 
-             pnew(truepara(j)) = new_value 
+             call neigh_value(MDDS(truepara(j)), prange(truepara(j),1), prange(truepara(j),2), ir, new_value)
+             pnew(truepara(j)) = new_value
           end if
        end do
        !
        ! Step 3 of Fig 1 of Tolson and Shoemaker (2007) in case {N} empty
        if (dvn_count == 0) then                               ! no DVs selected at random, so select one
-          call xor4096(0_i8,ranval)                           ! selects next uniform random number in sequence 
-          dv = truepara(int(( ranval * real(size(truepara),dp))  + 1.0_dp, i4 ))  ! index for one DV 
+          call xor4096(0_i8,ranval)                           ! selects next uniform random number in sequence
+          dv = truepara(int(( ranval * real(size(truepara),dp))  + 1.0_dp, i4 ))  ! index for one DV
           ! call 1-D perturbation function to get new DV value (new_value):
           call neigh_value(MDDS(dv), prange(dv,1), prange(dv,2), ir, new_value)
           pnew(dv) = new_value                                ! change relevant DV value in stest
@@ -414,9 +413,9 @@ CONTAINS
        !
        ! Step 5 of Fig 1 of Tolson and Shoemaker (2007)
        ! Evaluate obj function value for test
-       of_new = imaxit * obj_func(pnew)                       ! imaxit handles min(=1) and max(=-1) problems 
+       of_new = imaxit * obj_func(pnew)                       ! imaxit handles min(=1) and max(=-1) problems
        ! update current best solution
-       if (of_new <= of_best) then                                               
+       if (of_new <= of_best) then
           of_best = of_new
           MDDS    = pnew
        else ! Modifications by Huang et al. (2010)
@@ -448,7 +447,7 @@ CONTAINS
   !  decision variable value being perturbed by the DDS optimization algorithm.
   !  New DV value respects the upper and lower DV bounds.
   !  Coded by Bryan Tolson, Nov 2005.
-  ! 
+  !
   ! I/O variable definitions:
   !  x_cur     - current decision variable (DV) value
   !  x_min     - min DV value
@@ -473,14 +472,14 @@ CONTAINS
     ! generate a standard normal random variate (zvalue)
     call xor4096g(0_i8,zvalue)
 
-    ! calculate new decision variable value:			   	
+    ! calculate new decision variable value:
     new_value = x_cur + zvalue*r*x_range
 
     !  check new value is within bounds. If not, bounds are reflecting.
     if (new_value < x_min) then
        new_value = x_min + (x_min - new_value)
        if (new_value > x_max) then
-          ! if reflection goes past x_max then value should be x_min since 
+          ! if reflection goes past x_max then value should be x_min since
           ! without reflection the approach goes way past lower bound.
           ! This keeps x close to lower bound when x_cur is close to lower bound
           ! Practically speaking, this should never happen with r values <0.3.

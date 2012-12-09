@@ -13,7 +13,7 @@ MODULE mo_moment
   !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
   !   Central moments and error variances
   !       LH Benedict & RD Gould, Towards better uncertainty estimates for turbulence statistics,
-  !           Experiments in Fluids 22, 129—136, 1996
+  !           Experiments in Fluids 22, 129-136, 1996
 
   ! Written Nov 2011, Matthias Cuntz
   !         Modified, MC, Dec 2011 - mod. correlation, covariance
@@ -63,7 +63,7 @@ MODULE mo_moment
   ! Single-User Licenses, may permanently assign those licenses, in the
   ! number acquired, to individual employees. Such an assignment must be
   ! made before the code is first used and, once made, it is irrevocable
-  ! and can not be transferred. 
+  ! and can not be transferred.
 
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
@@ -71,8 +71,6 @@ MODULE mo_moment
   USE mo_kind, ONLY: i4, sp, dp
 
   IMPLICIT NONE
-
-  PRIVATE
 
   PUBLIC :: absdev                        ! Mean absolute deviation from mean of an array
   PUBLIC :: average                       ! 1st moment of an array (same as mean)
@@ -89,53 +87,6 @@ MODULE mo_moment
   PUBLIC :: stddev                        ! Sqrt of 2nd moment of an array
   PUBLIC :: variance                      ! 2nd moment of an array
 
-  INTERFACE absdev                    
-     MODULE PROCEDURE absdev_sp, absdev_dp
-  END INTERFACE absdev                    
-  INTERFACE average                   
-     MODULE PROCEDURE average_sp, average_dp
-  END INTERFACE average                   
-  INTERFACE central_moment            
-     MODULE PROCEDURE central_moment_sp, central_moment_dp
-  END INTERFACE central_moment            
-  INTERFACE central_moment_var        
-     MODULE PROCEDURE central_moment_var_sp, central_moment_var_dp
-  END INTERFACE central_moment_var        
-  INTERFACE correlation               
-     MODULE PROCEDURE correlation_sp, correlation_dp
-  END INTERFACE correlation               
-  INTERFACE covariance                
-     MODULE PROCEDURE covariance_sp, covariance_dp
-  END INTERFACE covariance                
-  INTERFACE kurtosis                  
-     MODULE PROCEDURE kurtosis_sp, kurtosis_dp
-  END INTERFACE kurtosis                  
-  INTERFACE mean                      
-     MODULE PROCEDURE mean_sp, mean_dp
-  END INTERFACE mean                      
-  INTERFACE mixed_central_moment      
-     MODULE PROCEDURE mixed_central_moment_sp, mixed_central_moment_dp
-  END INTERFACE mixed_central_moment      
-  INTERFACE mixed_central_moment_var  
-     MODULE PROCEDURE mixed_central_moment_var_sp, mixed_central_moment_var_dp
-  END INTERFACE mixed_central_moment_var  
-  INTERFACE moment                    
-     MODULE PROCEDURE moment_sp, moment_dp
-  END INTERFACE moment                    
-  INTERFACE skewness                  
-     MODULE PROCEDURE skewness_sp, skewness_dp
-  END INTERFACE skewness                  
-  INTERFACE stddev                    
-     MODULE PROCEDURE stddev_sp, stddev_dp
-  END INTERFACE stddev                    
-  INTERFACE variance                  
-     MODULE PROCEDURE variance_sp, variance_dp
-  END INTERFACE variance                  
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
-
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -150,7 +101,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         out = absdev(dat, mask=mask)
-  
+
   !     INDENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
 
@@ -185,6 +136,744 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE absdev
+     MODULE PROCEDURE absdev_sp, absdev_dp
+  END INTERFACE absdev
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         average
+
+  !     PURPOSE
+  !         Calculates the average value of a vector, i.e. the first moment of a series of numbers:
+  !             average = sum(x)/n
+  !
+  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = average(dat, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: dat(:)     1D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: average    average of all elements in dat
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
+  !         m   = average(vec, mask=(vec >= 0.))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE average
+     MODULE PROCEDURE average_sp, average_dp
+  END INTERFACE average
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         central_moment
+
+  !     PURPOSE
+  !         Calculates the central moment of a vector, i.e. the r-central moment of a series of numbers:
+  !             central_moment = sum((x-mean(x))**r)/n
+  !         Note that the variance is the second central moment: variance(x) = central_moment(x,2)
+  !
+  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = central_moment(x, r, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: dat(:)     1D-array with input numbers
+  !         integer(i4) :: r          order of the central moment, i.e. r=2 is variance
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: central_moment    r-th central moment of elements in dat
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
+  !         m   = central_moment(vec, 2, mask=(vec >= 0.))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         LH Benedict & RD Gould, Towards better uncertainty estimates for turbulence statistics,
+  !             Experiments in Fluids 22, 129-136, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE central_moment
+     MODULE PROCEDURE central_moment_sp, central_moment_dp
+  END INTERFACE central_moment
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         central_moment_var
+
+  !     PURPOSE
+  !         Calculates the sampling variance of the central moment of a vector.
+  !         central_moment_var is something like the "error variance" of the r-th order central moment sampling statistic.
+  !
+  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = central_moment_var(x, r, nin=nin, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: dat(:)     1D-array with input numbers
+  !         integer(i4) :: r          order of the central moment, i.e. r=2 is variance
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: central_moment_var    sampling variance of r-th central moment of elements in dat
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
+  !         m   = central_moment(vec, 2, mask=(vec >= 0.))
+  !         em  = central_moment_var(vec, 2, mask=(vec >= 0.))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         LH Benedict & RD Gould, Towards better uncertainty estimates for turbulence statistics,
+  !             Experiments in Fluids 22, 129-136, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE central_moment_var
+     MODULE PROCEDURE central_moment_var_sp, central_moment_var_dp
+  END INTERFACE central_moment_var
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         correlation
+
+  !     PURPOSE
+  !         Calculates the correlation between two input vectors, i.e. the covariance divided by the standard deviations:
+  !             correlation = (sum((x-mean(x))*(y-mean(y)))/n) / (stddev(x)*stddev(y))
+  !
+  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = correlation(x, y, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)     First 1D-array with input numbers
+  !         real(sp/dp) :: y(:)     Second 1D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: correlation    correlation between x and y
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(x).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
+  !         vec2 = (/ 1.3, 2.7, 3.9, 5.1, 6., 8. /)
+  !         m   = correlation(vec1, vec2, mask=((vec1 >= 0.) .and. (vec2 >= 0.)))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  !         Modified, MC, Dec 2011 - covariance as <(x-<x>)(y-<y>)> instead of <xy>-<x><y>
+  INTERFACE correlation
+     MODULE PROCEDURE correlation_sp, correlation_dp
+  END INTERFACE correlation
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         covariance
+
+  !     PURPOSE
+  !         Calculates the covariance between two input vectors:
+  !             covariance = sum((x-mean(x))*(y-mean(y)))/n
+  !
+  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = covariance(x, y, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)     First 1D-array with input numbers
+  !         real(sp/dp) :: y(:)     Second 1D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: covariance    covariance between x and y
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(x).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
+  !         vec2 = (/ 1.3, 2.7, 3.9, 5.1, 6., 8. /)
+  !         m   = covariance(vec1, vec2, mask=((vec1 >= 0.) .and. (vec2 >= 0.)))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  !         Modified, MC, Dec 2011 - covariance as <(x-<x>)(y-<y>)> instead of <xy>-<x><y>
+  INTERFACE covariance
+     MODULE PROCEDURE covariance_sp, covariance_dp
+  END INTERFACE covariance
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         kurtosis
+
+  !     PURPOSE
+  !         Calculates the kurtosis of a vector, also called excess kurtosis:
+  !             kurtosis = central_moment(x,4) / variance(x)**2 - 3
+  !                      = sum(((x-mean(x))/stddev(x))**4)/n - 3
+  !
+  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = kurtosis(dat, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: dat(:)     1D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: kurtosis    kurtosis of all elements in dat
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
+  !         m   = kurtosis(vec, mask=(vec >= 0.))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE kurtosis
+     MODULE PROCEDURE kurtosis_sp, kurtosis_dp
+  END INTERFACE kurtosis
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         mean
+
+  !     PURPOSE
+  !         Calculates the average value of a vector, i.e. the first moment of a series of numbers:
+  !             mean = sum(x)/n
+  !
+  !         If an optinal mask is given, the mean is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = mean(dat, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: dat(:)     1D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: mean       average of all elements in dat
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
+  !         m   = mean(vec, mask=(vec >= 0.))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE mean
+     MODULE PROCEDURE mean_sp, mean_dp
+  END INTERFACE mean
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         mixed_central_moment
+
+  !     PURPOSE
+  !         Calculates the r,s-th mixed central moment between two vectors:
+  !             mixed_central_moment = sum((x-mean(x))**r * (y-mean(y))**s)/n
+  !         Note that covariace(x,y) = mixed_central_moment(x,y,1,1)
+  !
+  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = mixed_central_moment(x, y, r, s, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)       First 1D-array
+  !         real(sp/dp) :: y(:)       Second 1D-array
+  !         integer(i4) :: r          order of x
+  !         integer(i4) :: r          order of y
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: mixed_central_moment    r,s-th mixed central moment between x and y
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(x).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
+  !         vec2 = (/ 1.3, 2.7, 3.9, 5.1, 6., 8. /)
+  !         m   = mixed_central_moment(vec1, vec2, 2, 2, mask=((vec1 >= 0.) .and. (vec2 >= 0.)))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         LH Benedict & RD Gould, Towards better uncertainty estimates for turbulence statistics,
+  !             Experiments in Fluids 22, 129-136, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE mixed_central_moment
+     MODULE PROCEDURE mixed_central_moment_sp, mixed_central_moment_dp
+  END INTERFACE mixed_central_moment
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         mixed_central_moment_var
+
+  !     PURPOSE
+  !         Calculates the sample variance of r,s-th mixed central moment between two vectors.
+  !         mixed_central_moment_var is something like the "error variance" of
+  !         the r,s-th order mixed central moment sampling statistic.
+  !
+  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = mixed_central_moment_var(x, y, r, s, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:)       First 1D-array
+  !         real(sp/dp) :: y(:)       Second 1D-array
+  !         integer(i4) :: r          order of x
+  !         integer(i4) :: r          order of y
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: mixed_central_moment_var    sampling variance of r,s-th mixed central moment between x and y
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(x).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
+  !         vec2 = (/ 1.3, 2.7, 3.9, 5.1, 6., 8. /)
+  !         m    = mixed_central_moment(vec1, vec2, 2, 2, mask=((vec1 >= 0.) .and. (vec2 >= 0.)))
+  !         em   = mixed_central_moment_var(vec1, vec2, 2, 2, mask=((vec1 >= 0.) .and. (vec2 >= 0.)))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         LH Benedict & RD Gould, Towards better uncertainty estimates for turbulence statistics,
+  !             Experiments in Fluids 22, 129-136, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE mixed_central_moment_var
+     MODULE PROCEDURE mixed_central_moment_var_sp, mixed_central_moment_var_dp
+  END INTERFACE mixed_central_moment_var
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         moment
+
+  !     PURPOSE
+  !         Calculates the first four sample moments of a vector, i.e. mean, variance, skewness, and kurtosis,
+  !         as well as standard deviation and mean absolute devation.
+  !            mean = sum(x)/n
+  !            variance = sum((x-mean(x))**2)/(n-1)
+  !            skewness = sum(((x-mean(x))/stddev(x))**3)/n
+  !            kurtosis = sum(((x-mean(x))/stddev(x))**4)/n - 3
+  !            stddev   = sqrt(variance)
+  !            absdev   = sum(abs(x-mean(x)))/n
+  !
+  !         All output is optional.
+  !         If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         call moment(dat, average=average, variance=variance, skewness=skewness, kurtosis=kurtosis, &
+  !                     mean=mean, stddev=stddev, absdev=absdev, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: dat(:)     1D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         None
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
+  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         real(sp/dp) :: average    average of input vector
+  !         real(sp/dp) :: variance   sample variance of input vector
+  !         real(sp/dp) :: skewness   skewness of input vector
+  !         real(sp/dp) :: kurtosis   excess kurtosis of input vector
+  !         real(sp/dp) :: mean       same as average
+  !         real(sp/dp) :: stddev     sqaure root of variance
+  !         real(sp/dp) :: absdev     mean absolute deviations from average
+
+  !     RESTRICTIONS
+  !         Input values must be floating points. Inpt and all optional outputs must have same kind.
+
+  !     EXAMPLE
+  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
+  !         call moment absdev(vec, mask=(vec >= 0.), mean=m, stddev=s)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE moment
+     MODULE PROCEDURE moment_sp, moment_dp
+  END INTERFACE moment
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         skewness
+
+  !     PURPOSE
+  !         Calculates the skewness of a vector, i.e. the third standardised moment:
+  !             skewness = sum(((x-mean(x))/stddev(x))**3)/n
+  !
+  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = skewness(dat, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: dat(:)     1D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: skewness    skewness of all elements in dat
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
+  !         m   = skewness(vec, mask=(vec >= 0.))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE skewness
+     MODULE PROCEDURE skewness_sp, skewness_dp
+  END INTERFACE skewness
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         stddev
+
+  !     PURPOSE
+  !         Calculates the sample standard deviation of a vector, i.e. the square root of the second moment
+  !             stddev = sqrt(sum((x-mean(x))**2)/(n-1))
+  !
+  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = stddev(dat, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: dat(:)     1D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: stddev     sample standard deviation of all elements in dat
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+  !         This is the sample standard deviation. The population standard deviation is:
+  !             popstddev = stddev * sqrt((n-1)/n)
+
+  !     EXAMPLE
+  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
+  !         m   = stddev(vec, mask=(vec >= 0.))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE stddev
+     MODULE PROCEDURE stddev_sp, stddev_dp
+  END INTERFACE stddev
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         variance
+
+  !     PURPOSE
+  !         Calculates the sample variance of a vector, i.e. the second moment
+  !             variance = sum((x-mean(x))**2)/(n-1)
+  !
+  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
+  !         x can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = variance(dat, mask=mask)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: dat(:)     1D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: variance    sample variance of all elements in dat
+
+  !     INDENT(IN), OPTIONAL
+  !         logical :: mask(:)        1D-array of logical values with size(dat).
+  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+  !         This is the sample variance. The population variance is:
+  !             var = variance * (n-1)/n
+
+  !     EXAMPLE
+  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
+  !         m   = variance(vec, mask=(vec >= 0.))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+  !             Cambridge University Press, UK, 1996
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2011
+  INTERFACE variance
+     MODULE PROCEDURE variance_sp, variance_dp
+  END INTERFACE variance
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
+
+  ! ------------------------------------------------------------------
 
   FUNCTION absdev_dp(dat, mask)
 
@@ -249,54 +938,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         average
-
-  !     PURPOSE
-  !         Calculates the average value of a vector, i.e. the first moment of a series of numbers:
-  !             average = sum(x)/n
-  !
-  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = average(dat, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: dat(:)     1D-array with input numbers
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: average    average of all elements in dat
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(dat).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-
-  !     EXAMPLE
-  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
-  !         m   = average(vec, mask=(vec >= 0.))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
-
   FUNCTION average_dp(dat, mask)
 
     IMPLICIT NONE
@@ -323,7 +964,7 @@ CONTAINS
 
   END FUNCTION average_dp
 
-  
+
   FUNCTION average_sp(dat, mask)
 
     IMPLICIT NONE
@@ -351,55 +992,6 @@ CONTAINS
   END FUNCTION average_sp
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         central_moment
-
-  !     PURPOSE
-  !         Calculates the central moment of a vector, i.e. the r-central moment of a series of numbers:
-  !             central_moment = sum((x-mean(x))**r)/n
-  !         Note that the variance is the second central moment: variance(x) = central_moment(x,2)
-  !
-  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = central_moment(x, r, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: dat(:)     1D-array with input numbers
-  !         integer(i4) :: r          order of the central moment, i.e. r=2 is variance
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: central_moment    r-th central moment of elements in dat
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(dat).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-
-  !     EXAMPLE
-  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
-  !         m   = central_moment(vec, 2, mask=(vec >= 0.))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         LH Benedict & RD Gould, Towards better uncertainty estimates for turbulence statistics,
-  !             Experiments in Fluids 22, 129—136, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
 
   FUNCTION central_moment_dp(x, r, mask)
 
@@ -480,55 +1072,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         central_moment_var
-
-  !     PURPOSE
-  !         Calculates the sampling variance of the central moment of a vector.
-  !         central_moment_var is something like the "error variance" of the r-th order central moment sampling statistic.
-  !
-  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = central_moment_var(x, r, nin=nin, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: dat(:)     1D-array with input numbers
-  !         integer(i4) :: r          order of the central moment, i.e. r=2 is variance
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: central_moment_var    sampling variance of r-th central moment of elements in dat
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(dat).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-
-  !     EXAMPLE
-  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
-  !         m   = central_moment(vec, 2, mask=(vec >= 0.))
-  !         em  = central_moment_var(vec, 2, mask=(vec >= 0.))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         LH Benedict & RD Gould, Towards better uncertainty estimates for turbulence statistics,
-  !             Experiments in Fluids 22, 129—136, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
-
   FUNCTION central_moment_var_dp(x, r, mask)
 
     IMPLICIT NONE
@@ -606,57 +1149,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         correlation
-
-  !     PURPOSE
-  !         Calculates the correlation between two input vectors, i.e. the covariance divided by the standard deviations:
-  !             correlation = (sum((x-mean(x))*(y-mean(y)))/n) / (stddev(x)*stddev(y))
-  !
-  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = correlation(x, y, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:)     First 1D-array with input numbers
-  !         real(sp/dp) :: y(:)     Second 1D-array with input numbers
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: correlation    correlation between x and y
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(x).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-
-  !     EXAMPLE
-  !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
-  !         vec2 = (/ 1.3, 2.7, 3.9, 5.1, 6., 8. /)
-  !         m   = correlation(vec1, vec2, mask=((vec1 >= 0.) .and. (vec2 >= 0.)))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
-  !         Modified, MC, Dec 2011 - covariance as <(x-<x>)(y-<y>)> instead of <xy>-<x><y>
-
   FUNCTION correlation_dp(x, y, mask)
 
     IMPLICIT NONE
@@ -728,57 +1220,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         covariance
-
-  !     PURPOSE
-  !         Calculates the covariance between two input vectors:
-  !             covariance = sum((x-mean(x))*(y-mean(y)))/n
-  !
-  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = covariance(x, y, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:)     First 1D-array with input numbers
-  !         real(sp/dp) :: y(:)     Second 1D-array with input numbers
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: covariance    covariance between x and y
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(x).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-
-  !     EXAMPLE
-  !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
-  !         vec2 = (/ 1.3, 2.7, 3.9, 5.1, 6., 8. /)
-  !         m   = covariance(vec1, vec2, mask=((vec1 >= 0.) .and. (vec2 >= 0.)))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
-  !         Modified, MC, Dec 2011 - covariance as <(x-<x>)(y-<y>)> instead of <xy>-<x><y>
-
   FUNCTION covariance_dp(x, y, mask)
 
     IMPLICIT NONE
@@ -843,55 +1284,6 @@ CONTAINS
   END FUNCTION covariance_sp
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         kurtosis
-
-  !     PURPOSE
-  !         Calculates the kurtosis of a vector, also called excess kurtosis:
-  !             kurtosis = central_moment(x,4) / variance(x)**2 - 3
-  !                      = sum(((x-mean(x))/stddev(x))**4)/n - 3
-  !
-  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = kurtosis(dat, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: dat(:)     1D-array with input numbers
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: kurtosis    kurtosis of all elements in dat
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(dat).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-
-  !     EXAMPLE
-  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
-  !         m   = kurtosis(vec, mask=(vec >= 0.))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
 
   FUNCTION kurtosis_dp(dat, mask)
 
@@ -976,54 +1368,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         mean
-
-  !     PURPOSE
-  !         Calculates the average value of a vector, i.e. the first moment of a series of numbers:
-  !             mean = sum(x)/n
-  !
-  !         If an optinal mask is given, the mean is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = mean(dat, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: dat(:)     1D-array with input numbers
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: mean       average of all elements in dat
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(dat).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-
-  !     EXAMPLE
-  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
-  !         m   = mean(vec, mask=(vec >= 0.))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
-
   FUNCTION mean_dp(dat, mask)
 
     IMPLICIT NONE
@@ -1051,7 +1395,7 @@ CONTAINS
 
   END FUNCTION mean_dp
 
-  
+
   FUNCTION mean_sp(dat, mask)
 
     IMPLICIT NONE
@@ -1080,58 +1424,6 @@ CONTAINS
   END FUNCTION mean_sp
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         mixed_central_moment
-
-  !     PURPOSE
-  !         Calculates the r,s-th mixed central moment between two vectors:
-  !             mixed_central_moment = sum((x-mean(x))**r * (y-mean(y))**s)/n
-  !         Note that covariace(x,y) = mixed_central_moment(x,y,1,1)
-  !
-  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = mixed_central_moment(x, y, r, s, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:)       First 1D-array
-  !         real(sp/dp) :: y(:)       Second 1D-array
-  !         integer(i4) :: r          order of x
-  !         integer(i4) :: r          order of y
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: mixed_central_moment    r,s-th mixed central moment between x and y
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(x).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-
-  !     EXAMPLE
-  !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
-  !         vec2 = (/ 1.3, 2.7, 3.9, 5.1, 6., 8. /)
-  !         m   = mixed_central_moment(vec1, vec2, 2, 2, mask=((vec1 >= 0.) .and. (vec2 >= 0.)))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         LH Benedict & RD Gould, Towards better uncertainty estimates for turbulence statistics,
-  !             Experiments in Fluids 22, 129—136, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
 
   FUNCTION mixed_central_moment_dp(x, y, r, s, mask)
 
@@ -1234,59 +1526,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         mixed_central_moment_var
-
-  !     PURPOSE
-  !         Calculates the sample variance of r,s-th mixed central moment between two vectors.
-  !         mixed_central_moment_var is something like the "error variance" of
-  !         the r,s-th order mixed central moment sampling statistic.
-  !
-  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = mixed_central_moment_var(x, y, r, s, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:)       First 1D-array
-  !         real(sp/dp) :: y(:)       Second 1D-array
-  !         integer(i4) :: r          order of x
-  !         integer(i4) :: r          order of y
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: mixed_central_moment_var    sampling variance of r,s-th mixed central moment between x and y
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(x).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-
-  !     EXAMPLE
-  !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
-  !         vec2 = (/ 1.3, 2.7, 3.9, 5.1, 6., 8. /)
-  !         m    = mixed_central_moment(vec1, vec2, 2, 2, mask=((vec1 >= 0.) .and. (vec2 >= 0.)))
-  !         em   = mixed_central_moment_var(vec1, vec2, 2, 2, mask=((vec1 >= 0.) .and. (vec2 >= 0.)))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         LH Benedict & RD Gould, Towards better uncertainty estimates for turbulence statistics,
-  !             Experiments in Fluids 22, 129—136, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
-
   FUNCTION mixed_central_moment_var_dp(x, y, r, s, mask)
     ! Error variance of mixed central moment (Benedict & Gould 1996)
     IMPLICIT NONE
@@ -1379,68 +1618,6 @@ CONTAINS
   END FUNCTION mixed_central_moment_var_sp
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         moment
-
-  !     PURPOSE
-  !         Calculates the first four sample moments of a vector, i.e. mean, variance, skewness, and kurtosis,
-  !         as well as standard deviation and mean absolute devation.
-  !            mean = sum(x)/n
-  !            variance = sum((x-mean(x))**2)/(n-1)
-  !            skewness = sum(((x-mean(x))/stddev(x))**3)/n
-  !            kurtosis = sum(((x-mean(x))/stddev(x))**4)/n - 3
-  !            stddev   = sqrt(variance)
-  !            absdev   = sum(abs(x-mean(x)))/n
-  !
-  !         All output is optional.
-  !         If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         call moment(dat, average=average, variance=variance, skewness=skewness, kurtosis=kurtosis, &
-  !                     mean=mean, stddev=stddev, absdev=absdev, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: dat(:)     1D-array with input numbers
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         None
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(dat).
-  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         real(sp/dp) :: average    average of input vector
-  !         real(sp/dp) :: variance   sample variance of input vector
-  !         real(sp/dp) :: skewness   skewness of input vector
-  !         real(sp/dp) :: kurtosis   excess kurtosis of input vector
-  !         real(sp/dp) :: mean       same as average
-  !         real(sp/dp) :: stddev     sqaure root of variance
-  !         real(sp/dp) :: absdev     mean absolute deviations from average
-
-  !     RESTRICTIONS
-  !         Input values must be floating points. Inpt and all optional outputs must have same kind.
-
-  !     EXAMPLE
-  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
-  !         call moment absdev(vec, mask=(vec >= 0.), mean=m, stddev=s)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
 
   SUBROUTINE moment_dp(dat, average, variance, skewness, kurtosis, mean, stddev, absdev, mask)
 
@@ -1583,56 +1760,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         stddev
-
-  !     PURPOSE
-  !         Calculates the sample standard deviation of a vector, i.e. the square root of the second moment
-  !             stddev = sqrt(sum((x-mean(x))**2)/(n-1))
-  !
-  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = stddev(dat, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: dat(:)     1D-array with input numbers
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: stddev     sample standard deviation of all elements in dat
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(dat).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-  !         This is the sample standard deviation. The population standard deviation is:
-  !             popstddev = stddev * sqrt((n-1)/n)
-
-  !     EXAMPLE
-  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
-  !         m   = stddev(vec, mask=(vec >= 0.))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
-
   FUNCTION stddev_dp(dat, mask)
 
     IMPLICIT NONE
@@ -1707,54 +1834,6 @@ CONTAINS
   END FUNCTION stddev_sp
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         skewness
-
-  !     PURPOSE
-  !         Calculates the skewness of a vector, i.e. the third standardised moment:
-  !             skewness = sum(((x-mean(x))/stddev(x))**3)/n
-  !
-  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = skewness(dat, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: dat(:)     1D-array with input numbers
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: skewness    skewness of all elements in dat
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(dat).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-
-  !     EXAMPLE
-  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
-  !         m   = skewness(vec, mask=(vec >= 0.))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
 
   FUNCTION skewness_dp(dat, mask)
 
@@ -1840,56 +1919,6 @@ CONTAINS
   END FUNCTION skewness_sp
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         variance
-
-  !     PURPOSE
-  !         Calculates the sample variance of a vector, i.e. the second moment
-  !             variance = sum((x-mean(x))**2)/(n-1)
-  !
-  !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = variance(dat, mask=mask)
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: dat(:)     1D-array with input numbers
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: variance    sample variance of all elements in dat
-
-  !     INDENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(dat).
-  !                                   If present, only those locations in dat corresponding to the true values in mask are used.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-  !         This is the sample variance. The population variance is:
-  !             var = variance * (n-1)/n
-
-  !     EXAMPLE
-  !         vec = (/ 1., 2, 3., -999., 5., 6. /)
-  !         m   = variance(vec, mask=(vec >= 0.))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-  !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-  !             Cambridge University Press, UK, 1996
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
 
   FUNCTION variance_dp(dat, mask)
 

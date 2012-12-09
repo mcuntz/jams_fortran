@@ -21,7 +21,7 @@ MODULE mo_mcmc
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2012 
+  ! Copyright 2012
 
   USE mo_kind,    only: i4, i8, dp
   USE mo_xor4096, only: xor4096, xor4096g, get_timeseed
@@ -34,18 +34,7 @@ MODULE mo_mcmc
 
   IMPLICIT NONE
 
-  PRIVATE
-
   PUBLIC :: mcmc          ! Sample posterior parameter distribution
-
-  ! Interfaces for single and double precision routines; sort alphabetically
-  INTERFACE mcmc
-     MODULE PROCEDURE mcmc_dp
-  END INTERFACE mcmc
-
-  !-----------------------------------------------------------------------------------------------
-
-CONTAINS
 
   !-----------------------------------------------------------------------------------------------
   !
@@ -55,19 +44,19 @@ CONTAINS
   !
 
   ! PURPOSE
-  !     Sample posterior parameter distribution with Metropolis Algorithm 
+  !     Sample posterior parameter distribution with Metropolis Algorithm
   !
   !     (1) BURN IN PHASE: FIND THE OPTIMAL STEP SIZE
-  !          Purpose: 
+  !          Purpose:
   !            find optimal stepsize for each parameter such that the
   !            acceptance ratio converges to a value around 0.3
   !          Important variables:
   !            burnin_iter           ... length of markov chain performed to calculate acceptance ratio
   !            acceptance ratio      ... ratio between accepted jumps and all trials (LEN)
-  !            acceptance multiplier ... stepsize of a parameter is multiplied with 
+  !            acceptance multiplier ... stepsize of a parameter is multiplied with
   !                                      this value when jump is accepted
   !                                      (initial : 1.01)
-  !            rejection multiplier  ... stepsize of a parameter is multiplied with 
+  !            rejection multiplier  ... stepsize of a parameter is multiplied with
   !                                      this value when jump is rejected
   !                                      (initial : 0.99 and will never be changed)
   !            stepsize              ... a new parameter value is chosen based on a uniform distribution
@@ -75,8 +64,8 @@ CONTAINS
   !                                      (initial : stepsize_i = 1.0 for all i)
   !          Algorithm:
   !            (A) start a new markov chain of length burnin_iter with initial parameter set is the OPTIMAL one
-  !                - select a set of parameters to change 
-  !                  (  accurate: choose 1, 
+  !                - select a set of parameters to change
+  !                  (  accurate: choose 1,
   !                     comput. efficient: chose all,
   !                     moderate accurate & efficient: choose half )
   !                - change parameter(s) based on their stepsize
@@ -91,7 +80,7 @@ CONTAINS
   !                  * rejected step: stepsize_i = stepsize_i * rejection multiplier
   !                - if step is accepted: for all changed parameter(s) change stepsize
   !            (B) calculate acceptance ratio of the Markov Chain
-  !            (C) adjust acceptance multiplier acc_mult and 
+  !            (C) adjust acceptance multiplier acc_mult and
   !                store good ratios in history list
   !                - acceptance ratio < 0.23 --> acc_mult = acc_mult * 0.99
   !                                              delete history list
@@ -99,15 +88,15 @@ CONTAINS
   !                                              delete history list
   !                - 0.23 < acceptance ratio < 0.44
   !                                              add acceptance ratio to history list
-  !            (D) check if already 10 values are stored in history list and 
+  !            (D) check if already 10 values are stored in history list and
   !                if they have converged to a value above 0.3
-  !                ( mean above 0.3 and variance less Sqrt(1/12*0.05**2) = Variance 
+  !                ( mean above 0.3 and variance less Sqrt(1/12*0.05**2) = Variance
   !                  of uniform [acc_ratio +/- 2.5%] )
   !                - if check is positive abort and save stepsizes
   !                  else goto (A)
 
   !      (2) MONTE CARLO MARKOV CHAIN: SAMPLE POSTERIOR DISTRIBUTION OF PARAMETER
-  !          Purpose: 
+  !          Purpose:
   !            use the previous adapted stepsizes and perform ONE monte carlo markov chain
   !            the accepted parameter sets show the posterior distribution of parameters
   !          Important variables:
@@ -116,8 +105,8 @@ CONTAINS
   !                                      pnew_i = pold_i + Unif[-stepsize_i, stepsize_i]
   !                                      use stepsizes of the burn-in (1)
   !          Algorithm:
-  !            (A) select a set of parameters to change 
-  !                  accurate: choose 1, 
+  !            (A) select a set of parameters to change
+  !                  accurate: choose 1,
   !                  comput. efficient: chose all,
   !                  moderate accurate & efficient: choose half )
   !            (B) change parameter(s) based on their stepsize
@@ -140,7 +129,7 @@ CONTAINS
 
   !     INDENT(IN)
   !         real(dp) :: likelihood(x,sigma)          Interface Function which calculates likelihood of given parameter set x
-  !         real(dp) :: stddev_function(x)           Interface Function which approximates the standard deviation of the data 
+  !         real(dp) :: stddev_function(x)           Interface Function which approximates the standard deviation of the data
   !                                                  based on the modeled data using the (best) parameterset x
   !         real(dp) :: para(:)                      Inital parameter set (should be GOOD approximation of best parameter set)
   !         real(dp) :: rangePar(size(para),2)       Min/max range of parameters
@@ -153,9 +142,9 @@ CONTAINS
   !         real(dp), allocatable :: burnin_paras(:,:)    Parameter sets sampled during burn-in part of algorithm
 
   !     INDENT(IN), OPTIONAL
-  !         integer(i8) :: seeds_in(3)               User seed to initialise the random number generator 
+  !         integer(i8) :: seeds_in(3)               User seed to initialise the random number generator
   !                                                  (default: none --> initialized with timeseed)
-  !         logical     :: printflag_in              Print of output on command line 
+  !         logical     :: printflag_in              Print of output on command line
   !                                                  (default: .False.)
   !         logical     :: maskpara_in(size(para))   Parameter will be sampled (.True.) or not (.False.)
   !                                                  (default: .True.)
@@ -168,7 +157,7 @@ CONTAINS
   !                                                  (default: .false.)
   !         integer(i4) :: ParaSelectMode_in         How many parameters will be changed at once?
   !                                                  - half of the parameter  --> 1_i4
-  !                                                  - only one parameter     --> 2_i4 
+  !                                                  - only one parameter     --> 2_i4
   !                                                  - all parameter          --> 3_i4
   !                                                  (default: 2_i4)
   !         integer(i4) :: iter_burnin_in            Length of Markov chains of initial burn-in part
@@ -177,7 +166,7 @@ CONTAINS
   !                                                  (default: 1000 * count(maskpara) )
   !         integer(i4) :: chains_in                 number of parallel mcmc chains
   !                                                  (default: 5_i4)
-  !         real(dp), DIMENSION(size(para,1)) :: 
+  !         real(dp), DIMENSION(size(para,1)) ::
   !                        stepsize_in               stepsize for each parameter
   !                                                  if given burn-in is discarded
   !                                                  (default: none)
@@ -190,15 +179,15 @@ CONTAINS
 
   !     RESTRICTIONS
   !         likelihood has to be defined as a function interface
-  !         -> see also example in test directory    
+  !         -> see also example in test directory
 
   !     EXAMPLE
-  !    
+  !
   !        function likelihood_dp(paraset)
   !           REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
   !           REAL(DP)                            :: likelihood_dp
   !           REAL(DP)                            :: sigma
-  !           sigma  = 0.1_dp     ! variance of your datapoints!! 
+  !           sigma  = 0.1_dp     ! variance of your datapoints!!
   !           likelihood_dp = sum( (model(paraset)-data()) * (model(paraset)-data()) ) / sigma
   !           likelihood_dp = exp(-0.5_dp * likelihood_dp)
   !         end function likelihood_dp
@@ -216,8 +205,8 @@ CONTAINS
   !         Gelman et. al (1997)
   !             Efficient Metropolis Jumping Rules, Baysian Statistics 5, pp. 599-607
   !         Tautenhahn et. al (2012)
-  !             Beyond distance-invariant survival in inverse recruitment modeling: 
-  !             A case study in Siberian Pinus sylvestris forests, Ecological Modelling, 233, 
+  !             Beyond distance-invariant survival in inverse recruitment modeling:
+  !             A case study in Siberian Pinus sylvestris forests, Ecological Modelling, 233,
   !             90-103. doi:10.1016/j.ecolmodel.2012.03.009.
 
   !     HISTORY
@@ -233,12 +222,24 @@ CONTAINS
   !                                             OpenMP for chains of MCMC
   !                                             optional file for temporal output
   !                              Nov. 2012    : Temporary file writing as NetCDF
+  INTERFACE mcmc
+     MODULE PROCEDURE mcmc_dp
+  END INTERFACE mcmc
 
+  !-----------------------------------------------------------------------------------------------
+
+  PRIVATE
+
+  !-----------------------------------------------------------------------------------------------
+
+CONTAINS
+
+  !-----------------------------------------------------------------------------------------------
 
   SUBROUTINE mcmc_dp(likelihood, stddev_function, para, rangePar,     &   ! obligatory IN
        mcmc_paras, burnin_paras,                                      &   ! obligatory OUT
-       seeds_in, printflag_in, maskpara_in,                           &   ! optional IN 
-       tmp_file,                                                      &   ! optional IN : filename for temporal output of MCMC parasets 
+       seeds_in, printflag_in, maskpara_in,                           &   ! optional IN
+       tmp_file,                                                      &   ! optional IN : filename for temporal output of MCMC parasets
        loglike_in,                                                    &   ! optional IN : true if loglikelihood is given
        ParaSelectMode_in,                                             &   ! optional IN : (=1) half, (=2) one, (=3) all
        iter_burnin_in,                                                &   ! optional IN : markov length of (1) burn-in
@@ -260,7 +261,7 @@ CONTAINS
 
     INTERFACE
        FUNCTION stddev_function(paraset)
-         ! approximates the standard deviation of the data based on 
+         ! approximates the standard deviation of the data based on
          ! the modeled data using the (best) parameterset
          use mo_kind
          REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
@@ -271,37 +272,37 @@ CONTAINS
     REAL(DP),    DIMENSION(:,:), INTENT(IN)    :: rangePar           ! range for each parameter
     REAL(DP),    DIMENSION(:),   INTENT(IN)    :: para               ! initial parameter i
     INTEGER(I8), OPTIONAL,       INTENT(IN)    :: seeds_in(:,:)      ! Seeds of random numbers: dim1=chains, dim2=3
-                                                                     ! (DEFAULT: Get_timeseed)
-    LOGICAL,     OPTIONAL,       INTENT(IN)    :: printflag_in       ! If command line output is written (.true.) 
-                                                                     ! (DEFAULT: .false.)
+    ! (DEFAULT: Get_timeseed)
+    LOGICAL,     OPTIONAL,       INTENT(IN)    :: printflag_in       ! If command line output is written (.true.)
+    ! (DEFAULT: .false.)
     LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)    :: maskpara_in        ! true if parameter will be optimized
-                                                                     ! false if parameter is discarded in optimization
-                                                                     ! DEFAULT = .true.
+         INTENT(IN)    :: maskpara_in        ! true if parameter will be optimized
+    ! false if parameter is discarded in optimization
+    ! DEFAULT = .true.
     LOGICAL,     OPTIONAL,       INTENT(IN)    :: loglike_in         ! true if loglikelihood is given instead of likelihood
-                                                                     ! DEFAULT: .false.
+    ! DEFAULT: .false.
     INTEGER(I4), OPTIONAL,       INTENT(IN)    :: ParaSelectMode_in  ! how many parameters changed per iteration:
-                                                                     !   1: half of the parameters
-                                                                     !   2: only one (DEFAULT)
-                                                                     !   3: all
+    !   1: half of the parameters
+    !   2: only one (DEFAULT)
+    !   3: all
     INTEGER(I4), OPTIONAL,       INTENT(IN)    :: iter_burnin_in       ! # iterations before checking ac_ratio
-                                                                     ! DEFAULT= MIN(250, 20_i4*n)
+    ! DEFAULT= MIN(250, 20_i4*n)
     INTEGER(I4), OPTIONAL,       INTENT(IN)    :: iter_mcmc_in       ! # iterations per chain for posterior sampling
-                                                                     ! DEFAULT= 1000_i4*n
+    ! DEFAULT= 1000_i4*n
     INTEGER(I4), OPTIONAL,       INTENT(IN)    :: chains_in          ! number of parallel mcmc chains
-                                                                     ! DEFAULT= 5_i4
+    ! DEFAULT= 5_i4
     REAL(DP),    OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)    :: stepsize_in        ! stepsize for each parameter
-                                                                     ! if given burn-in is discarded
+         INTENT(IN)    :: stepsize_in        ! stepsize for each parameter
+    ! if given burn-in is discarded
     CHARACTER(len=*), OPTIONAL,  INTENT(IN)    :: tmp_file           ! filename for temporal data saving:
-                                                                     ! every iter_mcmc_in iterations parameter sets are appended to this file
-                                                                     ! the number of the chain will be prepended to filename
-                                                                     ! DEFAULT= no file writing
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT)    :: mcmc_paras   
-                                                                     ! array to save para values of MCMC runs, 
-                                                                     ! dim1=sets of all chains, dim2=paras
-    REAL(DP), DIMENSION(:,:),   ALLOCATABLE, INTENT(OUT)  :: burnin_paras 
-                                                                     ! array to save para values of Burn in run
+    ! every iter_mcmc_in iterations parameter sets are appended to this file
+    ! the number of the chain will be prepended to filename
+    ! DEFAULT= no file writing
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT)    :: mcmc_paras
+    ! array to save para values of MCMC runs,
+    ! dim1=sets of all chains, dim2=paras
+    REAL(DP), DIMENSION(:,:),   ALLOCATABLE, INTENT(OUT)  :: burnin_paras
+    ! array to save para values of Burn in run
 
 
     ! local variables
@@ -317,7 +318,7 @@ CONTAINS
     integer(I8), dimension(:),   allocatable  :: iin1, iin2, iin3  ! optional arguments for restarting RN streams: dim1=chains
     integer(I8), dimension(:),   allocatable  :: win1, win2, win3  ! optional arguments for restarting RN streams: dim1=chains
     integer(I8), dimension(:,:), allocatable  :: xin1, xin2,xin3   ! optional arguments for restarting RN streams:
-                                                                   !     dim1=chains, dim2=0:63
+    !     dim1=chains, dim2=0:63
     integer(I8), dimension(:),   allocatable  :: RNflag
     real(DP),    dimension(:),   allocatable  :: RNy2
 
@@ -329,11 +330,11 @@ CONTAINS
     character(200)                                 :: outputfile
 
     ! FOR BURN-IN AND MCMC
-    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE        :: mcmc_paras_3d     ! array to save para values of MCMC runs, 
-                                                                        ! dim1=sets, dim2=paras, dim3=chain
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE        :: mcmc_paras_3d     ! array to save para values of MCMC runs,
+    ! dim1=sets, dim2=paras, dim3=chain
     integer(I4)                                    :: i
     integer(I4), dimension(:), allocatable         :: Ipos, Ineg
-    logical                                        :: iStop 
+    logical                                        :: iStop
     INTEGER(I4)                                    :: ParaSelectMode    ! how many parameters are changed per jump
     INTEGER(I4)                                    :: iter_burnin       ! number fo iterations before checking ac_ratio
     INTEGER(I4)                                    :: iter_mcmc         ! number fo iterations for posterior sampling
@@ -353,9 +354,9 @@ CONTAINS
     REAL(DP)                                       :: likelinew         ! likelihood of new parameter set
     REAL(DP)                                       :: likelibest        ! likelihood of best parameter set overall
     INTEGER(I4)                                    :: markov            ! counter for markov chain
-    REAL(DP), DIMENSION(:,:), ALLOCATABLE          :: burnin_paras_part ! accepted parameter sets of one MC in burn-in 
+    REAL(DP), DIMENSION(:,:), ALLOCATABLE          :: burnin_paras_part ! accepted parameter sets of one MC in burn-in
     REAL(DP)                                       :: oddsRatio         ! ratio of likelihoods = likelinew/likeliold
-    REAL(DP), dimension(:), allocatable            :: accRatio          ! acceptance ratio = (pos/neg) accepted/iter_burnin 
+    REAL(DP), dimension(:), allocatable            :: accRatio          ! acceptance ratio = (pos/neg) accepted/iter_burnin
     REAL(DP)                                       :: accratio_stddev   ! stddev of accRatios in history
     REAL(DP), DIMENSION(:), ALLOCATABLE            :: history_accratio  ! history of 'good' acceptance ratios
     INTEGER(I4)                                    :: accratio_n        ! number of 'good' acceptance ratios
@@ -372,7 +373,7 @@ CONTAINS
     LOGICAL                               :: converged         ! if MCMC already converged
 
     ! for OMP
-!$  integer(i4)                           :: n_threads
+    !$  integer(i4)                           :: n_threads
 
     ! CHECKING OPTIONALS
 
@@ -422,7 +423,7 @@ CONTAINS
     endif
 
     ! how many iterations ('jumps') are performed in MCMC
-    ! iter_mcmc_in is handled later properly (after acceptance ratio of burn_in is known) 
+    ! iter_mcmc_in is handled later properly (after acceptance ratio of burn_in is known)
     if (present(iter_mcmc_in)) then
        if (iter_mcmc_in .le. 0_i4)  then
           stop 'Input argument iter_mcmc must be greater than  0!'
@@ -452,13 +453,13 @@ CONTAINS
        printflag = .false.
     endif
 
-!$  write(*,*) '--------------------------------------------------'
-!$  write(*,*) ' This program is parallel.'
-!$OMP parallel
-!$    n_threads = OMP_GET_NUM_THREADS()
-!$OMP end parallel
-!$  write(*,*) ' ',chains,' MCMC chains will run in ',n_threads,' threads'
-!$  write(*,*) '--------------------------------------------------'
+    !$  write(*,*) '--------------------------------------------------'
+    !$  write(*,*) ' This program is parallel.'
+    !$OMP parallel
+    !$    n_threads = OMP_GET_NUM_THREADS()
+    !$OMP end parallel
+    !$  write(*,*) ' ',chains,' MCMC chains will run in ',n_threads,' threads'
+    !$  write(*,*) '--------------------------------------------------'
 
     if (printflag) then
        print*, 'Following parameters will be sampled with MCMC: ',truepara
@@ -487,13 +488,13 @@ CONTAINS
        call xor4096(seeds(chain,1), RN1, iin=iin1(chain), win=win1(chain), xin=xin1(chain,0:63))
        call xor4096(seeds(chain,2), RN2, iin=iin2(chain), win=win2(chain), xin=xin2(chain,0:63))
        call xor4096g(seeds(chain,3), RN3, iin=iin3(chain), win=win3(chain), xin=xin3(chain,0:63), &
-                     FlagIn=RNflag(chain),y2In=RNy2(chain))
+            FlagIn=RNflag(chain),y2In=RNy2(chain))
     end do
     seeds = 0_i8
-   
+
     parabest   = para
     stddev_data = stddev_function(parabest)
-    likelibest = likelihood(parabest,stddev_data) 
+    likelibest = likelihood(parabest,stddev_data)
 
     !----------------------------------------------------------------------
     ! (1) BURN IN
@@ -518,7 +519,7 @@ CONTAINS
        ! -------------------------------------------------------------------------------------
        ! restarts if a better parameter set was found in between
        ! -------------------------------------------------------------------------------------
-       betterParaFound: do while (parabestChanged)    
+       betterParaFound: do while (parabestChanged)
 
           if (allocated(burnin_paras))     deallocate(burnin_paras)
           if (allocated(history_accRatio)) deallocate(history_accRatio)
@@ -530,7 +531,7 @@ CONTAINS
           accMult    = 1.01_dp
           rejMult    = 0.99_dp
           stddev_data = stddev_function(parabest)
-          likelibest = likelihood(parabest,stddev_data) 
+          likelibest = likelihood(parabest,stddev_data)
 
           if (printflag) then
              print*, ' '
@@ -540,17 +541,17 @@ CONTAINS
              print*, '   ssq        = ',-2.0_dp * stddev_data**2 * likelibest
              print*, ' '
           end if
-          
+
 
           ! ----------------------------------------------------------------------------------
           ! repeats until convergence of acceptance ratio or better parameter set was found
           ! ----------------------------------------------------------------------------------
-          convergedBURNIN: do while ( (.not. iStop) .and. (.not. parabestChanged) ) 
+          convergedBURNIN: do while ( (.not. iStop) .and. (.not. parabestChanged) )
 
              Ipos = 0_i4   ! positive accepted
              Ineg = 0_i4   ! negative accepted
              paraold   = parabest
-             likeliold = likelihood(paraold,stddev_data) 
+             likeliold = likelihood(paraold,stddev_data)
 
              ! -------------------------------------------------------------------------------
              ! do a short-cut MCMC
@@ -702,9 +703,9 @@ CONTAINS
     end if
     Ipos(:) = 0_i4   ! positive accepted
     Ineg(:) = 0_i4   ! negative accepted
-    
+
     ! if all parameters converged: Sqrt(R_i) < 1.1 (see Gelman et. al: Baysian Data Analysis, p. 331ff
-    converged = .False.       
+    converged = .False.
 
     convergedMCMC: do while (.not. converged)
 
@@ -725,9 +726,9 @@ CONTAINS
           deallocate(tmp)
        end if
 
-!$OMP parallel default(shared) &
-!$OMP private(chain, paraold, paranew, likeliold, likelinew, oddsSwitch1, oddsSwitch2, RN1, oddsRatio, ChangePara)
-!$OMP do 
+       !$OMP parallel default(shared) &
+       !$OMP private(chain, paraold, paranew, likeliold, likelinew, oddsSwitch1, oddsSwitch2, RN1, oddsRatio, ChangePara)
+       !$OMP do
        parallelchain: do chain=1, chains
 
           if (Ipos(chain)+Ineg(chain) .eq. 0_i4) then
@@ -735,7 +736,7 @@ CONTAINS
           else
              paraold = mcmc_paras_3d(Ipos(chain)+Ineg(chain),:,chain)
           end if
-          likeliold = likelihood(paraold,stddev_data) 
+          likeliold = likelihood(paraold,stddev_data)
 
           markovchainMCMC: do
 
@@ -823,8 +824,8 @@ CONTAINS
           end do markovchainMCMC
 
        end do parallelchain
-!$OMP end do
-!$OMP end parallel
+       !$OMP end do
+       !$OMP end parallel
 
        ! write parameter sets to temporal file
        if (present(tmp_file)) then
@@ -876,22 +877,22 @@ CONTAINS
           ! Between chain variances
           do chain=1, chains
              vDotJ(chain) = 1.0_dp / real(n_end-n_start+1_i4,dp) * &
-                            sum(mcmc_paras_3d(n_start:n_end,truepara(iPar),chain))
+                  sum(mcmc_paras_3d(n_start:n_end,truepara(iPar),chain))
           end do
           vDotDot = 1.0_dp / real(chains,dp) * sum(vDotJ)
           B = real(n_end -n_start + 1_i4,dp) / real(chains-1_i4,dp) * &
-              sum((vDotJ - vDotDot)*(vDotJ - vDotDot))
+               sum((vDotJ - vDotDot)*(vDotJ - vDotDot))
 
           ! Within chain variances
           do chain=1, chains
              s2(chain) = 1.0_dp / real(n_end-n_start,dp) * &
-                         sum((mcmc_paras_3d(n_start:n_end,truepara(iPar),chain)-vDotJ(chain))**2)
+                  sum((mcmc_paras_3d(n_start:n_end,truepara(iPar),chain)-vDotJ(chain))**2)
           end do
           W = 1.0_dp / real(chains,dp) * Sum(s2)
 
           ! ratio sqrtR
           sqrtR(truepara(iPar)) = real(n_end-n_start,dp) / real(n_end-n_start+1_i4,dp) * W + &
-                                  1.0_dp                 / real(n_end-n_start+1_i4,dp) * B
+               1.0_dp                 / real(n_end-n_start+1_i4,dp) * B
           sqrtR(truepara(iPar)) = sqrt( sqrtR(truepara(iPar)) / W )
 
        end do
@@ -899,13 +900,13 @@ CONTAINS
           do i=1, size(para)
              if ( sqrtR(i) .gt. 1.1_dp ) then
                 print*, '   sqrtR para #',i,' : ', sqrtR(i),'  <-- FAILED'
-             else 
+             else
                 print*, '   sqrtR para #',i,' : ', sqrtR(i)
              end if
           end do
        end if
        if ( all(sqrtR .lt. 1.1_dp) ) then
-          converged = .true. 
+          converged = .true.
           if ( printflag ) then
              print*, '   --> converged (all less than 1.1)'
              print*, ' '
@@ -933,7 +934,7 @@ CONTAINS
        mcmc_paras( (chain-1_i4)*size(mcmc_paras_3d,1)+1_i4 : chain*size(mcmc_paras_3d,1),:) = mcmc_paras_3d(:,:,chain)
     end do
 
-    RETURN 
+    RETURN
   END SUBROUTINE mcmc_dp
 
   !***************************************************
@@ -954,7 +955,7 @@ CONTAINS
     !
     inbound2 = .true.
     parGen_dp = old + (rn*2.0_dp*dMax - dMax)
-    
+
     if (parGen_dp < oMin) then
        parGen_dp = oMin
        inbound2 = .false.
@@ -992,10 +993,10 @@ CONTAINS
     !(2) scale RN = [-dMax, dMax]
     !RN_scale = (RN * 2.0_dp * dMax) - dMax
     !(2) scale RN distrib. N(0, dMax)
-    RN_scale = (RN * dMax) 
+    RN_scale = (RN * dMax)
 
     !(3) generate new parameter value + check inbound
-    parGenNorm_dp = old_scaled + RN_scale 
+    parGenNorm_dp = old_scaled + RN_scale
     !    Parameter is bounded between Max and Min.
     if (parGenNorm_dp < 0.0_dp) then
        parGenNorm_dp = 0.0_dp
@@ -1008,7 +1009,7 @@ CONTAINS
     if (present(inbound)) inbound = inbound2
 
     !(4) convert back to original range
-    parGenNorm_dp = parGenNorm_dp * ( oMax - oMin) + oMin 
+    parGenNorm_dp = parGenNorm_dp * ( oMax - oMin) + oMin
 
   end function parGenNorm_dp
 
@@ -1029,7 +1030,7 @@ CONTAINS
     logical, dimension(size(paraold)),  intent(out)   :: ChangePara
 
     ! local variables
-    REAL(DP)       :: RN2, RN3     
+    REAL(DP)       :: RN2, RN3
     logical        :: inbound
     integer(i4)    :: i, iPar
 

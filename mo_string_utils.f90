@@ -25,83 +25,14 @@ MODULE mo_string_utils
 
   IMPLICIT NONE
 
-  PRIVATE
-
 #ifndef ABSOFT
   PUBLIC :: DIVIDE_STRING ! split string in substring with the help of delimiter
 #endif
   PUBLIC :: nonull        ! Check if string is still NULL
   PUBLIC :: num2str       ! Convert a number to a string
   PUBLIC :: separator     ! Format string: '-----...-----'
-  PUBLIC :: tolower       ! Conversion   : 'ABCXYZ' -> 'abcxyz'   
+  PUBLIC :: tolower       ! Conversion   : 'ABCXYZ' -> 'abcxyz'
   PUBLIC :: toupper       ! Conversion   : 'abcxyz' -> 'ABCXYZ'
-
-  INTERFACE num2str
-     MODULE PROCEDURE i42str, i82str, sp2str, dp2str, log2str
-  END INTERFACE
-
-  CHARACTER(len=*), PARAMETER :: separator = repeat('-',70)
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
-
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         nonull
-
-  !     PURPOSE
-  !         Checks if string was already used, i.e. does not contain NULL character anymore.
-
-  !     CALLING SEQUENCE
-  !         used = nonull(str)
-  
-  !     INDENT(IN)
-  !         character(len=*) :: str    String
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         logical :: used    .true.: string was already set; .false.: string still in initialised state
-
-  !     INDENT(IN), OPTIONAL
-  !         None
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         None
-
-  !     EXAMPLE
-  !         if (nonull(str)) write(*,*) trim(str)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         None
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Jan 2012
-
-  FUNCTION nonull(str)
-
-    IMPLICIT NONE
-
-    CHARACTER(LEN=*), INTENT(in) :: str
-    LOGICAL                      :: nonull
-
-    if (scan(str, achar(0)) == 0) then
-       nonull = .true.
-    else
-       nonull = .false.
-    endif
-
-  END FUNCTION nonull
 
   ! ------------------------------------------------------------------
 
@@ -113,7 +44,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         str = num2str(num,form=form)
-  
+
   !     INDENT(IN)
   !         integer(i4/i8)/real(sp/dp)/logical :: num    Number or logical
 
@@ -162,6 +93,80 @@ CONTAINS
 
   !     HISTORY
   !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  INTERFACE num2str
+     MODULE PROCEDURE i42str, i82str, sp2str, dp2str, log2str
+  END INTERFACE num2str
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
+
+  CHARACTER(len=*), PARAMETER :: separator = repeat('-',70)
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         nonull
+
+  !     PURPOSE
+  !         Checks if string was already used, i.e. does not contain NULL character anymore.
+
+  !     CALLING SEQUENCE
+  !         used = nonull(str)
+
+  !     INDENT(IN)
+  !         character(len=*) :: str    String
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         logical :: used    .true.: string was already set; .false.: string still in initialised state
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         if (nonull(str)) write(*,*) trim(str)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Jan 2012
+
+  FUNCTION nonull(str)
+
+    IMPLICIT NONE
+
+    CHARACTER(LEN=*), INTENT(in) :: str
+    LOGICAL                      :: nonull
+
+    if (scan(str, achar(0)) == 0) then
+       nonull = .true.
+    else
+       nonull = .false.
+    endif
+
+  END FUNCTION nonull
+
+  ! ------------------------------------------------------------------
 
   PURE FUNCTION i42str(nn,form)
     ! returns integer nn as a string (often needed in printing messages)
@@ -257,7 +262,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         low = tolower(upper)
-  
+
   !     INDENT(IN)
   !         character(len=*) :: upper    String
 
@@ -301,12 +306,12 @@ CONTAINS
     INTEGER ,PARAMETER :: idel = ICHAR('a')-ICHAR('A')
 
     DO i=1,LEN_TRIM(upper)
-      IF (ICHAR(upper(i:i)) >= ICHAR('A') .AND. &
-          ICHAR(upper(i:i)) <= ICHAR('Z')) THEN
-        tolower(i:i) = CHAR( ICHAR(upper(i:i)) + idel )
-      ELSE
-        tolower(i:i) = upper(i:i)
-      END IF
+       IF (ICHAR(upper(i:i)) >= ICHAR('A') .AND. &
+            ICHAR(upper(i:i)) <= ICHAR('Z')) THEN
+          tolower(i:i) = CHAR( ICHAR(upper(i:i)) + idel )
+       ELSE
+          tolower(i:i) = upper(i:i)
+       END IF
     END DO
 
   END FUNCTION tolower
@@ -321,7 +326,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         up = toupper(lower)
-  
+
   !     INDENT(IN)
   !         character(len=*) :: lower    String
 
@@ -365,12 +370,12 @@ CONTAINS
     INTEGER, PARAMETER :: idel = ICHAR('A')-ICHAR('a')
 
     DO i=1,LEN_TRIM(lower)
-      IF (ICHAR(lower(i:i)) >= ICHAR('a') .AND. &
-          ICHAR(lower(i:i)) <= ICHAR('z')) THEN
-        toupper(i:i) = CHAR( ICHAR(lower(i:i)) + idel )
-      ELSE
-        toupper(i:i) = lower(i:i)
-      END IF
+       IF (ICHAR(lower(i:i)) >= ICHAR('a') .AND. &
+            ICHAR(lower(i:i)) <= ICHAR('z')) THEN
+          toupper(i:i) = CHAR( ICHAR(lower(i:i)) + idel )
+       ELSE
+          toupper(i:i) = lower(i:i)
+       END IF
     END DO
 
   END FUNCTION toupper
@@ -386,7 +391,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         DIVIDE_STRING(string, delim, strArr(:))
-  
+
   !     INDENT(IN)
   !         CHARACTER(len=*), INTENT(IN)        :: string     - string to be divided
   !         CHARACTER(len=*), INTENT(IN)        :: delim      - delimiter specifying places for division
@@ -411,7 +416,7 @@ CONTAINS
   !     RESTRICTIONS
   !         only character types allowed
   !         output array should be allocateable array, which is unallocated handed to the subroutine
-  !             allocation is done in in devide_string 
+  !             allocation is done in in devide_string
 
   !     EXAMPLE
   !        DIVIDE_STRING('I want to test this routine!', ' ', strArr(:))
@@ -430,10 +435,10 @@ CONTAINS
     CHARACTER(len=*)             , INTENT(IN)        :: string
     CHARACTER(len=*)             , INTENT(IN)        :: delim
     CHARACTER(len=*), DIMENSION(:), ALLOCATABLE, &
-                                   INTENT(OUT)      :: strArr
+         INTENT(OUT)      :: strArr
     !
     CHARACTER(256)                                   :: stringDummy   ! string in fisrt place but cutted in pieces
-    CHARACTER(256), DIMENSION(:) , ALLOCATABLE       :: strDummyArr   ! Dummy arr until number of substrings is known 
+    CHARACTER(256), DIMENSION(:) , ALLOCATABLE       :: strDummyArr   ! Dummy arr until number of substrings is known
     INTEGER(i4)                                      :: pos           ! position of dilimiter
     INTEGER(i4)                                      :: nosubstr      ! number of substrings in string
     !

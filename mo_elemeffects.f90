@@ -4,41 +4,30 @@ MODULE mo_elemeffects
   ! using parameter sets sampled by the Morris method.
 
   ! Written    Juliane Mai,   Mar 2012
-  ! Modified 
+  ! Modified
 
   ! License
   ! -------
   ! This file is part of the UFZ Fortran library.
-  
+
   ! The UFZ Fortran library is free software: you can redistribute it and/or modify
   ! it under the terms of the GNU Lesser General Public License as published by
   ! the Free Software Foundation, either version 3 of the License, or
   ! (at your option) any later version.
-  
+
   ! The UFZ Fortran library is distributed in the hope that it will be useful,
   ! but WITHOUT ANY WARRANTY; without even the implied warranty of
   ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ! GNU Lesser General Public License for more details.
-  
+
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
-  
+
   USE mo_kind,    ONLY: i4, sp, dp
 
   IMPLICIT NONE
 
-  PRIVATE
-
   PUBLIC :: elemeffects            ! Elementary effects of model parameters
-
-  INTERFACE elemeffects
-     MODULE PROCEDURE elemeffects_0d_dp, elemeffects_0d_sp, &
-                      elemeffects_1d_dp, elemeffects_1d_sp
-  END INTERFACE elemeffects
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
 
   ! ------------------------------------------------------------------
 
@@ -46,13 +35,13 @@ CONTAINS
   !         elemeffects
 
   !     PURPOSE
-  !         Determine the Elementary Effects of model parameters using parameter sets sampled by 
+  !         Determine the Elementary Effects of model parameters using parameter sets sampled by
   !         the Morris method.
 
   !     CALLING SEQUENCE
   !         call elemeffects(modeloutput,para,changedpara,elemeffect,counter, &
   !                          modelstatus_in=modelstatus)
-  
+
   !     INDENT(IN)
   !         REAL(DP),    DIMENSION(:)/(:,:)     :: modeloutput      ! array of output the model (1D or 2D)
   !                                                                 ! each row contains output of a parameter set
@@ -62,20 +51,20 @@ CONTAINS
   !                                                                 ! size(para,1) number of sets
   !                                                                 ! size(para,2) number of parameters
   !        INTEGER(I4), DIMENSION(size(para,1)) :: changedpara      ! vector of parameter changed
-                                                                    ! between parameter set i and i+1 
+  ! between parameter set i and i+1
 
   !     INDENT(INOUT)
   !         None
 
   !     INDENT(OUT)
-  !         REAL(DP),    DIMENSION(size(para,2)) :: elemeffect      ! elementary effect per parameter 
-  !         INTEGER(I4), DIMENSION(size(para,2)) :: counter         ! ith elementary effect is based on counter(i) 
-  !                                                                 ! model outputs   
+  !         REAL(DP),    DIMENSION(size(para,2)) :: elemeffect      ! elementary effect per parameter
+  !         INTEGER(I4), DIMENSION(size(para,2)) :: counter         ! ith elementary effect is based on counter(i)
+  !                                                                 ! model outputs
 
   !     INDENT(IN), OPTIONAL
-  !         LOGICAL,     DIMENSION(:)            :: modelstatus_in  ! array of status of the model, i.e. if parameter set 
+  !         LOGICAL,     DIMENSION(:)            :: modelstatus_in  ! array of status of the model, i.e. if parameter set
   !                                                                 ! leads to valid model output
-                                                                    ! DEFAULT: .true. (parameter set valid)
+  ! DEFAULT: .true. (parameter set valid)
 
   !     INDENT(INOUT), OPTIONAL
   !         None
@@ -96,48 +85,62 @@ CONTAINS
   !         changedpara = (/ 1, 2, 0 /)
   !         modeloutput = (/ 3.2, 4.0, 0.8 /)
   !         call elemeffects(modeloutput,para,changedpara,elemeffect,counter)
-  !         
+  !
   !         see also test/test_mo_elemeffects for detailled example
 
   !     LITERATURE
-  !         Morris, M. D., 1991. 
+  !         Morris, M. D., 1991.
   !                Factorial sampling plans for preliminary computational experiments.
-  !                Technometrics 33:161–174.
-  !         Saltelli, A., M. Ratto, T. Andres, F. Campolongo, J. Cariboni, D. Gatelli, M. Saisana, and S. Tarantola, 2008. 
-  !                Global Sensitivity Analysis. The Primer. 
+  !                Technometrics 33:161-174.
+  !         Saltelli, A., M. Ratto, T. Andres, F. Campolongo, J. Cariboni, D. Gatelli, M. Saisana, and S. Tarantola, 2008.
+  !                Global Sensitivity Analysis. The Primer.
   !                John Wiley & Sons Ltd.
-  !         Campolongo, F., J. Cariboni, and A. Saltelli, 2007. 
-  !                An effective screening design for sensitivity analysis of large models. 
-  !                Environmental Modelling & Software 22:1509 – 1518.
+  !         Campolongo, F., J. Cariboni, and A. Saltelli, 2007.
+  !                An effective screening design for sensitivity analysis of large models.
+  !                Environmental Modelling & Software 22:1509-1518.
 
   !     HISTORY
   !         Written,  Juliane Mai, March 2012
+  INTERFACE elemeffects
+     MODULE PROCEDURE elemeffects_0d_dp, elemeffects_0d_sp, &
+          elemeffects_1d_dp, elemeffects_1d_sp
+  END INTERFACE elemeffects
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
+
+  ! ------------------------------------------------------------------
 
   SUBROUTINE elemeffects_0d_dp(modeloutput_0d,para,changedpara,elemeffect,counter,modelstatus_in)
 
     IMPLICIT NONE
 
     REAL(DP),    DIMENSION(:),            INTENT(IN)    :: modeloutput_0d
-                                                                 ! vector of output the model
-                                                                 ! generated with certain parameters 
+    ! vector of output the model
+    ! generated with certain parameters
     REAL(DP),    DIMENSION(:,:),          INTENT(IN)    :: para  ! matrix of parameters to test
-                                                                 ! parameter sets have to be a 
-                                                                 ! morris sequence
-                                                                 ! values >= 0.0 and <= 1.0
-                                                                 ! size(para,1) number of sets
-                                                                 ! size(para,2) number of parameters
-    INTEGER(I4), DIMENSION(size(para,1)), INTENT(IN)    :: changedpara  
-                                                                 ! vector of parameter changed
-                                                                 ! between parameter set i and i+1 
-    REAL(DP),    DIMENSION(size(para,2)), INTENT(OUT)   :: elemeffect  
-                                                                 ! elementary effect of each parameter     
-    INTEGER(I4), DIMENSION(size(para,2)), INTENT(OUT)   :: counter  
-                                                                 ! ith elementary effect is 
-                                                                 ! based on counter(i) values  
+    ! parameter sets have to be a
+    ! morris sequence
+    ! values >= 0.0 and <= 1.0
+    ! size(para,1) number of sets
+    ! size(para,2) number of parameters
+    INTEGER(I4), DIMENSION(size(para,1)), INTENT(IN)    :: changedpara
+    ! vector of parameter changed
+    ! between parameter set i and i+1
+    REAL(DP),    DIMENSION(size(para,2)), INTENT(OUT)   :: elemeffect
+    ! elementary effect of each parameter
+    INTEGER(I4), DIMENSION(size(para,2)), INTENT(OUT)   :: counter
+    ! ith elementary effect is
+    ! based on counter(i) values
     LOGICAL,     DIMENSION(:), OPTIONAL,  INTENT(IN)    :: modelstatus_in
-                                                                 ! vector of status of the model
-                                                                 ! .true. if parameter set was valid
-                                                                 
+    ! vector of status of the model
+    ! .true. if parameter set was valid
+
     ! local variables
     INTEGER(I4)                                   :: sets            ! Number of parameter sets
     INTEGER(I4)                                   :: i, valid
@@ -146,13 +149,13 @@ CONTAINS
     sets = size(para,1)
     elemeffect = 0.0_dp
     counter    = 0_i4
-    
+
     if (present(modelstatus_in)) then
        modelstatus = modelstatus_in
     else
        modelstatus = .true.
     end if
-    
+
     valid = 0
     do i=1, sets
        ! only within a trajectory
@@ -160,11 +163,11 @@ CONTAINS
           ! determine model value
           if ( modelstatus(i) .and. modelstatus(i+1) &
                .and. (abs(para(i+1,changedpara(i))-para(i,changedpara(i))) .gt. tiny(0.0_dp)) ) then
-             elemeffect(changedpara(i)) = elemeffect(changedpara(i))                                 & 
-                                          + abs(                                                     &
-                                                  (modeloutput_0d(i+1)-modeloutput_0d(i))/           &
-                                                  (para(i+1,changedpara(i))-para(i,changedpara(i)))  &
-                                               )
+             elemeffect(changedpara(i)) = elemeffect(changedpara(i))                                 &
+                  + abs(                                                     &
+                  (modeloutput_0d(i+1)-modeloutput_0d(i))/           &
+                  (para(i+1,changedpara(i))-para(i,changedpara(i)))  &
+                  )
              counter(changedpara(i)) = counter(changedpara(i)) + 1_i4
           end if
        end if
@@ -173,7 +176,7 @@ CONTAINS
           valid = valid + 1_i4
        end if
     end do
-    
+
     elemeffect(:) = elemeffect(:)/max(real(counter(:),dp), 1.0_dp)
 
   END SUBROUTINE elemeffects_0d_dp
@@ -183,26 +186,26 @@ CONTAINS
     IMPLICIT NONE
 
     REAL(SP),    DIMENSION(:),            INTENT(IN)    :: modeloutput_0d
-                                                                 ! vector of output the model
-                                                                 ! generated with certain parameters 
+    ! vector of output the model
+    ! generated with certain parameters
     REAL(SP),    DIMENSION(:,:),          INTENT(IN)    :: para  ! matrix of parameters to test
-                                                                 ! parameter sets have to be a 
-                                                                 ! morris sequence
-                                                                 ! values >= 0.0 and <= 1.0
-                                                                 ! size(para,1) number of sets
-                                                                 ! size(para,2) number of parameters
-    INTEGER(I4), DIMENSION(size(para,1)), INTENT(IN)    :: changedpara  
-                                                                 ! vector of parameter changed
-                                                                 ! between parameter set i and i+1 
-    REAL(SP),    DIMENSION(size(para,2)), INTENT(OUT)   :: elemeffect  
-                                                                 ! elementary effect of each parameter     
-    INTEGER(I4), DIMENSION(size(para,2)), INTENT(OUT)   :: counter  
-                                                                 ! ith elementary effect is 
-                                                                 ! based on counter(i) values  
+    ! parameter sets have to be a
+    ! morris sequence
+    ! values >= 0.0 and <= 1.0
+    ! size(para,1) number of sets
+    ! size(para,2) number of parameters
+    INTEGER(I4), DIMENSION(size(para,1)), INTENT(IN)    :: changedpara
+    ! vector of parameter changed
+    ! between parameter set i and i+1
+    REAL(SP),    DIMENSION(size(para,2)), INTENT(OUT)   :: elemeffect
+    ! elementary effect of each parameter
+    INTEGER(I4), DIMENSION(size(para,2)), INTENT(OUT)   :: counter
+    ! ith elementary effect is
+    ! based on counter(i) values
     LOGICAL,     DIMENSION(:), OPTIONAL,  INTENT(IN)    :: modelstatus_in
-                                                                 ! vector of status of the model
-                                                                 ! .true. if parameter set was valid
-                                                                 
+    ! vector of status of the model
+    ! .true. if parameter set was valid
+
     ! local variables
     INTEGER(I4)                                   :: sets            ! Number of parameter sets
     INTEGER(I4)                                   :: i, valid
@@ -211,13 +214,13 @@ CONTAINS
     sets = size(para,1)
     elemeffect = 0.0_sp
     counter    = 0_i4
-    
+
     if (present(modelstatus_in)) then
        modelstatus = modelstatus_in
     else
        modelstatus = .true.
     end if
-    
+
     valid = 0
     do i=1, sets
        ! only within a trajectory
@@ -225,11 +228,11 @@ CONTAINS
           ! determine model value
           if ( modelstatus(i) .and. modelstatus(i+1) &
                .and. (abs(para(i+1,changedpara(i))-para(i,changedpara(i))) .gt. tiny(0.0_sp)) ) then
-             elemeffect(changedpara(i)) = elemeffect(changedpara(i))                                 & 
-                                          + abs(                                                     &
-                                                  (modeloutput_0d(i+1)-modeloutput_0d(i))/           &
-                                                  (para(i+1,changedpara(i))-para(i,changedpara(i)))  &
-                                               )
+             elemeffect(changedpara(i)) = elemeffect(changedpara(i))                                 &
+                  + abs(                                                     &
+                  (modeloutput_0d(i+1)-modeloutput_0d(i))/           &
+                  (para(i+1,changedpara(i))-para(i,changedpara(i)))  &
+                  )
              counter(changedpara(i)) = counter(changedpara(i)) + 1_i4
           end if
        end if
@@ -238,42 +241,42 @@ CONTAINS
           valid = valid + 1_i4
        end if
     end do
-    
+
     elemeffect(:) = elemeffect(:)/max(real(counter(:),sp), 1.0_sp)
 
   END SUBROUTINE elemeffects_0d_sp
-  
+
   SUBROUTINE elemeffects_1d_dp(modeloutput_1d,para,changedpara,elemeffect,counter,modelstatus_in)
 
     IMPLICIT NONE
 
     REAL(DP),    DIMENSION(:,:),          INTENT(IN)    :: modeloutput_1d
-                                                                 ! matrix of output the model
-                                                                 ! generated with certain parameters 
-                                                                 ! 1 row per parameter set
+    ! matrix of output the model
+    ! generated with certain parameters
+    ! 1 row per parameter set
     REAL(DP),    DIMENSION(:,:),          INTENT(IN)    :: para  ! matrix of parameters to test
-                                                                 ! parameter sets have to be a 
-                                                                 ! morris sequence
-                                                                 ! values >= 0.0 and <= 1.0
-                                                                 ! size(para,1) number of sets
-                                                                 ! size(para,2) number of parameters
-    INTEGER(I4), DIMENSION(size(para,1)), INTENT(IN)    :: changedpara  
-                                                                 ! vector of parameter changed
-                                                                 ! between parameter set i and i+1 
-    REAL(DP),    DIMENSION(size(para,2)), INTENT(OUT)   :: elemeffect  
-                                                                 ! elementary effect of each parameter     
-    INTEGER(I4), DIMENSION(size(para,2)), INTENT(OUT)   :: counter  
-                                                                 ! ith elementary effect is 
-                                                                 ! based on counter(i) values  
+    ! parameter sets have to be a
+    ! morris sequence
+    ! values >= 0.0 and <= 1.0
+    ! size(para,1) number of sets
+    ! size(para,2) number of parameters
+    INTEGER(I4), DIMENSION(size(para,1)), INTENT(IN)    :: changedpara
+    ! vector of parameter changed
+    ! between parameter set i and i+1
+    REAL(DP),    DIMENSION(size(para,2)), INTENT(OUT)   :: elemeffect
+    ! elementary effect of each parameter
+    INTEGER(I4), DIMENSION(size(para,2)), INTENT(OUT)   :: counter
+    ! ith elementary effect is
+    ! based on counter(i) values
     LOGICAL,     DIMENSION(:), OPTIONAL,  INTENT(IN)    :: modelstatus_in
-                                                                 ! vector of status of the model
-                                                                 ! .true. if parameter set was valid
-                                            
+    ! vector of status of the model
+    ! .true. if parameter set was valid
+
     ! local variables
     INTEGER(I4)                                   :: sets            ! Number of parameter sets
     LOGICAL,  DIMENSION(size(modeloutput_1d,1))   :: modelstatus     ! default .true.
     INTEGER(I4)                                   :: i, valid, n
-    
+
     if (present(modelstatus_in)) then
        modelstatus = modelstatus_in
     else
@@ -284,18 +287,18 @@ CONTAINS
     sets = size(para,1)
     elemeffect = 0.0_dp
     counter    = 0_i4
-    
+
     valid = 0
     do i=1, sets
        ! only within a trajectory
        if (changedpara(i) .gt. 0_i4) then
           ! only if both both parameter sets were valid
           if (modelstatus(i) .and. modelstatus(i+1)) then
-             elemeffect(changedpara(i)) = elemeffect(changedpara(i))                                 & 
-                                          + sum( abs(                                                &
-                                                  (modeloutput_1d(i+1,:)-modeloutput_1d(i,:))/       &
-                                                  (para(i+1,changedpara(i))-para(i,changedpara(i)))  &
-                                               ) )
+             elemeffect(changedpara(i)) = elemeffect(changedpara(i))                                 &
+                  + sum( abs(                                                &
+                  (modeloutput_1d(i+1,:)-modeloutput_1d(i,:))/       &
+                  (para(i+1,changedpara(i))-para(i,changedpara(i)))  &
+                  ) )
              counter(changedpara(i)) = counter(changedpara(i)) + n
           end if
        end if
@@ -304,7 +307,7 @@ CONTAINS
           valid = valid + 1_i4
        end if
     end do
-    
+
     elemeffect(:) = elemeffect(:)/max(real(counter(:),dp), 1.0_dp)
     counter(:)    = int(real(counter(:),dp)/real(n,dp),i4)
 
@@ -315,33 +318,33 @@ CONTAINS
     IMPLICIT NONE
 
     REAL(SP),    DIMENSION(:,:),          INTENT(IN)    :: modeloutput_1d
-                                                                 ! matrix of output the model
-                                                                 ! generated with certain parameters 
-                                                                 ! 1 row per parameter set
+    ! matrix of output the model
+    ! generated with certain parameters
+    ! 1 row per parameter set
     REAL(SP),    DIMENSION(:,:),          INTENT(IN)    :: para  ! matrix of parameters to test
-                                                                 ! parameter sets have to be a 
-                                                                 ! morris sequence
-                                                                 ! values >= 0.0 and <= 1.0
-                                                                 ! size(para,1) number of sets
-                                                                 ! size(para,2) number of parameters
-    INTEGER(I4), DIMENSION(size(para,1)), INTENT(IN)    :: changedpara  
-                                                                 ! vector of parameter changed
-                                                                 ! between parameter set i and i+1 
-    REAL(SP),    DIMENSION(size(para,2)), INTENT(OUT)   :: elemeffect  
-                                                                 ! elementary effect of each parameter     
-    INTEGER(I4), DIMENSION(size(para,2)), INTENT(OUT)   :: counter  
-                                                                 ! ith elementary effect is 
-                                                                 ! based on counter(i) values  
+    ! parameter sets have to be a
+    ! morris sequence
+    ! values >= 0.0 and <= 1.0
+    ! size(para,1) number of sets
+    ! size(para,2) number of parameters
+    INTEGER(I4), DIMENSION(size(para,1)), INTENT(IN)    :: changedpara
+    ! vector of parameter changed
+    ! between parameter set i and i+1
+    REAL(SP),    DIMENSION(size(para,2)), INTENT(OUT)   :: elemeffect
+    ! elementary effect of each parameter
+    INTEGER(I4), DIMENSION(size(para,2)), INTENT(OUT)   :: counter
+    ! ith elementary effect is
+    ! based on counter(i) values
     LOGICAL,     DIMENSION(:), OPTIONAL,  INTENT(IN)    :: modelstatus_in
-                                                                 ! vector of status of the model
-                                                                 ! .true. if parameter set was valid
-                                            
+    ! vector of status of the model
+    ! .true. if parameter set was valid
+
     ! local variables
     INTEGER(I4)                                   :: sets            ! Number of parameter sets
     LOGICAL,  DIMENSION(size(modeloutput_1d,1))   :: modelstatus     ! default .true.
-    
+
     INTEGER(I4)                        :: i, valid, n
-    
+
     if (present(modelstatus_in)) then
        modelstatus = modelstatus_in
     else
@@ -352,18 +355,18 @@ CONTAINS
     sets = size(para,1)
     elemeffect = 0.0_sp
     counter    = 0_i4
-    
+
     valid = 0
     do i=1, sets
        ! only within a trajectory
        if (changedpara(i) .gt. 0_i4) then
           ! only if both both parameter sets were valid
           if (modelstatus(i) .and. modelstatus(i+1)) then
-             elemeffect(changedpara(i)) = elemeffect(changedpara(i))                                 & 
-                                          + sum( abs(                                                &
-                                                  (modeloutput_1d(i+1,:)-modeloutput_1d(i,:))/       &
-                                                  (para(i+1,changedpara(i))-para(i,changedpara(i)))  &
-                                               ) )
+             elemeffect(changedpara(i)) = elemeffect(changedpara(i))                                 &
+                  + sum( abs(                                                &
+                  (modeloutput_1d(i+1,:)-modeloutput_1d(i,:))/       &
+                  (para(i+1,changedpara(i))-para(i,changedpara(i)))  &
+                  ) )
              counter(changedpara(i)) = counter(changedpara(i)) + n
           end if
        end if
@@ -372,12 +375,12 @@ CONTAINS
           valid = valid + 1_i4
        end if
     end do
-    
+
     elemeffect(:) = elemeffect(:)/max(real(counter(:),sp), 1.0_sp)
     counter(:)    = int(real(counter(:),sp)/real(n,sp),i4)
 
   END SUBROUTINE elemeffects_1d_sp
-  
+
   ! ------------------------------------------------------------------
 
 END MODULE mo_elemeffects

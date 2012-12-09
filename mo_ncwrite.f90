@@ -21,20 +21,16 @@ module mo_ncwrite
 
   ! Copyright 2011-2012 Luis Samaniego, Stephan Thober, Matthias Cuntz
 
-  use mo_kind, only: i4, sp, dp
+  use mo_kind,         only: i4, sp, dp
+  use mo_string_utils, only: nonull
 
   ! functions and constants of netcdf4 library
   use netcdf,  only: nf90_create, nf90_def_dim, NF90_UNLIMITED, nf90_def_var, &
-                     NF90_CHAR, nf90_put_att, NF90_INT, NF90_INT, NF90_GLOBAL, &
-                     nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, &
-                     NF90_close, nf90_noerr, nf90_strerror, NF90_CLOBBER, &
-                     NF90_MAX_NAME, NF90_WRITE, nf90_inq_varid, nf90_inquire_variable, &
-                     nf90_inquire_dimension, nf90_open
-
-  ! Use string utils
-  use mo_string_utils, only: nonull
-
-  private
+       NF90_CHAR, nf90_put_att, NF90_INT, NF90_INT, NF90_GLOBAL, &
+       nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, &
+       NF90_close, nf90_noerr, nf90_strerror, NF90_CLOBBER, &
+       NF90_MAX_NAME, NF90_WRITE, nf90_inq_varid, nf90_inquire_variable, &
+       nf90_inquire_dimension, nf90_open
 
   ! public routines -------------------------------------------------------------------
   public :: close_netcdf         ! save and close the netcdf file
@@ -42,13 +38,17 @@ module mo_ncwrite
   public :: dump_netcdf          ! simple dump of variable into a netcdf file
   public :: write_dynamic_netcdf ! write dynamically (one record after the other) in the file
   public :: write_static_netcdf  ! write static data in the file
+  ! public types -------------------------------------------------------------------
+  public :: dims
+  public :: variable
+  public :: attribute
 
   ! public parameters
-  integer(i4), parameter :: nMaxDim = 5         ! nr. max dimensions
-  integer(i4), parameter :: nMaxAtt = 20        ! nr. max attributes
-  integer(i4), parameter :: maxLen  = 256       ! nr. string length
-  integer(i4), parameter :: nGAtt   = 20        ! nr. global attributes
-  integer(i4), parameter :: nAttDim = 2         ! dim array of attribute values
+  integer(i4), public, parameter :: nMaxDim = 5         ! nr. max dimensions
+  integer(i4), public, parameter :: nMaxAtt = 20        ! nr. max attributes
+  integer(i4), public, parameter :: maxLen  = 256       ! nr. string length
+  integer(i4), public, parameter :: nGAtt   = 20        ! nr. global attributes
+  integer(i4), public, parameter :: nAttDim = 2         ! dim array of attribute values
 
   ! public types -----------------------------------------------------------------
   type dims
@@ -58,24 +58,24 @@ module mo_ncwrite
   end type dims
 
   type attribute
-    character (len=maxLen)                  :: name                ! attribute name
-    integer(i4)                             :: xType               ! attribute of the values
-    integer(i4)                             :: nValues             ! number of attributes       
-    character (len=maxLen)                  :: values              ! numbers or "characters" separed by spaces
+     character (len=maxLen)                  :: name                ! attribute name
+     integer(i4)                             :: xType               ! attribute of the values
+     integer(i4)                             :: nValues             ! number of attributes
+     character (len=maxLen)                  :: values              ! numbers or "characters" separed by spaces
   end type attribute
 
   type variable
      character (len=maxLen)                 :: name                ! short name
      integer(i4)                            :: xType               ! NF90 var. type
-     integer(i4)                            :: nLvls               ! number of levels  
-     integer(i4)                            :: nSubs               ! number of subparts     
+     integer(i4)                            :: nLvls               ! number of levels
+     integer(i4)                            :: nSubs               ! number of subparts
      logical                                :: unlimited           ! time limited
      integer(i4)                            :: variD               ! Id
      integer(i4)                            :: nDims               ! field dimension
      integer(i4), dimension(nMaxDim)        :: dimIds              ! passing var. dimensions
      integer(i4), dimension(nMaxDim)        :: dimTypes            ! type of dimensions
-     integer(i4)                            :: nAtt                ! nr. attributes     
-     type(attribute), dimension(nMaxAtt)    :: att                 ! var. attributes   
+     integer(i4)                            :: nAtt                ! nr. attributes
+     type(attribute), dimension(nMaxAtt)    :: att                 ! var. attributes
      integer(i4), dimension(nMaxDim)        :: start               ! starting indices for netcdf
      integer(i4), dimension(nMaxDim)        :: count               ! counter          for netcdf
      logical                                :: wFlag               ! write flag
@@ -96,17 +96,66 @@ module mo_ncwrite
      real(dp),    dimension(:,:,:,:), pointer :: G4_d              ! array pointing model variables
   end type variable
 
-  public :: dims
-  public :: variable
-  public :: attribute
-
   ! public variables -----------------------------------------------------------------
   integer(i4),     public                            :: nVars   ! nr. variables
-  integer(i4),     public                            :: nDims   ! nr. dimensions 
-  type (dims),     public, dimension(:), allocatable :: Dnc     ! dimensions list 
+  integer(i4),     public                            :: nDims   ! nr. dimensions
+  type (dims),     public, dimension(:), allocatable :: Dnc     ! dimensions list
   type(variable),  public, dimension(:), allocatable :: V       ! variable list, THIS STRUCTURE WILL BE WRITTEN IN THE FILE
   type(attribute), public, dimension(nGAtt)          :: gatt    ! global attributes for netcdf
 
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         dump_netcdf
+
+  !     PURPOSE
+  !         Simple write of a variable in a netcdf file.
+
+  !         The variabel can be 1 to 5 dimensional and single or double precision.
+
+  !         1D and 2D are dumped as static variables. From 3 to 5 dimension, the last
+  !         dimension will be defined as time.
+  !         The Variable will be called var.
+
+  !     CALLING SEQUENCE
+  !         call dump_netcdf(filename, arr)
+
+  !     INDENT(IN)
+  !         character(len=*) :: filename                  name of netcdf output file
+  !         real(sp/dp) ::      arr(:[,:[,:[,:[,:]]]])    1D to 5D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         None
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         If dimension
+
+  !     EXAMPLE
+  !         call dump_netcdf('test.nc, myarray)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written,  Matthias Cuntz, Nov 2012
+  !         Modified, Stephan Thober, Nov 2012 - added functions for i4 variables
+  !         Modified, Matthias Cuntz and Juliane Mai
+  !                                   Nov 2012 - append
+  !                                            - fake time dimension for 1D and 2D
+  !                                            - make i4 behave exactly as sp and dp
   interface dump_netcdf
      module procedure dump_netcdf_1d_sp, dump_netcdf_2d_sp, dump_netcdf_3d_sp, &
           dump_netcdf_4d_sp, dump_netcdf_5d_sp, &
@@ -116,8 +165,14 @@ module mo_ncwrite
           dump_netcdf_4d_i4, dump_netcdf_5d_i4
   end interface dump_netcdf
 
+  ! ----------------------------------------------------------------------------
+
+  private
+
+  ! ----------------------------------------------------------------------------
+
 contains
-  
+
   ! ----------------------------------------------------------------------------
   !
   ! NAME
@@ -152,7 +207,7 @@ contains
   subroutine close_netcdf(ncId,Info)
     !
     implicit none
-    ! 
+    !
     integer(i4), intent(in)           :: ncId
     logical,     intent(in), optional :: Info
     !
@@ -212,7 +267,7 @@ contains
     logical,          intent(in), optional :: Info
     !
     integer(i4)                               :: i, j, k
-    integer(i4), dimension(nAttDim)           :: att_INT  
+    integer(i4), dimension(nAttDim)           :: att_INT
     real(sp),    dimension(nAttDim)           :: att_FLOAT
     character(len=maxLen), dimension(nAttDim) :: att_CHAR
     !
@@ -252,8 +307,8 @@ contains
           select case (V(i)%att(k)%xType)
           case (NF90_CHAR)
              ! read( V(i)%att(k)%values, *) ( att_CHAR(j), j =1, V(i)%att(k)%nValues )
-             read( V(i)%att(k)%values, '(a)')  att_CHAR(1) 
-             call check( nf90_put_att ( ncId, V(i)%varId, V(i)%att(k)%name, att_CHAR(1) ))     
+             read( V(i)%att(k)%values, '(a)')  att_CHAR(1)
+             call check( nf90_put_att ( ncId, V(i)%varId, V(i)%att(k)%name, att_CHAR(1) ))
           case (NF90_INT)
              read( V(i)%att(k)%values, *) ( att_INT(j), j =1, V(i)%att(k)%nValues )
              call check( nf90_put_att ( ncId, V(i)%varId, V(i)%att(k)%name, att_INT(1:V(i)%att(k)%nValues) ))
@@ -276,63 +331,10 @@ contains
     if (present(Info)) then
        if (Info) write(*,*) "NetCDF file was created", ncId
     end if
-    ! 
+    !
   end subroutine create_netcdf
 
-
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         dump_netcdf
-
-  !     PURPOSE
-  !         Simple write of a variable in a netcdf file.
-
-  !         The variabel can be 1 to 5 dimensional and single or double precision.
-
-  !         1D and 2D are dumped as static variables. From 3 to 5 dimension, the last
-  !         dimension will be defined as time.
-  !         The Variable will be called var.
-
-  !     CALLING SEQUENCE
-  !         call dump_netcdf(filename, arr)
-  
-  !     INDENT(IN)
-  !         character(len=*) :: filename                  name of netcdf output file
-  !         real(sp/dp) ::      arr(:[,:[,:[,:[,:]]]])    1D to 5D-array with input numbers
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         None
-
-  !     INDENT(IN), OPTIONAL
-  !         None
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         If dimension 
-
-  !     EXAMPLE
-  !         call dump_netcdf('test.nc, myarray)
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         None
-
-  !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2012
-  !         Modified, Stephan Thober, Nov 2012 - added functions for i4 variables
-  !         Modified, Matthias Cuntz and Juliane Mai
-  !                                   Nov 2012 - append
-  !                                            - fake time dimension for 1D and 2D
-  !                                            - make i4 behave exactly as sp and dp
 
   subroutine dump_netcdf_1d_sp(filename, arr, append)
 
@@ -365,7 +367,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -478,7 +480,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -591,7 +593,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -703,7 +705,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -815,7 +817,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -927,7 +929,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -1040,7 +1042,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -1153,7 +1155,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -1265,7 +1267,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -1377,7 +1379,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -1489,7 +1491,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -1602,7 +1604,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -1715,7 +1717,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -1827,7 +1829,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -1939,7 +1941,7 @@ contains
     else
        iappend = .false.
     endif
-       
+
     ! dimension names
     dnames(1:4) = (/ 'x', 'y', 'z', 'l' /)
     !
@@ -2087,7 +2089,7 @@ contains
        case (NF90_INT)
           select case (V(i)%nDims-1)
           case (0)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_i, V(i)%start )) 
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_i, V(i)%start ))
           case (1)
              call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_i, V(i)%start, V(i)%count ))
           case (2)
@@ -2100,7 +2102,7 @@ contains
        case (NF90_FLOAT)
           select case (V(i)%nDims-1)
           case (0)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_f, V(i)%start )) 
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_f, V(i)%start ))
           case (1)
              call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_f, V(i)%start, V(i)%count ))
           case (2)
@@ -2113,7 +2115,7 @@ contains
        case (NF90_DOUBLE)
           select case (V(i)%nDims-1)
           case (0)
-             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_d, V(i)%start )) 
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_d, V(i)%start ))
           case (1)
              call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_d, V(i)%start, V(i)%count ))
           case (2)

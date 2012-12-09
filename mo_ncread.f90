@@ -1,7 +1,7 @@
 module mo_NcRead
-  
+
   ! This module provides subroutines for reading arrays from nc file using the netcdf4 library
-  
+
   ! License
   ! -------
   ! This file is part of the UFZ Fortran library.
@@ -25,13 +25,11 @@ module mo_NcRead
 
   ! functions and constants of netcdf4 library
   use netcdf,  only: nf90_open, nf90_get_var, nf90_close, NF90_MAX_NAME , &
-                     nf90_get_att,  nf90_inq_varid, nf90_inquire_variable, &
-                     nf90_inquire_dimension, NF90_NOWRITE, &
-                     nf90_noerr, nf90_strerror, nf90_inquire_attribute
+       nf90_get_att,  nf90_inq_varid, nf90_inquire_variable, &
+       nf90_inquire_dimension, NF90_NOWRITE, &
+       nf90_noerr, nf90_strerror, nf90_inquire_attribute
 
   implicit none
-
-  private
 
   public :: Get_NcDim    ! get the dimensions of a Variable
 #ifndef ABSOFT
@@ -42,19 +40,77 @@ module mo_NcRead
   public :: NcOpen       ! Open a file and get a handle back
   public :: NcClose      ! Close a file
 
+  ! ------------------------------------------------------------------------------
+
+  !    NAME
+  !        Get_NcVar
+
+  !    PURPOSE
+  !        Reads a 2 - 5 dimensional array from a nc file given
+  !        the variable name EXACTLY as specified in the file.
+  !        When calling, the array has to be allocated correctly!
+  !        If the dimension of the actual data is less than the ones
+  !        of the array, then the dimension lengths of the array will
+  !        be filled with ones.
+
+  !    CALLING SEQUENCE
+  !        call Get_NcVar(Filename, VarName, Dat, start=jdate, count=Nvalues, fid=fid)
+
+  !    INTENT(IN)
+  !        character(len=*) :: Filename - Name of the nc file
+
+  !    INTENT(IN)
+  !        character(len=*) :: VarName - Name of the Variable in the nc file
+
+  !    INTENT(INOUT)
+  !        real(sp/dp), dimension(:,:[,:[,:[,:]]]) :: array - array where data will be read
+
+  !    INTENT(IN), OPTIONAL
+  !        integer(i4), dimension(:) :: jdate ! starting indeces of first value to read
+  !                                           ! len is the number of dimensions of
+  !                                           ! array, default is 1, see example
+  !        integer(i4), dimension(:) :: count ! same size as jdate, specifies how
+  !                                           ! many values in each dimension
+  !                                           ! is going to be read
+  !        integer(i4)               :: fid   ! file handle of opened netcdf file
+  !
+  !    RESTRICTIONS
+  !        Output array is a floating point of 2-5 dimensions.
+  !        NOT yet tested for different compilers than intel11.1.075
+  !        CANNOT read packed data
+
+  !    EXAMPLE
+  !        see test program in directory test_mo_NcRead
+
+  !    LITERATURE
+  !        http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
+
+  !    HISTORY
+  !        Written,  Stephan Thober, Nov 2011
+  !        Modified, Stephan Thober, Nov 2011 - added comments
+  !        Modified, Matthias Cuntz, Jan 2012 - unified routines for different dimensions and data types
+  !        Modified, Stephan Thober, Mar 2012 - corrected dynamical read of data
+  !        Modified, Stephan Thober, May 2012 - fid
+  !        Modified, Stephan Thober, Nov 2012 - write out Varname, when vartype is incorrect
   interface Get_NcVar
      module procedure Get_NcVar_0d_sp, Get_NcVar_0d_dp, Get_NcVar_1d_sp, &
           Get_NcVar_1d_dp, Get_NcVar_2d_sp, Get_NcVar_2d_dp, &
           Get_NcVar_3d_sp, Get_NcVar_3d_dp, Get_NcVar_4d_sp, &
           Get_NcVar_4d_dp, Get_NcVar_5d_sp, Get_NcVar_5d_dp, &
           Get_NcVar_0d_i4, Get_NcVar_1d_i4, Get_NcVar_2d_i4, &
-          Get_NcVar_3d_i4, Get_NcVar_4d_i4, Get_NcVar_5d_i4 
-  end interface
+          Get_NcVar_3d_i4, Get_NcVar_4d_i4, Get_NcVar_5d_i4
+  end interface Get_NcVar
+
+  ! ------------------------------------------------------------------------------
+
+  private
+
+  ! ------------------------------------------------------------------------------
 
 contains
 
   ! ------------------------------------------------------------------------------
-  ! 
+  !
   ! NAME
   !     Get_NcDim
   !
@@ -122,50 +178,50 @@ contains
 
 #ifndef ABSOFT
   ! ------------------------------------------------------------------
-	
+
   !     NAME
   !         Get_NcDimAtt
-  
+
   !     PURPOSE
   !         gets the name and size of the dimensions of a variable in a netcdf file
-  
+
   !     CALLING SEQUENCE
   !         Get_NcDimAtt(Filename, Variable, DimName, DimLen)
-	 
+
   !     INDENT(IN)
   !         character(len=*),  intent(in) :: Filename  - Filename of netcdf file
   !         character(len=*),  intent(in) :: Variable  - Variable name exactly as specified in the file
-  
+
   !     INDENT(INOUT)
   !         None
-  
+
   !     INDENT(OUT)
   !         character(len=*), dimension(:), allocatable, intent(out)      :: DimName  - allocatable array with the
-  !                                                                                     names of the dimensions 
-  
+  !                                                                                     names of the dimensions
+
   !     INDENT(IN), OPTIONAL
   !         None
 
   !     INDENT(INOUT), OPTIONAL
   !         None
-  
+
   !     INDENT(OUT), OPTIONAL
   !         integer(i4), dimension(:), allocatable, optional, intent(out) :: DimLen   - allocatable array with the size
-  !                                                                                     of the dimensions 
-  
+  !                                                                                     of the dimensions
+
   !     RESTRICTIONS
-  !         DimName and DimLen are both allocated within the subroutine, so please just provide an 1 dimensional 
+  !         DimName and DimLen are both allocated within the subroutine, so please just provide an 1 dimensional
   !             allocatable array to the subroutine
-  
+
   !     EXAMPLE
   !         Filename = 'test.nc'
   !         Varname  = 'data'
   !         call Get_NcDimAtt(Filename, Varname, DimNames, DimLen)
   !         -> see example in test directory
-  
+
   !     LITERATURE
   !         http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
-	
+
   !     HISTORY
   !         Written,  Matthias Zink, Oct 2012
 
@@ -176,9 +232,9 @@ contains
     character(len=*),                  intent(in)  :: Filename
     character(len=*),                  intent(in)  :: Variable
     character(len=*), dimension(:), allocatable, &
-                                       intent(out) :: DimName
+         intent(out) :: DimName
     integer(i4)     , dimension(:), allocatable, &
-                             optional, intent(out) :: DimLen
+         optional, intent(out) :: DimLen
     !
     integer(i4), dimension(5)                      :: Get_NcDim
     !
@@ -210,52 +266,52 @@ contains
   end subroutine Get_NcDimAtt
 
   ! ------------------------------------------------------------------
-	
+
   !     NAME
   !         Get_NcVarAtt
-  
+
   !     PURPOSE
   !         gets the values of an particular attribute of an variable
-  
+
   !     CALLING SEQUENCE
   !         Get_NcVarAtt(FileName, VarName, AttName, AttValues, fid)
-	 
+
   !     INDENT(IN)
   !         character(len=*), intent(in)      :: FileName  - Filename of netcdf file
   !         character(len=*), intent(in)      :: VarName   - Variable name exactly as specified in the file
   !         character(len=*), intent(in)      :: AttName   - Attribute name exactly as specified for the Variable
-  
+
   !     INDENT(INOUT)
   !         None
-  
+
   !     INDENT(OUT)
   !         character(len=*), intent(out)     :: AttValues - values of the Attribute
-  
+
   !     INDENT(IN), OPTIONAL
   !         integer(i4), optional, intent(in) :: fid   ! file handle of opened netcdf file
   !         integer(i4), optional, intent(in) :: dtype ! datatype (ineteger,float) see NetCDF convention (unidata.ucar)
 
   !     INDENT(INOUT), OPTIONAL
   !         None
-  
+
   !     INDENT(OUT), OPTIONAL
   !         None
-  
+
   !     RESTRICTIONS
   !         AttValues are restricted to be of character type
   !         The name of the variable (VarName) has to be known beforehand
   !         The name of the attribute (AttName) has to be known beforehand
-  
+
   !     EXAMPLE
   !         Filename = 'test.nc'
   !         VarName  = 'data'
-  !         AttName  = 'units' 
+  !         AttName  = 'units'
   !         call Get_NcDimAtt(Filename, Varname, AttName, AttValues)
   !         -> see example in test directory
-  
+
   !     LITERATURE
   !         http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
-	
+
   !     HISTORY
   !         Written,  Matthias Zink, Oct 2012
 
@@ -271,7 +327,7 @@ contains
     integer(i4),                   optional, intent(out)   :: dtype
     !
     integer(i4)                                            :: ncid
-    integer(i4)                                            :: varid  
+    integer(i4)                                            :: varid
     !
     integer(i4)                                            :: type
     integer(i8)                                            :: avint
@@ -292,36 +348,36 @@ contains
     ! read attribute by type
     select case (type)
     case (1) ! 1 = NF90_BYTE
-          call check(nf90_get_att(ncid, varid, trim(AttName), avint))
-          write(AttValues,'(i4)')  avfloat
-          AttValues = adjustl(trim(AttValues))
-          if (present(dtype)) dtype=type
-       case (2) ! NF90_CHAR
-          call check(nf90_get_att(ncid, varid, trim(AttName), avchar))
-          AttValues = adjustl(trim(avchar))
-          if (present(dtype)) dtype=type
-       case (3) ! NF90_SHORT
-          call check(nf90_get_att(ncid, varid, trim(AttName), avint))
-          write(AttValues,'(i6)')  avfloat
-          AttValues = adjustl(trim(AttValues))
-          if (present(dtype)) dtype=type
-       case (4) ! NF90_INT
-          call check(nf90_get_att(ncid, varid, trim(AttName), avint))
-          write(AttValues,'(i11)')  avfloat
-          AttValues = adjustl(trim(AttValues))
-          if (present(dtype)) dtype=type
-       case (5) ! NF90_FLOAT
-          call check(nf90_get_att(ncid, varid, trim(AttName), avfloat))
-          write(AttValues,'(E15.7)')  avfloat
-          AttValues = adjustl(trim(AttValues))
-          if (present(dtype)) dtype=type
-       case (6) ! NF90_DOUBLE
-          call check(nf90_get_att(ncid, varid, trim(AttName), avfloat))
-          write(AttValues,'(E24.15)')  avfloat
-          AttValues = adjustl(trim(AttValues))
-          if (present(dtype)) dtype=type
-       case DEFAULT
-          print*, '***ERROR: mo_ncread: Mismatch in attribute datatype!'
+       call check(nf90_get_att(ncid, varid, trim(AttName), avint))
+       write(AttValues,'(i4)')  avfloat
+       AttValues = adjustl(trim(AttValues))
+       if (present(dtype)) dtype=type
+    case (2) ! NF90_CHAR
+       call check(nf90_get_att(ncid, varid, trim(AttName), avchar))
+       AttValues = adjustl(trim(avchar))
+       if (present(dtype)) dtype=type
+    case (3) ! NF90_SHORT
+       call check(nf90_get_att(ncid, varid, trim(AttName), avint))
+       write(AttValues,'(i6)')  avfloat
+       AttValues = adjustl(trim(AttValues))
+       if (present(dtype)) dtype=type
+    case (4) ! NF90_INT
+       call check(nf90_get_att(ncid, varid, trim(AttName), avint))
+       write(AttValues,'(i11)')  avfloat
+       AttValues = adjustl(trim(AttValues))
+       if (present(dtype)) dtype=type
+    case (5) ! NF90_FLOAT
+       call check(nf90_get_att(ncid, varid, trim(AttName), avfloat))
+       write(AttValues,'(E15.7)')  avfloat
+       AttValues = adjustl(trim(AttValues))
+       if (present(dtype)) dtype=type
+    case (6) ! NF90_DOUBLE
+       call check(nf90_get_att(ncid, varid, trim(AttName), avfloat))
+       write(AttValues,'(E24.15)')  avfloat
+       AttValues = adjustl(trim(AttValues))
+       if (present(dtype)) dtype=type
+    case DEFAULT
+       print*, '***ERROR: mo_ncread: Mismatch in attribute datatype!'
     end select
     !
     if (.not. present(fid)) call check(nf90_close(ncid))
@@ -330,57 +386,6 @@ contains
 #endif
 
   ! ------------------------------------------------------------------------------
-
-  !    NAME
-  !        Get_NcVar
-
-  !    PURPOSE
-  !        Reads a 2 - 5 dimensional array from a nc file given
-  !        the variable name EXACTLY as specified in the file.
-  !        When calling, the array has to be allocated correctly!
-  !        If the dimension of the actual data is less than the ones
-  !        of the array, then the dimension lengths of the array will
-  !        be filled with ones.
-
-  !    CALLING SEQUENCE
-  !        call Get_NcVar(Filename, VarName, Dat, start=jdate, count=Nvalues, fid=fid)
-
-  !    INTENT(IN)
-  !        character(len=*) :: Filename - Name of the nc file
-
-  !    INTENT(IN)
-  !        character(len=*) :: VarName - Name of the Variable in the nc file
-  
-  !    INTENT(INOUT)
-  !        real(sp/dp), dimension(:,:[,:[,:[,:]]]) :: array - array where data will be read
-  
-  !    INTENT(IN), OPTIONAL
-  !        integer(i4), dimension(:) :: jdate ! starting indeces of first value to read
-  !                                           ! len is the number of dimensions of
-  !                                           ! array, default is 1, see example 
-  !        integer(i4), dimension(:) :: count ! same size as jdate, specifies how 
-  !                                           ! many values in each dimension
-  !                                           ! is going to be read
-  !        integer(i4)               :: fid   ! file handle of opened netcdf file
-  !
-  !    RESTRICTIONS
-  !        Output array is a floating point of 2-5 dimensions.
-  !        NOT yet tested for different compilers than intel11.1.075
-  !        CANNOT read packed data
-
-  !    EXAMPLE
-  !        see test program in directory test_mo_NcRead
-
-  !    LITERATURE
-  !        http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
-
-  !    HISTORY
-  !        Written,  Stephan Thober, Nov 2011
-  !        Modified, Stephan Thober, Nov 2011 - added comments
-  !        Modified, Matthias Cuntz, Jan 2012 - unified routines for different dimensions and data types
-  !        Modified, Stephan Thober, Mar 2012 - corrected dynamical read of data
-  !        Modified, Stephan Thober, May 2012 - fid
-  !        Modified, Stephan Thober, Nov 2012 - write out Varname, when vartype is incorrect
 
   subroutine Get_NcVar_0d_sp(Filename, VarName, Dat, fid)
     !
@@ -706,7 +711,7 @@ contains
     ! Open NetCDF filename
     if (present(fid)) then
        ncid = fid
-    else 
+    else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
     !
@@ -772,8 +777,8 @@ contains
     !
     ! Open NetCDF filename
     if (present(fid)) then
-       ncid = fid 
-    else 
+       ncid = fid
+    else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
     !
@@ -839,8 +844,8 @@ contains
     !
     ! Open NetCDF filename
     if (present(fid)) then
-       ncid = fid 
-    else 
+       ncid = fid
+    else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
     !
@@ -906,8 +911,8 @@ contains
     !
     ! Open NetCDF filename
     if (present(fid)) then
-       ncid = fid 
-    else   
+       ncid = fid
+    else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
     !
@@ -973,8 +978,8 @@ contains
     !
     ! Open NetCDF filename
     if (present(fid)) then
-       ncid = fid 
-    else 
+       ncid = fid
+    else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
     !
@@ -1040,8 +1045,8 @@ contains
     !
     ! Open NetCDF filename
     if (present(fid)) then
-       ncid = fid 
-    else 
+       ncid = fid
+    else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
     !
@@ -1107,8 +1112,8 @@ contains
     !
     ! Open NetCDF filename
     if (present(fid)) then
-       ncid = fid 
-    else 
+       ncid = fid
+    else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
     !
@@ -1169,7 +1174,7 @@ contains
     !
   end subroutine Get_NcVar_0d_i4
 
-  
+
   subroutine Get_NcVar_1d_i4(Filename, VarName, Dat, start, count, fid)
     !
     implicit none
@@ -1212,8 +1217,8 @@ contains
     !
     ! Open NetCDF filename
     if (present(fid)) then
-       ncid = fid 
-    else 
+       ncid = fid
+    else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
     !
@@ -1277,8 +1282,8 @@ contains
     !
     ! Open NetCDF filename
     if (present(fid)) then
-       ncid = fid 
-    else 
+       ncid = fid
+    else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
     !
@@ -1342,7 +1347,7 @@ contains
     !
     ! Open NetCDF filename
     if (present(fid)) then
-       ncid = fid 
+       ncid = fid
     else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
@@ -1407,7 +1412,7 @@ contains
     !
     ! Open NetCDF filename
     if (present(fid)) then
-       ncid = fid 
+       ncid = fid
     else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
@@ -1472,7 +1477,7 @@ contains
     !
     ! Open NetCDF filename
     if (present(fid)) then
-       ncid = fid 
+       ncid = fid
     else
        call check(nf90_open(trim(Filename),NF90_NOWRITE, ncid))
     end if
@@ -1564,7 +1569,7 @@ contains
   !
   ! This subroutine is PRIVATE and therefore does not exist outside of this module.
   !
-  ! This subroutine inquires the nc file. Given the Variable name and the stream 
+  ! This subroutine inquires the nc file. Given the Variable name and the stream
   ! of the nc file, this subroutine determines the variable id, the kind of the
   ! variable and the length of the dimensions in the file.
   !
@@ -1578,7 +1583,7 @@ contains
     implicit none
     !
     character(len=*),                    intent(in)     :: Varname
-    integer(i4),                         intent(in)     :: ncid 
+    integer(i4),                         intent(in)     :: ncid
     integer(i4),                         intent(out)    :: varid    ! variable id of data to be read
     integer(i4),                         intent(out)    :: xtype    ! type of the variable
     integer(i4), dimension(:), optional, intent(inout)  :: dl

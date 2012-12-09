@@ -49,7 +49,7 @@ MODULE mo_julian
   ! Single-User Licenses, may permanently assign those licenses, in the
   ! number acquired, to individual employees. Such an assignment must be
   ! made before the code is first used and, once made, it is irrevocable
-  ! and can not be transferred. 
+  ! and can not be transferred.
 
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
@@ -76,14 +76,14 @@ CONTAINS
 
   !     PURPOSE
   !         Inverse of the function julday. Here julian is input as a Julian Day Number,
-  !         and the routine outputs id, mm, and yy as the day, month, and year on which the specified 
+  !         and the routine outputs id, mm, and yy as the day, month, and year on which the specified
   !         Julian Day started at noon.
 
   !         The zeroth Julian Day is 01.01.-4713, i.e. the 1st January 4713 BC.
 
   !     CALLING SEQUENCE
   !         call caldat(Julday, dd, mm, yy)
-  
+
   !     INDENT(IN)
   !         integer(i4) :: Julday     Julian day
 
@@ -146,7 +146,7 @@ CONTAINS
     yy = jc - 4715_i4
     if (mm > 2)  yy = yy - 1
     if (yy <= 0) yy = yy - 1
-    
+
   END SUBROUTINE caldat
 
   ! ------------------------------------------------------------------
@@ -163,7 +163,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         julian = julday(dd, mm, yy)
-  
+
   !     INDENT(IN)
   !         integer(i4) :: dd         Day in month of Julian day
   !         integer(i4) :: mm         Month in year of Julian day
@@ -225,7 +225,7 @@ CONTAINS
        ja = int(0.01_dp*jy, i4)
        julday=julday + 2 - ja + int(0.25_dp*ja, i4)
     end if
-    
+
   END FUNCTION julday
 
   ! ------------------------------------------------------------------
@@ -241,7 +241,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         julian = ndays(dd, mm, yy)
-  
+
   !     INDENT(IN)
   !         integer(i4) :: dd         Day in month of IMSL Julian day
   !         integer(i4) :: mm         Month in year of IMSL Julian day
@@ -277,7 +277,7 @@ CONTAINS
   !         Written,  Matthias Cuntz, Dec 2011
 
   FUNCTION ndays(dd,mm,yy)
-    
+
     IMPLICIT NONE
 
     INTEGER(i4), INTENT(IN) :: dd, mm, yy
@@ -286,7 +286,7 @@ CONTAINS
     INTEGER(i4), PARAMETER :: IMSLday = 2415021_i4
 
     ndays = julday(dd, mm, yy) - IMSLday
-    
+
   END FUNCTION ndays
 
   ! ------------------------------------------------------------------
@@ -302,7 +302,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         call ndyin(julian, dd, mm, yy)
-  
+
   !     INDENT(IN)
   !         integer(i4) :: julian     IMSL Julian day, i.e. days before or after 01.01.1900
 
@@ -347,7 +347,7 @@ CONTAINS
     INTEGER(i4), PARAMETER :: IMSLday = 2415021_i4
 
     call caldat(julian+IMSLday, dd, mm, yy)
-    
+
   END SUBROUTINE ndyin
 
   ! ------------------------------------------------------------------

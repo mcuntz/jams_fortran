@@ -26,15 +26,8 @@ module mo_mvn
   !
   implicit none
   !
-  private
-  !
   public :: mvn
   !
-  interface mvn
-     module procedure mvn_SP, mvn_DP
-  end interface
-  !
-contains
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -48,20 +41,20 @@ contains
 
   !     CALLING SEQUENCE
   !         out = mvn( lcho [, init] )
-  
+
   !     INDENT(IN)
-  !         real(sp/dp), dimension(:,:) :: lcho ! lower cholesky factor of 
+  !         real(sp/dp), dimension(:,:) :: lcho ! lower cholesky factor of
   !                                               covariance matrix cov
 
   !     INDENT(INOUT)
   !         None
 
   !     INDENT(OUT)
-  !         real(sp/dp), dimension(:)   :: mvn  ! array of multivariate gaussian 
+  !         real(sp/dp), dimension(:)   :: mvn  ! array of multivariate gaussian
   !                                               variates
 
   !     INDENT(IN), OPTIONAL
-  !         logical                     :: init ! if present, random number 
+  !         logical                     :: init ! if present, random number
   !                                               generator is initialized with time
 
   !     INDENT(INOUT), OPTIONAL
@@ -73,17 +66,17 @@ contains
   !     RESTRICTIONS
   !         None
 
-  !     EXAMPLE 
+  !     EXAMPLE
   !         one can use LAPACK for calculating the lower
   !         Cholesky Factor of the covariance matrix, which is
   !         required by MVN
   !
   !         external DPOTRF   ! Lapack routine for calculating the cholesky factor
-  !         
+  !
   !         integer(i4)              :: info
   !         real(sp), dimension(2,2) :: cov  ! covariance matrix
   !         real(sp), dimension(2,2) :: lcho ! lower cholesky factor
-  ! 
+  !
   !         cov = (/ 1., 0.25; 0.25, 1./)
   !         lcho = cov
   !         call DPOTRF('L', size(lcho,1), lcho, size(lcho,1), info) ! changes lower triangular (incl. main diagonal) of Lcho
@@ -94,9 +87,9 @@ contains
   !
   !         ! DONT forget to set upper triangular matrix to zero
   !         lcho(1,2) = 0._sp
-  !         
+  !
   !         rand = mvn( lcho )
-  !         CAUTION: one has to sample a time series to stabilize the covariances 
+  !         CAUTION: one has to sample a time series to stabilize the covariances
   !         between the entries of mvn
 
   !     LITERATURE
@@ -105,6 +98,15 @@ contains
 
   !     HISTORY
   !         Written,  Stephan Thober, Oct 2012
+  interface mvn
+     module procedure mvn_SP, mvn_DP
+  end interface mvn
+  !
+  private
+  !
+contains
+
+  ! ------------------------------------------------------------------
   !
   function mvn_SP(lcho, init)
     !

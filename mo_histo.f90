@@ -28,23 +28,9 @@ MODULE mo_histo
 
   IMPLICIT NONE
 
-  PRIVATE
-
 #ifndef ABSOFT
   PUBLIC :: histo           ! Histogram of 1D data
   PUBLIC :: histo2d         ! Histogram of 2D data
-
-  INTERFACE histo
-     MODULE PROCEDURE histo_sp_1d, histo_dp_1d, histo_sp_2d, histo_dp_2d
-  END INTERFACE histo
-  
-  INTERFACE histo2d
-     MODULE PROCEDURE histo2d_sp, histo2d_dp
-  END INTERFACE histo2d
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
 
   ! ------------------------------------------------------------------
 
@@ -52,22 +38,22 @@ CONTAINS
   !         histo
 
   !     PURPOSE
-  !         Calculates the histogram of n data 1D points (Xi),i=1,n , 
-  !         i.e. the n data points are sorted into k categories (bins). 
-  !         In case of multidimensional data points (Xij),j=1,n , 
+  !         Calculates the histogram of n data 1D points (Xi),i=1,n ,
+  !         i.e. the n data points are sorted into k categories (bins).
+  !         In case of multidimensional data points (Xij),j=1,n ,
   !         only the first coordinate (X1j) is taken for determination of the category,
-  !         while the other coordinates are averged per bin.  
+  !         while the other coordinates are averged per bin.
   !
-  !         With no optional arguments the number of bins k is the integer part of Sqrt(n) 
+  !         With no optional arguments the number of bins k is the integer part of Sqrt(n)
   !         where n is the number of data points. E.g. n=15 will create k=3 bins.
-  !         The bin width w is calculated depending on the minimal and maximal value of 
+  !         The bin width w is calculated depending on the minimal and maximal value of
   !         the first coordinate):
   !                     w = (maxval(X) - minval(X)) / k
   !
-  !         Optionally, one can fix the number of bins k (integer i4) 
-  !         while the width of the bins is determined. 
+  !         Optionally, one can fix the number of bins k (integer i4)
+  !         while the width of the bins is determined.
   !         Or, on can fix the binwidth w (float sp/dp) while k is determined automatically.
-  !         If an optional mask is given, the histogram is taken into account only data points (Xij) 
+  !         If an optional mask is given, the histogram is taken into account only data points (Xij)
   !         which have a true value in the mask.
   !         (Xij) can be single or double precision. The result will have the same numerical precision.
 
@@ -75,7 +61,7 @@ CONTAINS
   !         call hist(x, binx, bincount, width)                          ! with no optional arguments
   !         call hist(x, binx, bincount, width, bins=k,     mask=maske)  ! to fix the number of bins k
   !         call hist(x, binx, bincount, width, binwidth=w, mask=maske)  ! to fix the bin width w
-  
+
   !     INDENT(IN)
   !         real(sp/dp) :: x(:)     1D array of x values
   !       or
@@ -94,16 +80,16 @@ CONTAINS
 
   !     INDENT(IN), OPTIONAL
   !         logical     :: mask(:)    1D-array of logical values with size(x,1).
-  !                                   If present, only the data points in (Xij) corresponding 
+  !                                   If present, only the data points in (Xij) corresponding
   !                                   to the true values in mask are used.
   !         integer(i4) :: bins       Number of bins to be generated.
   !                                   If present, the number of bins will be fixed to this value.
-  !                                   Otherwise, is set to integer part of sqrt(size(x)) or 
+  !                                   Otherwise, is set to integer part of sqrt(size(x)) or
   !                                   using the optionally set binwidth.
   !         real(sp/dp) :: binwidth   Width of the bins to be generated.
   !                                   If present, the width of bins will be fixed to this value and
   !                                   the INDENT(OUT) width will be set to this value.
-  !                                   Otherwise, will be determined using the number of bins.  
+  !                                   Otherwise, will be determined using the number of bins.
 
   !     INDENT(INOUT), OPTIONAL
   !         None
@@ -118,7 +104,7 @@ CONTAINS
   !         If you fix the width of the bins, it has to be larger than 0: binwidth > 0.
   !         Either the number of bins or the width of the bins can be fixed, not both.
   !         Not all values of the first coordinate should be equal.
-  !         Dimension of x and mask have to match: Size(x,1) = Size(mask). 
+  !         Dimension of x and mask have to match: Size(x,1) = Size(mask).
 
   !     EXAMPLE
   !         x = (/3.0, 4.0, 6.0, 7.0/)
@@ -136,10 +122,137 @@ CONTAINS
   !         -> see also example in test directory
 
   !     LITERATURE
-  !         
+  !
 
   !     HISTORY
   !         Written,  Juliane Mai, Feb 2012
+  INTERFACE histo
+     MODULE PROCEDURE histo_sp_1d, histo_dp_1d, histo_sp_2d, histo_dp_2d
+  END INTERFACE histo
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         histo2d
+
+  !     PURPOSE
+  !         Calculates the 2D histogram of n data 2D points (Xi,Yi),i=1,n ,
+  !         i.e. the n data points are sorted into k x k categories (bins).
+  !
+  !         With no optional arguments the number of bins k per dimension
+  !         is the integer part of n**(1/4) where n is the number of data points.
+  !         E.g. n=20 will create k=2 bins in each direction (= 4 bins in sum).
+  !         The bin width w is calculated depending on the minimal and maximal value of
+  !         the first coordinate):
+  !                     w = (maxval(X) - minval(X)) / k
+  !
+  !         Optionally, one can fix the number of bins k (integer i4)
+  !         while the width of the bins is determined.
+  !         Or, on can fix the binwidth w (float sp/dp) while k is determined automatically.
+  !         If an optional mask is given, the histogram is taken into account only data points
+  !         (Xi, Yi) which have a true value in the mask.
+  !         (Xi, Yi) can be single or double precision.
+  !         The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !     with no optional arguments
+  !         call hist2d(x, binx, bincount, width)
+  !     to fix the number of bins k
+  !         call hist2d(x, binx, bincount, width, bins=k,     mask=maske)
+  !     to fix the bin width w
+  !         call hist2d(x, binx, bincount, width, binwidth=w, mask=maske)
+
+  !     INDENT(IN)
+  !         real(sp/dp) :: x(:,2)   2D array of (x,y) values
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         real(sp/dp) :: binx(:,2)     (x,y)-values of the histogram (center of the bin)
+  !         integer(i4) :: bincount(:)   number of values within each bin
+  !         real(sp/dp) :: width         width of a bin
+
+  !     INDENT(IN), OPTIONAL
+  !         logical     :: mask(:)      1D-array of logical values with size(x,1).
+  !                                     If present, only the data points in (Xij) corresponding
+  !                                     to the true values in mask are used.
+  !         integer(i4) :: bins         Number of bins to be generated.
+  !                                     If present, the number of bins will be fixed to this value.
+  !                                     Otherwise, is set to integer part of sqrt(size(x)) or
+  !                                     using the optionally set binwidth.
+  !         real(sp/dp) :: binwidth(2)  Width of the bins to be generated.
+  !                                     One value for each direction.
+  !                                     If present, the width of bins will be fixed to this value
+  !                                     and the INDENT(OUT) width will be set to this value.
+  !                                     Otherwise, will be determined using the number of bins.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         The number of bins is equal in each direction, i.e. x and y.
+  !         Input values must be floating points.
+  !         Use more than one data point: Size(x,1) > 1.
+  !         If you fix the number of bins, it has to be larger than 1: bins > 1.
+  !         If you fix the width of the bins, it has to be larger than 0: binwidth > 0.
+  !         Either the number of bins or the width of the bins can be fixed, not both.
+  !         Not all values of the first coordinate should be equal.
+  !         Dimension of x and mask have to match: Size(x,1) = Size(mask).
+
+  !     EXAMPLE
+  !     REAL(DP),    DIMENSION(4,2)              :: x
+  !     REAL(DP),    DIMENSION(:,:), ALLOCATABLE :: testbinx
+  !     INTEGER(I4), DIMENSION(:),   ALLOCATABLE :: testbincount
+  !     REAL(DP),    DIMENSION(2)                :: testwidth
+
+  !     x(1,:) = (/3.0_dp, 1.0_dp/)
+  !     x(2,:) = (/6.0_dp, 4.0_dp/)
+  !     x(3,:) = (/2.0_dp, 3.0_dp/)
+  !     x(4,:) = (/1.0_dp, 1.0_dp/)
+  !
+  !     call histo2d(x, testbinx, testbincount, testwidth)
+  !
+  !         ^
+  !         |                                      x ... data points
+  !       4 |  ********************x               * ... edge of bin
+  !         |  *         *         *
+  !       3 |  *   x     *         *
+  !         |  *********************
+  !       2 |  *         *         *
+  !         |  *         *         *
+  !       1 |  x*******x************
+  !         |
+  !         |- - - - - - - - - - - - -  >
+  !            1   2   3   4   5   6
+  !
+  !     print*, 'testbinx(1)  = ',testbinx(1,:)    --> (/2.25, 1.75/)
+  !     print*, 'testbinx(2)  = ',testbinx(2,:)    --> (/4.75, 1.75/)
+  !     print*, 'testbinx(3)  = ',testbinx(3,:)    --> (/2.25, 3.25/)
+  !     print*, 'testbinx(4)  = ',testbinx(4,:)    --> (/4.75, 3.25/)
+  !     print*, 'testbincount = ',testbincount     --> (/ 2, 0, 1, 1/)
+  !     print*, 'testwidth    = ',testwidth        --> (/ 2.5, 1.5 /)
+  !
+  !     LITERATURE
+  !
+  !     HISTORY
+  !         Written,  Juliane Mai, Mar 2012
+  INTERFACE histo2d
+     MODULE PROCEDURE histo2d_sp, histo2d_dp
+  END INTERFACE histo2d
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
+
+  ! ------------------------------------------------------------------
 
   SUBROUTINE histo_dp_1d(x, binx, bincount, width, mask, bins, binwidth)
 
@@ -181,13 +294,13 @@ CONTAINS
     end if
 
     if (present(bins) .and. present(binwidth)) then
-       stop 'Error histo_dp: Either fix number of bins or binwidth, not both.' 
-    end if 
+       stop 'Error histo_dp: Either fix number of bins or binwidth, not both.'
+    end if
 
     if (present(bins)) then
        if (bins .le. 1_i4) stop 'Error histo_dp: number of bins <= 1'
        k = bins
-       w = (maxval(x(:), mask=maske)-minval(x(:), mask=maske)) / real(k,dp) 
+       w = (maxval(x(:), mask=maske)-minval(x(:), mask=maske)) / real(k,dp)
     else
        if (present(binwidth)) then
           if (binwidth .le. tiny(1.0_dp)) stop 'Error histo_dp: width of bins too small'
@@ -246,7 +359,7 @@ CONTAINS
 
   END SUBROUTINE histo_dp_1d
 
-  
+
   SUBROUTINE histo_sp_1d(x, binx, bincount, width, mask, bins, binwidth)
 
     IMPLICIT NONE
@@ -287,13 +400,13 @@ CONTAINS
     end if
 
     if (present(bins) .and. present(binwidth)) then
-       stop 'Error histo_sp: Either fix number of bins or binwidth, not both.' 
-    end if 
+       stop 'Error histo_sp: Either fix number of bins or binwidth, not both.'
+    end if
 
     if (present(bins)) then
        if (bins .le. 1_i4) stop 'Error histo_sp: number of bins <= 1'
        k = bins
-       w = (maxval(x(:), mask=maske)-minval(x(:), mask=maske)) / real(k,sp) 
+       w = (maxval(x(:), mask=maske)-minval(x(:), mask=maske)) / real(k,sp)
     else
        if (present(binwidth)) then
           if (binwidth .le. tiny(1.0_sp)) stop 'Error histo_sp: width of bins too small'
@@ -392,13 +505,13 @@ CONTAINS
     end if
 
     if (present(bins) .and. present(binwidth)) then
-       stop 'Error histo_dp: Either fix number of bins or binwidth, not both.' 
-    end if 
+       stop 'Error histo_dp: Either fix number of bins or binwidth, not both.'
+    end if
 
     if (present(bins)) then
        if (bins .le. 1_i4) stop 'Error histo_dp: number of bins <= 1'
        k = bins
-       w = (maxval(x(:,1), mask=maske)-minval(x(:,1), mask=maske)) / real(k,dp) 
+       w = (maxval(x(:,1), mask=maske)-minval(x(:,1), mask=maske)) / real(k,dp)
     else
        if (present(binwidth)) then
           if (binwidth .le. tiny(1.0_dp)) stop 'Error histo_dp: width of bins too small'
@@ -413,7 +526,7 @@ CONTAINS
     ! Histogram
 
     allocate (binx(k,size(x,2)),bincount(k))
-    
+
     minimalvalue = minval(x(:,1), mask=maske)
 
     binx = 0.0_dp
@@ -452,8 +565,8 @@ CONTAINS
              end do
              helpbincount(binnr) = bincount(i)
              binnr=binnr+1_i4
-          !else
-          !   print*, 'Delete binx = ', binx(i,1)
+             !else
+             !   print*, 'Delete binx = ', binx(i,1)
           end if
        end do
        deallocate(binx,bincount)
@@ -472,7 +585,7 @@ CONTAINS
 
   END SUBROUTINE histo_dp_2d
 
-  
+
   SUBROUTINE histo_sp_2d(x, binx, bincount, width, mask, bins, binwidth)
 
     IMPLICIT NONE
@@ -513,13 +626,13 @@ CONTAINS
     end if
 
     if (present(bins) .and. present(binwidth)) then
-       stop 'Error histo_sp: Either fix number of bins or binwidth, not both.' 
-    end if 
+       stop 'Error histo_sp: Either fix number of bins or binwidth, not both.'
+    end if
 
     if (present(bins)) then
        if (bins .le. 1_i4) stop 'Error histo_sp: number of bins <= 1'
        k = bins
-       w = (maxval(x(:,1), mask=maske)-minval(x(:,1), mask=maske)) / real(k,sp) 
+       w = (maxval(x(:,1), mask=maske)-minval(x(:,1), mask=maske)) / real(k,sp)
     else
        if (present(binwidth)) then
           if (binwidth .le. tiny(1.0_sp)) stop 'Error histo_sp: width of bins too small'
@@ -534,7 +647,7 @@ CONTAINS
     ! Histogram
 
     allocate (binx(k,size(x,2)),bincount(k))
-    
+
     minimalvalue = minval(x(:,1), mask=maske)
 
     binx = 0.0_sp
@@ -573,8 +686,8 @@ CONTAINS
              end do
              helpbincount(binnr) = bincount(i)
              binnr=binnr+1_i4
-          !else
-          !   print*, 'Delete binx = ', binx(i,1)
+             !else
+             !   print*, 'Delete binx = ', binx(i,1)
           end if
        end do
        deallocate(binx,bincount)
@@ -594,115 +707,6 @@ CONTAINS
   END SUBROUTINE histo_sp_2d
 
   ! ------------------------------------------------------------------
-
-  !     NAME
-  !         histo2d
-
-  !     PURPOSE
-  !         Calculates the 2D histogram of n data 2D points (Xi,Yi),i=1,n , 
-  !         i.e. the n data points are sorted into k x k categories (bins).  
-  !
-  !         With no optional arguments the number of bins k per dimension 
-  !         is the integer part of n**(1/4) where n is the number of data points. 
-  !         E.g. n=20 will create k=2 bins in each direction (= 4 bins in sum).
-  !         The bin width w is calculated depending on the minimal and maximal value of 
-  !         the first coordinate):
-  !                     w = (maxval(X) - minval(X)) / k
-  !
-  !         Optionally, one can fix the number of bins k (integer i4) 
-  !         while the width of the bins is determined. 
-  !         Or, on can fix the binwidth w (float sp/dp) while k is determined automatically.
-  !         If an optional mask is given, the histogram is taken into account only data points  
-  !         (Xi, Yi) which have a true value in the mask.
-  !         (Xi, Yi) can be single or double precision. 
-  !         The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !     with no optional arguments
-  !         call hist2d(x, binx, bincount, width)  
-  !     to fix the number of bins k
-  !         call hist2d(x, binx, bincount, width, bins=k,     mask=maske)  
-  !     to fix the bin width w
-  !         call hist2d(x, binx, bincount, width, binwidth=w, mask=maske)  
-  
-  !     INDENT(IN)
-  !         real(sp/dp) :: x(:,2)   2D array of (x,y) values
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         real(sp/dp) :: binx(:,2)     (x,y)-values of the histogram (center of the bin)
-  !         integer(i4) :: bincount(:)   number of values within each bin
-  !         real(sp/dp) :: width         width of a bin
-
-  !     INDENT(IN), OPTIONAL
-  !         logical     :: mask(:)      1D-array of logical values with size(x,1).
-  !                                     If present, only the data points in (Xij) corresponding 
-  !                                     to the true values in mask are used.
-  !         integer(i4) :: bins         Number of bins to be generated.
-  !                                     If present, the number of bins will be fixed to this value.
-  !                                     Otherwise, is set to integer part of sqrt(size(x)) or 
-  !                                     using the optionally set binwidth.
-  !         real(sp/dp) :: binwidth(2)  Width of the bins to be generated. 
-  !                                     One value for each direction.
-  !                                     If present, the width of bins will be fixed to this value
-  !                                     and the INDENT(OUT) width will be set to this value.
-  !                                     Otherwise, will be determined using the number of bins.  
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         The number of bins is equal in each direction, i.e. x and y.
-  !         Input values must be floating points.
-  !         Use more than one data point: Size(x,1) > 1.
-  !         If you fix the number of bins, it has to be larger than 1: bins > 1.
-  !         If you fix the width of the bins, it has to be larger than 0: binwidth > 0.
-  !         Either the number of bins or the width of the bins can be fixed, not both.
-  !         Not all values of the first coordinate should be equal.
-  !         Dimension of x and mask have to match: Size(x,1) = Size(mask). 
-
-  !     EXAMPLE
-  !     REAL(DP),    DIMENSION(4,2)              :: x
-  !     REAL(DP),    DIMENSION(:,:), ALLOCATABLE :: testbinx
-  !     INTEGER(I4), DIMENSION(:),   ALLOCATABLE :: testbincount
-  !     REAL(DP),    DIMENSION(2)                :: testwidth
-  
-  !     x(1,:) = (/3.0_dp, 1.0_dp/)
-  !     x(2,:) = (/6.0_dp, 4.0_dp/)
-  !     x(3,:) = (/2.0_dp, 3.0_dp/) 
-  !     x(4,:) = (/1.0_dp, 1.0_dp/)
-  !     
-  !     call histo2d(x, testbinx, testbincount, testwidth) 
-  !
-  !         ^
-  !         |                                      x ... data points
-  !       4 |  ********************x               * ... edge of bin
-  !         |  *         *         *
-  !       3 |  *   x     *         *
-  !         |  *********************
-  !       2 |  *         *         *
-  !         |  *         *         *
-  !       1 |  x*******x************
-  !         |
-  !         |- - - - - - - - - - - - -  >
-  !            1   2   3   4   5   6
-  !
-  !     print*, 'testbinx(1)  = ',testbinx(1,:)    --> (/2.25, 1.75/)
-  !     print*, 'testbinx(2)  = ',testbinx(2,:)    --> (/4.75, 1.75/)
-  !     print*, 'testbinx(3)  = ',testbinx(3,:)    --> (/2.25, 3.25/)
-  !     print*, 'testbinx(4)  = ',testbinx(4,:)    --> (/4.75, 3.25/)
-  !     print*, 'testbincount = ',testbincount     --> (/ 2, 0, 1, 1/)
-  !     print*, 'testwidth    = ',testwidth        --> (/ 2.5, 1.5 /)
-  !
-  !     LITERATURE
-  !         
-  !     HISTORY
-  !         Written,  Juliane Mai, Mar 2012
 
   SUBROUTINE histo2d_dp(x, binx, bincount, width, mask, bins, binwidth)
 
@@ -745,8 +749,8 @@ CONTAINS
     !end if
 
     if (present(bins) .and. present(binwidth)) then
-       stop 'Error histo2d_dp: Either fix number of bins or binwidth, not both.' 
-    end if 
+       stop 'Error histo2d_dp: Either fix number of bins or binwidth, not both.'
+    end if
 
     if (present(bins)) then
        if (bins .le. 1_i4) stop 'Error histo2d_dp: number of bins <= 1'
@@ -759,7 +763,7 @@ CONTAINS
           if (size(binwidth,1) .ne. 2_i4) stop 'Error histo2d_dp: size(width) has to be 2'
           w(:) = binwidth(:)
           k = Max( Ceiling( (maxval(x(:,1), mask=maske)-minval(x(:,1), mask=maske)) / w(1) ), &
-                   Ceiling( (maxval(x(:,2), mask=maske)-minval(x(:,2), mask=maske)) / w(2) ) )
+               Ceiling( (maxval(x(:,2), mask=maske)-minval(x(:,2), mask=maske)) / w(2) ) )
        else
           k = Floor(real(n,dp)**0.25_dp)
           w(1) = (maxval(x(:,1), mask=maske)-minval(x(:,1), mask=maske)) / real(k,dp)
@@ -789,12 +793,12 @@ CONTAINS
           ! maxval(x) has to be assigned to last bin k not k+1
           binnr1 =   binnr1 - Floor(real(binnr1,dp)/real(k,dp)) + 1_i4
           !print*, 'i = ',i,'  binnr 1 = ',binnr1
-          
+
           binnr2 =   Floor((x(i,2)-minimalvalue(2))/w(2) )
           ! maxval(x) has to be assigned to last bin k not k+1
           binnr2 =   binnr2 - Floor(real(binnr2,dp)/real(k,dp)) + 1_i4
           !print*, 'i = ',i,'  binnr 2 = ',binnr2
-          
+
           binnr           = (binnr2-1_i4)*k + binnr1
           !print*, 'i = ',i,'  binnr 3 = ',binnr
           bincount(binnr) = bincount(binnr) + 1_i4
@@ -805,8 +809,8 @@ CONTAINS
 
   END SUBROUTINE histo2d_dp
 
-  
- SUBROUTINE histo2d_sp(x, binx, bincount, width, mask, bins, binwidth)
+
+  SUBROUTINE histo2d_sp(x, binx, bincount, width, mask, bins, binwidth)
 
     IMPLICIT NONE
 
@@ -847,8 +851,8 @@ CONTAINS
     !end if
 
     if (present(bins) .and. present(binwidth)) then
-       stop 'Error histo2d_sp: Either fix number of bins or binwidth, not both.' 
-    end if 
+       stop 'Error histo2d_sp: Either fix number of bins or binwidth, not both.'
+    end if
 
     if (present(bins)) then
        if (bins .le. 1_i4) stop 'Error histo2d_sp: number of bins <= 1'
@@ -861,7 +865,7 @@ CONTAINS
           if (size(binwidth,1) .ne. 2_i4) stop 'Error histo2d_sp: size(width) has to be 2'
           w(:) = binwidth(:)
           k = Max( Ceiling( (maxval(x(:,1), mask=maske)-minval(x(:,1), mask=maske)) / w(1) ), &
-                   Ceiling( (maxval(x(:,2), mask=maske)-minval(x(:,2), mask=maske)) / w(2) ) )
+               Ceiling( (maxval(x(:,2), mask=maske)-minval(x(:,2), mask=maske)) / w(2) ) )
        else
           k = Floor(Sqrt(real(n,sp)))
           w(1) = (maxval(x(:,1), mask=maske)-minval(x(:,1), mask=maske)) / real(k,sp)
@@ -891,12 +895,12 @@ CONTAINS
           ! maxval(x) has to be assigned to last bin k not k+1
           binnr1 =   binnr1 - Floor(real(binnr1,sp)/real(k,sp)) + 1_i4
           !print*, 'i = ',i,'  binnr 1 = ',binnr1
-          
+
           binnr2 =   Floor((x(i,2)-minimalvalue(2))/w(2) )
           ! maxval(x) has to be assigned to last bin k not k+1
           binnr2 =   binnr2 - Floor(real(binnr2,sp)/real(k,sp)) + 1_i4
           !print*, 'i = ',i,'  binnr 2 = ',binnr2
-          
+
           binnr           = (binnr2-1_i4)*k + binnr1
           !print*, 'i = ',i,'  binnr 3 = ',binnr
           bincount(binnr) = bincount(binnr) + 1_i4

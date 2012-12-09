@@ -8,13 +8,14 @@ MODULE mo_template
   !     - Include optional mask argument, if possible.
   !     - Make the module private by default.
   !     - Make routines available explicitly, i.e. public.
-  !     - Break lines at column 130 at most.
+  !     - Break lines at column 130 at most, including comments.
   !     - Do not use tabs in files.
   !     - Give 1-line descriptions after the public definition.
   !     - Documentation:
   !       * document before the individual routines;
-  !       * do one documentation per interface, i.e. no separate docu for sp and dp;
-  !       * follow the documentation structure before the function mean_sp in mo_template.f90;
+  !       * but document before the module interface not the seprate routines,
+  !         i.e. do one documentation per interface, no separate docu for sp and dp;
+  !       * follow the documentation structure before the interface of mean in mo_template.f90;
   !       * break comment lines at column 130 at most as well.
   !     - Sort routines alphabetically in the file and in the public definitions.
   !     - The modules should be tested with at least two different compilers (of different vendors)
@@ -75,7 +76,7 @@ MODULE mo_template
   ! Single-User Licenses, may permanently assign those licenses, in the
   ! number acquired, to individual employees. Such an assignment must be
   ! made before the code is first used and, once made, it is irrevocable
-  ! and can not be transferred. 
+  ! and can not be transferred.
 
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
@@ -86,9 +87,6 @@ MODULE mo_template
   ! Of course
   IMPLICIT NONE
 
-  ! Make everything private by default
-  PRIVATE
-
   ! Explicitly make public only the routines, parameters, etc. that shall be provided
   ! Sort alphabetically and give 1-line descriptions
   PUBLIC :: mean            ! 1st moment of an array, i.e. the mean
@@ -96,20 +94,7 @@ MODULE mo_template
   PUBLIC :: PI_sp           ! Constant Pi in single precision
 
   ! Interfaces for single and double precision routines; sort alphabetically
-  INTERFACE mean
-     MODULE PROCEDURE mean_sp, mean_dp
-  END INTERFACE mean
-
-  ! Public parameters
-  REAL(dp), PARAMETER :: PI_dp = 3.141592653589793238462643383279502884197_dp
-  REAL(sp), PARAMETER :: PI_sp = 3.141592653589793238462643383279502884197_sp
-
-  ! Private global parameters (not used, only for demonstration)
-  INTEGER(i4), PARAMETER :: iTest=1
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
+  ! Document in front of interfaces
 
   ! ------------------------------------------------------------------
 
@@ -125,7 +110,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         out = mean(vec, mask=mask)
-  
+
   !     INDENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
 
@@ -164,6 +149,30 @@ CONTAINS
   !         Written,  Matthias Cuntz, Nov 2011
   !         Modified, Matthias Cuntz, Nov 2011 - include mask
   !                   Matthias Cuntz, Nov 2011 - test size(mask) == size(dat)
+  INTERFACE mean
+     MODULE PROCEDURE mean_sp, mean_dp
+  END INTERFACE mean
+
+  ! ------------------------------------------------------------------
+
+  ! Make everything private by default.
+  ! Do it after public interface definitions (for doxygen)
+  PRIVATE
+
+  ! ------------------------------------------------------------------
+
+  ! Public parameters
+  REAL(dp), PARAMETER :: PI_dp = 3.141592653589793238462643383279502884197_dp
+  REAL(sp), PARAMETER :: PI_sp = 3.141592653589793238462643383279502884197_sp
+
+  ! Private global parameters (not used, only for demonstration)
+  INTEGER(i4), PARAMETER :: iTest=1
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
+
+  ! ------------------------------------------------------------------
 
   FUNCTION mean_dp(dat, mask)
 
@@ -192,7 +201,7 @@ CONTAINS
 
   END FUNCTION mean_dp
 
-  
+
   FUNCTION mean_sp(dat, mask)
 
     IMPLICIT NONE

@@ -3,7 +3,7 @@ MODULE mo_anneal
   ! This module is minimizing a cost function via Simulated Annealing
   ! and is part of the UFZ CHS Fortran library.
 
-  ! 
+  !
   ! Written  Juliane Mai, March 2012 : module implementation
   ! Modified Juliane Mai, May   2012 : anneal: sp version
   !          Juliane Mai, May   2012 : anneal: documentation
@@ -40,42 +40,14 @@ MODULE mo_anneal
 
   IMPLICIT NONE
 
-  PRIVATE
-
   PUBLIC :: anneal                  ! Minimization of a cost function via Simaulated Annealing
   PUBLIC :: anneal_valid            ! Minimization of a cost function via Simaulated Annealing
-                                    ! including checks of parameter validity
-  PUBLIC :: GetTemperature          ! Function which returns the optimal initial temperature for 
-                                    ! a given acceptance ratio and initial parameter set
-  PUBLIC :: GetTemperature_valid    ! Function which returns the optimal initial temperature for 
-                                    ! a given acceptance ratio and initial parameter set
-                                    ! including checks of parameter validity
-
-  ! Interfaces for single and double precision routines; sort alphabetically
-  INTERFACE anneal
-     MODULE PROCEDURE anneal_dp , anneal_sp, &
-                      anneal_fixedrange_dp, anneal_fixedrange_sp
-  END INTERFACE anneal
-
-  INTERFACE anneal_valid
-     MODULE PROCEDURE anneal_status_dp , anneal_status_sp, &
-                      anneal_status_fixedrange_dp, anneal_status_fixedrange_sp
-  END INTERFACE anneal_valid
-
-  INTERFACE GetTemperature
-     MODULE PROCEDURE GetTemperature_dp,  GetTemperature_sp, &
-                      GetTemperature_fixedrange_dp,  GetTemperature_fixedrange_sp
-  END INTERFACE GetTemperature
-
-  INTERFACE GetTemperature_valid
-     MODULE PROCEDURE GetTemperature_status_dp,  GetTemperature_status_sp, &
-                      GetTemperature_status_fixedrange_dp,  GetTemperature_status_fixedrange_sp
-  END INTERFACE GetTemperature_valid
-
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
+  ! including checks of parameter validity
+  PUBLIC :: GetTemperature          ! Function which returns the optimal initial temperature for
+  ! a given acceptance ratio and initial parameter set
+  PUBLIC :: GetTemperature_valid    ! Function which returns the optimal initial temperature for
+  ! a given acceptance ratio and initial parameter set
+  ! including checks of parameter validity
 
   ! ------------------------------------------------------------------
 
@@ -84,15 +56,15 @@ CONTAINS
 
   !     PURPOSE
   !         Optimizes a user provided cost function using the Simulated Annealing strategy
-  !    
+  !
 
   !     CALLING SEQUENCE
   !         para = (/ 1.0_dp , 2.0_dp /)
   !
-  !         user defined function cost_dp which calculates the cost function value for a 
+  !         user defined function cost_dp which calculates the cost function value for a
   !         parameter set (the interface given below has to be used for this function!)
   !
-  !         user defined subroutine range_dp which returns the range for a parameter  
+  !         user defined subroutine range_dp which returns the range for a parameter
   !         (the subroutine has to have a specific interface given below!)
   !
   !         parabest = anneal(cost_dp, para, range_dp)
@@ -102,18 +74,18 @@ CONTAINS
   !     FUNCTION RETURN
   !         REAL(SP/DP),    DIMENSION(size(para,1))   :: parabest ... parameter set minimizing the
   !                                                                   cost function
-  !         
-  
+  !
+
   !     INDENT(IN)
-  !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the 
+  !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the
   !                                                                      cost function at a given point
   !
   !         REAL(SP/DP),    DIMENSION(:)              :: para        ... initial parameter set
   !
   !         INTERFACE                                 :: range_dp/sp ... lower and upper bound per parameter
   !                                                                         OR
-  !                                                                      interface calculating the 
-  !                                                                      feasible range for a parameter 
+  !                                                                      interface calculating the
+  !                                                                      feasible range for a parameter
   !                                                                      at a certain point, if ranges are variable
 
   !     INDENT(INOUT)
@@ -134,7 +106,7 @@ CONTAINS
   !
   !         INTEGER(I4)    :: nITERmax_in    ... maximal number of iterations
   !                                              will be increased by 10% if stopping criteria of
-  !                                              acceptance ratio or epsilon decreement of cost 
+  !                                              acceptance ratio or epsilon decreement of cost
   !                                              function is not fullfilled
   !                                              DEFAULT: 1000
   !
@@ -144,7 +116,7 @@ CONTAINS
   !         INTEGER(I4)    :: nST_in         ... Number of consecutive LEN steps
   !                                              DEFAULT: 5
   !
-  !         REAL(SP/DP)    :: eps_in         ... Stopping criteria of epsilon decreement of 
+  !         REAL(SP/DP)    :: eps_in         ... Stopping criteria of epsilon decreement of
   !                                              cost function
   !                                              DEFAULT: 0.0001
   !
@@ -159,20 +131,20 @@ CONTAINS
   !         LOGICAL        :: printflag_in   ... If .true. detailed command line output is written
   !                                              DEFAULT: .false.
   !
-  !         LOGICAL, DIMENSION(size(para,1)) :: 
+  !         LOGICAL, DIMENSION(size(para,1)) ::
   !                           maskpara_in    ... vector of logicals
   !                                              maskpara(i) = .true.  --> parameter is optimized
-  !                                              maskpara(i) = .false. --> parameter is discarded 
+  !                                              maskpara(i) = .false. --> parameter is discarded
   !                                                                        from optimiztaion
   !                                              DEFAULT = .true.
   !         REAL(DP), DIMENSION(size(para,1)) ::
   !                           weight_in      ... vector of weights per parameter
   !                                              gives the frequency of parameter to be chosen for
   !                                              optimization (will be scaled to a CDF internally)
-  !                                              eg. [1,2,1] --> parameter 2 is chosen twice as 
+  !                                              eg. [1,2,1] --> parameter 2 is chosen twice as
   !                                                              often as parameter 1 and 2
   !                                              DEFAULT: weight_in = 1.0_dp
-  !         LOGICAL        :: maxit_in       ... .true.  for maximizing a function  
+  !         LOGICAL        :: maxit_in       ... .true.  for maximizing a function
   !                                              .false. for minimizing a function
   !                                              DEFAULT = .false. (minimization)
 
@@ -181,7 +153,7 @@ CONTAINS
 
   !     INDENT(OUT), OPTIONAL
   !         REAL(SP/DP)                            :: funcbest ... minimized value of cost function
-  !         REAL(DP), DIMENSION(:,:), ALLOCATABLE  :: history  ... returns a vector of achieved objective 
+  !         REAL(DP), DIMENSION(:,:), ALLOCATABLE  :: history  ... returns a vector of achieved objective
   !                                                                after ith model evaluation
   !
 
@@ -199,47 +171,432 @@ CONTAINS
   !         see test/test_mo_anneal/
 
   !     LITERATURE
-  !         (1) S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi. 
-  !             Optimization by simulated annealing. 
-  !             Science, 220:671–680, 1983.
+  !         (1) S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi.
+  !             Optimization by simulated annealing.
+  !             Science, 220:671-680, 1983.
   !
-  !         (2) N. Metropolis, A. W. Rosenbluth, M. N. Rosenbluth, A. H. Teller, and E. Teller. 
-  !             Equation of state calculations by fast computing machines. 
-  !             J. Chem. Phys., 21:1087–1092, June 1953.
+  !         (2) N. Metropolis, A. W. Rosenbluth, M. N. Rosenbluth, A. H. Teller, and E. Teller.
+  !             Equation of state calculations by fast computing machines.
+  !             J. Chem. Phys., 21:1087-1092, June 1953.
 
   !     HISTORY
-  !        Written  Samaniego,   Jan   2000 : Created 
+  !        Written  Samaniego,   Jan   2000 : Created
   !                 Samaniego,   Mar   2003 : Re-heating
   !                 Juliane Mai, March 2012 : modular version
   !        Modified Juliane Mai, May   2012 : sp version
   !                 Juliane Mai, May   2012 : documentation
+  INTERFACE anneal
+     MODULE PROCEDURE anneal_dp , anneal_sp, &
+          anneal_fixedrange_dp, anneal_fixedrange_sp
+  END INTERFACE anneal
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         anneal_valid
+
+  !     PURPOSE
+  !         Optimizes a user provided cost function using the Simulated Annealing strategy
+  !
+
+  !     CALLING SEQUENCE
+  !         para = (/ 1.0_dp , 2.0_dp /)
+  !         range(1,:) = (/  0.0_dp, 5.0_dp /)
+  !         range(2,:) = (/ -2.0_dp, 2.0_dp /)
+  !
+  !         user defined function cost_dp which calculates the cost function value for a
+  !         parameter set (the interface given below has to be used for this function!)
+  !
+  !         parabest = anneal(cost_dp, para, range)
+  !
+  !         see also test folder for a detailed example
+
+  !     FUNCTION RETURN
+  !         REAL(SP/DP),    DIMENSION(size(para,1))   :: parabest ... parameter set minimizing the
+  !                                                                   cost function
+  !
+
+  !     INDENT(IN)
+  !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the
+  !                                                                      cost function at a given point
+  !
+  !         REAL(SP/DP),    DIMENSION(:)              :: para        ... initial parameter set
+  !
+  !         REAL(SP/DP), DIMENSION(size(para,1),2)    :: range_dp/sp ... lower and upper bound per parameter
+  !
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         None
+  !
+
+
+  !     INDENT(IN), OPTIONAL
+  !         REAL(SP/DP)    :: temp           ... initial temperature
+  !                                              DEFAULT: subroutine Get_Temperature
+  !
+  !         REAL(SP/DP)    :: DT_in          ... geometrical decreement of temperature
+  !                                              0.7<DT<0.999
+  !                                              DEFAULT: 0.9
+  !
+  !         INTEGER(I4)    :: nITERmax_in    ... maximal number of iterations
+  !                                              will be increased by 10% if stopping criteria of
+  !                                              acceptance ratio or epsilon decreement of cost
+  !                                              function is not fullfilled
+  !                                              DEFAULT: 1000
+  !
+  !         INTEGER(I4)    :: LEN_in         ... Length of Markov Chain
+  !                                              DEFAULT: MAX(250, size(para,1))
+  !
+  !         INTEGER(I4)    :: nST_in         ... Number of consecutive LEN steps
+  !                                              DEFAULT: 5
+  !
+  !         REAL(SP/DP)    :: eps_in         ... Stopping criteria of epsilon decreement of
+  !                                              cost function
+  !                                              DEFAULT: 0.01
+  !
+  !         REAL(SP/DP)    :: acc_in         ... Stopping criteria for Acceptance Ratio
+  !                                              acc_in <= 0.1
+  !                                              DEFAULT: 0.1
+  !
+  !         INTEGER(I4/I8) :: seeds_in(3)    ... Seeds of random numbers used for random parameter
+  !                                              set generation
+  !                                              DEFAULT: dependent on current time
+  !
+  !         LOGICAL        :: printflag_in   ... If .true. detailed command line output is written
+  !                                              DEFAULT: .false.
+  !
+  !         LOGICAL        :: coststatus_in  ... If .true. the status of cost function value is
+  !                                              checked, i.e. rejects parameter sets which are not
+  !                                              valid therefore the calculation of the user
+  !                                              provided FUNCTION cost has to set the OPTIONAL
+  !                                              coststatus variable to .false. in case of an
+  !                                              invalid parameter set
+  !                                              DEFAULT = .false. (assuming that each parameter set
+  !                                                                 is valid)
+  !
+  !         LOGICAL, DIMENSION(size(para,1)) ::
+  !                           maskpara_in    ... vector of logicals
+  !                                              maskpara(i) = .true.  --> parameter is optimized
+  !                                              maskpara(i) = .false. --> parameter is discarded
+  !                                                                        from optimiztaion
+  !                                              DEFAULT = .true.
+  !         REAL(DP), DIMENSION(size(para,1)) ::
+  !                           weight_in      ... vector of weights per parameter
+  !                                              gives the frequency of parameter to be chosen for
+  !                                              optimization (will be scaled to a CDF internally)
+  !                                              eg. [1,2,1] --> parameter 2 is chosen twice as
+  !                                                              often as parameter 1 and 2
+  !                                              DEFAULT: weight_in = 1.0_dp
+  !         LOGICAL        :: maxit_in       ... .true.  for maximizing a function
+  !                                              .false. for minimizing a function
+  !                                              DEFAULT = .false. (minimization)
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         REAL(SP/DP)    :: funcbest ... minimized value of cost function
+
+  !     RESTRICTIONS
+  !         Needs a user defined:
+  !         (1) FUNCTION to evaluate the cost function value for a given parameter set.
+  !             this function needs to have the following interface:
+  !                     FUNCTION cost(paraset,status_in)
+  !                     ! calculates the cost function at a certain parameter set paraset and
+  !                     ! returns optionally if it is a valid parameter set (status_in)
+  !                         USE mo_kind
+  !                         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+  !                         REAL(DP)                            :: cost
+  !                         LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
+  !                     END FUNCTION cost
+  !     EXAMPLE
+  !         see test/test_mo_anneal/
+
+  !     LITERATURE
+  !         (1) S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi.
+  !             Optimization by simulated annealing.
+  !             Science, 220:671-680, 1983.
+  !
+  !         (2) N. Metropolis, A. W. Rosenbluth, M. N. Rosenbluth, A. H. Teller, and E. Teller.
+  !             Equation of state calculations by fast computing machines.
+  !             J. Chem. Phys., 21:1087-1092, June 1953.
+
+  !     HISTORY
+  !        Written  Samaniego,   Jan   2000 : Created
+  !                 Samaniego,   Mar   2003 : Re-heating
+  !                 Juliane Mai, March 2012 : modular version
+  !        Modified Juliane Mai, May   2012 : sp version
+  !                 Juliane Mai, May   2012 : documentation
+  INTERFACE anneal_valid
+     MODULE PROCEDURE anneal_status_dp , anneal_status_sp, &
+          anneal_status_fixedrange_dp, anneal_status_fixedrange_sp
+  END INTERFACE anneal_valid
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         gettemperature
+
+  !     PURPOSE
+  !         Determines an initial temperature for Simulated Annealing achieving
+  !         certain acceptance ratio
+  !
+
+  !     CALLING SEQUENCE
+  !         para = (/ 1.0_dp , 2.0_dp /)
+  !         acc_goal   = 0.95_dp
+  !
+  !         user defined function cost_dp which calculates the cost function value for a
+  !         parameter set (the interface given below has to be used for this function!)
+  !
+  !         user defined subroutine range_dp which returns the range for a parameter
+  !         (the subroutine has to have a specific interface givene below!)
+  !
+  !         temp = GetTemperature(para, cost_dp, range_dp, acc_goal)
+  !
+  !         see also test folder for a detailed example
+
+  !     FUNCTION RETURN
+  !         REAL(SP/DP)                               :: temperature ... temperature achieving a certain
+  !                                                                      acceptance ratio for Sim. Ann.
+  !
+
+  !     INDENT(IN)
+  !         REAL(SP/DP),    DIMENSION(:)              :: paraset     ... initial (valid) parameter set
+  !
+  !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the
+  !                                                                      cost function at a given point
+  !
+  !         INTERFACE                                 :: range_dp/sp ... lower and upper bound per parameter
+  !                                                                         OR
+  !                                                                      interface calculating the
+  !                                                                      feasible range for a parameter
+  !                                                                      at a certain point, if ranges are variable
+  !         REAL(SP/DP)                               :: acc_goal    ... Acceptance Ratio which has to be achieved
+  !
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         None
+  !
+
+
+  !     INDENT(IN), OPTIONAL
+  !         INTEGER(I4)    :: samplesize_in  ... number of iterations the estimation of temperature is based on
+  !                                              DEFAULT: Max(20_i4*n,250_i4)
+  !
+  !         LOGICAL, DIMENSION(size(para,1)) ::
+  !                           maskpara_in    ... vector of logicals
+  !                                              maskpara(i) = .true.  --> parameter is optimized
+  !                                              maskpara(i) = .false. --> parameter is discarded
+  !                                                                        from optimiztaion
+  !                                              DEFAULT = .true.
+  !
+  !         INTEGER(I4/I8) :: seeds_in(2)    ... Seeds of random numbers used for random parameter
+  !                                              set generation
+  !                                              DEFAULT: dependent on current time
+  !
+  !         LOGICAL        :: printflag_in   ... If .true. detailed command line output is written
+  !                                              DEFAULT: .false.
+  !
+  !         REAL(DP), DIMENSION(size(para,1)) ::
+  !                           weight_in      ... vector of weights per parameter
+  !                                              gives the frequency of parameter to be chosen for
+  !                                              optimization (will be scaled to a CDF internally)
+  !                                              eg. [1,2,1] --> parameter 2 is chosen twice as
+  !                                                              often as parameter 1 and 2
+  !                                              DEFAULT: weight_in = 1.0_dp
+  !
+  !         LOGICAL        :: maxit_in       ... .true.  for maximizing a function
+  !                                              .false. for minimizing a function
+  !                                              DEFAULT = .false. (minimization)
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Needs a user defined:
+  !         (1) FUNCTION to evaluate the cost function value for a given parameter set.
+  !             this function needs to have the following interface:
+  !                     FUNCTION cost(paraset)
+  !                     ! calculates the cost function at a certain parameter set paraset
+  !                         USE mo_kind
+  !                         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+  !                         REAL(DP)                            :: cost
+  !                     END FUNCTION cost
+  !         (2) get_temperature is not checking on validity of parameter sets
+
+  !     EXAMPLE
+  !         see test/test_mo_anneal/
+
+  !     LITERATURE
+  !         (1) Walid Ben-Ameur
+  !             Compututing the Initial Temperature of Simulated Annealing
+  !             Comput. Opt. and App. (2004).
+
+  !     HISTORY
+  !        Written  Juliane Mai,   May   2012
+  INTERFACE GetTemperature
+     MODULE PROCEDURE GetTemperature_dp,  GetTemperature_sp, &
+          GetTemperature_fixedrange_dp,  GetTemperature_fixedrange_sp
+  END INTERFACE GetTemperature
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         GetTemperature_valid
+
+  !     PURPOSE
+  !         Determines an initial temperature for Simulated Annealing achieving
+  !         certain acceptance ratio
+  !
+
+  !     CALLING SEQUENCE
+  !         para = (/ 1.0_dp , 2.0_dp /)
+  !         range(1,:) = (/  0.0_dp, 5.0_dp /)
+  !         range(2,:) = (/ -2.0_dp, 2.0_dp /)
+  !         acc_goal   = 0.95_dp
+  !
+  !         user defined function cost_dp which calculates the cost function value for a
+  !         parameter set (the interface given below has to be used for this function!)
+  !
+  !         temp = GetTemperature_valid(para, cost_dp, range, acc_goal)
+  !
+  !         see also test folder for a detailed example
+
+  !     FUNCTION RETURN
+  !         REAL(SP/DP)                               :: temperature ... temperature achieving a certain
+  !                                                                      acceptance ratio for Sim. Ann.
+  !
+
+  !     INDENT(IN)
+  !         REAL(SP/DP),    DIMENSION(:)              :: paraset     ... initial (valid) parameter set
+  !
+  !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the
+  !                                                                      cost function at a given point
+  !
+  !         REAL(SP/DP), DIMENSION(size(para,1),2)    :: range_dp/sp ... lower and upper bound per parameter
+  !
+  !         REAL(SP/DP)                               :: acc_goal    ... Acceptance Ratio which has to be achieved
+  !
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         None
+  !
+
+
+  !     INDENT(IN), OPTIONAL
+  !         INTEGER(I4)    :: samplesize_in  ... number of iterations the estimation of temperature is based on
+  !                                              DEFAULT: Max(20_i4*n,250_i4)
+  !
+  !         LOGICAL, DIMENSION(size(para,1)) ::
+  !                           maskpara_in    ... vector of logicals
+  !                                              maskpara(i) = .true.  --> parameter is optimized
+  !                                              maskpara(i) = .false. --> parameter is discarded
+  !                                                                        from optimiztaion
+  !                                              DEFAULT = .true.
+  !
+  !         INTEGER(I4/I8) :: seeds_in(2)    ... Seeds of random numbers used for random parameter
+  !                                              set generation
+  !                                              DEFAULT: dependent on current time
+  !
+  !         LOGICAL        :: printflag_in   ... If .true. detailed command line output is written
+  !                                              DEFAULT: .false.
+  !
+  !         REAL(DP), DIMENSION(size(para,1)) ::
+  !                           weight_in      ... vector of weights per parameter
+  !                                              gives the frequency of parameter to be chosen for
+  !                                              optimization (will be scaled to a CDF internally)
+  !                                              eg. [1,2,1] --> parameter 2 is chosen twice as
+  !                                                              often as parameter 1 and 2
+  !                                              DEFAULT: weight_in = 1.0_dp
+  !
+  !         LOGICAL        :: maxit_in       ... .true.  for maximizing a function
+  !                                              .false. for minimizing a function
+  !                                              DEFAULT = .false. (minimization)
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Needs a user defined:
+  !         (1) FUNCTION to evaluate the cost function value for a given parameter set.
+  !             this function needs to have the following interface:
+  !                     FUNCTION cost(paraset,status_in)
+  !                     ! calculates the cost function at a certain parameter set paraset and
+  !                     ! returns optionally if it is a valid parameter set (status_in)
+  !                         USE mo_kind
+  !                         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+  !                         REAL(DP)                            :: cost
+  !                         LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
+  !                     END FUNCTION cost
+  !         (2) get_temperature is not checking on validity of parameter sets
+
+  !     EXAMPLE
+  !         see test/test_mo_anneal/
+
+  !     LITERATURE
+  !         (1) Walid Ben-Ameur
+  !             Compututing the Initial Temperature of Simulated Annealing
+  !             Comput. Opt. and App. (2004).
+
+  !     HISTORY
+  !        Written  Juliane Mai,   May   2012
+  INTERFACE GetTemperature_valid
+     MODULE PROCEDURE GetTemperature_status_dp,  GetTemperature_status_sp, &
+          GetTemperature_status_fixedrange_dp,  GetTemperature_status_fixedrange_sp
+  END INTERFACE GetTemperature_valid
+
+  ! ------------------------------------------------------------------
+
+  PRIVATE
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
+
+  ! ------------------------------------------------------------------
 
   FUNCTION anneal_dp(  cost, para, range,                                             &   ! obligatory
-                       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
-                       seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN 
-                       maxit_in,                                                      &   ! optional IN
-                       funcbest, history                                              &   ! optional OUT
-                    ) &
-           result(parabest)
+       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
+       seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN
+       maxit_in,                                                      &   ! optional IN
+       funcbest, history                                              &   ! optional OUT
+       ) &
+       result(parabest)
 
     IMPLICIT NONE
 
     INTERFACE
        FUNCTION cost(paraset)
-       ! calculates the cost function at a certain parameter set paraset
-           use mo_kind
-           REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
-           REAL(DP)                            :: cost
+         ! calculates the cost function at a certain parameter set paraset
+         use mo_kind
+         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+         REAL(DP)                            :: cost
        END FUNCTION cost
     END INTERFACE
-    
+
     INTERFACE
        SUBROUTINE range(paraset,iPar,rangePar)
-       ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
-           use mo_kind
-           REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
-           INTEGER(I4),            INTENT(IN)  :: iPar
-           REAL(DP), DIMENSION(2), INTENT(OUT) :: rangePar
+         ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
+         use mo_kind
+         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+         INTEGER(I4),            INTENT(IN)  :: iPar
+         REAL(DP), DIMENSION(2), INTENT(OUT) :: rangePar
        END SUBROUTINE range
     END INTERFACE
 
@@ -247,40 +604,40 @@ CONTAINS
     REAL(DP),    DIMENSION(size(para,1))                :: parabest  ! parameter set minimizing the cost function
 
     ! optionals
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature 
-                                                                     ! (DEFAULT: Get_Temperature)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999 
-                                                                     ! (DEFAULT: 0.9)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations 
-                                                                     ! (DEFAULT: 1000)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain, 
-                                                                     ! DEFAULT: max(250, size(para,1))
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps 
-                                                                     ! (DEFAULT: 5)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function 
-                                                                     ! (DEFAULT: 0.01)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria 
-                                                                     ! (DEFAULT: 0.1)
-    INTEGER(I8), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers 
-                                                                     ! (DEFAULT: Get_timeseed)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.) 
-                                                                     ! (DEFAULT: .false.)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature
+    ! (DEFAULT: Get_Temperature)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999
+    ! (DEFAULT: 0.9)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations
+    ! (DEFAULT: 1000)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain,
+    ! DEFAULT: max(250, size(para,1))
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps
+    ! (DEFAULT: 5)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function
+    ! (DEFAULT: 0.01)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria
+    ! (DEFAULT: 0.1)
+    INTEGER(I8), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers
+    ! (DEFAULT: Get_timeseed)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.)
+    ! (DEFAULT: .false.)
     LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
-                                                                     ! false if parameter is discarded in optimization
-                                                                     ! DEFAULT = .true.
+         INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
+    ! false if parameter is discarded in optimization
+    ! DEFAULT = .true.
     REAL(DP),    OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: weight_in            ! vector of weights per parameter
-                                                                     ! gives the frequency of parameter to be 
-                                                                     ! chosen for optimization 
-                                                                     ! DEFAULT: uniform
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function 
-                                                                     ! maximization = .true., minimization = .false.
-                                                                     ! DEFAULT = .false.
+         INTENT(IN)  :: weight_in            ! vector of weights per parameter
+    ! gives the frequency of parameter to be
+    ! chosen for optimization
+    ! DEFAULT: uniform
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
     REAL(DP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
     REAL(DP),    OPTIONAL, DIMENSION(:,:), ALLOCATABLE, &
-                                 INTENT(OUT) :: history              ! returns a vector of achieved objective 
-                                                                     ! after ith model evaluation
+         INTENT(OUT) :: history              ! returns a vector of achieved objective
+    ! after ith model evaluation
 
     ! local variables
     INTEGER(I4)                            :: n           ! Number of parameters
@@ -293,8 +650,8 @@ CONTAINS
     REAL(DP)                               :: acc         ! Acceptance Ratio, <0.1 stopping criteria
     INTEGER(I8)                            :: seeds(3)    ! Seeds of random numbers
     LOGICAL                                :: printflag   ! If command line output is written
-    LOGICAL                                :: coststatus  ! Checks status of cost function value, 
-                                                          ! i.e. is parameter set is feasible
+    LOGICAL                                :: coststatus  ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible
     LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
     REAL(DP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter chosen for optimization
@@ -303,7 +660,7 @@ CONTAINS
     REAL(DP)                               :: costbest    ! minimized value of cost function
     REAL(DP),    DIMENSION(:,:), ALLOCATABLE  :: history_out ! vector of best cost function value after k iterations
     REAL(DP),    DIMENSION(:,:), ALLOCATABLE  :: history_out_tmp ! helper vector
-    
+
     type paramLim
        real(DP)                                 :: min                 !            minimum value
        real(DP)                                 :: max                 !            maximum value
@@ -334,9 +691,9 @@ CONTAINS
     integer(I4)            :: iConL, iConR, iConF
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
-    logical                :: iStop 
+    logical                :: iStop
     logical                :: ldummy
-    
+
     integer(I4)            :: iPar
     real(DP), DIMENSION(2) :: iParRange
 
@@ -479,12 +836,12 @@ CONTAINS
     weight    = 0.0_dp
     weightUni = 0.0_dp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = weight_in(:)
           weightUni(:) = 1.0_dp
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = 1.0_dp
           weightUni(:) = 1.0_dp
        end where
@@ -513,15 +870,15 @@ CONTAINS
     DT0=     DT
     !
     ! Generate and evaluate the initial solution state
-    fo = cost(gamma(:)%old) * maxit   
+    fo = cost(gamma(:)%old) * maxit
     if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     !
-    ! initialize counters /var for new SA    
+    ! initialize counters /var for new SA
     iConL=           0_i4
     iConR=           1_i4
     iConF=           0_i4
     iTotalCounter=   0_i4
-    iTotalCounterR = 0_i4   
+    iTotalCounterR = 0_i4
     fn =             0.0_DP
     ac_ratio =       1.0_DP
     iStop=           .TRUE.
@@ -544,11 +901,11 @@ CONTAINS
     ! chains (LEN) of the objective function (f) <= epsilon
     ! ******************************************************
     loopTest: do while (iStop)
-       iter = iter + 1_i4    
+       iter = iter + 1_i4
        Ipos= 0_i4
        Ineg= 0_i4
        fbb=  fBest
-       !LEN = int( real(iter,dp)*sqrt(real(iter,dp)) / nITER + 1.5*real(N,dp),i4) 
+       !LEN = int( real(iter,dp)*sqrt(real(iter,dp)) / nITER + 1.5*real(N,dp),i4)
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
@@ -562,7 +919,7 @@ CONTAINS
                (iTotalCounterR <= int(real(nIterMax,dp)/3._dp*4_dp,i4))) then
              dR = 0.05_DP
           end if
-          ! (1a) Select parameter to be changed    
+          ! (1a) Select parameter to be changed
           call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
           ! V1: select one parameter from all n
           !iPar = int(real(N,dp)*RN2+1._DP,i4)
@@ -589,20 +946,20 @@ CONTAINS
           !   end do
           ! end if
           !
-          !   GRADUAL: LINEAR FUNCTION       
-          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)                                
+          !   GRADUAL: LINEAR FUNCTION
+          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: ROOT FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**0.25_dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)     
+          !do while (weightUni(iPar)+(ac_ratio**0.25_dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: HILL FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**5._dp)/(0.3**5._dp+ac_ratio**5._dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2) 
+          !do while (weightUni(iPar)+(ac_ratio**5._dp)/(0.3**5._dp+ac_ratio**5._dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
-          !end do 
+          !end do
           !
           ! (1b) Generate new value of selected parameter
           call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
@@ -619,7 +976,7 @@ CONTAINS
              fn = fn/normPhi
              !
              ! Change in cost function value
-             df = fn-fo             
+             df = fn-fo
              !
              ! analyze change in the objective function: df
              if (df < 0.0_DP) then
@@ -627,7 +984,7 @@ CONTAINS
                 ! accept the new state
                 Ipos=Ipos+1_i4
                 fo = fn
-                gamma(:)%old   = gamma(:)%new 
+                gamma(:)%old   = gamma(:)%new
                 !
                 ! keep best solution
                 if (fo < fBest) then
@@ -641,8 +998,8 @@ CONTAINS
                       pa=0.0_DP
                    else
                       pa=EXP(rho)
-                   end if              
-  	           !
+                   end if
+                   !
                    call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
                    !
                    if (pa > RN1) then
@@ -650,7 +1007,7 @@ CONTAINS
                       Ineg=Ineg+1_i4
                       fo = fn
                       ! save old state
-                      gamma(:)%old   = gamma(:)%new 
+                      gamma(:)%old   = gamma(:)%new
                    end if
                 end if
              end if
@@ -668,12 +1025,12 @@ CONTAINS
        else
           idummy = nST
        end if
-       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /) 
+       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /)
 
        ! store current best in history vector
        history_out(iTotalCounter/LEN,1) = real(iTotalCounter,dp)
        history_out(iTotalCounter/LEN,2) = maxit * fBest*normPhi
-       !    
+       !
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
                fo*NormPhi*maxit, fBest*NormPhi*maxit
@@ -704,7 +1061,7 @@ CONTAINS
           gamma(:)%old   = gamma(:)%best
        else
           ! Update Temperature (geometrical decrement)
-          if (ac_ratio < 0.4_dp)  then 
+          if (ac_ratio < 0.4_dp)  then
              DT=0.995_dp
           else
              DT=DT0
@@ -747,17 +1104,17 @@ CONTAINS
           end do
 
           deallocate(history_out_tmp)
-          
+
        end if
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
-          iStop=.FALSE.          
+          iStop=.FALSE.
        end if
        !
     end do loopTest
     !
     !
-    ! calculate cost function again (only for check and return values)  
+    ! calculate cost function again (only for check and return values)
     parabest = gamma(:)%best
     costbest = cost(parabest) * maxit
     if (present (funcbest)) then
@@ -788,32 +1145,33 @@ CONTAINS
 
   END FUNCTION anneal_dp
 
+
   FUNCTION anneal_sp(  cost, para, range,                                             &   ! obligatory
-                       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
-                       seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN 
-                       maxit_in,                                                      &   ! optional IN
-                       funcbest, history                                              &   ! optional OUT
-                    ) &
-           result(parabest)
+       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
+       seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN
+       maxit_in,                                                      &   ! optional IN
+       funcbest, history                                              &   ! optional OUT
+       ) &
+       result(parabest)
 
     IMPLICIT NONE
 
     INTERFACE
        FUNCTION cost(paraset)
-       ! calculates the cost function at a certain parameter set paraset
-           use mo_kind
-           REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
-           REAL(SP)                            :: cost
+         ! calculates the cost function at a certain parameter set paraset
+         use mo_kind
+         REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
+         REAL(SP)                            :: cost
        END FUNCTION cost
     END INTERFACE
-    
+
     INTERFACE
        SUBROUTINE range(paraset,iPar,rangePar)
-       ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
-           use mo_kind
-           REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
-           INTEGER(I4),            INTENT(IN)  :: iPar
-           REAL(SP), DIMENSION(2), INTENT(OUT) :: rangePar
+         ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
+         use mo_kind
+         REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
+         INTEGER(I4),            INTENT(IN)  :: iPar
+         REAL(SP), DIMENSION(2), INTENT(OUT) :: rangePar
        END SUBROUTINE range
     END INTERFACE
 
@@ -821,40 +1179,40 @@ CONTAINS
     REAL(SP),    DIMENSION(size(para,1))                :: parabest  ! parameter set minimizing the cost function
 
     ! optionals
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature 
-                                                                     ! (DEFAULT: Get_Temperature)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999 
-                                                                     ! (DEFAULT: 0.9)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations 
-                                                                     ! (DEFAULT: 1000)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain, 
-                                                                     ! DEFAULT: max(250, size(para,1))
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps 
-                                                                     ! (DEFAULT: 5)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function 
-                                                                     ! (DEFAULT: 0.01)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria 
-                                                                     ! (DEFAULT: 0.1)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers 
-                                                                     ! (DEFAULT: Get_timeseed)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.) 
-                                                                     ! (DEFAULT: .false.)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature
+    ! (DEFAULT: Get_Temperature)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999
+    ! (DEFAULT: 0.9)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations
+    ! (DEFAULT: 1000)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain,
+    ! DEFAULT: max(250, size(para,1))
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps
+    ! (DEFAULT: 5)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function
+    ! (DEFAULT: 0.01)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria
+    ! (DEFAULT: 0.1)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers
+    ! (DEFAULT: Get_timeseed)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.)
+    ! (DEFAULT: .false.)
     LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
-                                                                     ! false if parameter is discarded in optimization
-                                                                     ! DEFAULT = .true.
+         INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
+    ! false if parameter is discarded in optimization
+    ! DEFAULT = .true.
     REAL(SP),    OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: weight_in            ! vector of weights per parameter
-                                                                     ! gives the frequency of parameter to be 
-                                                                     ! chosen for optimization 
-                                                                     ! DEFAULT: uniform
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function 
-                                                                     ! maximization = .true., minimization = .false.
-                                                                     ! DEFAULT = .false.
+         INTENT(IN)  :: weight_in            ! vector of weights per parameter
+    ! gives the frequency of parameter to be
+    ! chosen for optimization
+    ! DEFAULT: uniform
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
     REAL(SP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
     REAL(DP),    OPTIONAL, DIMENSION(:,:), ALLOCATABLE, &
-                                 INTENT(OUT) :: history              ! returns a vector of achieved objective 
-                                                                     ! after ith model evaluation
+         INTENT(OUT) :: history              ! returns a vector of achieved objective
+    ! after ith model evaluation
 
     ! local variables
     INTEGER(I4)                            :: n           ! Number of parameters
@@ -867,8 +1225,8 @@ CONTAINS
     REAL(SP)                               :: acc         ! Acceptance Ratio, <0.1 stopping criteria
     INTEGER(I4)                            :: seeds(3)    ! Seeds of random numbers
     LOGICAL                                :: printflag   ! If command line output is written
-    LOGICAL                                :: coststatus  ! Checks status of cost function value, 
-                                                          ! i.e. is parameter set is feasible
+    LOGICAL                                :: coststatus  ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible
     LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
     REAL(SP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter chosen for optimization
@@ -877,7 +1235,7 @@ CONTAINS
     REAL(SP)                               :: costbest    ! minimized value of cost function
     REAL(SP),    DIMENSION(:,:), ALLOCATABLE  :: history_out ! vector of best cost function value after k iterations
     REAL(SP),    DIMENSION(:,:), ALLOCATABLE  :: history_out_tmp ! helper vector
-    
+
     type paramLim
        real(SP)                                 :: min                 !            minimum value
        real(SP)                                 :: max                 !            maximum value
@@ -908,9 +1266,9 @@ CONTAINS
     integer(I4)            :: iConL, iConR, iConF
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
-    logical                :: iStop 
+    logical                :: iStop
     logical                :: ldummy
-    
+
     integer(I4)            :: iPar
     real(SP), DIMENSION(2) :: iParRange
 
@@ -1053,12 +1411,12 @@ CONTAINS
     weight    = 0.0_sp
     weightUni = 0.0_sp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = weight_in(:)
           weightUni(:) = 1.0_sp
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = 1.0_sp
           weightUni(:) = 1.0_sp
        end where
@@ -1087,15 +1445,15 @@ CONTAINS
     DT0=     DT
     !
     ! Generate and evaluate the initial solution state
-    fo = cost(gamma(:)%old) * maxit   
+    fo = cost(gamma(:)%old) * maxit
     if ( abs(fo) .lt. tiny(0.0_sp) ) fo = 0.0000001_sp * maxit
     !
-    ! initialize counters /var for new SA    
+    ! initialize counters /var for new SA
     iConL=           0_i4
     iConR=           1_i4
     iConF=           0_i4
     iTotalCounter=   0_i4
-    iTotalCounterR = 0_i4   
+    iTotalCounterR = 0_i4
     fn =             0.0_SP
     ac_ratio =       1.0_SP
     iStop=           .TRUE.
@@ -1118,11 +1476,11 @@ CONTAINS
     ! chains (LEN) of the objective function (f) <= epsilon
     ! ******************************************************
     loopTest: do while (iStop)
-       iter = iter + 1_i4    
+       iter = iter + 1_i4
        Ipos= 0_i4
        Ineg= 0_i4
        fbb=  fBest
-       !LEN = int( real(iter,sp)*sqrt(real(iter,sp)) / nITER + 1.5*real(N,sp),i4) 
+       !LEN = int( real(iter,sp)*sqrt(real(iter,sp)) / nITER + 1.5*real(N,sp),i4)
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
@@ -1136,7 +1494,7 @@ CONTAINS
                (iTotalCounterR <= int(real(nIterMax,sp)/3._sp*4_sp,i4))) then
              dR = 0.05_SP
           end if
-          ! (1a) Select parameter to be changed    
+          ! (1a) Select parameter to be changed
           call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
           ! V1: select one parameter from all n
           !iPar = int(real(N,sp)*RN2+1._SP,i4)
@@ -1163,20 +1521,20 @@ CONTAINS
           !   end do
           ! end if
           !
-          !   GRADUAL: LINEAR FUNCTION       
-          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)                                
+          !   GRADUAL: LINEAR FUNCTION
+          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: ROOT FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**0.25_sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)     
+          !do while (weightUni(iPar)+(ac_ratio**0.25_sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: HILL FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**5._sp)/(0.3**5._sp+ac_ratio**5._sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2) 
+          !do while (weightUni(iPar)+(ac_ratio**5._sp)/(0.3**5._sp+ac_ratio**5._sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
-          !end do 
+          !end do
           !
           !
           ! (1b) Generate new value of selected parameter
@@ -1194,7 +1552,7 @@ CONTAINS
              fn = fn/normPhi
              !
              ! Change in cost function value
-             df = fn-fo             
+             df = fn-fo
              !
              ! analyze change in the objective function: df
              if (df < 0.0_SP) then
@@ -1202,7 +1560,7 @@ CONTAINS
                 ! accept the new state
                 Ipos=Ipos+1_i4
                 fo = fn
-                gamma(:)%old   = gamma(:)%new 
+                gamma(:)%old   = gamma(:)%new
                 !
                 ! keep best solution
                 if (fo < fBest) then
@@ -1223,7 +1581,7 @@ CONTAINS
                       Ineg=Ineg+1_i4
                       fo = fn
                       ! save old state
-                      gamma(:)%old   = gamma(:)%new 
+                      gamma(:)%old   = gamma(:)%new
                    end if
                 end if
              end if
@@ -1241,12 +1599,12 @@ CONTAINS
        else
           idummy = nST
        end if
-       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /) 
+       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /)
 
        ! store current best in history vector
        history_out(iTotalCounter/LEN,1) = real(iTotalCounter,sp)
        history_out(iTotalCounter/LEN,2) = maxit * fBest*normPhi
-       !    
+       !
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
                fo*NormPhi*maxit, fBest*NormPhi*maxit
@@ -1277,7 +1635,7 @@ CONTAINS
           gamma(:)%old   = gamma(:)%best
        else
           ! Update Temperature (geometrical decrement)
-          if (ac_ratio < 0.4_sp)  then 
+          if (ac_ratio < 0.4_sp)  then
              DT=0.995_sp
           else
              DT=DT0
@@ -1320,17 +1678,17 @@ CONTAINS
           end do
 
           deallocate(history_out_tmp)
-          
+
        end if
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
-          iStop=.FALSE.          
+          iStop=.FALSE.
        end if
        !
     end do loopTest
     !
     !
-    ! calculate cost function again (only for check and return values)  
+    ! calculate cost function again (only for check and return values)
     parabest = gamma(:)%best
     costbest = cost(parabest) * maxit
     if (present (funcbest)) then
@@ -1361,22 +1719,24 @@ CONTAINS
 
   END FUNCTION anneal_sp
 
+  ! ------------------------------------------------------------------
+
   FUNCTION anneal_fixedrange_dp(  cost, para, prange,                                 &   ! obligatory
-                       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
-                       seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN 
-                       maxit_in,                                                      &   ! optional IN
-                       funcbest, history &                                                ! optional OUT
-                    ) &
-           result(parabest)
+       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
+       seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN
+       maxit_in,                                                      &   ! optional IN
+       funcbest, history &                                                ! optional OUT
+       ) &
+       result(parabest)
 
     IMPLICIT NONE
 
     INTERFACE
        FUNCTION cost(paraset)
-       ! calculates the cost function at a certain parameter set paraset
-           use mo_kind
-           REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
-           REAL(DP)                            :: cost
+         ! calculates the cost function at a certain parameter set paraset
+         use mo_kind
+         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+         REAL(DP)                            :: cost
        END FUNCTION cost
     END INTERFACE
 
@@ -1385,40 +1745,40 @@ CONTAINS
     REAL(DP),    DIMENSION(size(para,1))                :: parabest  ! parameter set minimizing the cost function
 
     ! optionals
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature 
-                                                                     ! (DEFAULT: Get_Temperature)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999 
-                                                                     ! (DEFAULT: 0.9)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations 
-                                                                     ! (DEFAULT: 1000)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain, 
-                                                                     ! DEFAULT: max(250, size(para,1))
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps 
-                                                                     ! (DEFAULT: 5)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function 
-                                                                     ! (DEFAULT: 0.01)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria 
-                                                                     ! (DEFAULT: 0.1)
-    INTEGER(I8), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers 
-                                                                     ! (DEFAULT: Get_timeseed)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.) 
-                                                                     ! (DEFAULT: .false.)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature
+    ! (DEFAULT: Get_Temperature)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999
+    ! (DEFAULT: 0.9)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations
+    ! (DEFAULT: 1000)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain,
+    ! DEFAULT: max(250, size(para,1))
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps
+    ! (DEFAULT: 5)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function
+    ! (DEFAULT: 0.01)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria
+    ! (DEFAULT: 0.1)
+    INTEGER(I8), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers
+    ! (DEFAULT: Get_timeseed)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.)
+    ! (DEFAULT: .false.)
     LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
-                                                                     ! false if parameter is discarded in optimization
-                                                                     ! DEFAULT = .true.
+         INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
+    ! false if parameter is discarded in optimization
+    ! DEFAULT = .true.
     REAL(DP),    OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: weight_in            ! vector of weights per parameter
-                                                                     ! gives the frequency of parameter to be 
-                                                                     ! chosen for optimization 
-                                                                     ! DEFAULT: uniform
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function 
-                                                                     ! maximization = .true., minimization = .false.
-                                                                     ! DEFAULT = .false.
+         INTENT(IN)  :: weight_in            ! vector of weights per parameter
+    ! gives the frequency of parameter to be
+    ! chosen for optimization
+    ! DEFAULT: uniform
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
     REAL(DP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
     REAL(DP),    OPTIONAL, DIMENSION(:,:), ALLOCATABLE, &
-                                 INTENT(OUT) :: history              ! returns a vector of achieved objective 
-                                                                     ! after ith model evaluation
+         INTENT(OUT) :: history              ! returns a vector of achieved objective
+    ! after ith model evaluation
 
     ! local variables
     INTEGER(I4)                               :: n           ! Number of parameters
@@ -1431,8 +1791,8 @@ CONTAINS
     REAL(DP)                                  :: acc         ! Acceptance Ratio, <0.1 stopping criteria
     INTEGER(I8)                               :: seeds(3)    ! Seeds of random numbers
     LOGICAL                                   :: printflag   ! If command line output is written
-    LOGICAL                                   :: coststatus  ! Checks status of cost function value, 
-                                                             ! i.e. is parameter set is feasible
+    LOGICAL                                   :: coststatus  ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible
     LOGICAL,     DIMENSION(size(para,1))      :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE    :: truepara    ! indexes of parameters to be optimized
     REAL(DP),    DIMENSION(size(para,1))      :: weight      ! CDF of parameter chosen for optimization
@@ -1441,7 +1801,7 @@ CONTAINS
     REAL(DP)                                  :: costbest    ! minimized value of cost function
     REAL(DP),    DIMENSION(:,:), ALLOCATABLE  :: history_out ! vector of best cost function value after k iterations
     REAL(DP),    DIMENSION(:,:), ALLOCATABLE  :: history_out_tmp ! helper vector
-    
+
     type paramLim
        real(DP)                                 :: min                 !            minimum value
        real(DP)                                 :: max                 !            maximum value
@@ -1472,9 +1832,9 @@ CONTAINS
     integer(I4)            :: iConL, iConR, iConF
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
-    logical                :: iStop 
+    logical                :: iStop
     logical                :: ldummy
-    
+
     integer(I4)            :: iPar
 
     ! CHECKING OPTIONALS
@@ -1616,12 +1976,12 @@ CONTAINS
     weight    = 0.0_dp
     weightUni = 0.0_dp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = weight_in(:)
           weightUni(:) = 1.0_dp
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = 1.0_dp
           weightUni(:) = 1.0_dp
        end where
@@ -1650,15 +2010,15 @@ CONTAINS
     DT0=     DT
     !
     ! Generate and evaluate the initial solution state
-    fo = cost(gamma(:)%old) * maxit   
+    fo = cost(gamma(:)%old) * maxit
     if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     !
-    ! initialize counters /var for new SA    
+    ! initialize counters /var for new SA
     iConL=           0_i4
     iConR=           1_i4
     iConF=           0_i4
     iTotalCounter=   0_i4
-    iTotalCounterR = 0_i4   
+    iTotalCounterR = 0_i4
     fn =             0.0_DP
     ac_ratio =       1.0_DP
     iStop=           .TRUE.
@@ -1681,11 +2041,11 @@ CONTAINS
     ! chains (LEN) of the objective function (f) <= epsilon
     ! ******************************************************
     loopTest: do while (iStop)
-       iter = iter + 1_i4    
+       iter = iter + 1_i4
        Ipos= 0_i4
        Ineg= 0_i4
        fbb=  fBest
-       !LEN = int( real(iter,dp)*sqrt(real(iter,dp)) / nITER + 1.5*real(N,dp),i4) 
+       !LEN = int( real(iter,dp)*sqrt(real(iter,dp)) / nITER + 1.5*real(N,dp),i4)
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
@@ -1699,7 +2059,7 @@ CONTAINS
                (iTotalCounterR <= int(real(nIterMax,dp)/3._dp*4_dp,i4))) then
              dR = 0.05_DP
           end if
-          ! (1a) Select parameter to be changed    
+          ! (1a) Select parameter to be changed
           call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
           ! V1: select one parameter from all n
           !iPar = int(real(N,dp)*RN2+1._DP,i4)
@@ -1726,20 +2086,20 @@ CONTAINS
           !   end do
           ! end if
           !
-          !   GRADUAL: LINEAR FUNCTION       
-          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)                                
+          !   GRADUAL: LINEAR FUNCTION
+          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: ROOT FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**0.25_dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)     
+          !do while (weightUni(iPar)+(ac_ratio**0.25_dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: HILL FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**5._dp)/(0.3**5._dp+ac_ratio**5._dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2) 
+          !do while (weightUni(iPar)+(ac_ratio**5._dp)/(0.3**5._dp+ac_ratio**5._dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
-          !end do 
+          !end do
           !
           ! (1b) Generate new value of selected parameter
           call xor4096(seeds(3),RN3, iin=iin3, win=win3, xin=xin3)
@@ -1755,7 +2115,7 @@ CONTAINS
              fn = fn/normPhi
              !
              ! Change in cost function value
-             df = fn-fo             
+             df = fn-fo
              !
              ! analyze change in the objective function: df
              if (df < 0.0_DP) then
@@ -1763,7 +2123,7 @@ CONTAINS
                 ! accept the new state
                 Ipos=Ipos+1_i4
                 fo = fn
-                gamma(:)%old   = gamma(:)%new 
+                gamma(:)%old   = gamma(:)%new
                 !
                 ! keep best solution
                 if (fo < fBest) then
@@ -1777,8 +2137,8 @@ CONTAINS
                       pa=0.0_DP
                    else
                       pa=EXP(rho)
-                   end if              
-  	           !
+                   end if
+                   !
                    call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
                    !
                    if (pa > RN1) then
@@ -1786,7 +2146,7 @@ CONTAINS
                       Ineg=Ineg+1_i4
                       fo = fn
                       ! save old state
-                      gamma(:)%old   = gamma(:)%new 
+                      gamma(:)%old   = gamma(:)%new
                    end if
                 end if
              end if
@@ -1804,12 +2164,12 @@ CONTAINS
        else
           idummy = nST
        end if
-       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /) 
+       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /)
 
        ! store current best in history vector
        history_out(iTotalCounter/LEN,1) = real(iTotalCounter,dp)
        history_out(iTotalCounter/LEN,2) = maxit * fBest*normPhi
-       !    
+       !
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
                fo*NormPhi*maxit, fBest*NormPhi*maxit
@@ -1840,7 +2200,7 @@ CONTAINS
           gamma(:)%old   = gamma(:)%best
        else
           ! Update Temperature (geometrical decrement)
-          if (ac_ratio < 0.4_dp)  then 
+          if (ac_ratio < 0.4_dp)  then
              DT=0.995_dp
           else
              DT=DT0
@@ -1883,17 +2243,17 @@ CONTAINS
           end do
 
           deallocate(history_out_tmp)
-          
+
        end if
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
-          iStop=.FALSE.          
+          iStop=.FALSE.
        end if
        !
     end do loopTest
     !
     !
-    ! calculate cost function again (only for check and return values)  
+    ! calculate cost function again (only for check and return values)
     parabest = gamma(:)%best
     costbest = cost(parabest) * maxit
     if (present (funcbest)) then
@@ -1924,22 +2284,23 @@ CONTAINS
 
   END FUNCTION anneal_fixedrange_dp
 
+
   FUNCTION anneal_fixedrange_sp(  cost, para, prange,                                 &   ! obligatory
-                       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
-                       seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN 
-                       maxit_in,                                                      &   ! optional IN
-                       funcbest, history &                                                ! optional OUT
-                    ) &
-           result(parabest)
+       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
+       seeds_in, printflag_in, maskpara_in, weight_in,                &   ! optional IN
+       maxit_in,                                                      &   ! optional IN
+       funcbest, history &                                                ! optional OUT
+       ) &
+       result(parabest)
 
     IMPLICIT NONE
 
     INTERFACE
        FUNCTION cost(paraset)
-       ! calculates the cost function at a certain parameter set paraset
-           use mo_kind
-           REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
-           REAL(SP)                            :: cost
+         ! calculates the cost function at a certain parameter set paraset
+         use mo_kind
+         REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
+         REAL(SP)                            :: cost
        END FUNCTION cost
     END INTERFACE
 
@@ -1948,40 +2309,40 @@ CONTAINS
     REAL(SP),    DIMENSION(size(para,1))                :: parabest  ! parameter set minimizing the cost function
 
     ! optionals
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature 
-                                                                     ! (DEFAULT: Get_Temperature)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999 
-                                                                     ! (DEFAULT: 0.9)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations 
-                                                                     ! (DEFAULT: 1000)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain, 
-                                                                     ! DEFAULT: max(250, size(para,1))
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps 
-                                                                     ! (DEFAULT: 5)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function 
-                                                                     ! (DEFAULT: 0.01)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria 
-                                                                     ! (DEFAULT: 0.1)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers 
-                                                                     ! (DEFAULT: Get_timeseed)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.) 
-                                                                     ! (DEFAULT: .false.)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature
+    ! (DEFAULT: Get_Temperature)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999
+    ! (DEFAULT: 0.9)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations
+    ! (DEFAULT: 1000)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain,
+    ! DEFAULT: max(250, size(para,1))
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps
+    ! (DEFAULT: 5)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function
+    ! (DEFAULT: 0.01)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria
+    ! (DEFAULT: 0.1)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers
+    ! (DEFAULT: Get_timeseed)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.)
+    ! (DEFAULT: .false.)
     LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
-                                                                     ! false if parameter is discarded in optimization
-                                                                     ! DEFAULT = .true.
+         INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
+    ! false if parameter is discarded in optimization
+    ! DEFAULT = .true.
     REAL(SP),    OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: weight_in            ! vector of weights per parameter
-                                                                     ! gives the frequency of parameter to be 
-                                                                     ! chosen for optimization 
-                                                                     ! DEFAULT: uniform
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function 
-                                                                     ! maximization = .true., minimization = .false.
-                                                                     ! DEFAULT = .false.
+         INTENT(IN)  :: weight_in            ! vector of weights per parameter
+    ! gives the frequency of parameter to be
+    ! chosen for optimization
+    ! DEFAULT: uniform
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
     REAL(SP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
     REAL(SP),    OPTIONAL, DIMENSION(:,:), ALLOCATABLE, &
-                                 INTENT(OUT) :: history              ! returns a vector of achieved objective 
-                                                                     ! after ith model evaluation
+         INTENT(OUT) :: history              ! returns a vector of achieved objective
+    ! after ith model evaluation
 
     ! local variables
     INTEGER(I4)                               :: n           ! Number of parameters
@@ -1994,8 +2355,8 @@ CONTAINS
     REAL(SP)                                  :: acc         ! Acceptance Ratio, <0.1 stopping criteria
     INTEGER(I4)                               :: seeds(3)    ! Seeds of random numbers
     LOGICAL                                   :: printflag   ! If command line output is written
-    LOGICAL                                   :: coststatus  ! Checks status of cost function value, 
-                                                             ! i.e. is parameter set is feasible
+    LOGICAL                                   :: coststatus  ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible
     LOGICAL,     DIMENSION(size(para,1))      :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE    :: truepara    ! indexes of parameters to be optimized
     REAL(SP),    DIMENSION(size(para,1))      :: weight      ! CDF of parameter chosen for optimization
@@ -2004,7 +2365,7 @@ CONTAINS
     REAL(SP)                                  :: costbest    ! minimized value of cost function
     REAL(SP),    DIMENSION(:,:), ALLOCATABLE  :: history_out ! vector of best cost function value after k iterations
     REAL(SP),    DIMENSION(:,:), ALLOCATABLE  :: history_out_tmp ! helper vector
-    
+
     type paramLim
        real(SP)                                 :: min                 !            minimum value
        real(SP)                                 :: max                 !            maximum value
@@ -2035,9 +2396,9 @@ CONTAINS
     integer(I4)            :: iConL, iConR, iConF
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
-    logical                :: iStop 
+    logical                :: iStop
     logical                :: ldummy
-    
+
     integer(I4)            :: iPar
 
     ! CHECKING OPTIONALS
@@ -2179,12 +2540,12 @@ CONTAINS
     weight    = 0.0_sp
     weightUni = 0.0_sp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = weight_in(:)
           weightUni(:) = 1.0_sp
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = 1.0_sp
           weightUni(:) = 1.0_sp
        end where
@@ -2213,15 +2574,15 @@ CONTAINS
     DT0=     DT
     !
     ! Generate and evaluate the initial solution state
-    fo = cost(gamma(:)%old) * maxit   
+    fo = cost(gamma(:)%old) * maxit
     if ( abs(fo) .lt. tiny(0.0_sp) ) fo = 0.0000001_sp * maxit
     !
-    ! initialize counters /var for new SA    
+    ! initialize counters /var for new SA
     iConL=           0_i4
     iConR=           1_i4
     iConF=           0_i4
     iTotalCounter=   0_i4
-    iTotalCounterR = 0_i4   
+    iTotalCounterR = 0_i4
     fn =             0.0_SP
     ac_ratio =       1.0_SP
     iStop=           .TRUE.
@@ -2244,11 +2605,11 @@ CONTAINS
     ! chains (LEN) of the objective function (f) <= epsilon
     ! ******************************************************
     loopTest: do while (iStop)
-       iter = iter + 1_i4    
+       iter = iter + 1_i4
        Ipos= 0_i4
        Ineg= 0_i4
        fbb=  fBest
-       !LEN = int( real(iter,sp)*sqrt(real(iter,sp)) / nITER + 1.5*real(N,sp),i4) 
+       !LEN = int( real(iter,sp)*sqrt(real(iter,sp)) / nITER + 1.5*real(N,sp),i4)
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
@@ -2262,7 +2623,7 @@ CONTAINS
                (iTotalCounterR <= int(real(nIterMax,sp)/3._sp*4_sp,i4))) then
              dR = 0.05_SP
           end if
-          ! (1a) Select parameter to be changed    
+          ! (1a) Select parameter to be changed
           call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
           ! V1: select one parameter from all n
           !iPar = int(real(N,sp)*RN2+1._SP,i4)
@@ -2289,20 +2650,20 @@ CONTAINS
           !   end do
           ! end if
           !
-          !   GRADUAL: LINEAR FUNCTION       
-          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)                                
+          !   GRADUAL: LINEAR FUNCTION
+          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: ROOT FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**0.25_sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)     
+          !do while (weightUni(iPar)+(ac_ratio**0.25_sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: HILL FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**5._sp)/(0.3**5._sp+ac_ratio**5._sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2) 
+          !do while (weightUni(iPar)+(ac_ratio**5._sp)/(0.3**5._sp+ac_ratio**5._sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
-          !end do 
+          !end do
           !
           !
           ! (1b) Generate new value of selected parameter
@@ -2319,7 +2680,7 @@ CONTAINS
              fn = fn/normPhi
              !
              ! Change in cost function value
-             df = fn-fo             
+             df = fn-fo
              !
              ! analyze change in the objective function: df
              if (df < 0.0_SP) then
@@ -2327,7 +2688,7 @@ CONTAINS
                 ! accept the new state
                 Ipos=Ipos+1_i4
                 fo = fn
-                gamma(:)%old   = gamma(:)%new 
+                gamma(:)%old   = gamma(:)%new
                 !
                 ! keep best solution
                 if (fo < fBest) then
@@ -2348,7 +2709,7 @@ CONTAINS
                       Ineg=Ineg+1_i4
                       fo = fn
                       ! save old state
-                      gamma(:)%old   = gamma(:)%new 
+                      gamma(:)%old   = gamma(:)%new
                    end if
                 end if
              end if
@@ -2366,12 +2727,12 @@ CONTAINS
        else
           idummy = nST
        end if
-       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /) 
+       iPos_iNeg_history(idummy,:) = (/ iPos, iNeg /)
 
        ! store current best in history vector
        history_out(iTotalCounter/LEN,1) = real(iTotalCounter,sp)
        history_out(iTotalCounter/LEN,2) = maxit * fBest*normPhi
-       !    
+       !
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
                fo*NormPhi*maxit, fBest*NormPhi*maxit
@@ -2402,7 +2763,7 @@ CONTAINS
           gamma(:)%old   = gamma(:)%best
        else
           ! Update Temperature (geometrical decrement)
-          if (ac_ratio < 0.4_sp)  then 
+          if (ac_ratio < 0.4_sp)  then
              DT=0.995_sp
           else
              DT=DT0
@@ -2445,17 +2806,17 @@ CONTAINS
           end do
 
           deallocate(history_out_tmp)
-          
+
        end if
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
-          iStop=.FALSE.          
+          iStop=.FALSE.
        end if
        !
     end do loopTest
     !
     !
-    ! calculate cost function again (only for check and return values)  
+    ! calculate cost function again (only for check and return values)
     parabest = gamma(:)%best
     costbest = cost(parabest) * maxit
     if (present (funcbest)) then
@@ -2488,173 +2849,34 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         anneal_valid
-
-  !     PURPOSE
-  !         Optimizes a user provided cost function using the Simulated Annealing strategy
-  !    
-
-  !     CALLING SEQUENCE
-  !         para = (/ 1.0_dp , 2.0_dp /)
-  !         range(1,:) = (/  0.0_dp, 5.0_dp /)
-  !         range(2,:) = (/ -2.0_dp, 2.0_dp /)
-  !
-  !         user defined function cost_dp which calculates the cost function value for a 
-  !         parameter set (the interface given below has to be used for this function!)
-  !
-  !         parabest = anneal(cost_dp, para, range)
-  !
-  !         see also test folder for a detailed example
-
-  !     FUNCTION RETURN
-  !         REAL(SP/DP),    DIMENSION(size(para,1))   :: parabest ... parameter set minimizing the
-  !                                                                   cost function
-  !         
-  
-  !     INDENT(IN)
-  !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the 
-  !                                                                      cost function at a given point
-  !
-  !         REAL(SP/DP),    DIMENSION(:)              :: para        ... initial parameter set
-  !
-  !         REAL(SP/DP), DIMENSION(size(para,1),2)    :: range_dp/sp ... lower and upper bound per parameter
-  !                                                                 
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         None
-  !
-
-
-  !     INDENT(IN), OPTIONAL
-  !         REAL(SP/DP)    :: temp           ... initial temperature
-  !                                              DEFAULT: subroutine Get_Temperature
-  !
-  !         REAL(SP/DP)    :: DT_in          ... geometrical decreement of temperature
-  !                                              0.7<DT<0.999
-  !                                              DEFAULT: 0.9
-  !
-  !         INTEGER(I4)    :: nITERmax_in    ... maximal number of iterations
-  !                                              will be increased by 10% if stopping criteria of
-  !                                              acceptance ratio or epsilon decreement of cost 
-  !                                              function is not fullfilled
-  !                                              DEFAULT: 1000
-  !
-  !         INTEGER(I4)    :: LEN_in         ... Length of Markov Chain
-  !                                              DEFAULT: MAX(250, size(para,1))
-  !
-  !         INTEGER(I4)    :: nST_in         ... Number of consecutive LEN steps
-  !                                              DEFAULT: 5
-  !
-  !         REAL(SP/DP)    :: eps_in         ... Stopping criteria of epsilon decreement of 
-  !                                              cost function
-  !                                              DEFAULT: 0.01
-  !
-  !         REAL(SP/DP)    :: acc_in         ... Stopping criteria for Acceptance Ratio
-  !                                              acc_in <= 0.1
-  !                                              DEFAULT: 0.1
-  !
-  !         INTEGER(I4/I8) :: seeds_in(3)    ... Seeds of random numbers used for random parameter
-  !                                              set generation
-  !                                              DEFAULT: dependent on current time
-  !
-  !         LOGICAL        :: printflag_in   ... If .true. detailed command line output is written
-  !                                              DEFAULT: .false.
-  !
-  !         LOGICAL        :: coststatus_in  ... If .true. the status of cost function value is  
-  !                                              checked, i.e. rejects parameter sets which are not
-  !                                              valid therefore the calculation of the user 
-  !                                              provided FUNCTION cost has to set the OPTIONAL 
-  !                                              coststatus variable to .false. in case of an 
-  !                                              invalid parameter set
-  !                                              DEFAULT = .false. (assuming that each parameter set
-  !                                                                 is valid)
-  !
-  !         LOGICAL, DIMENSION(size(para,1)) :: 
-  !                           maskpara_in    ... vector of logicals
-  !                                              maskpara(i) = .true.  --> parameter is optimized
-  !                                              maskpara(i) = .false. --> parameter is discarded 
-  !                                                                        from optimiztaion
-  !                                              DEFAULT = .true.
-  !         REAL(DP), DIMENSION(size(para,1)) ::
-  !                           weight_in      ... vector of weights per parameter
-  !                                              gives the frequency of parameter to be chosen for
-  !                                              optimization (will be scaled to a CDF internally)
-  !                                              eg. [1,2,1] --> parameter 2 is chosen twice as 
-  !                                                              often as parameter 1 and 2
-  !                                              DEFAULT: weight_in = 1.0_dp
-  !         LOGICAL        :: maxit_in       ... .true.  for maximizing a function  
-  !                                              .false. for minimizing a function
-  !                                              DEFAULT = .false. (minimization)
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         REAL(SP/DP)    :: funcbest ... minimized value of cost function
-
-  !     RESTRICTIONS
-  !         Needs a user defined:
-  !         (1) FUNCTION to evaluate the cost function value for a given parameter set.
-  !             this function needs to have the following interface:
-  !                     FUNCTION cost(paraset,status_in)
-  !                     ! calculates the cost function at a certain parameter set paraset and 
-  !                     ! returns optionally if it is a valid parameter set (status_in)
-  !                         USE mo_kind
-  !                         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
-  !                         REAL(DP)                            :: cost
-  !                         LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
-  !                     END FUNCTION cost
-  !     EXAMPLE
-  !         see test/test_mo_anneal/
-
-  !     LITERATURE
-  !         (1) S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi. 
-  !             Optimization by simulated annealing. 
-  !             Science, 220:671–680, 1983.
-  !
-  !         (2) N. Metropolis, A. W. Rosenbluth, M. N. Rosenbluth, A. H. Teller, and E. Teller. 
-  !             Equation of state calculations by fast computing machines. 
-  !             J. Chem. Phys., 21:1087–1092, June 1953.
-
-  !     HISTORY
-  !        Written  Samaniego,   Jan   2000 : Created 
-  !                 Samaniego,   Mar   2003 : Re-heating
-  !                 Juliane Mai, March 2012 : modular version
-  !        Modified Juliane Mai, May   2012 : sp version
-  !                 Juliane Mai, May   2012 : documentation
-
   FUNCTION anneal_status_dp(  cost, para, range,                                      &   ! obligatory
-                       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
-                       seeds_in, printflag_in, coststatus_in, maskpara_in, weight_in, &   ! optional IN 
-                       maxit_in,                                                      &   ! optional IN
-                       funcbest &                                                         ! optional OUT
-                    ) &
-           result(parabest)
+       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
+       seeds_in, printflag_in, coststatus_in, maskpara_in, weight_in, &   ! optional IN
+       maxit_in,                                                      &   ! optional IN
+       funcbest &                                                         ! optional OUT
+       ) &
+       result(parabest)
 
     IMPLICIT NONE
 
     INTERFACE
        FUNCTION cost(paraset,status_in)
-       ! calculates the cost function at a certain parameter set paraset and 
-       ! returns optionally if it is a valid parameter set (status_in)
-           use mo_kind
-           REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
-           REAL(DP)                            :: cost
-           LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
+         ! calculates the cost function at a certain parameter set paraset and
+         ! returns optionally if it is a valid parameter set (status_in)
+         use mo_kind
+         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+         REAL(DP)                            :: cost
+         LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
        END FUNCTION cost
     END INTERFACE
-    
+
     INTERFACE
        SUBROUTINE range(paraset,iPar,rangePar)
-       ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
-           use mo_kind
-           REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
-           INTEGER(I4),            INTENT(IN)  :: iPar
-           REAL(DP), DIMENSION(2), INTENT(OUT) :: rangePar
+         ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
+         use mo_kind
+         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+         INTEGER(I4),            INTENT(IN)  :: iPar
+         REAL(DP), DIMENSION(2), INTENT(OUT) :: rangePar
        END SUBROUTINE range
     END INTERFACE
 
@@ -2662,39 +2884,39 @@ CONTAINS
     REAL(DP),    DIMENSION(size(para,1))                :: parabest  ! parameter set minimizing the cost function
 
     ! optionals
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature 
-                                                                     ! (DEFAULT: Get_Temperature)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999 
-                                                                     ! (DEFAULT: 0.9)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations 
-                                                                     ! (DEFAULT: 1000)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain, 
-                                                                     ! DEFAULT: max(250, size(para,1))
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps 
-                                                                     ! (DEFAULT: 5)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function 
-                                                                     ! (DEFAULT: 0.01)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria 
-                                                                     ! (DEFAULT: 0.1)
-    INTEGER(I8), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers 
-                                                                     ! (DEFAULT: Get_timeseed)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.) 
-                                                                     ! (DEFAULT: .false.)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: coststatus_in        ! Checks status of cost function value, 
-                                                                     ! i.e. is parameter set is feasible (.true.)
-                                                                     ! DEFAULT = .false.
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature
+    ! (DEFAULT: Get_Temperature)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999
+    ! (DEFAULT: 0.9)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations
+    ! (DEFAULT: 1000)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain,
+    ! DEFAULT: max(250, size(para,1))
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps
+    ! (DEFAULT: 5)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function
+    ! (DEFAULT: 0.01)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria
+    ! (DEFAULT: 0.1)
+    INTEGER(I8), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers
+    ! (DEFAULT: Get_timeseed)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.)
+    ! (DEFAULT: .false.)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: coststatus_in        ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible (.true.)
+    ! DEFAULT = .false.
     LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
-                                                                     ! false if parameter is discarded in optimization
-                                                                     ! DEFAULT = .true.
+         INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
+    ! false if parameter is discarded in optimization
+    ! DEFAULT = .true.
     REAL(DP),    OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: weight_in            ! vector of weights per parameter
-                                                                     ! gives the frequency of parameter to be 
-                                                                     ! chosen for optimization 
-                                                                     ! DEFAULT: uniform
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function 
-                                                                     ! maximization = .true., minimization = .false.
-                                                                     ! DEFAULT = .false.
+         INTENT(IN)  :: weight_in            ! vector of weights per parameter
+    ! gives the frequency of parameter to be
+    ! chosen for optimization
+    ! DEFAULT: uniform
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
     REAL(DP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
 
     ! local variables
@@ -2708,15 +2930,15 @@ CONTAINS
     REAL(DP)                               :: acc         ! Acceptance Ratio, <0.1 stopping criteria
     INTEGER(I8)                            :: seeds(3)    ! Seeds of random numbers
     LOGICAL                                :: printflag   ! If command line output is written
-    LOGICAL                                :: coststatus  ! Checks status of cost function value, 
-                                                          ! i.e. is parameter set is feasible
+    LOGICAL                                :: coststatus  ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible
     LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
     REAL(DP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter chosen for optimization
     REAL(DP),    DIMENSION(size(para,1))   :: weightUni   ! uniform CDF of parameter chosen for optimization
     REAL(DP)                               :: maxit       ! maximization = -1._dp, minimization = 1._dp
     REAL(DP)                               :: costbest    ! minimized value of cost function
-    
+
     type paramLim
        real(DP)                                 :: min                 !            minimum value
        real(DP)                                 :: max                 !            maximum value
@@ -2746,9 +2968,9 @@ CONTAINS
     integer(I4)            :: iConL, iConR, iConF
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
-    logical                :: iStop 
+    logical                :: iStop
     logical                :: ldummy
-    
+
     integer(I4)            :: iPar
     real(DP), DIMENSION(2) :: iParRange
 
@@ -2884,12 +3106,12 @@ CONTAINS
     weight    = 0.0_dp
     weightUni = 0.0_dp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = weight_in(:)
           weightUni(:) = 1.0_dp
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = 1.0_dp
           weightUni(:) = 1.0_dp
        end where
@@ -2921,15 +3143,15 @@ CONTAINS
     !nITER =  2_i4*N
     !
     ! Generate and evaluate the initial solution state
-    fo = cost(gamma(:)%old) * maxit   
+    fo = cost(gamma(:)%old) * maxit
     if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     !
-    ! initialize counters /var for new SA    
+    ! initialize counters /var for new SA
     iConL=           0_i4
     iConR=           1_i4
     iConF=           0_i4
     iTotalCounter=   0_i4
-    iTotalCounterR = 0_i4   
+    iTotalCounterR = 0_i4
     fn =             0.0_DP
     ac_ratio =       1.0_DP
     iStop=           .TRUE.
@@ -2953,11 +3175,11 @@ CONTAINS
     ! ******************************************************
     loopTest: do while (iStop)
        ! loopTest: do iter = 1, nIter
-       iter = iter + 1_i4    
+       iter = iter + 1_i4
        Ipos= 0_i4
        Ineg= 0_i4
        fbb=  fBest
-       !LEN = int( real(iter,dp)*sqrt(real(iter,dp)) / nITER + 1.5*real(N,dp),i4) 
+       !LEN = int( real(iter,dp)*sqrt(real(iter,dp)) / nITER + 1.5*real(N,dp),i4)
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
@@ -2965,7 +3187,7 @@ CONTAINS
           iTotalCounterR =  iTotalCounterR + 1_i4
           iTotalCounter = iTotalCounter + 1_i4
           !if (mod(iTotalCounter,1000_i4) == 0_i4) then
-          !  call writeresults_o(4,fn) 
+          !  call writeresults_o(4,fn)
           !end if
           !
           ! Generate a random subsequent state and evaluate its objective function
@@ -2975,7 +3197,7 @@ CONTAINS
                (iTotalCounterR <= int(real(nIterMax,dp)/3._dp*4_dp,i4))) then
              dR = 0.05_DP
           end if
-          ! (1a) Select parameter to be changed    
+          ! (1a) Select parameter to be changed
           call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
           ! V1: select one parameter from all n
           !iPar = int(real(N,dp)*RN2+1._DP,i4)
@@ -3002,20 +3224,20 @@ CONTAINS
           !   end do
           ! end if
           !
-          !   GRADUAL: LINEAR FUNCTION       
-          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)                                
+          !   GRADUAL: LINEAR FUNCTION
+          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: ROOT FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**0.25_dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)     
+          !do while (weightUni(iPar)+(ac_ratio**0.25_dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: HILL FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**5._dp)/(0.3**5._dp+ac_ratio**5._dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2) 
+          !do while (weightUni(iPar)+(ac_ratio**5._dp)/(0.3**5._dp+ac_ratio**5._dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
-          !end do 
+          !end do
           !
 
           !print*, 'iPar=',iPar !
@@ -3045,7 +3267,7 @@ CONTAINS
              fn = fn/normPhi
              !
              ! Change in cost function value
-             df = fn-fo             
+             df = fn-fo
              !
              ! analyze change in the objective function: df
              if (df < 0.0_DP) then
@@ -3054,7 +3276,7 @@ CONTAINS
                 Ipos=Ipos+1_i4
                 !print*, 'Ipos=',Ipos
                 fo = fn
-                gamma(:)%old   = gamma(:)%new 
+                gamma(:)%old   = gamma(:)%new
                 !print*, gamma(:)%new
                 !
                 ! keep best solution
@@ -3070,8 +3292,8 @@ CONTAINS
                    else
                       pa=EXP(rho)
                    end if
-                   !print*, 'rho=',rho,'  pa=',pa                 
-  	           !
+                   !print*, 'rho=',rho,'  pa=',pa
+                   !
                    call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
                    !print*, RN1
                    !
@@ -3082,7 +3304,7 @@ CONTAINS
                       !pause
                       fo = fn
                       ! save old state
-                      gamma(:)%old   = gamma(:)%new 
+                      gamma(:)%old   = gamma(:)%new
                       !print*, gamma(:)%new
                    end if
                    !else
@@ -3098,7 +3320,7 @@ CONTAINS
        !
        ! estimate acceptance ratio
        ac_ratio=(real(Ipos,dp) + real(Ineg,dp))/real(LEN,dp)
-       !    
+       !
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
                fo*NormPhi*maxit, fBest*NormPhi*maxit
@@ -3129,7 +3351,7 @@ CONTAINS
           gamma(:)%old   = gamma(:)%best
        else
           ! Update Temperature (geometrical decrement)
-          if (ac_ratio < 0.4_dp)  then 
+          if (ac_ratio < 0.4_dp)  then
              DT=0.995_dp
           else
              DT=DT0
@@ -3154,7 +3376,7 @@ CONTAINS
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
           !print*, 'iStop = .false.'
-          iStop=.FALSE.          
+          iStop=.FALSE.
        end if
        !
     end do loopTest
@@ -3163,7 +3385,7 @@ CONTAINS
     !
     ! write final results
     !
-    ! calculate cost function again (only for check and return values)  
+    ! calculate cost function again (only for check and return values)
     parabest = gamma(:)%best
     costbest = cost(parabest) * maxit
     if (present (funcbest)) then
@@ -3189,34 +3411,35 @@ CONTAINS
 
   END FUNCTION anneal_status_dp
 
+
   FUNCTION anneal_status_sp(  cost, para, range,                                      &   ! obligatory
-                       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
-                       seeds_in, printflag_in, coststatus_in, maskpara_in, weight_in, &   ! optional IN 
-                       maxit_in,                                                      &   ! optional IN
-                       funcbest &                                                         ! optional OUT
-                    ) &
-           result(parabest)
+       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
+       seeds_in, printflag_in, coststatus_in, maskpara_in, weight_in, &   ! optional IN
+       maxit_in,                                                      &   ! optional IN
+       funcbest &                                                         ! optional OUT
+       ) &
+       result(parabest)
 
     IMPLICIT NONE
 
     INTERFACE
        FUNCTION cost(paraset,status_in)
-       ! calculates the cost function at a certain parameter set paraset and 
-       ! returns optionally if it is a valid parameter set (status_in)
-           use mo_kind
-           REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
-           REAL(SP)                            :: cost
-           LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
+         ! calculates the cost function at a certain parameter set paraset and
+         ! returns optionally if it is a valid parameter set (status_in)
+         use mo_kind
+         REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
+         REAL(SP)                            :: cost
+         LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
        END FUNCTION cost
     END INTERFACE
-    
+
     INTERFACE
        SUBROUTINE range(paraset,iPar,rangePar)
-       ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
-           use mo_kind
-           REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
-           INTEGER(I4),            INTENT(IN)  :: iPar
-           REAL(SP), DIMENSION(2), INTENT(OUT) :: rangePar
+         ! gives the range (min,max) of the parameter iPar at a certain parameter set paraset
+         use mo_kind
+         REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
+         INTEGER(I4),            INTENT(IN)  :: iPar
+         REAL(SP), DIMENSION(2), INTENT(OUT) :: rangePar
        END SUBROUTINE range
     END INTERFACE
 
@@ -3224,39 +3447,39 @@ CONTAINS
     REAL(SP),    DIMENSION(size(para,1))                :: parabest  ! parameter set minimizing the cost function
 
     ! optionals
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature 
-                                                                     ! (DEFAULT: Get_Temperature)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999 
-                                                                     ! (DEFAULT: 0.9)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations 
-                                                                     ! (DEFAULT: 1000)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain, 
-                                                                     ! DEFAULT: max(250, size(para,1))
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps 
-                                                                     ! (DEFAULT: 5)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function 
-                                                                     ! (DEFAULT: 0.01)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria 
-                                                                     ! (DEFAULT: 0.1)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers 
-                                                                     ! (DEFAULT: Get_timeseed)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.) 
-                                                                     ! (DEFAULT: .false.)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: coststatus_in        ! Checks status of cost function value, 
-                                                                     ! i.e. is parameter set is feasible (.true.)
-                                                                     ! DEFAULT = .false.
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature
+    ! (DEFAULT: Get_Temperature)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999
+    ! (DEFAULT: 0.9)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations
+    ! (DEFAULT: 1000)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain,
+    ! DEFAULT: max(250, size(para,1))
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps
+    ! (DEFAULT: 5)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function
+    ! (DEFAULT: 0.01)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria
+    ! (DEFAULT: 0.1)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers
+    ! (DEFAULT: Get_timeseed)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.)
+    ! (DEFAULT: .false.)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: coststatus_in        ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible (.true.)
+    ! DEFAULT = .false.
     LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
-                                                                     ! false if parameter is discarded in optimization
-                                                                     ! DEFAULT = .true.
+         INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
+    ! false if parameter is discarded in optimization
+    ! DEFAULT = .true.
     REAL(SP),    OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: weight_in            ! vector of weights per parameter
-                                                                     ! gives the frequency of parameter to be 
-                                                                     ! chosen for optimization 
-                                                                     ! DEFAULT: uniform
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function 
-                                                                     ! maximization = .true., minimization = .false.
-                                                                     ! DEFAULT = .false.
+         INTENT(IN)  :: weight_in            ! vector of weights per parameter
+    ! gives the frequency of parameter to be
+    ! chosen for optimization
+    ! DEFAULT: uniform
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
     REAL(SP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
 
     ! local variables
@@ -3270,15 +3493,15 @@ CONTAINS
     REAL(SP)                               :: acc         ! Acceptance Ratio, <0.1 stopping criteria
     INTEGER(I4)                            :: seeds(3)    ! Seeds of random numbers
     LOGICAL                                :: printflag   ! If command line output is written
-    LOGICAL                                :: coststatus  ! Checks status of cost function value, 
-                                                          ! i.e. is parameter set is feasible
+    LOGICAL                                :: coststatus  ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible
     LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
     REAL(SP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter chosen for optimization
     REAL(SP),    DIMENSION(size(para,1))   :: weightUni   ! uniform CDF of parameter chosen for optimization
     REAL(SP)                               :: maxit       ! maximization = -1._sp, minimization = 1._sp
     REAL(SP)                               :: costbest    ! minimized value of cost function
-    
+
     type paramLim
        real(SP)                                 :: min                 !            minimum value
        real(SP)                                 :: max                 !            maximum value
@@ -3308,9 +3531,9 @@ CONTAINS
     integer(I4)            :: iConL, iConR, iConF
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
-    logical                :: iStop 
+    logical                :: iStop
     logical                :: ldummy
-    
+
     integer(I4)            :: iPar
     real(SP), DIMENSION(2) :: iParRange
 
@@ -3446,12 +3669,12 @@ CONTAINS
     weight    = 0.0_sp
     weightUni = 0.0_sp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = weight_in(:)
           weightUni(:) = 1.0_sp
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = 1.0_sp
           weightUni(:) = 1.0_sp
        end where
@@ -3483,15 +3706,15 @@ CONTAINS
     !nITER =  2_i4*N
     !
     ! Generate and evaluate the initial solution state
-    fo = cost(gamma(:)%old) * maxit   
+    fo = cost(gamma(:)%old) * maxit
     if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
     !
-    ! initialize counters /var for new SA    
+    ! initialize counters /var for new SA
     iConL=           0_i4
     iConR=           1_i4
     iConF=           0_i4
     iTotalCounter=   0_i4
-    iTotalCounterR = 0_i4   
+    iTotalCounterR = 0_i4
     fn =             0.0_SP
     ac_ratio =       1.0_SP
     iStop=           .TRUE.
@@ -3515,11 +3738,11 @@ CONTAINS
     ! ******************************************************
     loopTest: do while (iStop)
        ! loopTest: do iter = 1, nIter
-       iter = iter + 1_i4    
+       iter = iter + 1_i4
        Ipos= 0_i4
        Ineg= 0_i4
        fbb=  fBest
-       !LEN = int( real(iter,sp)*sqrt(real(iter,sp)) / nITER + 1.5*real(N,sp),i4) 
+       !LEN = int( real(iter,sp)*sqrt(real(iter,sp)) / nITER + 1.5*real(N,sp),i4)
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
@@ -3527,7 +3750,7 @@ CONTAINS
           iTotalCounterR =  iTotalCounterR + 1_i4
           iTotalCounter = iTotalCounter + 1_i4
           !if (mod(iTotalCounter,1000_i4) == 0_i4) then
-          !  call writeresults_o(4,fn) 
+          !  call writeresults_o(4,fn)
           !end if
           !
           ! Generate a random subsequent state and evaluate its objective function
@@ -3537,7 +3760,7 @@ CONTAINS
                (iTotalCounterR <= int(real(nIterMax,sp)/3._sp*4_sp,i4))) then
              dR = 0.05_SP
           end if
-          ! (1a) Select parameter to be changed    
+          ! (1a) Select parameter to be changed
           call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
           ! V1: select one parameter from all n
           !iPar = int(real(N,sp)*RN2+1._SP,i4)
@@ -3564,20 +3787,20 @@ CONTAINS
           !   end do
           ! end if
           !
-          !   GRADUAL: LINEAR FUNCTION       
-          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)                                
+          !   GRADUAL: LINEAR FUNCTION
+          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: ROOT FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**0.25_sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)     
+          !do while (weightUni(iPar)+(ac_ratio**0.25_sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: HILL FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**5._sp)/(0.3**5._sp+ac_ratio**5._sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2) 
+          !do while (weightUni(iPar)+(ac_ratio**5._sp)/(0.3**5._sp+ac_ratio**5._sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
-          !end do 
+          !end do
           !
 
           !print*, 'iPar=',iPar !
@@ -3607,7 +3830,7 @@ CONTAINS
              fn = fn/normPhi
              !
              ! Change in cost function value
-             df = fn-fo             
+             df = fn-fo
              !
              ! analyze change in the objective function: df
              if (df < 0.0_SP) then
@@ -3616,7 +3839,7 @@ CONTAINS
                 Ipos=Ipos+1_i4
                 !print*, 'Ipos=',Ipos
                 fo = fn
-                gamma(:)%old   = gamma(:)%new 
+                gamma(:)%old   = gamma(:)%new
                 !print*, gamma(:)%new
                 !
                 ! keep best solution
@@ -3632,8 +3855,8 @@ CONTAINS
                    else
                       pa=EXP(rho)
                    end if
-                   !print*, 'rho=',rho,'  pa=',pa                 
-  	           !
+                   !print*, 'rho=',rho,'  pa=',pa
+                   !
                    call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
                    !print*, RN1
                    !
@@ -3644,7 +3867,7 @@ CONTAINS
                       !pause
                       fo = fn
                       ! save old state
-                      gamma(:)%old   = gamma(:)%new 
+                      gamma(:)%old   = gamma(:)%new
                       !print*, gamma(:)%new
                    end if
                    !else
@@ -3660,7 +3883,7 @@ CONTAINS
        !
        ! estimate acceptance ratio
        ac_ratio=(real(Ipos,sp) + real(Ineg,sp))/real(LEN,sp)
-       !    
+       !
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
                fo*NormPhi*maxit, fBest*NormPhi*maxit
@@ -3691,7 +3914,7 @@ CONTAINS
           gamma(:)%old   = gamma(:)%best
        else
           ! Update Temperature (geometrical decrement)
-          if (ac_ratio < 0.4_sp)  then 
+          if (ac_ratio < 0.4_sp)  then
              DT=0.995_sp
           else
              DT=DT0
@@ -3716,7 +3939,7 @@ CONTAINS
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
           !print*, 'iStop = .false.'
-          iStop=.FALSE.          
+          iStop=.FALSE.
        end if
        !
     end do loopTest
@@ -3725,7 +3948,7 @@ CONTAINS
     !
     ! write final results
     !
-    ! calculate cost function again (only for check and return values)  
+    ! calculate cost function again (only for check and return values)
     parabest = gamma(:)%best
     costbest = cost(parabest) * maxit
     if (present (funcbest)) then
@@ -3751,24 +3974,26 @@ CONTAINS
 
   END FUNCTION anneal_status_sp
 
+  ! ------------------------------------------------------------------
+
   FUNCTION anneal_status_fixedrange_dp(  cost, para, prange,                          &   ! obligatory
-                       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
-                       seeds_in, printflag_in, coststatus_in, maskpara_in, weight_in, &   ! optional IN 
-                       maxit_in,                                                      &   ! optional IN
-                       funcbest &                                                         ! optional OUT
-                    ) &
-           result(parabest)
+       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
+       seeds_in, printflag_in, coststatus_in, maskpara_in, weight_in, &   ! optional IN
+       maxit_in,                                                      &   ! optional IN
+       funcbest &                                                         ! optional OUT
+       ) &
+       result(parabest)
 
     IMPLICIT NONE
 
     INTERFACE
        FUNCTION cost(paraset,status_in)
-       ! calculates the cost function at a certain parameter set paraset and 
-       ! returns optionally if it is a valid parameter set (status_in)
-           use mo_kind
-           REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
-           REAL(DP)                            :: cost
-           LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
+         ! calculates the cost function at a certain parameter set paraset and
+         ! returns optionally if it is a valid parameter set (status_in)
+         use mo_kind
+         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
+         REAL(DP)                            :: cost
+         LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
        END FUNCTION cost
     END INTERFACE
 
@@ -3777,39 +4002,39 @@ CONTAINS
     REAL(DP),    DIMENSION(size(para,1))                :: parabest  ! parameter set minimizing the cost function
 
     ! optionals
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature 
-                                                                     ! (DEFAULT: Get_Temperature)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999 
-                                                                     ! (DEFAULT: 0.9)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations 
-                                                                     ! (DEFAULT: 1000)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain, 
-                                                                     ! DEFAULT: max(250, size(para,1))
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps 
-                                                                     ! (DEFAULT: 5)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function 
-                                                                     ! (DEFAULT: 0.01)
-    REAL(DP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria 
-                                                                     ! (DEFAULT: 0.1)
-    INTEGER(I8), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers 
-                                                                     ! (DEFAULT: Get_timeseed)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.) 
-                                                                     ! (DEFAULT: .false.)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: coststatus_in        ! Checks status of cost function value, 
-                                                                     ! i.e. is parameter set is feasible (.true.)
-                                                                     ! DEFAULT = .false.
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature
+    ! (DEFAULT: Get_Temperature)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999
+    ! (DEFAULT: 0.9)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations
+    ! (DEFAULT: 1000)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain,
+    ! DEFAULT: max(250, size(para,1))
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps
+    ! (DEFAULT: 5)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function
+    ! (DEFAULT: 0.01)
+    REAL(DP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria
+    ! (DEFAULT: 0.1)
+    INTEGER(I8), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers
+    ! (DEFAULT: Get_timeseed)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.)
+    ! (DEFAULT: .false.)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: coststatus_in        ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible (.true.)
+    ! DEFAULT = .false.
     LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
-                                                                     ! false if parameter is discarded in optimization
-                                                                     ! DEFAULT = .true.
+         INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
+    ! false if parameter is discarded in optimization
+    ! DEFAULT = .true.
     REAL(DP),    OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: weight_in            ! vector of weights per parameter
-                                                                     ! gives the frequency of parameter to be 
-                                                                     ! chosen for optimization 
-                                                                     ! DEFAULT: uniform
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function 
-                                                                     ! maximization = .true., minimization = .false.
-                                                                     ! DEFAULT = .false.
+         INTENT(IN)  :: weight_in            ! vector of weights per parameter
+    ! gives the frequency of parameter to be
+    ! chosen for optimization
+    ! DEFAULT: uniform
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
     REAL(DP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
 
     ! local variables
@@ -3823,15 +4048,15 @@ CONTAINS
     REAL(DP)                               :: acc         ! Acceptance Ratio, <0.1 stopping criteria
     INTEGER(I8)                            :: seeds(3)    ! Seeds of random numbers
     LOGICAL                                :: printflag   ! If command line output is written
-    LOGICAL                                :: coststatus  ! Checks status of cost function value, 
-                                                          ! i.e. is parameter set is feasible
+    LOGICAL                                :: coststatus  ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible
     LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
     REAL(DP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter chosen for optimization
     REAL(DP),    DIMENSION(size(para,1))   :: weightUni   ! uniform CDF of parameter chosen for optimization
     REAL(DP)                               :: maxit       ! maximization = -1._dp, minimization = 1._dp
     REAL(DP)                               :: costbest    ! minimized value of cost function
-    
+
     type paramLim
        real(DP)                                 :: min                 !            minimum value
        real(DP)                                 :: max                 !            maximum value
@@ -3861,9 +4086,9 @@ CONTAINS
     integer(I4)            :: iConL, iConR, iConF
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
-    logical                :: iStop 
+    logical                :: iStop
     logical                :: ldummy
-    
+
     integer(I4)            :: iPar
 
     ! CHECKING OPTIONALS
@@ -3998,12 +4223,12 @@ CONTAINS
     weight    = 0.0_dp
     weightUni = 0.0_dp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = weight_in(:)
           weightUni(:) = 1.0_dp
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = 1.0_dp
           weightUni(:) = 1.0_dp
        end where
@@ -4035,15 +4260,15 @@ CONTAINS
     !nITER =  2_i4*N
     !
     ! Generate and evaluate the initial solution state
-    fo = cost(gamma(:)%old) * maxit   
+    fo = cost(gamma(:)%old) * maxit
     if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit
     !
-    ! initialize counters /var for new SA    
+    ! initialize counters /var for new SA
     iConL=           0_i4
     iConR=           1_i4
     iConF=           0_i4
     iTotalCounter=   0_i4
-    iTotalCounterR = 0_i4   
+    iTotalCounterR = 0_i4
     fn =             0.0_DP
     ac_ratio =       1.0_DP
     iStop=           .TRUE.
@@ -4067,11 +4292,11 @@ CONTAINS
     ! ******************************************************
     loopTest: do while (iStop)
        ! loopTest: do iter = 1, nIter
-       iter = iter + 1_i4    
+       iter = iter + 1_i4
        Ipos= 0_i4
        Ineg= 0_i4
        fbb=  fBest
-       !LEN = int( real(iter,dp)*sqrt(real(iter,dp)) / nITER + 1.5*real(N,dp),i4) 
+       !LEN = int( real(iter,dp)*sqrt(real(iter,dp)) / nITER + 1.5*real(N,dp),i4)
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
@@ -4079,7 +4304,7 @@ CONTAINS
           iTotalCounterR =  iTotalCounterR + 1_i4
           iTotalCounter = iTotalCounter + 1_i4
           !if (mod(iTotalCounter,1000_i4) == 0_i4) then
-          !  call writeresults_o(4,fn) 
+          !  call writeresults_o(4,fn)
           !end if
           !
           ! Generate a random subsequent state and evaluate its objective function
@@ -4089,7 +4314,7 @@ CONTAINS
                (iTotalCounterR <= int(real(nIterMax,dp)/3._dp*4_dp,i4))) then
              dR = 0.05_DP
           end if
-          ! (1a) Select parameter to be changed    
+          ! (1a) Select parameter to be changed
           call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
           ! V1: select one parameter from all n
           !iPar = int(real(N,dp)*RN2+1._DP,i4)
@@ -4116,20 +4341,20 @@ CONTAINS
           !   end do
           ! end if
           !
-          !   GRADUAL: LINEAR FUNCTION       
-          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)                                
+          !   GRADUAL: LINEAR FUNCTION
+          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: ROOT FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**0.25_dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)     
+          !do while (weightUni(iPar)+(ac_ratio**0.25_dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: HILL FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**5._dp)/(0.3**5._dp+ac_ratio**5._dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2) 
+          !do while (weightUni(iPar)+(ac_ratio**5._dp)/(0.3**5._dp+ac_ratio**5._dp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
-          !end do 
+          !end do
           !
 
           !print*, 'iPar=',iPar !
@@ -4158,7 +4383,7 @@ CONTAINS
              fn = fn/normPhi
              !
              ! Change in cost function value
-             df = fn-fo             
+             df = fn-fo
              !
              ! analyze change in the objective function: df
              if (df < 0.0_DP) then
@@ -4167,7 +4392,7 @@ CONTAINS
                 Ipos=Ipos+1_i4
                 !print*, 'Ipos=',Ipos
                 fo = fn
-                gamma(:)%old   = gamma(:)%new 
+                gamma(:)%old   = gamma(:)%new
                 !print*, gamma(:)%new
                 !
                 ! keep best solution
@@ -4183,8 +4408,8 @@ CONTAINS
                    else
                       pa=EXP(rho)
                    end if
-                   !print*, 'rho=',rho,'  pa=',pa                 
-  	           !
+                   !print*, 'rho=',rho,'  pa=',pa
+                   !
                    call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
                    !print*, RN1
                    !
@@ -4195,7 +4420,7 @@ CONTAINS
                       !pause
                       fo = fn
                       ! save old state
-                      gamma(:)%old   = gamma(:)%new 
+                      gamma(:)%old   = gamma(:)%new
                       !print*, gamma(:)%new
                    end if
                    !else
@@ -4211,7 +4436,7 @@ CONTAINS
        !
        ! estimate acceptance ratio
        ac_ratio=(real(Ipos,dp) + real(Ineg,dp))/real(LEN,dp)
-       !    
+       !
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
                fo*NormPhi*maxit, fBest*NormPhi*maxit
@@ -4242,7 +4467,7 @@ CONTAINS
           gamma(:)%old   = gamma(:)%best
        else
           ! Update Temperature (geometrical decrement)
-          if (ac_ratio < 0.4_dp)  then 
+          if (ac_ratio < 0.4_dp)  then
              DT=0.995_dp
           else
              DT=DT0
@@ -4267,7 +4492,7 @@ CONTAINS
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
           !print*, 'iStop = .false.'
-          iStop=.FALSE.          
+          iStop=.FALSE.
        end if
        !
     end do loopTest
@@ -4276,7 +4501,7 @@ CONTAINS
     !
     ! write final results
     !
-    ! calculate cost function again (only for check and return values)  
+    ! calculate cost function again (only for check and return values)
     parabest = gamma(:)%best
     costbest = cost(parabest) * maxit
     if (present (funcbest)) then
@@ -4302,24 +4527,25 @@ CONTAINS
 
   END FUNCTION anneal_status_fixedrange_dp
 
+
   FUNCTION anneal_status_fixedrange_sp(  cost, para, prange,                          &   ! obligatory
-                       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
-                       seeds_in, printflag_in, coststatus_in, maskpara_in, weight_in, &   ! optional IN 
-                       maxit_in,                                                      &   ! optional IN
-                       funcbest &                                                         ! optional OUT
-                    ) &
-           result(parabest)
+       temp_in, DT_in, nITERmax_in, LEN_in, nST_in, eps_in, acc_in,   &   ! optional IN
+       seeds_in, printflag_in, coststatus_in, maskpara_in, weight_in, &   ! optional IN
+       maxit_in,                                                      &   ! optional IN
+       funcbest &                                                         ! optional OUT
+       ) &
+       result(parabest)
 
     IMPLICIT NONE
 
     INTERFACE
        FUNCTION cost(paraset,status_in)
-       ! calculates the cost function at a certain parameter set paraset and 
-       ! returns optionally if it is a valid parameter set (status_in)
-           use mo_kind
-           REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
-           REAL(SP)                            :: cost
-           LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
+         ! calculates the cost function at a certain parameter set paraset and
+         ! returns optionally if it is a valid parameter set (status_in)
+         use mo_kind
+         REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
+         REAL(SP)                            :: cost
+         LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
        END FUNCTION cost
     END INTERFACE
 
@@ -4328,39 +4554,39 @@ CONTAINS
     REAL(SP),    DIMENSION(size(para,1))                :: parabest  ! parameter set minimizing the cost function
 
     ! optionals
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature 
-                                                                     ! (DEFAULT: Get_Temperature)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999 
-                                                                     ! (DEFAULT: 0.9)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations 
-                                                                     ! (DEFAULT: 1000)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain, 
-                                                                     ! DEFAULT: max(250, size(para,1))
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps 
-                                                                     ! (DEFAULT: 5)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function 
-                                                                     ! (DEFAULT: 0.01)
-    REAL(SP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria 
-                                                                     ! (DEFAULT: 0.1)
-    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers 
-                                                                     ! (DEFAULT: Get_timeseed)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.) 
-                                                                     ! (DEFAULT: .false.)
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: coststatus_in        ! Checks status of cost function value, 
-                                                                     ! i.e. is parameter set is feasible (.true.)
-                                                                     ! DEFAULT = .false.
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: temp_in              ! starting temperature
+    ! (DEFAULT: Get_Temperature)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: DT_in                ! geometrical decreement, 0.7<DT<0.999
+    ! (DEFAULT: 0.9)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nITERmax_in          ! maximal number of iterations
+    ! (DEFAULT: 1000)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: LEN_in               ! Length of Markov Chain,
+    ! DEFAULT: max(250, size(para,1))
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: nST_in               ! Number of consecutive LEN steps
+    ! (DEFAULT: 5)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: eps_in               ! epsilon decreement of cost function
+    ! (DEFAULT: 0.01)
+    REAL(SP),    OPTIONAL,       INTENT(IN)  :: acc_in               ! Acceptance Ratio, <0.1 stopping criteria
+    ! (DEFAULT: 0.1)
+    INTEGER(I4), OPTIONAL,       INTENT(IN)  :: seeds_in(3)          ! Seeds of random numbers
+    ! (DEFAULT: Get_timeseed)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: printflag_in         ! If command line output is written (.true.)
+    ! (DEFAULT: .false.)
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: coststatus_in        ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible (.true.)
+    ! DEFAULT = .false.
     LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
-                                                                     ! false if parameter is discarded in optimization
-                                                                     ! DEFAULT = .true.
+         INTENT(IN)  :: maskpara_in          ! true if parameter will be optimized
+    ! false if parameter is discarded in optimization
+    ! DEFAULT = .true.
     REAL(SP),    OPTIONAL, DIMENSION(size(para,1)), &
-                                 INTENT(IN)  :: weight_in            ! vector of weights per parameter
-                                                                     ! gives the frequency of parameter to be 
-                                                                     ! chosen for optimization 
-                                                                     ! DEFAULT: uniform
-    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function 
-                                                                     ! maximization = .true., minimization = .false.
-                                                                     ! DEFAULT = .false.
+         INTENT(IN)  :: weight_in            ! vector of weights per parameter
+    ! gives the frequency of parameter to be
+    ! chosen for optimization
+    ! DEFAULT: uniform
+    LOGICAL,     OPTIONAL,       INTENT(IN)  :: maxit_in             ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
     REAL(SP),    OPTIONAL,       INTENT(OUT) :: funcbest             ! minimized value of cost function
 
     ! local variables
@@ -4374,15 +4600,15 @@ CONTAINS
     REAL(SP)                               :: acc         ! Acceptance Ratio, <0.1 stopping criteria
     INTEGER(I4)                            :: seeds(3)    ! Seeds of random numbers
     LOGICAL                                :: printflag   ! If command line output is written
-    LOGICAL                                :: coststatus  ! Checks status of cost function value, 
-                                                          ! i.e. is parameter set is feasible
+    LOGICAL                                :: coststatus  ! Checks status of cost function value,
+    ! i.e. is parameter set is feasible
     LOGICAL,     DIMENSION(size(para,1))   :: maskpara    ! true if parameter will be optimized
     INTEGER(I4), DIMENSION(:), ALLOCATABLE :: truepara    ! indexes of parameters to be optimized
     REAL(SP),    DIMENSION(size(para,1))   :: weight      ! CDF of parameter chosen for optimization
     REAL(SP),    DIMENSION(size(para,1))   :: weightUni   ! uniform CDF of parameter chosen for optimization
     REAL(SP)                               :: maxit       ! maximization = -1._sp, minimization = 1._sp
     REAL(SP)                               :: costbest    ! minimized value of cost function
-    
+
     type paramLim
        real(SP)                                 :: min                 !            minimum value
        real(SP)                                 :: max                 !            maximum value
@@ -4412,9 +4638,9 @@ CONTAINS
     integer(I4)            :: iConL, iConR, iConF
     integer(I4)            :: iTotalCounter                        ! includes reheating for final conditions
     integer(I4)            :: iTotalCounterR                       ! counter of interations in one reheating
-    logical                :: iStop 
+    logical                :: iStop
     logical                :: ldummy
-    
+
     integer(I4)            :: iPar
 
     ! CHECKING OPTIONALS
@@ -4549,12 +4775,12 @@ CONTAINS
     weight    = 0.0_sp
     weightUni = 0.0_sp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = weight_in(:)
           weightUni(:) = 1.0_sp
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:)    = 1.0_sp
           weightUni(:) = 1.0_sp
        end where
@@ -4586,15 +4812,15 @@ CONTAINS
     !nITER =  2_i4*N
     !
     ! Generate and evaluate the initial solution state
-    fo = cost(gamma(:)%old) * maxit   
+    fo = cost(gamma(:)%old) * maxit
     if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_sp * maxit
     !
-    ! initialize counters /var for new SA    
+    ! initialize counters /var for new SA
     iConL=           0_i4
     iConR=           1_i4
     iConF=           0_i4
     iTotalCounter=   0_i4
-    iTotalCounterR = 0_i4   
+    iTotalCounterR = 0_i4
     fn =             0.0_SP
     ac_ratio =       1.0_SP
     iStop=           .TRUE.
@@ -4618,11 +4844,11 @@ CONTAINS
     ! ******************************************************
     loopTest: do while (iStop)
        ! loopTest: do iter = 1, nIter
-       iter = iter + 1_i4    
+       iter = iter + 1_i4
        Ipos= 0_i4
        Ineg= 0_i4
        fbb=  fBest
-       !LEN = int( real(iter,sp)*sqrt(real(iter,sp)) / nITER + 1.5*real(N,sp),i4) 
+       !LEN = int( real(iter,sp)*sqrt(real(iter,sp)) / nITER + 1.5*real(N,sp),i4)
        ! Repeat LEN times with feasible solution
        j=1
        loopLEN: do while (j .le. LEN)
@@ -4630,7 +4856,7 @@ CONTAINS
           iTotalCounterR =  iTotalCounterR + 1_i4
           iTotalCounter = iTotalCounter + 1_i4
           !if (mod(iTotalCounter,1000_i4) == 0_i4) then
-          !  call writeresults_o(4,fn) 
+          !  call writeresults_o(4,fn)
           !end if
           !
           ! Generate a random subsequent state and evaluate its objective function
@@ -4640,7 +4866,7 @@ CONTAINS
                (iTotalCounterR <= int(real(nIterMax,sp)/3._sp*4_sp,i4))) then
              dR = 0.05_SP
           end if
-          ! (1a) Select parameter to be changed    
+          ! (1a) Select parameter to be changed
           call xor4096(seeds(2),RN2, iin=iin2, win=win2, xin=xin2)
           ! V1: select one parameter from all n
           !iPar = int(real(N,sp)*RN2+1._SP,i4)
@@ -4667,20 +4893,20 @@ CONTAINS
           !   end do
           ! end if
           !
-          !   GRADUAL: LINEAR FUNCTION       
-          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)                                
+          !   GRADUAL: LINEAR FUNCTION
+          !do while (weightUni(iPar)+(ac_ratio)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: ROOT FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**0.25_sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)     
+          !do while (weightUni(iPar)+(ac_ratio**0.25_sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
           !end do
           !
           !   GRADUAL: HILL FUNCTION
-          !do while (weightUni(iPar)+(ac_ratio**5._sp)/(0.3**5._sp+ac_ratio**5._sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2) 
+          !do while (weightUni(iPar)+(ac_ratio**5._sp)/(0.3**5._sp+ac_ratio**5._sp)*(weight(iPar)-weightUni(iPar)) .lt. RN2)
           !   iPar = iPar + 1_i4
-          !end do 
+          !end do
           !
 
           !print*, 'iPar=',iPar !
@@ -4709,7 +4935,7 @@ CONTAINS
              fn = fn/normPhi
              !
              ! Change in cost function value
-             df = fn-fo             
+             df = fn-fo
              !
              ! analyze change in the objective function: df
              if (df < 0.0_SP) then
@@ -4718,7 +4944,7 @@ CONTAINS
                 Ipos=Ipos+1_i4
                 !print*, 'Ipos=',Ipos
                 fo = fn
-                gamma(:)%old   = gamma(:)%new 
+                gamma(:)%old   = gamma(:)%new
                 !print*, gamma(:)%new
                 !
                 ! keep best solution
@@ -4734,8 +4960,8 @@ CONTAINS
                    else
                       pa=EXP(rho)
                    end if
-                   !print*, 'rho=',rho,'  pa=',pa                 
-  	           !
+                   !print*, 'rho=',rho,'  pa=',pa
+                   !
                    call xor4096(seeds(1), RN1, iin=iin1, win=win1, xin=xin1)
                    !print*, RN1
                    !
@@ -4746,7 +4972,7 @@ CONTAINS
                       !pause
                       fo = fn
                       ! save old state
-                      gamma(:)%old   = gamma(:)%new 
+                      gamma(:)%old   = gamma(:)%new
                       !print*, gamma(:)%new
                    end if
                    !else
@@ -4762,7 +4988,7 @@ CONTAINS
        !
        ! estimate acceptance ratio
        ac_ratio=(real(Ipos,sp) + real(Ineg,sp))/real(LEN,sp)
-       !    
+       !
        if (printflag) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T, &
                fo*NormPhi*maxit, fBest*NormPhi*maxit
@@ -4793,7 +5019,7 @@ CONTAINS
           gamma(:)%old   = gamma(:)%best
        else
           ! Update Temperature (geometrical decrement)
-          if (ac_ratio < 0.4_sp)  then 
+          if (ac_ratio < 0.4_sp)  then
              DT=0.995_sp
           else
              DT=DT0
@@ -4818,7 +5044,7 @@ CONTAINS
        ! STOP condition
        if ( iTotalCounter > nITERmax ) then
           !print*, 'iStop = .false.'
-          iStop=.FALSE.          
+          iStop=.FALSE.
        end if
        !
     end do loopTest
@@ -4827,7 +5053,7 @@ CONTAINS
     !
     ! write final results
     !
-    ! calculate cost function again (only for check and return values)  
+    ! calculate cost function again (only for check and return values)
     parabest = gamma(:)%best
     costbest = cost(parabest) * maxit
     if (present (funcbest)) then
@@ -4855,114 +5081,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         gettemperature
-
-  !     PURPOSE
-  !         Determines an initial temperature for Simulated Annealing achieving 
-  !         certain acceptance ratio
-  !    
-
-  !     CALLING SEQUENCE
-  !         para = (/ 1.0_dp , 2.0_dp /)
-  !         acc_goal   = 0.95_dp
-  !
-  !         user defined function cost_dp which calculates the cost function value for a 
-  !         parameter set (the interface given below has to be used for this function!)
-  !
-  !         user defined subroutine range_dp which returns the range for a parameter  
-  !         (the subroutine has to have a specific interface givene below!)
-  !
-  !         temp = GetTemperature(para, cost_dp, range_dp, acc_goal)
-  !
-  !         see also test folder for a detailed example
-
-  !     FUNCTION RETURN
-  !         REAL(SP/DP)                               :: temperature ... temperature achieving a certain 
-  !                                                                      acceptance ratio for Sim. Ann.
-  !         
-  
-  !     INDENT(IN)
-  !         REAL(SP/DP),    DIMENSION(:)              :: paraset     ... initial (valid) parameter set
-  !
-  !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the 
-  !                                                                      cost function at a given point
-  !
-  !         INTERFACE                                 :: range_dp/sp ... lower and upper bound per parameter
-  !                                                                         OR
-  !                                                                      interface calculating the 
-  !                                                                      feasible range for a parameter 
-  !                                                                      at a certain point, if ranges are variable
-  !         REAL(SP/DP)                               :: acc_goal    ... Acceptance Ratio which has to be achieved
-  !       
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         None
-  !
-
-
-  !     INDENT(IN), OPTIONAL
-  !         INTEGER(I4)    :: samplesize_in  ... number of iterations the estimation of temperature is based on
-  !                                              DEFAULT: Max(20_i4*n,250_i4)
-  !
-  !         LOGICAL, DIMENSION(size(para,1)) :: 
-  !                           maskpara_in    ... vector of logicals
-  !                                              maskpara(i) = .true.  --> parameter is optimized
-  !                                              maskpara(i) = .false. --> parameter is discarded 
-  !                                                                        from optimiztaion
-  !                                              DEFAULT = .true.
-  !
-  !         INTEGER(I4/I8) :: seeds_in(2)    ... Seeds of random numbers used for random parameter
-  !                                              set generation
-  !                                              DEFAULT: dependent on current time
-  !
-  !         LOGICAL        :: printflag_in   ... If .true. detailed command line output is written
-  !                                              DEFAULT: .false.
-  !
-  !         REAL(DP), DIMENSION(size(para,1)) ::
-  !                           weight_in      ... vector of weights per parameter
-  !                                              gives the frequency of parameter to be chosen for
-  !                                              optimization (will be scaled to a CDF internally)
-  !                                              eg. [1,2,1] --> parameter 2 is chosen twice as 
-  !                                                              often as parameter 1 and 2
-  !                                              DEFAULT: weight_in = 1.0_dp
-  !
-  !         LOGICAL        :: maxit_in       ... .true.  for maximizing a function  
-  !                                              .false. for minimizing a function
-  !                                              DEFAULT = .false. (minimization)
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Needs a user defined:
-  !         (1) FUNCTION to evaluate the cost function value for a given parameter set.
-  !             this function needs to have the following interface:
-  !                     FUNCTION cost(paraset)
-  !                     ! calculates the cost function at a certain parameter set paraset
-  !                         USE mo_kind
-  !                         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
-  !                         REAL(DP)                            :: cost
-  !                     END FUNCTION cost
-  !         (2) get_temperature is not checking on validity of parameter sets
-
-  !     EXAMPLE
-  !         see test/test_mo_anneal/
-
-  !     LITERATURE
-  !         (1) Walid Ben-Ameur
-  !             Compututing the Initial Temperature of Simulated Annealing
-  !             Comput. Opt. and App. (2004).
-
-  !     HISTORY
-  !        Written  Juliane Mai,   May   2012
-
   real(DP) function GetTemperature_dp( paraset, cost, range, acc_goal, &
        samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in, maxit_in)
     use mo_kind, only: dp, i4, i8
@@ -4970,25 +5088,25 @@ CONTAINS
     !
     real(dp),               dimension(:),               intent(in)    :: paraset         ! a valid parameter set of the model
     real(dp),                                           intent(in)    :: acc_goal        ! acceptance ratio to achieve
-    integer(i4), optional,                              intent(in)    :: samplesize_in   ! size of random set the 
-                                                                                         ! acc_estimate is based on
-                                                                                         ! default = Max(250, 20*<Number of parameters>)
+    integer(i4), optional,                              intent(in)    :: samplesize_in   ! size of random set the
+    ! acc_estimate is based on
+    ! default = Max(250, 20*<Number of parameters>)
     logical,     optional,  dimension(size(paraset,1)), intent(in)    :: maskpara_in     ! true if parameter will be optimized
-                                                                                         ! false if parameter is discarded in 
-                                                                                         ! optimization
-                                                                                         ! default = .true.
+    ! false if parameter is discarded in
+    ! optimization
+    ! default = .true.
     integer(i8), optional,  dimension(2),               intent(in)    :: seeds_in        ! Seeds of random numbers
-                                                                                         ! default = time dependent
-    logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation 
-                                                                                         ! is printed
-                                                                                         ! default = .false.
-    REAL(DP),    OPTIONAL,  DIMENSION(size(paraset,1)), INTENT(IN)    :: weight_in  
-                                                                                         ! vector of weights per parameter
-                                                                                         ! gives the frequency of parameter to be chosen for optimization 
+    ! default = time dependent
+    logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation
+    ! is printed
+    ! default = .false.
+    REAL(DP),    OPTIONAL,  DIMENSION(size(paraset,1)), INTENT(IN)    :: weight_in
+    ! vector of weights per parameter
+    ! gives the frequency of parameter to be chosen for optimization
     LOGICAL,     OPTIONAL,                              INTENT(IN)    :: maxit_in
-                                                                                         ! Maximization or minimization of function 
-                                                                                         ! maximization = .true., minimization = .false.
-                                                                                         ! DEFAULT = .false.
+    ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
 
     INTERFACE
        FUNCTION cost(paraset)
@@ -5046,8 +5164,8 @@ CONTAINS
 
     ! for initial temperature estimate
     real(DP)                              :: acc_estim  ! estimate of acceptance probability
-                                                        ! depends on temperature
-                                                        ! goal: find a temperature such that acc_estim ~ 0.9
+    ! depends on temperature
+    ! goal: find a temperature such that acc_estim ~ 0.9
     real(DP), dimension(:,:), allocatable :: Energy     ! dim(LEN,2) cost function values before (:,1) and after (:,2) transition
 
     n = size(paraset,1)
@@ -5112,11 +5230,11 @@ CONTAINS
 
     weight    = 0.0_dp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = weight_in(:)
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = 1.0_dp
        end where
     endif
@@ -5151,7 +5269,7 @@ CONTAINS
        ! Generate a random subsequent state and evaluate its objective function
        ! (1)  Generate new parameter set
        dR=1.0_DP
-       ! (1a) Select parameter to be changed    
+       ! (1a) Select parameter to be changed
        call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
        ! V1: select one parameter from all n
        !iPar = int(real(N,dp)*RN1+1._DP,i4)
@@ -5183,7 +5301,7 @@ CONTAINS
           ! Comput. Opt. and App. 2004
           Energy(j,2) = fn     ! E_max_t
           Energy(j,1) = fo     ! E_min_t
-          j=j+1 
+          j=j+1
        end if feasible !valid parameter set
     end do loopSamplesize
 
@@ -5211,32 +5329,33 @@ CONTAINS
     !
   end function GetTemperature_dp
 
+
   real(SP) function GetTemperature_sp( paraset, cost, range, acc_goal, &
-                                       samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in, maxit_in)
+       samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in, maxit_in)
     use mo_kind, only: sp, i4
     implicit none
     !
     real(sp),               dimension(:),               intent(in)    :: paraset         ! a valid parameter set of the model
     real(sp),                                           intent(in)    :: acc_goal        ! acceptance ratio to achieve
-    integer(i4), optional,                              intent(in)    :: samplesize_in   ! size of random set the 
-                                                                                         ! acc_estimate is based on
-                                                                                         ! default = Max(250, 20*<Number of parameters>)
+    integer(i4), optional,                              intent(in)    :: samplesize_in   ! size of random set the
+    ! acc_estimate is based on
+    ! default = Max(250, 20*<Number of parameters>)
     logical,     optional,  dimension(size(paraset,1)), intent(in)    :: maskpara_in     ! true if parameter will be optimized
-                                                                                         ! false if parameter is discarded in 
-                                                                                         ! optimization
-                                                                                         ! default = .true.
+    ! false if parameter is discarded in
+    ! optimization
+    ! default = .true.
     integer(i4), optional,  dimension(2),               intent(in)    :: seeds_in        ! Seeds of random numbers
-                                                                                         ! default = time dependent
-    logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation 
-                                                                                         ! is printed
-                                                                                         ! default = .false.
-    REAL(SP),    OPTIONAL,  DIMENSION(size(paraset,1)), INTENT(IN)    :: weight_in  
-                                                                                         ! vector of weights per parameter
-                                                                                         ! gives the frequency of parameter to be chosen for optimization 
+    ! default = time dependent
+    logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation
+    ! is printed
+    ! default = .false.
+    REAL(SP),    OPTIONAL,  DIMENSION(size(paraset,1)), INTENT(IN)    :: weight_in
+    ! vector of weights per parameter
+    ! gives the frequency of parameter to be chosen for optimization
     LOGICAL,     OPTIONAL,                              INTENT(IN)    :: maxit_in
-                                                                                         ! Maximization or minimization of function 
-                                                                                         ! maximization = .true., minimization = .false.
-                                                                                         ! DEFAULT = .false.
+    ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
 
     INTERFACE
        FUNCTION cost(paraset)
@@ -5294,8 +5413,8 @@ CONTAINS
 
     ! for initial temperature estimate
     real(SP)                              :: acc_estim  ! estimate of acceptance probability
-                                                        ! depends on temperature
-                                                        ! goal: find a temperature such that acc_estim ~ 0.9
+    ! depends on temperature
+    ! goal: find a temperature such that acc_estim ~ 0.9
     real(SP), dimension(:,:), allocatable :: Energy     ! dim(LEN,2) cost function values before (:,1) and after (:,2) transition
 
     n = size(paraset,1)
@@ -5360,11 +5479,11 @@ CONTAINS
 
     weight    = 0.0_sp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = weight_in(:)
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = 1.0_sp
        end where
     endif
@@ -5399,7 +5518,7 @@ CONTAINS
        ! Generate a random subsequent state and evaluate its objective function
        ! (1)  Generate new parameter set
        dR=1.0_SP
-       ! (1a) Select parameter to be changed    
+       ! (1a) Select parameter to be changed
        call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
        ! V1: select one parameter from all n
        !iPar = int(real(N,sp)*RN1+1._SP,i4)
@@ -5431,7 +5550,7 @@ CONTAINS
           ! Comput. Opt. and App. 2004
           Energy(j,2) = fn     ! E_max_t
           Energy(j,1) = fo     ! E_min_t
-          j=j+1 
+          j=j+1
        end if feasible !valid parameter set
     end do loopSamplesize
 
@@ -5459,6 +5578,8 @@ CONTAINS
     !
   end function GetTemperature_sp
 
+  ! ------------------------------------------------------------------
+
   real(DP) function GetTemperature_fixedrange_dp( paraset, cost, prange, acc_goal, &
        samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in, maxit_in)
     use mo_kind, only: dp, i4, i8
@@ -5467,26 +5588,26 @@ CONTAINS
     real(dp),               dimension(:),                 intent(in)    :: paraset         ! a valid parameter set of the model
     real(dp),               dimension(size(paraset,1),2), intent(in)    :: prange          ! lower and upper bound per parameter
     real(dp),                                             intent(in)    :: acc_goal        ! acceptance ratio to achieve
-    integer(i4), optional,                                intent(in)    :: samplesize_in   ! size of random set the 
-                                                                                           ! acc_estimate is based on
-                                                                                           ! default = Max(250, 20*<Number of parameters>)
+    integer(i4), optional,                                intent(in)    :: samplesize_in   ! size of random set the
+    ! acc_estimate is based on
+    ! default = Max(250, 20*<Number of parameters>)
     logical,     optional,  dimension(size(paraset,1)),   intent(in)    :: maskpara_in     ! true if parameter will be optimized
-                                                                                           ! false if parameter is discarded in 
-                                                                                           ! optimization
-                                                                                           ! default = .true.
+    ! false if parameter is discarded in
+    ! optimization
+    ! default = .true.
     integer(i8), optional,  dimension(2),                 intent(in)    :: seeds_in        ! Seeds of random numbers
-                                                                                           ! default = time dependent
-    logical,     optional,                                intent(in)    :: printflag_in    ! .true. if detailed temperature  
-                                                                                           ! estimation is printed
-                                                                                           ! default = .false.
-    REAL(DP),    OPTIONAL,  DIMENSION(size(paraset,1)),   INTENT(IN)    :: weight_in  
-                                                                                           ! vector of weights per parameter
-                                                                                           ! gives the frequency of parameter to 
-                                                                                           ! be chosen for optimization 
+    ! default = time dependent
+    logical,     optional,                                intent(in)    :: printflag_in    ! .true. if detailed temperature
+    ! estimation is printed
+    ! default = .false.
+    REAL(DP),    OPTIONAL,  DIMENSION(size(paraset,1)),   INTENT(IN)    :: weight_in
+    ! vector of weights per parameter
+    ! gives the frequency of parameter to
+    ! be chosen for optimization
     LOGICAL,     OPTIONAL,                                INTENT(IN)    :: maxit_in
-                                                                                           ! Maximization or minimization of function 
-                                                                                           ! maximization = .true., minimization = .false.
-                                                                                           ! DEFAULT = .false.
+    ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
 
     INTERFACE
        FUNCTION cost(paraset)
@@ -5534,8 +5655,8 @@ CONTAINS
 
     ! for initial temperature estimate
     real(DP)                              :: acc_estim  ! estimate of acceptance probability
-                                                        ! depends on temperature
-                                                        ! goal: find a temperature such that acc_estim ~ 0.9
+    ! depends on temperature
+    ! goal: find a temperature such that acc_estim ~ 0.9
     real(DP), dimension(:,:), allocatable :: Energy     ! dim(LEN,2) cost function values before (:,1) and after (:,2) transition
 
     n = size(paraset,1)
@@ -5600,11 +5721,11 @@ CONTAINS
 
     weight    = 0.0_dp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = weight_in(:)
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = 1.0_dp
        end where
     endif
@@ -5640,7 +5761,7 @@ CONTAINS
        ! Generate a random subsequent state and evaluate its objective function
        ! (1)  Generate new parameter set
        dR=1.0_DP
-       ! (1a) Select parameter to be changed    
+       ! (1a) Select parameter to be changed
        call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
        ! V1: select one parameter from all n
        !iPar = int(real(N,dp)*RN1+1._DP,i4)
@@ -5674,8 +5795,8 @@ CONTAINS
              Energy(j,2) = fn     ! E_max_t
              Energy(j,1) = fo     ! E_min_t
              !print*, 'Energy: ', Energy(j,1),'  ', Energy(j,2)
-             j=j+1 
-          end if          
+             j=j+1
+          end if
        end if feasible !valid parameter set
     end do loopSamplesize
 
@@ -5691,8 +5812,8 @@ CONTAINS
     if (printflag) then
        print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
     end if
-    Do While ( & !(acc_estim .lt. 1.0_dp) .and. 
-       (abs(acc_estim - acc_goal) .gt. 0.0001_dp))
+    Do While ( & !(acc_estim .lt. 1.0_dp) .and.
+         (abs(acc_estim - acc_goal) .gt. 0.0001_dp))
        T = T * (Log(acc_estim)/Log(acc_goal))**(0.5_dp) ! **(1.0/p)  with p=1.0
        if ( all(T .gt. Energy(:,1)/709._dp) .and. all(T .gt. Energy(:,2)/709._dp) ) then
           acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
@@ -5708,6 +5829,7 @@ CONTAINS
     !
   end function GetTemperature_fixedrange_dp
 
+
   real(SP) function GetTemperature_fixedrange_sp( paraset, cost, prange, acc_goal, &
        samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in, maxit_in)
     use mo_kind, only: sp, i4
@@ -5716,26 +5838,26 @@ CONTAINS
     real(sp),               dimension(:),                 intent(in)    :: paraset         ! a valid parameter set of the model
     real(sp),               dimension(size(paraset,1),2), intent(in)    :: prange          ! lower and upper bound per parameter
     real(sp),                                             intent(in)    :: acc_goal        ! acceptance ratio to achieve
-    integer(i4), optional,                                intent(in)    :: samplesize_in   ! size of random set the 
-                                                                                           ! acc_estimate is based on
-                                                                                           ! default = Max(250, 20*<Number of parameters>)
+    integer(i4), optional,                                intent(in)    :: samplesize_in   ! size of random set the
+    ! acc_estimate is based on
+    ! default = Max(250, 20*<Number of parameters>)
     logical,     optional,  dimension(size(paraset,1)),   intent(in)    :: maskpara_in     ! true if parameter will be optimized
-                                                                                           ! false if parameter is discarded in 
-                                                                                           ! optimization
-                                                                                           ! default = .true.
+    ! false if parameter is discarded in
+    ! optimization
+    ! default = .true.
     integer(i4), optional,  dimension(2),                 intent(in)    :: seeds_in        ! Seeds of random numbers
-                                                                                           ! default = time dependent
-    logical,     optional,                                intent(in)    :: printflag_in    ! .true. if detailed temperature  
-                                                                                           ! estimation is printed
-                                                                                           ! default = .false.
-    REAL(SP),    OPTIONAL,  DIMENSION(size(paraset,1)),   INTENT(IN)    :: weight_in  
-                                                                                           ! vector of weights per parameter
-                                                                                           ! gives the frequency of parameter to 
-                                                                                           ! be chosen for optimization 
+    ! default = time dependent
+    logical,     optional,                                intent(in)    :: printflag_in    ! .true. if detailed temperature
+    ! estimation is printed
+    ! default = .false.
+    REAL(SP),    OPTIONAL,  DIMENSION(size(paraset,1)),   INTENT(IN)    :: weight_in
+    ! vector of weights per parameter
+    ! gives the frequency of parameter to
+    ! be chosen for optimization
     LOGICAL,     OPTIONAL,                                INTENT(IN)    :: maxit_in
-                                                                                           ! Maximization or minimization of function 
-                                                                                           ! maximization = .true., minimization = .false.
-                                                                                           ! DEFAULT = .false.
+    ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
 
     INTERFACE
        FUNCTION cost(paraset)
@@ -5783,8 +5905,8 @@ CONTAINS
 
     ! for initial temperature estimate
     real(SP)                              :: acc_estim  ! estimate of acceptance probability
-                                                        ! depends on temperature
-                                                        ! goal: find a temperature such that acc_estim ~ 0.9
+    ! depends on temperature
+    ! goal: find a temperature such that acc_estim ~ 0.9
     real(SP), dimension(:,:), allocatable :: Energy     ! dim(LEN,2) cost function values before (:,1) and after (:,2) transition
 
     n = size(paraset,1)
@@ -5849,11 +5971,11 @@ CONTAINS
 
     weight    = 0.0_sp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = weight_in(:)
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = 1.0_sp
        end where
     endif
@@ -5888,7 +6010,7 @@ CONTAINS
        ! Generate a random subsequent state and evaluate its objective function
        ! (1)  Generate new parameter set
        dR=1.0_SP
-       ! (1a) Select parameter to be changed    
+       ! (1a) Select parameter to be changed
        call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
        ! V1: select one parameter from all n
        !iPar = int(real(N,sp)*RN1+1._SP,i4)
@@ -5919,7 +6041,7 @@ CONTAINS
           ! Comput. Opt. and App. 2004
           Energy(j,2) = fn     ! E_max_t
           Energy(j,1) = fo     ! E_min_t
-          j=j+1 
+          j=j+1
        end if feasible !valid parameter set
     end do loopSamplesize
 
@@ -5949,112 +6071,6 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  !     NAME
-  !         GetTemperature_valid
-
-  !     PURPOSE
-  !         Determines an initial temperature for Simulated Annealing achieving 
-  !         certain acceptance ratio
-  !    
-
-  !     CALLING SEQUENCE
-  !         para = (/ 1.0_dp , 2.0_dp /)
-  !         range(1,:) = (/  0.0_dp, 5.0_dp /)
-  !         range(2,:) = (/ -2.0_dp, 2.0_dp /)
-  !         acc_goal   = 0.95_dp
-  !
-  !         user defined function cost_dp which calculates the cost function value for a 
-  !         parameter set (the interface given below has to be used for this function!)
-  !
-  !         temp = GetTemperature_valid(para, cost_dp, range, acc_goal)
-  !
-  !         see also test folder for a detailed example
-
-  !     FUNCTION RETURN
-  !         REAL(SP/DP)                               :: temperature ... temperature achieving a certain 
-  !                                                                      acceptance ratio for Sim. Ann.
-  !         
-  
-  !     INDENT(IN)
-  !         REAL(SP/DP),    DIMENSION(:)              :: paraset     ... initial (valid) parameter set
-  !
-  !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the 
-  !                                                                      cost function at a given point
-  !
-  !         REAL(SP/DP), DIMENSION(size(para,1),2)    :: range_dp/sp ... lower and upper bound per parameter
-  !                                                                     
-  !         REAL(SP/DP)                               :: acc_goal    ... Acceptance Ratio which has to be achieved
-  !       
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         None
-  !
-
-
-  !     INDENT(IN), OPTIONAL
-  !         INTEGER(I4)    :: samplesize_in  ... number of iterations the estimation of temperature is based on
-  !                                              DEFAULT: Max(20_i4*n,250_i4)
-  !
-  !         LOGICAL, DIMENSION(size(para,1)) :: 
-  !                           maskpara_in    ... vector of logicals
-  !                                              maskpara(i) = .true.  --> parameter is optimized
-  !                                              maskpara(i) = .false. --> parameter is discarded 
-  !                                                                        from optimiztaion
-  !                                              DEFAULT = .true.
-  !
-  !         INTEGER(I4/I8) :: seeds_in(2)    ... Seeds of random numbers used for random parameter
-  !                                              set generation
-  !                                              DEFAULT: dependent on current time
-  !
-  !         LOGICAL        :: printflag_in   ... If .true. detailed command line output is written
-  !                                              DEFAULT: .false.
-  !
-  !         REAL(DP), DIMENSION(size(para,1)) ::
-  !                           weight_in      ... vector of weights per parameter
-  !                                              gives the frequency of parameter to be chosen for
-  !                                              optimization (will be scaled to a CDF internally)
-  !                                              eg. [1,2,1] --> parameter 2 is chosen twice as 
-  !                                                              often as parameter 1 and 2
-  !                                              DEFAULT: weight_in = 1.0_dp
-  !
-  !         LOGICAL        :: maxit_in       ... .true.  for maximizing a function  
-  !                                              .false. for minimizing a function
-  !                                              DEFAULT = .false. (minimization)
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         Needs a user defined:
-  !         (1) FUNCTION to evaluate the cost function value for a given parameter set.
-  !             this function needs to have the following interface:
-  !                     FUNCTION cost(paraset,status_in)
-  !                     ! calculates the cost function at a certain parameter set paraset and 
-  !                     ! returns optionally if it is a valid parameter set (status_in)
-  !                         USE mo_kind
-  !                         REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
-  !                         REAL(DP)                            :: cost
-  !                         LOGICAL,  OPTIONAL,     INTENT(OUT) :: status_in
-  !                     END FUNCTION cost
-  !         (2) get_temperature is not checking on validity of parameter sets
-
-  !     EXAMPLE
-  !         see test/test_mo_anneal/
-
-  !     LITERATURE
-  !         (1) Walid Ben-Ameur
-  !             Compututing the Initial Temperature of Simulated Annealing
-  !             Comput. Opt. and App. (2004).
-
-  !     HISTORY
-  !        Written  Juliane Mai,   May   2012
-
   real(DP) function GetTemperature_status_dp( paraset, cost, range, acc_goal, &
        samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in, maxit_in)
     use mo_kind, only: dp, i4, i8
@@ -6062,29 +6078,29 @@ CONTAINS
     !
     real(dp),               dimension(:),               intent(in)    :: paraset         ! a valid parameter set of the model
     real(dp),                                           intent(in)    :: acc_goal        ! acceptance ratio to achieve
-    integer(i4), optional,                              intent(in)    :: samplesize_in   ! size of random set the 
-                                                                                         ! acc_estimate is based on
-                                                                                         ! default = Max(250, 20*<Number of parameters>)
+    integer(i4), optional,                              intent(in)    :: samplesize_in   ! size of random set the
+    ! acc_estimate is based on
+    ! default = Max(250, 20*<Number of parameters>)
     logical,     optional,  dimension(size(paraset,1)), intent(in)    :: maskpara_in     ! true if parameter will be optimized
-                                                                                         ! false if parameter is discarded in 
-                                                                                         ! optimization
-                                                                                         ! default = .true.
+    ! false if parameter is discarded in
+    ! optimization
+    ! default = .true.
     integer(i8), optional,  dimension(2),               intent(in)    :: seeds_in        ! Seeds of random numbers
-                                                                                         ! default = time dependent
-    logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation 
-                                                                                         ! is printed
-                                                                                         ! default = .false.
-    REAL(DP),    OPTIONAL,  DIMENSION(size(paraset,1)), INTENT(IN)    :: weight_in  
-                                                                                         ! vector of weights per parameter
-                                                                                         ! gives the frequency of parameter to be chosen for optimization 
+    ! default = time dependent
+    logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation
+    ! is printed
+    ! default = .false.
+    REAL(DP),    OPTIONAL,  DIMENSION(size(paraset,1)), INTENT(IN)    :: weight_in
+    ! vector of weights per parameter
+    ! gives the frequency of parameter to be chosen for optimization
     LOGICAL,     OPTIONAL,                              INTENT(IN)    :: maxit_in
-                                                                                         ! Maximization or minimization of function 
-                                                                                         ! maximization = .true., minimization = .false.
-                                                                                         ! DEFAULT = .false.
+    ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
 
     INTERFACE
        FUNCTION cost(paraset,status_in)
-         ! calculates the cost function at a certain parameter set paraset and 
+         ! calculates the cost function at a certain parameter set paraset and
          ! returns optionally if it is a valid parameter set (status_in)
          use mo_kind
          REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
@@ -6140,8 +6156,8 @@ CONTAINS
 
     ! for initial temperature estimate
     real(DP)                              :: acc_estim  ! estimate of acceptance probability
-                                                        ! depends on temperature
-                                                        ! goal: find a temperature such that acc_estim ~ 0.9
+    ! depends on temperature
+    ! goal: find a temperature such that acc_estim ~ 0.9
     real(DP), dimension(:,:), allocatable :: Energy     ! dim(LEN,2) cost function values before (:,1) and after (:,2) transition
 
     n = size(paraset,1)
@@ -6206,11 +6222,11 @@ CONTAINS
 
     weight    = 0.0_dp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = weight_in(:)
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = 1.0_dp
        end where
     endif
@@ -6245,7 +6261,7 @@ CONTAINS
        ! Generate a random subsequent state and evaluate its objective function
        ! (1)  Generate new parameter set
        dR=1.0_DP
-       ! (1a) Select parameter to be changed    
+       ! (1a) Select parameter to be changed
        call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
        ! V1: select one parameter from all n
        !iPar = int(real(N,dp)*RN1+1._DP,i4)
@@ -6277,7 +6293,7 @@ CONTAINS
           ! Comput. Opt. and App. 2004
           Energy(j,2) = fn     ! E_max_t
           Energy(j,1) = fo     ! E_min_t
-          j=j+1 
+          j=j+1
        end if feasible !valid parameter set
     end do loopSamplesize
 
@@ -6305,36 +6321,37 @@ CONTAINS
     !
   end function GetTemperature_status_dp
 
+
   real(SP) function GetTemperature_status_sp( paraset, cost, range, acc_goal, &
-                                       samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in, maxit_in)
+       samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in, maxit_in)
     use mo_kind, only: sp, i4
     implicit none
     !
     real(sp),               dimension(:),               intent(in)    :: paraset         ! a valid parameter set of the model
     real(sp),                                           intent(in)    :: acc_goal        ! acceptance ratio to achieve
-    integer(i4), optional,                              intent(in)    :: samplesize_in   ! size of random set the 
-                                                                                         ! acc_estimate is based on
-                                                                                         ! default = Max(250, 20*<Number of parameters>)
+    integer(i4), optional,                              intent(in)    :: samplesize_in   ! size of random set the
+    ! acc_estimate is based on
+    ! default = Max(250, 20*<Number of parameters>)
     logical,     optional,  dimension(size(paraset,1)), intent(in)    :: maskpara_in     ! true if parameter will be optimized
-                                                                                         ! false if parameter is discarded in 
-                                                                                         ! optimization
-                                                                                         ! default = .true.
+    ! false if parameter is discarded in
+    ! optimization
+    ! default = .true.
     integer(i4), optional,  dimension(2),               intent(in)    :: seeds_in        ! Seeds of random numbers
-                                                                                         ! default = time dependent
-    logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation 
-                                                                                         ! is printed
-                                                                                         ! default = .false.
-    REAL(SP),    OPTIONAL,  DIMENSION(size(paraset,1)), INTENT(IN)    :: weight_in  
-                                                                                         ! vector of weights per parameter
-                                                                                         ! gives the frequency of parameter to be chosen for optimization 
+    ! default = time dependent
+    logical,     optional,                              intent(in)    :: printflag_in    ! .true. if detailed temperature estimation
+    ! is printed
+    ! default = .false.
+    REAL(SP),    OPTIONAL,  DIMENSION(size(paraset,1)), INTENT(IN)    :: weight_in
+    ! vector of weights per parameter
+    ! gives the frequency of parameter to be chosen for optimization
     LOGICAL,     OPTIONAL,                              INTENT(IN)    :: maxit_in
-                                                                                         ! Maximization or minimization of function 
-                                                                                         ! maximization = .true., minimization = .false.
-                                                                                         ! DEFAULT = .false.
+    ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
 
     INTERFACE
        FUNCTION cost(paraset,status_in)
-         ! calculates the cost function at a certain parameter set paraset and 
+         ! calculates the cost function at a certain parameter set paraset and
          ! returns optionally if it is a valid parameter set (status_in)
          use mo_kind
          REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
@@ -6390,8 +6407,8 @@ CONTAINS
 
     ! for initial temperature estimate
     real(SP)                              :: acc_estim  ! estimate of acceptance probability
-                                                        ! depends on temperature
-                                                        ! goal: find a temperature such that acc_estim ~ 0.9
+    ! depends on temperature
+    ! goal: find a temperature such that acc_estim ~ 0.9
     real(SP), dimension(:,:), allocatable :: Energy     ! dim(LEN,2) cost function values before (:,1) and after (:,2) transition
 
     n = size(paraset,1)
@@ -6456,11 +6473,11 @@ CONTAINS
 
     weight    = 0.0_sp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = weight_in(:)
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = 1.0_sp
        end where
     endif
@@ -6495,7 +6512,7 @@ CONTAINS
        ! Generate a random subsequent state and evaluate its objective function
        ! (1)  Generate new parameter set
        dR=1.0_SP
-       ! (1a) Select parameter to be changed    
+       ! (1a) Select parameter to be changed
        call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
        ! V1: select one parameter from all n
        !iPar = int(real(N,sp)*RN1+1._SP,i4)
@@ -6527,7 +6544,7 @@ CONTAINS
           ! Comput. Opt. and App. 2004
           Energy(j,2) = fn     ! E_max_t
           Energy(j,1) = fo     ! E_min_t
-          j=j+1 
+          j=j+1
        end if feasible !valid parameter set
     end do loopSamplesize
 
@@ -6555,6 +6572,8 @@ CONTAINS
     !
   end function GetTemperature_status_sp
 
+  ! ------------------------------------------------------------------
+
   real(DP) function GetTemperature_status_fixedrange_dp( paraset, cost, prange, acc_goal, &
        samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in, maxit_in)
     use mo_kind, only: dp, i4, i8
@@ -6563,30 +6582,30 @@ CONTAINS
     real(dp),               dimension(:),                 intent(in)    :: paraset         ! a valid parameter set of the model
     real(dp),               dimension(size(paraset,1),2), intent(in)    :: prange          ! lower and upper bound per parameter
     real(dp),                                             intent(in)    :: acc_goal        ! acceptance ratio to achieve
-    integer(i4), optional,                                intent(in)    :: samplesize_in   ! size of random set the 
-                                                                                           ! acc_estimate is based on
-                                                                                           ! default = Max(250, 20*<Number of parameters>)
+    integer(i4), optional,                                intent(in)    :: samplesize_in   ! size of random set the
+    ! acc_estimate is based on
+    ! default = Max(250, 20*<Number of parameters>)
     logical,     optional,  dimension(size(paraset,1)),   intent(in)    :: maskpara_in     ! true if parameter will be optimized
-                                                                                           ! false if parameter is discarded in 
-                                                                                           ! optimization
-                                                                                           ! default = .true.
+    ! false if parameter is discarded in
+    ! optimization
+    ! default = .true.
     integer(i8), optional,  dimension(2),                 intent(in)    :: seeds_in        ! Seeds of random numbers
-                                                                                           ! default = time dependent
-    logical,     optional,                                intent(in)    :: printflag_in    ! .true. if detailed temperature  
-                                                                                           ! estimation is printed
-                                                                                           ! default = .false.
-    REAL(DP),    OPTIONAL,  DIMENSION(size(paraset,1)),   INTENT(IN)    :: weight_in  
-                                                                                           ! vector of weights per parameter
-                                                                                           ! gives the frequency of parameter to 
-                                                                                           ! be chosen for optimization 
+    ! default = time dependent
+    logical,     optional,                                intent(in)    :: printflag_in    ! .true. if detailed temperature
+    ! estimation is printed
+    ! default = .false.
+    REAL(DP),    OPTIONAL,  DIMENSION(size(paraset,1)),   INTENT(IN)    :: weight_in
+    ! vector of weights per parameter
+    ! gives the frequency of parameter to
+    ! be chosen for optimization
     LOGICAL,     OPTIONAL,                                INTENT(IN)    :: maxit_in
-                                                                                           ! Maximization or minimization of function 
-                                                                                           ! maximization = .true., minimization = .false.
-                                                                                           ! DEFAULT = .false.
+    ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
 
     INTERFACE
        FUNCTION cost(paraset,status_in)
-         ! calculates the cost function at a certain parameter set paraset and 
+         ! calculates the cost function at a certain parameter set paraset and
          ! returns optionally if it is a valid parameter set (status_in)
          use mo_kind
          REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
@@ -6632,8 +6651,8 @@ CONTAINS
 
     ! for initial temperature estimate
     real(DP)                              :: acc_estim  ! estimate of acceptance probability
-                                                        ! depends on temperature
-                                                        ! goal: find a temperature such that acc_estim ~ 0.9
+    ! depends on temperature
+    ! goal: find a temperature such that acc_estim ~ 0.9
     real(DP), dimension(:,:), allocatable :: Energy     ! dim(LEN,2) cost function values before (:,1) and after (:,2) transition
 
     n = size(paraset,1)
@@ -6698,11 +6717,11 @@ CONTAINS
 
     weight    = 0.0_dp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = weight_in(:)
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = 1.0_dp
        end where
     endif
@@ -6737,7 +6756,7 @@ CONTAINS
        ! Generate a random subsequent state and evaluate its objective function
        ! (1)  Generate new parameter set
        dR=1.0_DP
-       ! (1a) Select parameter to be changed    
+       ! (1a) Select parameter to be changed
        call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
        ! V1: select one parameter from all n
        !iPar = int(real(N,dp)*RN1+1._DP,i4)
@@ -6768,7 +6787,7 @@ CONTAINS
           ! Comput. Opt. and App. 2004
           Energy(j,2) = fn     ! E_max_t
           Energy(j,1) = fo     ! E_min_t
-          j=j+1 
+          j=j+1
        end if feasible !valid parameter set
     end do loopSamplesize
 
@@ -6796,6 +6815,7 @@ CONTAINS
     !
   end function GetTemperature_status_fixedrange_dp
 
+
   real(SP) function GetTemperature_status_fixedrange_sp( paraset, cost, prange, acc_goal, &
        samplesize_in, maskpara_in,seeds_in,printflag_in, weight_in, maxit_in)
     use mo_kind, only: sp, i4
@@ -6804,30 +6824,30 @@ CONTAINS
     real(sp),               dimension(:),                 intent(in)    :: paraset         ! a valid parameter set of the model
     real(sp),               dimension(size(paraset,1),2), intent(in)    :: prange          ! lower and upper bound per parameter
     real(sp),                                             intent(in)    :: acc_goal        ! acceptance ratio to achieve
-    integer(i4), optional,                                intent(in)    :: samplesize_in   ! size of random set the 
-                                                                                           ! acc_estimate is based on
-                                                                                           ! default = Max(250, 20*<Number of parameters>)
+    integer(i4), optional,                                intent(in)    :: samplesize_in   ! size of random set the
+    ! acc_estimate is based on
+    ! default = Max(250, 20*<Number of parameters>)
     logical,     optional,  dimension(size(paraset,1)),   intent(in)    :: maskpara_in     ! true if parameter will be optimized
-                                                                                           ! false if parameter is discarded in 
-                                                                                           ! optimization
-                                                                                           ! default = .true.
+    ! false if parameter is discarded in
+    ! optimization
+    ! default = .true.
     integer(i4), optional,  dimension(2),                 intent(in)    :: seeds_in        ! Seeds of random numbers
-                                                                                           ! default = time dependent
-    logical,     optional,                                intent(in)    :: printflag_in    ! .true. if detailed temperature  
-                                                                                           ! estimation is printed
-                                                                                           ! default = .false.
-    REAL(SP),    OPTIONAL,  DIMENSION(size(paraset,1)),   INTENT(IN)    :: weight_in  
-                                                                                           ! vector of weights per parameter
-                                                                                           ! gives the frequency of parameter to 
-                                                                                           ! be chosen for optimization 
+    ! default = time dependent
+    logical,     optional,                                intent(in)    :: printflag_in    ! .true. if detailed temperature
+    ! estimation is printed
+    ! default = .false.
+    REAL(SP),    OPTIONAL,  DIMENSION(size(paraset,1)),   INTENT(IN)    :: weight_in
+    ! vector of weights per parameter
+    ! gives the frequency of parameter to
+    ! be chosen for optimization
     LOGICAL,     OPTIONAL,                                INTENT(IN)    :: maxit_in
-                                                                                           ! Maximization or minimization of function 
-                                                                                           ! maximization = .true., minimization = .false.
-                                                                                           ! DEFAULT = .false.
+    ! Maximization or minimization of function
+    ! maximization = .true., minimization = .false.
+    ! DEFAULT = .false.
 
     INTERFACE
        FUNCTION cost(paraset,status_in)
-         ! calculates the cost function at a certain parameter set paraset and 
+         ! calculates the cost function at a certain parameter set paraset and
          ! returns optionally if it is a valid parameter set (status_in)
          use mo_kind
          REAL(SP), DIMENSION(:), INTENT(IN)  :: paraset
@@ -6873,8 +6893,8 @@ CONTAINS
 
     ! for initial temperature estimate
     real(SP)                              :: acc_estim  ! estimate of acceptance probability
-                                                        ! depends on temperature
-                                                        ! goal: find a temperature such that acc_estim ~ 0.9
+    ! depends on temperature
+    ! goal: find a temperature such that acc_estim ~ 0.9
     real(SP), dimension(:,:), allocatable :: Energy     ! dim(LEN,2) cost function values before (:,1) and after (:,2) transition
 
     n = size(paraset,1)
@@ -6939,11 +6959,11 @@ CONTAINS
 
     weight    = 0.0_sp
     if (present(weight_in)) then
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = weight_in(:)
        end where
     else
-       where ( maskpara(:) ) 
+       where ( maskpara(:) )
           weight(:) = 1.0_sp
        end where
     endif
@@ -6978,7 +6998,7 @@ CONTAINS
        ! Generate a random subsequent state and evaluate its objective function
        ! (1)  Generate new parameter set
        dR=1.0_SP
-       ! (1a) Select parameter to be changed    
+       ! (1a) Select parameter to be changed
        call xor4096(seeds(1),RN1, iin=iin1, win=win1, xin=xin1)
        ! V1: select one parameter from all n
        !iPar = int(real(N,sp)*RN1+1._SP,i4)
@@ -7009,7 +7029,7 @@ CONTAINS
           ! Comput. Opt. and App. 2004
           Energy(j,2) = fn     ! E_max_t
           Energy(j,1) = fo     ! E_min_t
-          j=j+1 
+          j=j+1
        end if feasible !valid parameter set
     end do loopSamplesize
 
@@ -7037,134 +7057,130 @@ CONTAINS
     !
   end function GetTemperature_status_fixedrange_sp
 
-!***************************************************
-!*               PRIVATE FUNCTIONS                 *
-!***************************************************
+  ! ------------------------------------------------------------------
+  !               PRIVATE FUNCTIONS
+  ! ------------------------------------------------------------------
 
-!
-real(DP) function parGen_dp(old, dMax, oMin, oMax,iDigit,isZero,RN)
-  use mo_kind, only: dp,i4
-  implicit none
-  !
-  real(DP),    intent(IN)   :: old, dMax, oMin,oMax
-  integer(I4), intent(IN)   :: iDigit,iszero
-  real(DP),    intent(IN)   :: RN
-  real(DP)                  :: oi, ox, delta, dMaxScal
-  !
-  oi=oMin
-  ox=oMax
-  ! scaling (new)
-  dMaxScal = dMax * ABS(oMax - oMin)
-  
-  if(oi >= ox) then
-    parGen_dp = (oi+ox)/2.0_DP
-  else
-    if ( (old - dMaxScal) > oi)  oi = old - dMaxScal
-    if ( (old + dMaxScal) < ox)  ox = old + dMaxScal
-    delta = (oi + RN * (ox - oi) ) - old
-    if ( delta > dMaxScal) delta =  dMaxScal
-    if ( delta <-dMaxScal) delta = -dMaxScal
-    parGen_dp = old + dChange_dp(delta,iDigit,isZero)
-  endif
-  !
-  ! Parameter is bounded between Max and Min.
-  ! Correction from Kumar and Luis
-  !
-  if (parGen_dp < oMin) then
-      parGen_dp = oMin
-  elseif(parGen_dp > oMax)then
-      parGen_dp = oMax
-  end if
-end function parGen_dp
+  real(DP) function parGen_dp(old, dMax, oMin, oMax,iDigit,isZero,RN)
+    use mo_kind, only: dp,i4
+    implicit none
+    !
+    real(DP),    intent(IN)   :: old, dMax, oMin,oMax
+    integer(I4), intent(IN)   :: iDigit,iszero
+    real(DP),    intent(IN)   :: RN
+    real(DP)                  :: oi, ox, delta, dMaxScal
+    !
+    oi=oMin
+    ox=oMax
+    ! scaling (new)
+    dMaxScal = dMax * ABS(oMax - oMin)
 
-real(SP) function parGen_sp(old, dMax, oMin, oMax,iDigit,isZero,RN)
-  use mo_kind, only: sp,i4
-  implicit none
-  !
-  real(SP),    intent(IN)   :: old, dMax, oMin,oMax
-  integer(I4), intent(IN)   :: iDigit,iszero
-  real(SP),    intent(IN)   :: RN
-  real(SP)                  :: oi, ox, delta, dMaxScal
-  !
-  oi=oMin
-  ox=oMax
-  ! scaling (new)
-  dMaxScal = dMax * ABS(oMax - oMin)
-  
-  if(oi >= ox) then
-    parGen_sp = (oi+ox)/2.0_SP
-  else
-    if ( (old - dMaxScal) > oi)  oi = old - dMaxScal
-    if ( (old + dMaxScal) < ox)  ox = old + dMaxScal
-    delta = (oi + RN * (ox - oi) ) - old
-    if ( delta > dMaxScal) delta =  dMaxScal
-    if ( delta <-dMaxScal) delta = -dMaxScal
-    parGen_sp = old + dChange_sp(delta,iDigit,isZero)
-  endif
-  !
-  ! Parameter is bounded between Max and Min.
-  ! Correction from Kumar and Luis
-  !
-  if (parGen_sp < oMin) then
-      parGen_sp = oMin
-  elseif(parGen_sp > oMax)then
-      parGen_sp = oMax
-  end if
-end function parGen_sp
-
-! ************************************************************************
-! delta change (steps & accuracy)
-! ************************************************************************
-real(DP) function  dChange_dp(delta,iDigit,isZero)
-  use mo_kind, only: i4,i8, dp
-  implicit none
-
-  integer(I4), intent(IN)   :: iDigit,isZero
-  real(DP),    intent(IN)   :: delta
-  integer(I4)               :: ioszt
-  integer(I8)               :: iDelta
-  !
-  ioszt = 10**iDigit
-  iDelta = int( delta * real(ioszt,dp),i8 )
-  if(isZero == 1_i4) then
-    if(iDelta == 0_i8) then
-      if(delta < 0_i4) then
-        iDelta = -1_i8
-      else
-        iDelta = 1_i8
-      endif
+    if(oi >= ox) then
+       parGen_dp = (oi+ox)/2.0_DP
+    else
+       if ( (old - dMaxScal) > oi)  oi = old - dMaxScal
+       if ( (old + dMaxScal) < ox)  ox = old + dMaxScal
+       delta = (oi + RN * (ox - oi) ) - old
+       if ( delta > dMaxScal) delta =  dMaxScal
+       if ( delta <-dMaxScal) delta = -dMaxScal
+       parGen_dp = old + dChange_dp(delta,iDigit,isZero)
     endif
-  endif
-  dChange_dp=real(iDelta,dp)/real(ioszt,dp)
-end function  dChange_dp
+    !
+    ! Parameter is bounded between Max and Min.
+    ! Correction from Kumar and Luis
+    !
+    if (parGen_dp < oMin) then
+       parGen_dp = oMin
+    elseif(parGen_dp > oMax)then
+       parGen_dp = oMax
+    end if
+  end function parGen_dp
 
-! ************************************************************************
-! delta change (steps & accuracy)
-! ************************************************************************
-real(SP) function  dChange_sp(delta,iDigit,isZero)
-  use mo_kind, only: i4,i8, sp
-  implicit none
+  real(SP) function parGen_sp(old, dMax, oMin, oMax,iDigit,isZero,RN)
+    use mo_kind, only: sp,i4
+    implicit none
+    !
+    real(SP),    intent(IN)   :: old, dMax, oMin,oMax
+    integer(I4), intent(IN)   :: iDigit,iszero
+    real(SP),    intent(IN)   :: RN
+    real(SP)                  :: oi, ox, delta, dMaxScal
+    !
+    oi=oMin
+    ox=oMax
+    ! scaling (new)
+    dMaxScal = dMax * ABS(oMax - oMin)
 
-  integer(I4), intent(IN)   :: iDigit,isZero
-  real(SP),    intent(IN)   :: delta
-  integer(I4)               :: ioszt
-  integer(I8)               :: iDelta
-  !
-  ioszt = 10**iDigit
-  iDelta = int( delta * real(ioszt,sp),i8 )
-  if(isZero == 1_i4) then
-    if(iDelta == 0_i8) then
-      if(delta < 0_i4) then
-        iDelta = -1_i8
-      else
-        iDelta = 1_i8
-      endif
+    if(oi >= ox) then
+       parGen_sp = (oi+ox)/2.0_SP
+    else
+       if ( (old - dMaxScal) > oi)  oi = old - dMaxScal
+       if ( (old + dMaxScal) < ox)  ox = old + dMaxScal
+       delta = (oi + RN * (ox - oi) ) - old
+       if ( delta > dMaxScal) delta =  dMaxScal
+       if ( delta <-dMaxScal) delta = -dMaxScal
+       parGen_sp = old + dChange_sp(delta,iDigit,isZero)
     endif
-  endif
-  dChange_sp=real(iDelta,sp)/real(ioszt,sp)
-end function  dChange_sp
+    !
+    ! Parameter is bounded between Max and Min.
+    ! Correction from Kumar and Luis
+    !
+    if (parGen_sp < oMin) then
+       parGen_sp = oMin
+    elseif(parGen_sp > oMax)then
+       parGen_sp = oMax
+    end if
+  end function parGen_sp
+
+  ! ------------------------------------------------------------------
+  ! delta change (steps & accuracy)
+
+  real(DP) function  dChange_dp(delta,iDigit,isZero)
+    use mo_kind, only: i4,i8, dp
+    implicit none
+
+    integer(I4), intent(IN)   :: iDigit,isZero
+    real(DP),    intent(IN)   :: delta
+    integer(I4)               :: ioszt
+    integer(I8)               :: iDelta
+    !
+    ioszt = 10**iDigit
+    iDelta = int( delta * real(ioszt,dp),i8 )
+    if(isZero == 1_i4) then
+       if(iDelta == 0_i8) then
+          if(delta < 0_i4) then
+             iDelta = -1_i8
+          else
+             iDelta = 1_i8
+          endif
+       endif
+    endif
+    dChange_dp=real(iDelta,dp)/real(ioszt,dp)
+  end function  dChange_dp
 
 
-! ------------------------------------------------------------------
+  real(SP) function  dChange_sp(delta,iDigit,isZero)
+    use mo_kind, only: i4,i8, sp
+    implicit none
+
+    integer(I4), intent(IN)   :: iDigit,isZero
+    real(SP),    intent(IN)   :: delta
+    integer(I4)               :: ioszt
+    integer(I8)               :: iDelta
+    !
+    ioszt = 10**iDigit
+    iDelta = int( delta * real(ioszt,sp),i8 )
+    if(isZero == 1_i4) then
+       if(iDelta == 0_i8) then
+          if(delta < 0_i4) then
+             iDelta = -1_i8
+          else
+             iDelta = 1_i8
+          endif
+       endif
+    endif
+    dChange_sp=real(iDelta,sp)/real(ioszt,sp)
+  end function  dChange_sp
+
+  ! ------------------------------------------------------------------
 
 END MODULE mo_anneal

@@ -18,7 +18,7 @@ PROGRAM main
   USE mo_mad
   USE mo_mcmc
   USE mo_message
-  USE mo_minpack
+  !  USE mo_minpack
   USE mo_moment
   USE mo_mvn
   USE mo_ncread
@@ -34,12 +34,12 @@ PROGRAM main
   USE mo_remap
   USE mo_sort
   USE mo_string_utils
-!  USE mo_template
+  !  USE mo_template
   USE mo_timer
   USE mo_xor4096
 
   IMPLICIT NONE
-  
+
   Write(*,*) 'I can compile.'
 
 END PROGRAM main
