@@ -58,7 +58,7 @@ CONTAINS
     ! local
     REAL(DP), DIMENSION(size(meas,1))   :: errors
 
-    errors  = model(paraset)-data()
+    errors(:) = model(paraset)-data()
     loglikelihood_dp = sum( errors(:) * errors(:) / stddev**2 )
     loglikelihood_dp = -0.5_dp * loglikelihood_dp
 

@@ -27,9 +27,7 @@ MODULE mo_mcmc
   USE mo_xor4096, only: xor4096, xor4096g, get_timeseed
   USE mo_append,  only: append
   USE mo_moment,  only: stddev
-#ifdef OPENMP
-  USE omp_lib,    only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
-#endif
+  !$ USE omp_lib,    only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
   use mo_ncwrite, only: dump_netcdf
 
   IMPLICIT NONE
