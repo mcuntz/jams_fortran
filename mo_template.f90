@@ -1,3 +1,12 @@
+!> \file mo_template.f90
+
+!> \brief Template for future module developments.
+
+!> \details This module serves as a template for future model developments.
+!> It shows the module structure, coding style, and documentation.
+
+!> \authors Matthias Cuntz, Juliane Mai, Christoph Schneider
+!> \date Nov 2011
 MODULE mo_template
 
   ! This module is a template for the UFZ CHS Fortran library.
@@ -30,6 +39,7 @@ MODULE mo_template
   ! Written  Matthias Cuntz, Nov 2011
   ! Modified Matthias Cuntz, Nov 2011 - add private
   !                          Nov 2011 - add public
+  !          Matthias Cuntz & Christoph Schneider, Nov 2011 - doxygen
 
   ! License
   ! -------
@@ -88,14 +98,17 @@ MODULE mo_template
   IMPLICIT NONE
 
   ! Explicitly make public only the routines, parameters, etc. that shall be provided
-  ! Sort alphabetically and give 1-line descriptions
-  PUBLIC :: mean            ! 1st moment of an array, i.e. the mean
-  PUBLIC :: PI_dp           ! Constant Pi in double precision
-  PUBLIC :: PI_sp           ! Constant Pi in single precision
+  ! Sort alphabetically and give 1-line descriptions.
+  PUBLIC :: circum  ! Circumference of circle
+  PUBLIC :: mean    ! Average
+  PUBLIC :: PI_dp   ! Constant Pi in double precision
+  PUBLIC :: PI_sp   ! Constant Pi in single precision
+
+  ! Documentation of routines is in front of the routines.
+  ! But documentation of module interface routines must be in front of the interface definition.
 
   ! Interfaces for single and double precision routines; sort alphabetically
-  ! Document in front of interfaces
-
+  ! Interfaces have to be in a public section for doxygen
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -105,34 +118,41 @@ MODULE mo_template
   !         Calculates the average value of a vector, i.e. the first moment of a series of numbers:
   !             mean = sum(x)/n
   !
-  !         If an optinal mask is given, the mean is only over those locations that correspond to true values in the mask.
-  !         x can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = mean(vec, mask=mask)
-
+  !>        \brief The average.
+  !
+  !>        \details Calculates the average value of a vector, i.e. the first moment of a series of numbers:
+  !>        \f[ \bar{x} = \frac{1}{N} \sum_{i=1}^N x_i \f]
+  !
+  !>        If an optinal mask is given, the mean is only over those locations that correspond
+  !>        to true values in the mask.\n
+  !>        x can be single or double precision. The result will have the same numerical precision.
+  !
   !     INTENT(IN)
-  !         real(sp/dp) :: vec(:)     1D-array with input numbers
-
+  !>        \param[in] "real(sp/dp) :: dat(:)"        \f$ x_i \f$ 1D-array with input numbers
+  !
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         real(sp/dp) :: mean       average of all elements in dat
-
+  !         None
+  !
   !     INTENT(IN), OPTIONAL
-  !         logical :: mask(:)        1D-array of logical values with size(vec).
-  !                                   If present, only those locations in vec corresponding to the true values in mask are used.
-
+  !>       \param[in] "logical, optional :: mask(:)" 1D-array with input mask\n
+  !>                                                 If present, only those locations in dat corresponding
+  !>                                                 to the true values in mask are used.
+  !
   !     INTENT(INOUT), OPTIONAL
   !         None
-
+  !
   !     INTENT(OUT), OPTIONAL
   !         None
-
+  !
+  !     RETURN
+  !>       \return     real(sp/dp) :: mean &mdash; \f$ \bar{x} \f$ average of all elements in vec
+  !
   !     RESTRICTIONS
-  !         Input values must be floating points.
-
+  !>       \note Input values must be floating points.
+  !
   !     EXAMPLE
   !         vec = (/ 1., 2, 3., -999., 5., 6. /)
   !         m   = mean(vec, mask=(vec >= 0.))
@@ -146,7 +166,8 @@ MODULE mo_template
   !             Cambridge University Press, UK, 1996
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011
+  !>        \author Matthias Cuntz
+  !>        \date Nov 2011
   !         Modified, Matthias Cuntz, Nov 2011 - include mask
   !                   Matthias Cuntz, Nov 2011 - test size(mask) == size(dat)
   INTERFACE mean
@@ -162,7 +183,9 @@ MODULE mo_template
   ! ------------------------------------------------------------------
 
   ! Public parameters
+  !> Constant Pi in double precision
   REAL(dp), PARAMETER :: PI_dp = 3.141592653589793238462643383279502884197_dp
+  !> Constant Pi in single precision
   REAL(sp), PARAMETER :: PI_sp = 3.141592653589793238462643383279502884197_sp
 
   ! Private global parameters (not used, only for demonstration)
@@ -171,6 +194,66 @@ MODULE mo_template
   ! ------------------------------------------------------------------
 
 CONTAINS
+
+  ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         circum
+  !
+  !     PURPOSE
+  !>        \brief Circumference of a circle
+  !
+  !>        \details Calculates the circumference of a circle
+  !>        \f[ c = 2 \pi r \f]
+  !
+  !     CALLING SEQUENCE
+  !         out = circum(radius)
+  !
+  !     INTENT(IN)
+  !>        \param[in] "real(dp) :: radius"        Radius
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !>       \return     real(dp) :: circum &mdash; circumference of circle.
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         r = (/ 1., 2, 3., 5., 6. /)
+  !         c = circum(r)
+  !
+  !     LITERATURE
+  !         None
+  !
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date Dec 2012
+
+  elemental pure function circum(radius)
+
+    implicit none
+
+    real(dp), intent(in) :: radius
+    real(dp)             :: circum
+
+    circum = 2.0_dp * pi_dp * radius
+
+  end function circum
 
   ! ------------------------------------------------------------------
 

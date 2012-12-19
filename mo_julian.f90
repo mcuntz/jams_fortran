@@ -1,3 +1,12 @@
+!> \file mo_julian.f90
+
+!> \brief Julian date conversion routines
+
+!> \details Julian date to and from day, month, year. Also convience routines for
+!> Julian dates of IMSL are provided.
+
+!> \author Matthias Cuntz
+!> \date Dec 2011
 MODULE mo_julian
 
   ! This module provides Julian day conversion routines
@@ -60,10 +69,10 @@ MODULE mo_julian
 
   PRIVATE
 
-  PUBLIC :: caldat          ! Day , month and year from Julian day
-  PUBLIC :: julday          ! Julian day from day, month and year
-  PUBLIC :: ndays           ! IMSL Julian day from day, month and year
-  PUBLIC :: ndyin           ! Day, month and year from IMSL Julian day
+  PUBLIC :: caldat ! Day , month and year from Julian day
+  PUBLIC :: julday ! Julian day from day, month and year
+  PUBLIC :: ndays  ! IMSL Julian day from day, month and year
+  PUBLIC :: ndyin  ! Day, month and year from IMSL Julian day
 
   ! ------------------------------------------------------------------
 
@@ -75,25 +84,27 @@ CONTAINS
   !         caldat
 
   !     PURPOSE
-  !         Inverse of the function julday. Here julian is input as a Julian Day Number,
-  !         and the routine outputs id, mm, and yy as the day, month, and year on which the specified
-  !         Julian Day started at noon.
+  !>        \brief Day , month and year from Julian day
 
-  !         The zeroth Julian Day is 01.01.-4713, i.e. the 1st January 4713 BC.
+  !>        \details Inverse of the function julday. Here julian is input as a Julian Day Number,
+  !>        and the routine outputs id, mm, and yy as the day, month, and year on which the specified
+  !>        Julian Day started at noon.
+
+  !>        The zeroth Julian Day is 01.01.-4713, i.e. the 1st January 4713 BC.
 
   !     CALLING SEQUENCE
   !         call caldat(Julday, dd, mm, yy)
 
   !     INTENT(IN)
-  !         integer(i4) :: Julday     Julian day
+  !>        \param[in] "integer(i4) :: Julday"     Julian day
 
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         integer(i4) :: dd         Day in month of Julian day
-  !         integer(i4) :: mm         Month in year of Julian day
-  !         integer(i4) :: yy         Year of Julian day
+  !>        \param[out] "integer(i4) :: dd"         Day in month of Julian day
+  !>        \param[out] "integer(i4) :: mm"         Month in year of Julian day
+  !>        \param[out] "integer(i4) :: yy"         Year of Julian day
 
   !     INTENT(IN), OPTIONAL
   !         None
@@ -118,7 +129,8 @@ CONTAINS
   !             Cambridge University Press, UK, 1996
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified caldat from Numerical Recipes
+  !>        \author Written,  Matthias Cuntz - modified caldat from Numerical Recipes
+  !>        \date Dec 2011
 
   SUBROUTINE caldat(julian,dd,mm,yy)
 
@@ -155,25 +167,27 @@ CONTAINS
   !         julday
 
   !     PURPOSE
-  !         In this routine julday returns the Julian Day Number that begins at noon of the calendar
-  !         date specified by month mm, day dd, and year yy, all integer variables. Positive year
-  !         signifies A.D.; negative, B.C. Remember that the year after 1 B.C. was 1 A.D.
+  !>        \brief Julian day from day, month and year
 
-  !         The zeroth Julian Day is 01.01.-4713, i.e. the 1st January 4713 BC.
+  !>        \details In this routine julday returns the Julian Day Number that begins at noon of the calendar
+  !>        date specified by month mm, day dd, and year yy, all integer variables. Positive year
+  !>        signifies A.D.; negative, B.C. Remember that the year after 1 B.C. was 1 A.D.
+
+  !>        The zeroth Julian Day is 01.01.-4713, i.e. the 1st January 4713 BC.
 
   !     CALLING SEQUENCE
   !         julian = julday(dd, mm, yy)
 
   !     INTENT(IN)
-  !         integer(i4) :: dd         Day in month of Julian day
-  !         integer(i4) :: mm         Month in year of Julian day
-  !         integer(i4) :: yy         Year of Julian day
+  !>        \param[in] "integer(i4) :: dd"         Day in month of Julian day
+  !>        \param[in] "integer(i4) :: mm"         Month in year of Julian day
+  !>        \param[in] "integer(i4) :: yy"         Year of Julian day
 
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         integer(i4) :: julian     Julian day
+  !         None
 
   !     INTENT(IN), OPTIONAL
   !         None
@@ -183,6 +197,9 @@ CONTAINS
 
   !     INTENT(OUT), OPTIONAL
   !         None
+
+  !     RETURN
+  !>        \return integer(i4) :: julian &mdash;     Julian day
 
   !     RESTRICTIONS
   !         Note: day and month are reversed compared to original Numerical recipes routine.
@@ -198,7 +215,8 @@ CONTAINS
   !             Cambridge University Press, UK, 1996
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified julday from Numerical Recipes
+  !>        \author Written,  Matthias Cuntz - modified julday from Numerical Recipes
+  !>        \date Dec 2011
 
   FUNCTION julday(dd,mm,yy)
 
@@ -234,24 +252,26 @@ CONTAINS
   !         ndays
 
   !     PURPOSE
-  !         In this routine ndays returns the IMSL Julian Day Number. Julian days begin at noon of the calendar
-  !         date specified by month mm, day dd, and year yy, all integer variables. IMSL treats 01.01.1900
-  !         as a reference and assigns a Julian day 0 to it.
-  !             ndays = julday(dd,mm,yy) - julday(01,01,1900)
+  !>        \brief IMSL Julian day from day, month and year
+
+  !>        \details In this routine ndays returns the IMSL Julian Day Number. Julian days begin at noon of the calendar
+  !>        date specified by month mm, day dd, and year yy, all integer variables. IMSL treats 01.01.1900
+  !>        as a reference and assigns a Julian day 0 to it.
+  !>            ndays = julday(dd,mm,yy) - julday(01,01,1900)
 
   !     CALLING SEQUENCE
   !         julian = ndays(dd, mm, yy)
 
   !     INTENT(IN)
-  !         integer(i4) :: dd         Day in month of IMSL Julian day
-  !         integer(i4) :: mm         Month in year of IMSL Julian day
-  !         integer(i4) :: yy         Year of IMSL Julian day
+  !>        \param[in] "integer(i4) :: dd"         Day in month of IMSL Julian day
+  !>        \param[in] "integer(i4) :: mm"         Month in year of IMSL Julian day
+  !>        \param[in] "integer(i4) :: yy"         Year of IMSL Julian day
 
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         integer(i4) :: julian     IMSL Julian day, i.e. days before or after 01.01.1900
+  !         None
 
   !     INTENT(IN), OPTIONAL
   !         None
@@ -261,6 +281,9 @@ CONTAINS
 
   !     INTENT(OUT), OPTIONAL
   !         None
+
+  !     RETURN
+  !>        \return integer(i4) :: julian &mdash;     IMSL Julian day, i.e. days before or after 01.01.1900
 
   !     RESTRICTIONS
   !         None
@@ -274,7 +297,8 @@ CONTAINS
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011
+  !>        \author Written,  Matthias Cuntz
+  !>        \date Dec 2011
 
   FUNCTION ndays(dd,mm,yy)
 
@@ -295,24 +319,26 @@ CONTAINS
   !         ndyin
 
   !     PURPOSE
-  !         Inverse of the function ndys. Here ISML Julian is input as a Julian Day Number
-  !         minus the Julian Day Number of 01.01.1900, and the routine outputs id, mm, and yy
-  !         as the day, month, and year on which the specified Julian Day started at noon.
-  !           ndyin is caldat(IMSLJulian + 2415021, dd, mm, yy)
+  !>        \brief Day, month and year from IMSL Julian day
+
+  !>        \details Inverse of the function ndys. Here ISML Julian is input as a Julian Day Number
+  !>        minus the Julian Day Number of 01.01.1900, and the routine outputs id, mm, and yy
+  !>        as the day, month, and year on which the specified Julian Day started at noon.
+  !>          ndyin is caldat(IMSLJulian + 2415021, dd, mm, yy)
 
   !     CALLING SEQUENCE
   !         call ndyin(julian, dd, mm, yy)
 
   !     INTENT(IN)
-  !         integer(i4) :: julian     IMSL Julian day, i.e. days before or after 01.01.1900
+  !>        \param[in] "integer(i4) :: julian"     IMSL Julian day, i.e. days before or after 01.01.1900
 
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         integer(i4) :: dd         Day in month of IMSL Julian day
-  !         integer(i4) :: mm         Month in year of IMSL Julian day
-  !         integer(i4) :: yy         Year of IMSL Julian day
+  !>        \param[out] "integer(i4) :: dd"         Day in month of IMSL Julian day
+  !>        \param[out] "integer(i4) :: mm"         Month in year of IMSL Julian day
+  !>        \param[out] "integer(i4) :: yy"         Year of IMSL Julian day
 
   !     INTENT(IN), OPTIONAL
   !         None
@@ -335,7 +361,8 @@ CONTAINS
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011
+  !>        \author Written,  Matthias Cuntz
+  !>        \date Dec 2011
 
   SUBROUTINE ndyin(julian,dd,mm,yy)
 

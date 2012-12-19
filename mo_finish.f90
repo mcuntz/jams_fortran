@@ -1,3 +1,12 @@
+!> \file mo_finish.f90
+
+!> \brief Finish a program gracefully
+
+!> \details This module supplies a routine that writes out final comments and then stops.
+
+!> \authors Original of Echam5, (C) MPI-MET, Hamburg, Germany.\n
+!> Modified Matthias Cuntz
+!> \date Jan 2011
 MODULE mo_finish
 
   ! This module supplies a routine to finish a program gracefully.
@@ -23,7 +32,6 @@ MODULE mo_finish
 
   ! Copyright 2011 Matthias Cuntz
 
-  USE mo_constants,    ONLY: nerr
   USE mo_string_utils, ONLY: separator
 
   IMPLICIT NONE
@@ -42,14 +50,16 @@ CONTAINS
   !         finish
 
   !     PURPOSE
-  !         Stop a program but writing out a message first that is separated
-  !         from earlier output by -------------- (i.e. the separator of mo_sting_utils)
+  !>        \brief Finish a program gracefully
+
+  !>        \details Stop a program but writing out a message first that is separated
+  !>        from earlier output by -------------- (i.e. the separator of mo_sting_utils)
 
   !     CALLING SEQUENCE
   !         call finish(name, text=text, unit=unit)
 
   !     INTENT(IN)
-  !         character(len=*) :: name         First string separated from otional second by :
+  !>        \param[in] "character(len=*) :: name"         First string separated from otional second by :
 
   !     INTENT(INOUT)
   !         None
@@ -58,8 +68,8 @@ CONTAINS
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !         character(len=*) :: text         Second string separated by :
-  !         integer          :: unit         File unit for write (default: nerr)
+  !>        \param[in] "character(len=*), optional :: text"         Second string separated by :
+  !>        \param[in] "integer, optional          :: unit"         File unit for write (default: *)
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -78,7 +88,8 @@ CONTAINS
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \author Written, Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \date Dec 2011
 
   SUBROUTINE finish(name, text, unit)
 
@@ -88,23 +99,27 @@ CONTAINS
     CHARACTER(len=*), INTENT(IN), OPTIONAL :: text
     INTEGER,          INTENT(IN), OPTIONAL :: unit
 
-    INTEGER :: nunit
-
     IF (PRESENT(unit)) THEN
-       nunit = unit
+       WRITE (unit,'(a)') separator
+
+       IF (PRESENT(text)) THEN
+          WRITE (unit,'(a,a,a)') name, ': ', text
+       ELSE
+          WRITE (unit,'(a)') name
+       END IF
+
+       WRITE (unit,'(a)') separator
     ELSE
-       nunit = nerr
+       WRITE (*,'(a)') separator
+
+       IF (PRESENT(text)) THEN
+          WRITE (*,'(a,a,a)') name, ': ', text
+       ELSE
+          WRITE (*,'(a)') name
+       END IF
+
+       WRITE (*,'(a)') separator
     ENDIF
-
-    WRITE (nunit,'(a)') separator
-
-    IF (PRESENT(text)) THEN
-       WRITE (nunit,'(a,a,a)') name, ': ', text
-    ELSE
-       WRITE (nunit,'(a)') name
-    END IF
-
-    WRITE (nunit,'(a)') separator
 
     STOP
 

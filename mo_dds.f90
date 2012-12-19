@@ -1,3 +1,14 @@
+!> \file mo_dds.f90
+
+!> \brief Dynamically Dimensioned Search (DDS)
+
+!> \details This module provides routines for Dynamically Dimensioned Search (DDS)
+!> of Tolson and Shoemaker (2007). It searches the minimum or maximum of a user-specified function,
+!> using an n-dimensional continuous global optimization algorithm (DDS).
+
+!> \authors Original by Bryan Tolson and later modified by Rohini Kumar.
+!> Matthias Cuntz and Juliane Mai for the module, MDDS, etc.
+!> \date Jul 2012
 module mo_dds
 
   ! This module contains routines for Dynamically Dimensioned Search (DDS)
@@ -39,54 +50,59 @@ CONTAINS
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         (M)DDS
+  !>        \brief DDS
 
   !     PURPOSE
-  !         Searches Minimum or Maximum of a user-specified function using
-  !         Dynamically Dimensioned Search (DDS) or alternativel the modified DDS.
+  !>        \details Searches Minimum or Maximum of a user-specified function using
+  !>        Dynamically Dimensioned Search (DDS).
+  !>
+  !>        DDS is an n-dimensional continuous global optimization algorithm.
+  !>        It is coded as a minimizer but one can give maxit=True in a maximization problem,
+  !>        so that the algorithm minimizes the negative of the objective function F=(-1*F).
   !
-  !         DDS is an n-dimensional continuous global optimization algorithm.
-  !         It is coded as a minimizer but one can give maxit=True in a maximization problem,
-  !         so that the algorithm minimizes the negative of the objective function F=(-1*F).
-  !
-  !         The function to be minimized is the first argument of DDS and must be defined as
-  !             function func(p)
-  !               use mo_kind, only: dp
-  !               implicit none
-  !               real(dp), dimension(:), intent(in) :: p
-  !               real(dp) :: func
-  !             end function func
+  !>        The function to be minimized is the first argument of DDS and must be defined as
+  !>            function func(p)
+  !>              use mo_kind, only: dp
+  !>              implicit none
+  !>              real(dp), dimension(:), intent(in) :: p
+  !>              real(dp) :: func
+  !>            end function func
   !
   !     CALLING SEQUENCE
   !         popt = DDS(obj_func, pini, prange, r=r, seed=seed, maxiter=maxiter, maxit=maxit, funcbest=funcbest)
-  !         popt = MDDS(obj_func, pini, prange, seed=seed, maxiter=maxiter, maxit=maxit, funcbest=funcbest)
 
   !     INTENT(IN)
-  !         real(dp) :: obj_func(p,xx,yy)       Function on which to search the minimum
-  !         real(dp) :: pini(:)                 inital value of decision variables
-  !         real(dp) :: prange(size(pini),2)    Min/max range of decision variables
+  !>        \param[in] "real(dp) :: obj_func(p)"             Function on which to search the minimum
+  !>        \param[in] "real(dp) :: pini(:)"                 inital value of decision variables
+  !>        \param[in] "real(dp) :: prange(size(pini),2)"    Min/max range of decision variables
 
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         real(dp) :: DDS(size(pini))         The parameters of the point which is estimated to minimize the function.
+  !         None
 
   !     INTENT(IN), OPTIONAL
-  !         integer(i8) :: seed                 User seed to initialise the random number generator (default: None)
-  !         integer(i8) :: maxiter              Maximum number of iteration or function evaluation (default: 1000)
-  !         logical     :: maxit                Maximization (.True.) or minimization (.False.) of function
-  !                                             (default: .False.)
-  !         ONLY DDS - in MDDS r starts at 0.3 and goes down to 0.05
-  !         real(dp)    :: r                    DDS perturbation parameter (default: 0.2)
+  !>        \param[in] "integer(i8), optinal :: seed"      User seed to initialise the random number generator
+  !>                                                       (default: None)
+  !>        \param[in] "integer(i8), optinal :: maxiter"   Maximum number of iteration or function evaluation
+  !>                                                       (default: 1000)
+  !>        \param[in] "logical, optinal     :: maxit"     Maximization (.True.) or minimization (.False.) of function
+  !>                                                       (default: .False.)
+  !>
+  !>        \param[in] "real(dp), optinal    :: r"         DDS perturbation parameter (default: 0.2)\n
 
   !     INTENT(INOUT), OPTIONAL
   !         None
 
   !     INTENT(OUT), OPTIONAL
-  !         real(dp)              :: funcbest       the best value of the function.
-  !         real(dp), allocatable :: history(:)     the history of best function values, history(maxiter)=funcbest
-  !                                                 allocatable only to be in correspondance with other optimization routines
+  !>        \param[out] "real(dp), optional              :: funcbest"    the best value of the function.
+  !>        \param[out] "real(dp), optional, allocatable :: history(:)"  the history of best function values,
+  !                                                                      history(maxiter)=funcbest\n
+  !                                          allocatable only to be in correspondance with other optimization routines
+
+  !     RETURN
+  !>        \return real(dp) :: DDS  &mdash;  The parameters of the point which is estimated to minimize the function.
 
   !     RESTRICTIONS
   !         None.
@@ -103,18 +119,14 @@ CONTAINS
   !         Tolson, B. A., and C. A. Shoemaker (2007)
   !             Dynamically dimensioned search algorithm for computationally efficient watershed
   !             model calibration, Water Resour. Res., 43, W01413, doi:10.1029/2005WR004723.
-  !         Huang X-L and Xiong J (2010)
-  !             Parameter Optimization of Multi-tank Model with Modified Dynamically Dimensioned
-  !             Search Algorithm, Proceedings of the Third International Symposium on Computer
-  !             Science and Computational Technology(ISCSCT ''10), Jiaozuo, P. R. China,
-  !             14-15 August 2010, pp. 283-288
 
   !     HISTORY
-  !         Written original Bryan Tolson, Feb 2007 - DDS v1.1
+  !>        \author Written original Bryan Tolson - DDS v1.1\n
+  !>        Modified Rohini Kumar, Matthias Cuntz, Juliane Mai
+  !         \date Feb 2007
   !         Modified, Rohini Kumar, Feb 2008
   !         Modified, Matthias Cuntz & Juliane Mai, Jul 2012 - module
   !                   Juliane Mai,                  Aug 2012 - optional argument funcbest added
-  !                   Matthias Cuntz & Juliane Mai, Aug 2012 - MDDS
   !                   Juliane Mai,                  Nov 2012 - masked parameter
   !                   Juliane Mai,                  Dec 2012 - history output
 
@@ -272,6 +284,89 @@ CONTAINS
   end function DDS
 
   ! ------------------------------------------------------------------
+
+  !     NAME
+  !>        \brief MDDS
+
+  !     PURPOSE
+  !>        \details Searches Minimum or Maximum of a user-specified function using the
+  !>        Modified Dynamically Dimensioned Search (DDS).
+  !
+  !>        DDS is an n-dimensional continuous global optimization algorithm.
+  !>        It is coded as a minimizer but one can give maxit=True in a maximization problem,
+  !>        so that the algorithm minimizes the negative of the objective function F=(-1*F).
+  !>
+  !>        The function to be minimized is the first argument of DDS and must be defined as
+  !>            function func(p)
+  !>              use mo_kind, only: dp
+  !>              implicit none
+  !>              real(dp), dimension(:), intent(in) :: p
+  !>              real(dp) :: func
+  !>            end function func
+  !>
+  !>       MDDS extents normal DDS by a continuous reduction of the DDS pertubation parameter r from 0.3 to 0.05,
+  !>       and by allowing a larger function value with a certain probablity.
+  !
+  !     CALLING SEQUENCE
+  !         popt = MDDS(obj_func, pini, prange, seed=seed, maxiter=maxiter, maxit=maxit, funcbest=funcbest)
+
+  !     INTENT(IN)
+  !>        \param[in] "real(dp) :: obj_func(p)"             Function on which to search the minimum
+  !>        \param[in] "real(dp) :: pini(:)"                 inital value of decision variables
+  !>        \param[in] "real(dp) :: prange(size(pini),2)"    Min/max range of decision variables
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !>        \param[in] "integer(i8), optinal :: seed"      User seed to initialise the random number generator
+  !>                                                       (default: None)
+  !>        \param[in] "integer(i8), optinal :: maxiter"   Maximum number of iteration or function evaluation
+  !>                                                       (default: 1000)
+  !>        \param[in] "logical, optinal     :: maxit"     Maximization (.True.) or minimization (.False.) of function
+  !>                                                       (default: .False.)
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !>        \param[out] "real(dp), optional              :: funcbest"    the best value of the function.
+  !>        \param[out] "real(dp), optional, allocatable :: history(:)"  the history of best function values,
+  !                                                                      history(maxiter)=funcbest\n
+  !                                          allocatable only to be in correspondance with other optimization routines
+
+  !     RETURN
+  !>        \return real(dp) :: MDDS  &mdash;  The parameters of the point which is estimated to minimize the function.
+
+  !     RESTRICTIONS
+  !         None.
+
+  !     EXAMPLE
+  !         dv_range(:,1) = (/ -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0 /)
+  !         dv_range(:,2) = (/ 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0 /)
+  !         dv_ini        = (/ -.226265E+01, -.130187E+01, -.151219E+01, 0.133983E+00, 0.988159E+00, &
+  !                            -.495074E+01, -.126574E+02, 0.572684E+00, 0.303864E+01, 0.343031E+01 /)
+  !         dv_opt = MDDS(griewank, dv_ini, dv_range)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Tolson, B. A., and C. A. Shoemaker (2007)
+  !             Dynamically dimensioned search algorithm for computationally efficient watershed
+  !             model calibration, Water Resour. Res., 43, W01413, doi:10.1029/2005WR004723.
+  !         Huang X-L and Xiong J (2010)
+  !             Parameter Optimization of Multi-tank Model with Modified Dynamically Dimensioned
+  !             Search Algorithm, Proceedings of the Third International Symposium on Computer
+  !             Science and Computational Technology(ISCSCT ''10), Jiaozuo, P. R. China,
+  !             14-15 August 2010, pp. 283-288
+
+  !     HISTORY
+  !>        \author Written Matthias Cuntz and Juliane Mai
+  !         \date Aug 2012
+  !         Modified, Juliane Mai,                  Nov 2012 - masked parameter
+  !                   Juliane Mai,                  Dec 2012 - history output
 
   function MDDS(obj_func, pini, prange, seed, maxiter, maxit, mask, funcbest, history)
 
