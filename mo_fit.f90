@@ -114,26 +114,26 @@ MODULE mo_fit
   !     CALLING SEQUENCE
   !         call fitfun(xin, yin, sigin, a, func, mask=mask, fit=fit, chisq=chisq, siga=siga)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: xin(:)                1D-array with input x
   !         real(sp/dp) :: yin(:)                1D-array with input y
   !         real(sp/dp) :: sigin(:)              1D-array with input sigma on y
   !         real(sp/dp), dimension(M) :: FUNCTION func(x,n)    Function that outputs the n basis functions
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp), dimension(M) :: a       fitted M parameters
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(vec).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         real(sp/dp), dimension(N) :: fit     Function evaluated at x=X
   !         real(sp/dp), dimension(M) :: siga    Error of fitted parameters
   !         real(sp/dp)               :: chisq   Minimum chi^2
@@ -182,23 +182,23 @@ MODULE mo_fit
   !     CALLING SEQUENCE
   !         vec = func(x,n)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x          x
   !         real(sp/dp) :: n          n-1 powers of x
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp), dimension(n) :: func       vec with [1,x,x**2,x**3,...,x**(n-1)]
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -236,23 +236,23 @@ MODULE mo_fit
   !     CALLING SEQUENCE
   !         out = linfit(x, y, a=a, b=b, siga=siga, sigb=sigb, chi2=chi2, model2=model2)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)                1D-array with input x
   !         real(sp/dp) :: y(:)                1D-array with input y
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp), dimension(size(x)) :: out     fitted values
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: model2                  If present, use geometric mean regression instead of ordinary least square
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         real(sp/dp), dimension(M) :: a      intercept
   !         real(sp/dp), dimension(M) :: b      slope
   !         real(sp/dp), dimension(M) :: siga   error on intercept
@@ -296,25 +296,25 @@ MODULE mo_fit
   !     CALLING SEQUENCE
   !         out = polyfit(x, y, d, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)                x
   !         real(sp/dp) :: y(:)                y
   !         integer     :: d                   d+1 parameters = polynom of degree d
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp), dimension(d+1) :: polyfit       fitted d+1 parameters for x^0, x^1, ..., x^d
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x)
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -365,28 +365,28 @@ MODULE mo_fit
   !     CALLING SEQUENCE
   !         call svdfit(x, y, sig, a, v, w, chisq, func)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)                1D-array with input x
   !         real(sp/dp) :: y(:)                1D-array with input y
   !         real(sp/dp) :: sig(:)              1D-array with input sigma on y
   !         real(sp/dp), dimension(M) :: FUNCTION func(x,n)    Function that outputs the n basis functions
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp), dimension(M)   :: a       fitted M parameters
   !         real(sp/dp)                 :: chisq   Minimum chi^2
   !         real(sp/dp), dimension(M,M) :: v       output for svdvar
   !         real(sp/dp), dimension(M)   :: w       output for svdvar
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -433,23 +433,23 @@ MODULE mo_fit
   !     CALLING SEQUENCE
   !         call svdvar(v, w, cvm)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp), dimension(M,M) :: v       output from svdfit
   !         real(sp/dp), dimension(M)   :: w       output from svdfit
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp), dimension(M,M)   :: cvm     covariance matrix for M fitted parameters
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

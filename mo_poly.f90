@@ -52,22 +52,22 @@ MODULE mo_poly
   !     CALLING SEQUENCE
   !         area =  areapoly(coord)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: coord(:,2)     (x,y) coordinates of edges of the polygon
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -113,22 +113,22 @@ MODULE mo_poly
   !     CALLING SEQUENCE
   !         com =  center_of_mass(coord)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: coord(:,2)     (x,y) coordinates of edges of the polygon
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -171,24 +171,24 @@ MODULE mo_poly
   !     CALLING SEQUENCE
   !         call inpoly( p, coord, inside )
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: p(2)           coordinates of the point in question
   !         real(sp/dp) :: coord(:,2)     (x,y) coordinates of edges of the polygon
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         integer(i4) :: inside   whether point is inside (=1), outside (=-1) or
   !                                 on a vertex/edge of the polygon
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

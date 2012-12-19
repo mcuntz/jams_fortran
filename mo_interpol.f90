@@ -81,24 +81,24 @@ MODULE mo_interpol
   !     CALLING SEQUENCE
   !         yout = interpol(yin, xin, xout)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: yin(:)      1D-array with input values to interpolate
   !         real(sp/dp) :: xin(:)      1D-array with position of yin values
   !         real(sp/dp) :: xout(:)     1D-array with wanted positions of interpolated values
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: yout        yin interpolated at xout
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

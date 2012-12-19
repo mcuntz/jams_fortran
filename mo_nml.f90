@@ -67,25 +67,25 @@ CONTAINS
   !     CALLING SEQUENCE
   !         call open_nml(file, unit, quiet=quiet)
   
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         character(len=*) :: file         Namelist filename
   !         integer          :: unit         namelist unit
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: quiet                 Be verbose or not (default: .false.)
   !                                          .true.:  no messages
   !                                          .false.: write out messages
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -138,22 +138,22 @@ CONTAINS
   !     CALLING SEQUENCE
   !         call close_nml()
   
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         None
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -203,26 +203,26 @@ CONTAINS
   !     CALLING SEQUENCE
   !         call position_nml(name, unit=unit, first=first, status=status)
   
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         character(len=*) :: name         namelist name (case independent)
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         integer     :: unit               namelist unit (default: nunitnml)
   !         logical     :: first              start search at beginning,
   !                                           i.e. rewind the namelist first (default: .true.)
   !                                          .true.:  rewind
   !                                          .false.: continue search from current file pointer
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         integer(i4) :: status            Set on output to either of
   !                                          POSITIONED (0)   - correct
   !                                          MISSING (1)      - name not found

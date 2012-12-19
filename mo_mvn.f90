@@ -42,25 +42,25 @@ module mo_mvn
   !     CALLING SEQUENCE
   !         out = mvn( lcho [, init] )
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp), dimension(:,:) :: lcho ! lower cholesky factor of
   !                                               covariance matrix cov
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp), dimension(:)   :: mvn  ! array of multivariate gaussian
   !                                               variates
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical                     :: init ! if present, random number
   !                                               generator is initialized with time
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

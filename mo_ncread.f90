@@ -188,24 +188,24 @@ contains
   !     CALLING SEQUENCE
   !         Get_NcDimAtt(Filename, Variable, DimName, DimLen)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         character(len=*),  intent(in) :: Filename  - Filename of netcdf file
   !         character(len=*),  intent(in) :: Variable  - Variable name exactly as specified in the file
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         character(len=*), dimension(:), allocatable, intent(out)      :: DimName  - allocatable array with the
   !                                                                                     names of the dimensions
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         integer(i4), dimension(:), allocatable, optional, intent(out) :: DimLen   - allocatable array with the size
   !                                                                                     of the dimensions
 
@@ -276,25 +276,25 @@ contains
   !     CALLING SEQUENCE
   !         Get_NcVarAtt(FileName, VarName, AttName, AttValues, fid)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         character(len=*), intent(in)      :: FileName  - Filename of netcdf file
   !         character(len=*), intent(in)      :: VarName   - Variable name exactly as specified in the file
   !         character(len=*), intent(in)      :: AttName   - Attribute name exactly as specified for the Variable
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         character(len=*), intent(out)     :: AttValues - values of the Attribute
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         integer(i4), optional, intent(in) :: fid   ! file handle of opened netcdf file
   !         integer(i4), optional, intent(in) :: dtype ! datatype (ineteger,float) see NetCDF convention (unidata.ucar)
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

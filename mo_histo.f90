@@ -62,15 +62,15 @@ MODULE mo_histo
   !         call hist(x, binx, bincount, width, bins=k,     mask=maske)  ! to fix the number of bins k
   !         call hist(x, binx, bincount, width, binwidth=w, mask=maske)  ! to fix the bin width w
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)     1D array of x values
   !       or
   !         real(sp/dp) :: x(:,:)   2D array of x values
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: binx(:)       x-values of the histogram (center of the bin)
   !       or
   !         real(sp/dp) :: binx(:,:)     center of the bins and the averaged 2nd, 3rd... coordinates
@@ -78,7 +78,7 @@ MODULE mo_histo
   !         integer(i4) :: bincount(:)   number of values within each bin
   !         real(sp/dp) :: width         width of a bin
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)    1D-array of logical values with size(x,1).
   !                                   If present, only the data points in (Xij) corresponding
   !                                   to the true values in mask are used.
@@ -88,13 +88,13 @@ MODULE mo_histo
   !                                   using the optionally set binwidth.
   !         real(sp/dp) :: binwidth   Width of the bins to be generated.
   !                                   If present, the width of bins will be fixed to this value and
-  !                                   the INDENT(OUT) width will be set to this value.
+  !                                   the INTENT(OUT) width will be set to this value.
   !                                   Otherwise, will be determined using the number of bins.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -162,18 +162,18 @@ MODULE mo_histo
   !     to fix the bin width w
   !         call hist2d(x, binx, bincount, width, binwidth=w, mask=maske)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:,2)   2D array of (x,y) values
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: binx(:,2)     (x,y)-values of the histogram (center of the bin)
   !         integer(i4) :: bincount(:)   number of values within each bin
   !         real(sp/dp) :: width         width of a bin
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)      1D-array of logical values with size(x,1).
   !                                     If present, only the data points in (Xij) corresponding
   !                                     to the true values in mask are used.
@@ -184,13 +184,13 @@ MODULE mo_histo
   !         real(sp/dp) :: binwidth(2)  Width of the bins to be generated.
   !                                     One value for each direction.
   !                                     If present, the width of bins will be fixed to this value
-  !                                     and the INDENT(OUT) width will be set to this value.
+  !                                     and the INTENT(OUT) width will be set to this value.
   !                                     Otherwise, will be determined using the number of bins.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

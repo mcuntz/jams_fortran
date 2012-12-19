@@ -84,20 +84,20 @@ CONTAINS
   !         pmin = nelmin(func, pstart, prange, funcmin, varmin, step, konvge, maxeval, &
   !                       neval, numrestart, ierror)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(dp) :: func(p,xx,yy)    Function on which to search the minimum
   !         real(dp) :: pstart(:)        Starting point for the iteration.
   !         real(dp) :: xx               First values to pass as function arguments
   !         real(dp) :: yy               Second values to pass as function arguments
   !         real(dp) :: prange(:,2)      Range of parameters (upper and lower bound).
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(dp) :: nelmin(size(start))    the coordinates of the point which is estimated to minimize the function.
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         real(dp) :: varmin           the terminating limit for the variance
   !                                      of the function values. varmin>0 is required.
   !         real(dp) :: step(:)          determines the size and shape of the initial simplex. 
@@ -108,10 +108,10 @@ CONTAINS
   !         integer(i4) :: maxeval       the maximum number of function evaluations.
   !                                      default: 1000
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         real(dp)    :: funcmin             the minimum value of the function.
   !         integer(i4) :: neval               the number of function evaluations used.
   !         integer(i4) :: numrestart          the number of restarts.

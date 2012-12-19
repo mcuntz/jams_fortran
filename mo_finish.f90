@@ -48,23 +48,23 @@ CONTAINS
   !     CALLING SEQUENCE
   !         call finish(name, text=text, unit=unit)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         character(len=*) :: name         First string separated from otional second by :
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         character(len=*) :: text         Second string separated by :
   !         integer          :: unit         File unit for write (default: nerr)
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

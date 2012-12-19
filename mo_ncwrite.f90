@@ -120,23 +120,23 @@ module mo_ncwrite
   !     CALLING SEQUENCE
   !         call dump_netcdf(filename, arr)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         character(len=*) :: filename                  name of netcdf output file
   !         real(sp/dp) ::      arr(:[,:[,:[,:[,:]]]])    1D to 5D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

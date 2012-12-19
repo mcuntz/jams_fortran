@@ -87,24 +87,24 @@ MODULE mo_corr
   !     CALLING SEQUENCE
   !         ak = autocoeffk(x, k, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)        Time series
   !         integer(i4) :: k[(:)]      Lag for autocorrelation
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: ak[(:)]     coefficient so that ak/autocoeffk(x,0) is the autocorrelation coefficient at lag k
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(vec).
   !                                    If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -144,24 +144,24 @@ MODULE mo_corr
   !     CALLING SEQUENCE
   !         ak = autocorr(x, k, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)        Time series
   !         integer(i4) :: k[(:)]      Lag for autocorrelation
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: ak[(:)]     Coefficient of autocorrelation function at lag k
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(vec).
   !                                    If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -208,17 +208,17 @@ MODULE mo_corr
   !     CALLING SEQUENCE
   !         cfunc = corr(data1,data2,nadjust=nadjust,nhigh=nhigh,nwin=nwin)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: data1(:)             1st time series
   !         real(sp/dp) :: data2(:)             2nd time series
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: corr(size(data1))    Correlation function between data1 and data2 in wrap-around order
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         integer(i4) :: nhigh                If >0 then nhigh upper frequencies are filtered. nwin then defines
   !                                             the used window function for filtering. (default: 0)
   !         integer(i4) :: nwin                 Window function for highpass filtering (default: 1)
@@ -227,10 +227,10 @@ MODULE mo_corr
   !                                             2: linear interpolation of 0 to 1 from highest to highest-nhigh
   !                                                frequency; similar Bartlett window
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         integer(i4) :: nadjust              Actual used number of elements.
 
   !     RESTRICTIONS
@@ -270,25 +270,25 @@ MODULE mo_corr
   !     CALLING SEQUENCE
   !         ck = crosscoeffk(x, y, k, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)        1st time series
   !         real(sp/dp) :: y(:)        2nd time series
   !         integer(i4) :: k           Lag for crosscorrelation
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: ck          coefficient so that ck/crosscoeffk(x,0) is the crosscorrelation coefficient at lag k
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(vec).
   !                                    If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -326,25 +326,25 @@ MODULE mo_corr
   !     CALLING SEQUENCE
   !         ck = crosscorr(x, y, k, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)        1st time series
   !         real(sp/dp) :: y(:)        2nd time series
   !         integer(i4) :: k           Lag for crosscorrelation
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: ck          Coefficient of crosscorrelation function at lag k
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(vec).
   !                                    If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

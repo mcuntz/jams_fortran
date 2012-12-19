@@ -46,17 +46,17 @@ MODULE mo_mad
   !     CALLING SEQUENCE
   !         out = mad(vec, z=z, mask=mask, deriv=deriv)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         logical :: out            mask with true everywhere except where input deviates more
   !                                   than z standard deviations from median
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         real(sp/dp) :: z          Input is allowed to deviate maximum z standard deviations from the median (default: 7)
   !         integer(i4) :: deriv      0: Act on raw input (default: 0)
   !                                   1: Use first derivatives
@@ -64,10 +64,10 @@ MODULE mo_mad
   !         logical     :: mask(:)    1D-array of logical values with size(vec).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

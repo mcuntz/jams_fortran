@@ -57,27 +57,27 @@ MODULE mo_append
   !         see also test folder for a detailed example
 
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE
   !                                       :: input2 ... flexible kind, but same as input1
   !                                                     scalar, vector, or matrix
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE
   !                                       :: input1 ... flexible kind, but same as input2
   !                                                     vector, or matrix
   !                                                     has to be allocatable
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -126,27 +126,27 @@ MODULE mo_append
   !         see also test folder for a detailed example
 
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE
   !                                       :: input2 ... flexible kind, but same as input1
   !                                                     scalar, vector, or matrix
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE
   !                                       :: input1 ... flexible kind, but same as input2
   !                                                     vector, or matrix
   !                                                     has to be allocatable
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

@@ -61,18 +61,18 @@ CONTAINS
   !         popt = DDS(obj_func, pini, prange, r=r, seed=seed, maxiter=maxiter, maxit=maxit, funcbest=funcbest)
   !         popt = MDDS(obj_func, pini, prange, seed=seed, maxiter=maxiter, maxit=maxit, funcbest=funcbest)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(dp) :: obj_func(p,xx,yy)       Function on which to search the minimum
   !         real(dp) :: pini(:)                 inital value of decision variables
   !         real(dp) :: prange(size(pini),2)    Min/max range of decision variables
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(dp) :: DDS(size(pini))         The parameters of the point which is estimated to minimize the function.
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         integer(i8) :: seed                 User seed to initialise the random number generator (default: None)
   !         integer(i8) :: maxiter              Maximum number of iteration or function evaluation (default: 1000)
   !         logical     :: maxit                Maximization (.True.) or minimization (.False.) of function
@@ -80,10 +80,10 @@ CONTAINS
   !         ONLY DDS - in MDDS r starts at 0.3 and goes down to 0.05
   !         real(dp)    :: r                    DDS perturbation parameter (default: 0.2)
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         real(dp)              :: funcbest       the best value of the function.
   !         real(dp), allocatable :: history(:)     the history of best function values, history(maxiter)=funcbest
   !                                                 allocatable only to be in correspondance with other optimization routines

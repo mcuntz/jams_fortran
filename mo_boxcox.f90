@@ -88,24 +88,24 @@ MODULE mo_boxcox
   !     CALLING SEQUENCE
   !         out = boxcox(x, lmbda, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)       1D-array with input numbers (>0.)
   !         real(sp/dp) :: lmbda      Exponent power of Box-Cox transform (>= 0.)
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: boxcox     Power transformed values (at mask=.True.)
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -144,23 +144,23 @@ MODULE mo_boxcox
   !     CALLING SEQUENCE
   !         out = get_boxcox(x, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)       1D-array with input numbers (>0.)
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: lambda     Lambda for power transformed values (at mask=.True.)
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -201,25 +201,25 @@ MODULE mo_boxcox
   !         out = invboxcox(x, lmbda)                   ! scalar x
   !         out = invboxcox(x, lmbda, mask=mask)        ! vector x
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x / x(:)   scalar/1D-array with input numbers (>0.)
   !         real(sp/dp) :: lmbda      Exponent power of Box-Cox transform (>= 0.)
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: boxcox     Back transformed values (at mask=.True.)
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
   !                                   Only applicable if x is a 1D-array
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

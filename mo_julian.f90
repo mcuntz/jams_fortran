@@ -84,24 +84,24 @@ CONTAINS
   !     CALLING SEQUENCE
   !         call caldat(Julday, dd, mm, yy)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         integer(i4) :: Julday     Julian day
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         integer(i4) :: dd         Day in month of Julian day
   !         integer(i4) :: mm         Month in year of Julian day
   !         integer(i4) :: yy         Year of Julian day
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -164,24 +164,24 @@ CONTAINS
   !     CALLING SEQUENCE
   !         julian = julday(dd, mm, yy)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         integer(i4) :: dd         Day in month of Julian day
   !         integer(i4) :: mm         Month in year of Julian day
   !         integer(i4) :: yy         Year of Julian day
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         integer(i4) :: julian     Julian day
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -242,24 +242,24 @@ CONTAINS
   !     CALLING SEQUENCE
   !         julian = ndays(dd, mm, yy)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         integer(i4) :: dd         Day in month of IMSL Julian day
   !         integer(i4) :: mm         Month in year of IMSL Julian day
   !         integer(i4) :: yy         Year of IMSL Julian day
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         integer(i4) :: julian     IMSL Julian day, i.e. days before or after 01.01.1900
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -303,24 +303,24 @@ CONTAINS
   !     CALLING SEQUENCE
   !         call ndyin(julian, dd, mm, yy)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         integer(i4) :: julian     IMSL Julian day, i.e. days before or after 01.01.1900
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         integer(i4) :: dd         Day in month of IMSL Julian day
   !         integer(i4) :: mm         Month in year of IMSL Julian day
   !         integer(i4) :: yy         Year of IMSL Julian day
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

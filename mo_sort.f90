@@ -85,23 +85,23 @@ MODULE mo_sort
   !     CALLING SEQUENCE
   !         call sort(arr)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         None
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         real(sp/dp) :: arr(:)     On input:  unsorted 1D-array
   !                                   On output: ascendingly sorted input array
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -134,22 +134,22 @@ MODULE mo_sort
   !     CALLING SEQUENCE
   !         ii = sort_index(arr)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: arr(:)     Unsorted 1D-array
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         integer(i4)               Indeces that would sort arr in ascending order
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

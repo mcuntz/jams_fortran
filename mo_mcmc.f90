@@ -125,21 +125,21 @@ MODULE mo_mcmc
   !                     iter_burnin_in=iter_burnin, iter_mcmc_in=iter_mcmc,
   !                     chains_in=chains, stepsize_in=stepsize)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(dp) :: likelihood(x,sigma)          Interface Function which calculates likelihood of given parameter set x
   !         real(dp) :: stddev_function(x)           Interface Function which approximates the standard deviation of the data
   !                                                  based on the modeled data using the (best) parameterset x
   !         real(dp) :: para(:)                      Inital parameter set (should be GOOD approximation of best parameter set)
   !         real(dp) :: rangePar(size(para),2)       Min/max range of parameters
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(dp), allocatable :: mcmc_paras(:,:)      Parameter sets sampled in proper MCMC part of algorithm
   !         real(dp), allocatable :: burnin_paras(:,:)    Parameter sets sampled during burn-in part of algorithm
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         integer(i8) :: seeds_in(3)               User seed to initialise the random number generator
   !                                                  (default: none --> initialized with timeseed)
   !         logical     :: printflag_in              Print of output on command line
@@ -169,10 +169,10 @@ MODULE mo_mcmc
   !                                                  if given burn-in is discarded
   !                                                  (default: none)
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

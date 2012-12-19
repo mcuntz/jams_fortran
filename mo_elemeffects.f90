@@ -42,7 +42,7 @@ MODULE mo_elemeffects
   !         call elemeffects(modeloutput,para,changedpara,elemeffect,counter, &
   !                          modelstatus_in=modelstatus)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         REAL(DP),    DIMENSION(:)/(:,:)     :: modeloutput      ! array of output the model (1D or 2D)
   !                                                                 ! each row contains output of a parameter set
   !         REAL(DP),    DIMENSION(:,:)         :: para             ! array of parameters sets
@@ -53,23 +53,23 @@ MODULE mo_elemeffects
   !        INTEGER(I4), DIMENSION(size(para,1)) :: changedpara      ! vector of parameter changed
   ! between parameter set i and i+1
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         REAL(DP),    DIMENSION(size(para,2)) :: elemeffect      ! elementary effect per parameter
   !         INTEGER(I4), DIMENSION(size(para,2)) :: counter         ! ith elementary effect is based on counter(i)
   !                                                                 ! model outputs
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         LOGICAL,     DIMENSION(:)            :: modelstatus_in  ! array of status of the model, i.e. if parameter set
   !                                                                 ! leads to valid model output
   ! DEFAULT: .true. (parameter set valid)
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

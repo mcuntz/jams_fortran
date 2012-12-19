@@ -111,23 +111,23 @@ MODULE mo_template
   !     CALLING SEQUENCE
   !         out = mean(vec, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: vec(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: mean       average of all elements in dat
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(vec).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

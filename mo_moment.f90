@@ -102,23 +102,23 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = absdev(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: absdev     mean absolute deviations from average
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -155,23 +155,23 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = average(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: average    average of all elements in dat
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -209,24 +209,24 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = central_moment(x, r, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
   !         integer(i4) :: r          order of the central moment, i.e. r=2 is variance
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: central_moment    r-th central moment of elements in dat
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -262,24 +262,24 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = central_moment_var(x, r, nin=nin, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
   !         integer(i4) :: r          order of the central moment, i.e. r=2 is variance
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: central_moment_var    sampling variance of r-th central moment of elements in dat
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -316,24 +316,24 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = correlation(x, y, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)     First 1D-array with input numbers
   !         real(sp/dp) :: y(:)     Second 1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: correlation    correlation between x and y
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -372,24 +372,24 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = covariance(x, y, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)     First 1D-array with input numbers
   !         real(sp/dp) :: y(:)     Second 1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: covariance    covariance between x and y
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -429,23 +429,23 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = kurtosis(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: kurtosis    kurtosis of all elements in dat
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -482,23 +482,23 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = mean(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: mean       average of all elements in dat
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -536,26 +536,26 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = mixed_central_moment(x, y, r, s, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)       First 1D-array
   !         real(sp/dp) :: y(:)       Second 1D-array
   !         integer(i4) :: r          order of x
   !         integer(i4) :: r          order of y
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: mixed_central_moment    r,s-th mixed central moment between x and y
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -593,26 +593,26 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = mixed_central_moment_var(x, y, r, s, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: x(:)       First 1D-array
   !         real(sp/dp) :: y(:)       Second 1D-array
   !         integer(i4) :: r          order of x
   !         integer(i4) :: r          order of y
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: mixed_central_moment_var    sampling variance of r,s-th mixed central moment between x and y
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -658,23 +658,23 @@ MODULE mo_moment
   !         call moment(dat, average=average, variance=variance, skewness=skewness, kurtosis=kurtosis, &
   !                     mean=mean, stddev=stddev, absdev=absdev, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         real(sp/dp) :: average    average of input vector
   !         real(sp/dp) :: variance   sample variance of input vector
   !         real(sp/dp) :: skewness   skewness of input vector
@@ -717,23 +717,23 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = skewness(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: skewness    skewness of all elements in dat
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -770,23 +770,23 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = stddev(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: stddev     sample standard deviation of all elements in dat
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -825,23 +825,23 @@ MODULE mo_moment
   !     CALLING SEQUENCE
   !         out = variance(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: variance    sample variance of all elements in dat
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

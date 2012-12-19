@@ -50,16 +50,16 @@ CONTAINS
   !         call message(t01=t01, t02=t02, t03=t03, t04=t04, t05=t05, t06=t06, t07=t07, &
   !                      t08=t08, t09=t09, t10=t10, unit=unit, advance=advance)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         None
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         character(len=*) :: t01        1st string
   !         character(len=*) :: t02        2nd string
   !         character(len=*) :: t03        3rd string
@@ -75,10 +75,10 @@ CONTAINS
   !                                        yes: newline will be written after message
   !                                        no:  no newline at end of message
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

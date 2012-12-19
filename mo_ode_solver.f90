@@ -91,7 +91,7 @@ module mo_ode_solver
   !
   !         --> see also example in test directory --> test/test_mo_ode_solver
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp),  dimension(:),   ::  vstart          ... initial conditions
   !                                                               N inital values known at the time x1 (given N ODEs)
   !
@@ -103,20 +103,20 @@ module mo_ode_solver
   !
   !         interface                     ::  derivs_sp/dp    ... returns derivatives dydx of y at x
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         none
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         none
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         character(*)  ::  fileName    ... name of the file in which all the results will be stored
   !                                           DEFAULT: no output files will be created
   !
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         none
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         real(sp/dp)                                  ::  Tout     ... print out the elapsed CPU time
   !                                                                       DEFAULT: no outputs will be created
   !
@@ -168,7 +168,7 @@ module mo_ode_solver
   !
   !         --> see also example in test directory --> test/test_mo_ode_solver
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp),  dimension(:),   ::  ystart          ... initial conditions
   !                                                               N inital values known at the time x1 (given N ODEs)
   !
@@ -180,13 +180,13 @@ module mo_ode_solver
   !
   !         interface                     ::  derivs_sp/dp    ... returns derivatives dydx of y at x
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         none
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         none
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         character(*)  ::  fileName    ... name of the file in which all the results will be stored
   !                                           DEFAULT: no output files will be created
   !
@@ -196,10 +196,10 @@ module mo_ode_solver
   !         real(sp/dp)   ::  epsIN       ... accuracy (overall tolerance level)
   !                                           DEFAULT: 10.0**(-6.0)
   !
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         none
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         real(sp/dp)                                  ::  Tout     ... print out the elapsed CPU time
   !                                                                       DEFAULT: no outputs will be created
   !

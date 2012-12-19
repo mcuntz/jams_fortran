@@ -76,7 +76,7 @@ MODULE mo_anneal
   !                                                                   cost function
   !
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the
   !                                                                      cost function at a given point
   !
@@ -88,15 +88,15 @@ MODULE mo_anneal
   !                                                                      feasible range for a parameter
   !                                                                      at a certain point, if ranges are variable
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
   !
 
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         REAL(SP/DP)    :: temp           ... initial temperature
   !                                              DEFAULT: subroutine Get_Temperature
   !
@@ -148,10 +148,10 @@ MODULE mo_anneal
   !                                              .false. for minimizing a function
   !                                              DEFAULT = .false. (minimization)
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         REAL(SP/DP)                            :: funcbest ... minimized value of cost function
   !         REAL(DP), DIMENSION(:,:), ALLOCATABLE  :: history  ... returns a vector of achieved objective
   !                                                                after ith model evaluation
@@ -216,7 +216,7 @@ MODULE mo_anneal
   !                                                                   cost function
   !
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the
   !                                                                      cost function at a given point
   !
@@ -225,15 +225,15 @@ MODULE mo_anneal
   !         REAL(SP/DP), DIMENSION(size(para,1),2)    :: range_dp/sp ... lower and upper bound per parameter
   !
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
   !
 
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         REAL(SP/DP)    :: temp           ... initial temperature
   !                                              DEFAULT: subroutine Get_Temperature
   !
@@ -294,10 +294,10 @@ MODULE mo_anneal
   !                                              .false. for minimizing a function
   !                                              DEFAULT = .false. (minimization)
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         REAL(SP/DP)    :: funcbest ... minimized value of cost function
 
   !     RESTRICTIONS
@@ -364,7 +364,7 @@ MODULE mo_anneal
   !                                                                      acceptance ratio for Sim. Ann.
   !
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         REAL(SP/DP),    DIMENSION(:)              :: paraset     ... initial (valid) parameter set
   !
   !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the
@@ -378,15 +378,15 @@ MODULE mo_anneal
   !         REAL(SP/DP)                               :: acc_goal    ... Acceptance Ratio which has to be achieved
   !
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
   !
 
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         INTEGER(I4)    :: samplesize_in  ... number of iterations the estimation of temperature is based on
   !                                              DEFAULT: Max(20_i4*n,250_i4)
   !
@@ -416,10 +416,10 @@ MODULE mo_anneal
   !                                              .false. for minimizing a function
   !                                              DEFAULT = .false. (minimization)
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -477,7 +477,7 @@ MODULE mo_anneal
   !                                                                      acceptance ratio for Sim. Ann.
   !
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         REAL(SP/DP),    DIMENSION(:)              :: paraset     ... initial (valid) parameter set
   !
   !         INTERFACE                                 :: cost_dp/sp  ... interface calculating the
@@ -488,15 +488,15 @@ MODULE mo_anneal
   !         REAL(SP/DP)                               :: acc_goal    ... Acceptance Ratio which has to be achieved
   !
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
   !
 
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         INTEGER(I4)    :: samplesize_in  ... number of iterations the estimation of temperature is based on
   !                                              DEFAULT: Max(20_i4*n,250_i4)
   !
@@ -526,10 +526,10 @@ MODULE mo_anneal
   !                                              .false. for minimizing a function
   !                                              DEFAULT = .false. (minimization)
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

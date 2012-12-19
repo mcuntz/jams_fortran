@@ -45,13 +45,13 @@ MODULE mo_string_utils
   !     CALLING SEQUENCE
   !         str = num2str(num,form=form)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         integer(i4/i8)/real(sp/dp)/logical :: num    Number or logical
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         character(len=X) :: str              String of formatted input number or logical
   !                                              Ouput length X is:
   !                                              i4    - 10
@@ -59,7 +59,7 @@ MODULE mo_string_utils
   !                                              sp/dp - 32
   !                                              log   - 10
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         character(len=*) :: form             Format string
   !                                              Defaults are:
   !                                              i4    - '(I10)'
@@ -67,10 +67,10 @@ MODULE mo_string_utils
   !                                              sp/dp - '(G32.5)'
   !                                              log   - '(L10)'
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -120,22 +120,22 @@ CONTAINS
   !     CALLING SEQUENCE
   !         used = nonull(str)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         character(len=*) :: str    String
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         logical :: used    .true.: string was already set; .false.: string still in initialised state
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -263,22 +263,22 @@ CONTAINS
   !     CALLING SEQUENCE
   !         low = tolower(upper)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         character(len=*) :: upper    String
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         character(len=len_trim(upper)) :: low    String where all uppercase in input is converted to lowercase
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -327,22 +327,22 @@ CONTAINS
   !     CALLING SEQUENCE
   !         up = toupper(lower)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         character(len=*) :: lower    String
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         character(len=len_trim(lower)) :: up    String where all lowercase in input is converted to uppercase
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -392,25 +392,25 @@ CONTAINS
   !     CALLING SEQUENCE
   !         DIVIDE_STRING(string, delim, strArr(:))
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         CHARACTER(len=*), INTENT(IN)        :: string     - string to be divided
   !         CHARACTER(len=*), INTENT(IN)        :: delim      - delimiter specifying places for division
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         CHARACTER(len=*), DIMENSION(:) ,   &
   !                  ALLOCATABLE,  INTENT(OUT)  :: strArr     -  Array of substrings, has to be allocateable and is
   !                                                              handed to the routine unallocated
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

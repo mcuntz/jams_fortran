@@ -60,24 +60,24 @@ module mo_xor4096
   !     CALLING SEQUENCE
   !         call get_timeseed(seed)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         None
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         integer(i4/i8)                     :: seed
   !           OR
   !         integer(i4/i8), dimension(:)       :: seed
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         None
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -166,14 +166,14 @@ module mo_xor4096
   !         call xor4096(seed, rn) or
   !         call xor4096(seed, rn, i, w, x)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         integer(i4/i8) :: seed/seed(:)     value or 1D-array with non-zero seeds for
   !                                            initialization or zero for subsequent calls
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !             none
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         integer(i4/i8)/real(sp/dp)   :: RN/RN(size(seed))
   !                                            uniform distributed random number with
   !                                            interval:
@@ -182,15 +182,15 @@ module mo_xor4096
   !                                                sp: (0.0_sp, 1.0_sp)
   !                                                dp: (0.0_dp, 1.0_dp)
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         none
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         integer(i4/i8), dimension(size(seed))              :: i
   !         integer(i4/i8), dimension(size(seed))              :: w
   !         integer(i4/i8), dimension(size(seed),0:127/0:63)   :: x
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -274,24 +274,24 @@ module mo_xor4096
   !         call xor4096g(seed, rn) or
   !         call xor4096g(seed, rn, i, w, x, Flag, y)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         integer(i4/i8) :: seed/seed(:)     value or 1D-array with non-zero seeds for
   !                                            initialization or zero for subsequent calls
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !             none
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp)   :: RN/RN(size(seed))
   !                                            gaussian distributed random number with
   !                                            interval:
   !                                                sp: RN ~ N(0.0_sp, 1.0_sp)
   !                                                dp: RN ~ N(0.0_dp, 1.0_dp)
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         none
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         integer(i4/i8), dimension(size(seed))              :: i
   !         integer(i4/i8), dimension(size(seed))              :: w
   !         integer(i4/i8), dimension(size(seed),0:127/0:63)   :: x
@@ -299,7 +299,7 @@ module mo_xor4096
   !         real(sp/dp),    dimension(size(seed))              :: y
   !
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

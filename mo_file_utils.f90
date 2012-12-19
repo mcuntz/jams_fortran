@@ -44,23 +44,23 @@ CONTAINS
   !     CALLING SEQUENCE
   !         iout = find_next_unit(istart,istop)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         integer :: istart         Starting unit
   !         integer :: istop          Last checked unit
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         integer :: iout           Free unit in interval [istart,istop], returns -1 if no free unit.
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         None
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS

@@ -54,20 +54,20 @@ MODULE mo_errormeasures
   !     CALLING SEQUENCE
   !         out = BIAS(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp), dimension(:)     :: x, y    1D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:)   :: x, y    2D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:,:) :: x, y    3D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: BIAS        bias
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(x/y).
   !             OR
   !         logical     :: mask(:,:)   2D-array of logical values with size(x/y).
@@ -76,10 +76,10 @@ MODULE mo_errormeasures
   !
   !         If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -115,20 +115,20 @@ MODULE mo_errormeasures
   !     CALLING SEQUENCE
   !         out = MAE(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp), dimension(:)     :: x, y    1D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:)   :: x, y    2D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:,:) :: x, y    3D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: MAE         Mean Absolute Error
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(x/y).
   !             OR
   !         logical     :: mask(:,:)   2D-array of logical values with size(x/y).
@@ -137,10 +137,10 @@ MODULE mo_errormeasures
   !
   !         If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -176,20 +176,20 @@ MODULE mo_errormeasures
   !     CALLING SEQUENCE
   !         out = MSE(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp), dimension(:)     :: x, y    1D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:)   :: x, y    2D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:,:) :: x, y    3D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: MSE         Mean squared error
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(x/y).
   !             OR
   !         logical     :: mask(:,:)   2D-array of logical values with size(x/y).
@@ -198,10 +198,10 @@ MODULE mo_errormeasures
   !
   !         If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -237,20 +237,20 @@ MODULE mo_errormeasures
   !     CALLING SEQUENCE
   !         out = NSE(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp), dimension(:)     :: x, y    1D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:)   :: x, y    2D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:,:) :: x, y    3D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: NSE         Nash Sutcliffe Efficiency
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(x/y).
   !             OR
   !         logical     :: mask(:,:)   2D-array of logical values with size(x/y).
@@ -259,10 +259,10 @@ MODULE mo_errormeasures
   !
   !         If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -299,20 +299,20 @@ MODULE mo_errormeasures
   !     CALLING SEQUENCE
   !         out = SAE(x, y, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp), dimension(:)     :: x, y    1D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:)   :: x, y    2D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:,:) :: x, y    3D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: SAE         sum of absolute errors
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(x/y).
   !             OR
   !         logical     :: mask(:,:)   2D-array of logical values with size(x/y).
@@ -321,10 +321,10 @@ MODULE mo_errormeasures
   !
   !         If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -360,20 +360,20 @@ MODULE mo_errormeasures
   !     CALLING SEQUENCE
   !         out = SSE(x, y, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp), dimension(:)     :: x, y    1D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:)   :: x, y    2D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:,:) :: x, y    3D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: SSE         sum of squared errors
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(x/y).
   !             OR
   !         logical     :: mask(:,:)   2D-array of logical values with size(x/y).
@@ -382,10 +382,10 @@ MODULE mo_errormeasures
   !
   !         If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -421,20 +421,20 @@ MODULE mo_errormeasures
   !     CALLING SEQUENCE
   !         out = RMSE(dat, mask=mask)
 
-  !     INDENT(IN)
+  !     INTENT(IN)
   !         real(sp/dp), dimension(:)     :: x, y    1D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:)   :: x, y    2D-array with input numbers
   !             OR
   !         real(sp/dp), dimension(:,:,:) :: x, y    3D-array with input numbers
 
-  !     INDENT(INOUT)
+  !     INTENT(INOUT)
   !         None
 
-  !     INDENT(OUT)
+  !     INTENT(OUT)
   !         real(sp/dp) :: RMSE        Root-mean-square error
 
-  !     INDENT(IN), OPTIONAL
+  !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(x/y).
   !             OR
   !         logical     :: mask(:,:)   2D-array of logical values with size(x/y).
@@ -443,10 +443,10 @@ MODULE mo_errormeasures
   !
   !         If present, only those locations in vec corresponding to the true values in mask are used.
 
-  !     INDENT(INOUT), OPTIONAL
+  !     INTENT(INOUT), OPTIONAL
   !         None
 
-  !     INDENT(OUT), OPTIONAL
+  !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
