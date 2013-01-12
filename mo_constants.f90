@@ -61,21 +61,39 @@ MODULE mo_constants
   !> Square root of 2 in single precision
   REAL(sp), PARAMETER :: SQRT2_sp = 1.41421356237309504880168872420969807856967_sp
   !> 2/3 in double precision
-  REAL(dp), PARAMETER :: TWOTHIRD_D = 0.6666666666666666666666666666666666667_dp      ! 2/3
+  REAL(dp), PARAMETER :: TWOTHIRD_dp = 0.6666666666666666666666666666666666667_dp      ! 2/3
   !> 2/3 in single precision
-  REAL(sp), PARAMETER :: TWOTHIRD   = 0.6666666666666666666666666666666666667_sp
+  REAL(sp), PARAMETER :: TWOTHIRD_sp = 0.6666666666666666666666666666666666667_sp
+  !> degree to radian conversion (pi/180) in double precision
+  REAL(dp), PARAMETER :: deg2rad_dp = PI_dp/180._dp                       ! deg2rad
+  !> degree to radian conversion (pi/180) in double precision
+  REAL(sp), PARAMETER :: deg2rad_sp = PI_sp/180._sp
+  !> radian to conversion (180/pi) in double precision
+  REAL(dp), PARAMETER :: deg2rad_dp = 180._dp/PI_dp                       ! rad2deg
+  !> radian to degree conversion (180/pi) in single precision
+  REAL(sp), PARAMETER :: deg2rad_sp = 180._sp/PI_sp
 
   ! Physical
-  !> Psychrometric constant [kPa K^-1]
-  REAL(sp), PARAMETER :: gamma_dp      = 0.0646_dp                   ! psychrometric constant [kPa C-1]
+  !> Seconds per day [s] in double precision
+  REAL(dp), PARAMETER :: secday_dp = 86400._dp                       ! secday [s]
+  !> Seconds per day [s] in single precision
+  REAL(sp), PARAMETER :: secday_sp = 86400._sp
+  !> Psychrometric constant [kPa K^-1] in double precision
+  REAL(dp), PARAMETER :: Psychro_dp      = 0.0646_dp                 ! psychrometric constant [kPa C-1]  
+  !> Psychrometric constant [kPa K^-1] in sibgle precision
+  REAL(sp), PARAMETER :: Psychro_sp      = 0.0646_sp
   !> Gravity accelaration [m^2 s^-1] in double precision
   REAL(dp), PARAMETER :: Gravity_dp   = 9.81_dp                      ! Gravity acceleration [m^2/s]
   !> Gravity accelaration [m^2 s^-1] in single precision
   REAL(sp), PARAMETER :: Gravity_sp   = 9.81_sp
-  !>  Solar constant in [MJ m^-2 s^-1]
-  REAL(sp), PARAMETER :: GSolarConst_dp  = 1367_dp                   ! Global solar constant in [W m-2 = kg s-3]
-  !> Specific heat for vaporization of water in [J m-2 mm-1]
-  REAL(sp), PARAMETER :: SpecHeatET_dp   = 2.45e06_dp                ! in [W s m-2 mm-1 = kg s-2 mm-1]
+  !>  Solar constant in [MJ m^-2 s^-1] in double precision
+  REAL(dp), PARAMETER :: GSolarConst_dp  = 1367._dp                  ! Global solar constant in [W m-2 = kg s-3]
+  !>  Solar constant in [MJ m^-2 s^-1] in single precision
+  REAL(sp), PARAMETER :: GSolarConst_sp  = 1367._sp
+  !> Specific heat for vaporization of water in [J m-2 mm-1] in double precision
+  REAL(dp), PARAMETER :: SpecHeatET_dp   = 2.45e06_dp                ! Specific heat in [W s m-2 mm-1 = kg s-2 mm-1]
+  !> Specific heat for vaporization of water in [J m-2 mm-1] in single precision
+  REAL(sp), PARAMETER :: SpecHeatET_sp   = 2.45e06_sp
   !> Standard temperature [K] in double precision
   REAL(dp), PARAMETER :: T0_dp        = 273.15_dp                    ! Celcius <-> Kelvin [K]
   !> Standard temperature [K] in single precision
@@ -111,7 +129,7 @@ MODULE mo_constants
   !> Euler''s constant in single precision
   REAL(sp), PARAMETER :: EULER   = 0.5772156649015328606065120900824024310422_sp
 
-  ! file units
+  ! Standard file units
   !> Standard input file unit
   INTEGER, PARAMETER :: nin  = 5   ! standard input stream
   !> Standard output file unit

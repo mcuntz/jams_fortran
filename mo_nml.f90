@@ -1,3 +1,11 @@
+!> \file mo_nml.f90
+
+!> \brief Deal with namelist files.
+
+!> \details This module provides routines to open, close and position namelist files.
+
+!> \authors Matthias Cuntz
+!> \date Jan 2011 
 MODULE mo_nml
 
   ! Adapted from Echam5, (C) MPI-MET, Hamburg, Germany
@@ -9,6 +17,8 @@ MODULE mo_nml
   ! Modified Jan 2011, Matthias Cuntz - compatible with gfortran <= version 4.3
   !                                     all integer(i4)
   !                                     quiet
+  !          Jan 2013, Matthias Cuntz - close_nml with unit, open_nml quiet=.true. default
+  !                                     position_nml swap first and status
 
   ! License
   ! -------
@@ -44,11 +54,16 @@ MODULE mo_nml
   PUBLIC :: nunitnml                                      ! namelist unit
   PUBLIC :: POSITIONED, MISSING, LENGTH_ERROR, READ_ERROR ! return values from position_nml
 
-  ! return values of function 'position_nml'
-  INTEGER(i4), PARAMETER :: POSITIONED   =  0 ! file pointer set to namelist group
-  INTEGER(i4), PARAMETER :: MISSING      =  1 ! namelist group is missing
-  INTEGER(i4), PARAMETER :: LENGTH_ERROR =  2 !
-  INTEGER(i4), PARAMETER :: READ_ERROR   =  3 !
+  ! return values in optinal status of function 'position_nml'
+  !> Information: file pointer set to namelist group
+  INTEGER(i4), PARAMETER :: POSITIONED   =  0
+  !> Error: namelist group is missing
+  INTEGER(i4), PARAMETER :: MISSING      =  1
+  !> Error: namelist group name too long
+  INTEGER(i4), PARAMETER :: LENGTH_ERROR =  2
+  !> Error occured during read of namelist file
+  INTEGER(i4), PARAMETER :: READ_ERROR   =  3
+
   ! default namelist unit
   INTEGER,     SAVE      :: nunitnml         = -1
 
@@ -62,14 +77,14 @@ CONTAINS
   !         open_nml
 
   !     PURPOSE
-  !         Open a namelist file.
+  !>        \brief Open a namelist file.
 
   !     CALLING SEQUENCE
   !         call open_nml(file, unit, quiet=quiet)
   
   !     INTENT(IN)
-  !         character(len=*) :: file         Namelist filename
-  !         integer          :: unit         namelist unit
+  !>        \param[in] "character(len=*) :: file"   namelist filename
+  !>        \param[in] "integer          :: unit"   namelist unit
 
   !     INTENT(INOUT)
   !         None
@@ -78,9 +93,9 @@ CONTAINS
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !         logical :: quiet                 Be verbose or not (default: .false.)
-  !                                          .true.:  no messages
-  !                                          .false.: write out messages
+  !>       \param[in] "logical, optional :: logical :: quiet"   Be verbose or not (default: .true.)\n
+  !>                                                            .true.:  no messages\n
+  !>                                                            .false.: write out messages
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -99,7 +114,9 @@ CONTAINS
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \date Dec 2011
+  !         Modified, Matthias Cuntz, Jan 2013 - quiet=.true. default
 
   SUBROUTINE open_nml(file, unit, quiet)
 
@@ -109,23 +126,21 @@ CONTAINS
     INTEGER         , INTENT(IN) :: unit
     INTEGER         , INTENT(IN), OPTIONAL :: quiet
     INTEGER :: istat
+    LOGICAL :: iquiet
+
+    iquiet = .false.
+    if (present(quiet)) iquiet=quiet
 
     nunitnml = unit
-    if (.not. present(quiet)) then
-       !message_text = '    This is namelist '//file
-       write(message_text,'(A,A)')'    This is namelist ', trim(file)
-       CALL message(trim(message_text))
-    end if
-    OPEN (nunitnml, file=file, iostat=istat, status='old', action='read', &
-         delim='apostrophe')
+    if (.not. quiet) CALL message('    This is namelist ', trim(file))
+    OPEN (nunitnml, file=file, iostat=istat, status='old', action='read', delim='apostrophe')
 
     IF (istat /= 0) THEN
-       !message_text = 'Could not open namelist file '//TRIM(file)
-       write(message_text,'(A,A)')'Could not open namelist file ', trim(file)
+       write(message_text,'(A,A)') 'Could not open namelist file ', trim(file)
       CALL finish('OPEN_NML',trim(message_text))
     END IF
 
-  END SUBROUTINE open_nml  
+  END SUBROUTINE open_nml
 
   ! ------------------------------------------------------------------
 
@@ -133,10 +148,10 @@ CONTAINS
   !         close_nml
 
   !     PURPOSE
-  !         Closes the namelist file.
+  !>        \brief Close a namelist file.
 
   !     CALLING SEQUENCE
-  !         call close_nml()
+  !         call close_nml(unit=unit)
   
   !     INTENT(IN)
   !         None
@@ -148,7 +163,7 @@ CONTAINS
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !         None
+  !>        \param[in] "integer, optional :: unit"   namelist unit
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -158,35 +173,40 @@ CONTAINS
 
   !     RESTRICTIONS
   !         open_nml remembers the namelist unit in the public, save variable nunitnml.
-  !         close_nml uses nunitnml.
+  !         close_nml uses nunitnml if unit is not given.
 
   !     EXAMPLE
   !         call close_nml()
+  !         or
+  !         call close_nml(unml)
   !         -> see also example in test directory
 
   !     LITERATURE
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \date Dec 2011
+  !         Modified, Matthias Cuntz, Jan 2013 - unit
 
-  SUBROUTINE close_nml()
+  SUBROUTINE close_nml(unit)
 
     IMPLICIT NONE
 
-    INTEGER :: istat
+    INTEGER, INTENT(IN), OPTIONAL :: unit
 
-    IF (nunitnml == -1) THEN
-      CALL finish('CLOSE_NML','No namelist file opened.')
-    END IF
+    INTEGER :: istat, nnml
 
-    CLOSE(nunitnml, IOSTAT=istat)
+    nnml = nunitnml
+    if (present(unit)) nnml = unit
+    
+    IF (nnml < 0) CALL finish('CLOSE_NML','No namelist file opened.')
 
-    IF (istat /= 0) THEN
-      CALL finish('CLOSE_NML','Could not close namelist file.')
-    END IF
+    CLOSE(nnml, IOSTAT=istat)
 
-    nunitnml = -1
+    IF (istat /= 0) CALL finish('CLOSE_NML','Could not close namelist file.')
+
+    if (not present(unit)) nunitnml = -1
 
   END SUBROUTINE close_nml
 
@@ -196,15 +216,17 @@ CONTAINS
   !         position_nml
 
   !     PURPOSE
-  !         Position namelist file pointer for reading a new namelist next.
-  !         It positions namelist file at correct place for reading
-  !         namelist /name/ (case independent).
+  !>        \brief Position a namlist file.
+  !
+  !>        \details Position namelist file pointer for reading a new namelist next.\n
+  !>        It positions the namelist file at the correct place for reading\n
+  !>        namelist /name/ (case independent).
 
   !     CALLING SEQUENCE
-  !         call position_nml(name, unit=unit, first=first, status=status)
+  !         call position_nml(name, unit=unit, status=status, first=first)
   
   !     INTENT(IN)
-  !         character(len=*) :: name         namelist name (case independent)
+  !>        \param[in] "character(len=*) :: name"     namelist name (case independent)
 
   !     INTENT(INOUT)
   !         None
@@ -213,21 +235,21 @@ CONTAINS
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !         integer     :: unit               namelist unit (default: nunitnml)
-  !         logical     :: first              start search at beginning,
-  !                                           i.e. rewind the namelist first (default: .true.)
-  !                                          .true.:  rewind
-  !                                          .false.: continue search from current file pointer
+  !>        \param[in] "integer, optional :: unit"    namelist unit (default: nunitnml)
+  !>        \param[in] "logical, optional :: first"   start search at beginning,
+  !>                                                  i.e. rewind the namelist first (default: .true.)\n
+  !>                                                  .true.:  rewind\n
+  !>                                                  .false.: continue search from current file pointer
 
   !     INTENT(INOUT), OPTIONAL
   !         None
 
   !     INTENT(OUT), OPTIONAL
-  !         integer(i4) :: status            Set on output to either of
-  !                                          POSITIONED (0)   - correct
-  !                                          MISSING (1)      - name not found
-  !                                          LENGTH_ERROR (2) - namelist length longer then 256 characters
-  !                                          READ_ERROR (3)   - error while reading namelist file
+  !>        \param[out] "integer(i4), optional :: status"   Set on output to either of\n
+  !>                                                        POSITIONED (0)   - correct\n
+  !>                                                        MISSING (1)      - name not found\n
+  !>                                                        LENGTH_ERROR (2) - namelist length longer then 256 characters\n
+  !>                                                        READ_ERROR (3)   - error while reading namelist file
 
   !     RESTRICTIONS
   !         None
@@ -240,16 +262,18 @@ CONTAINS
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \date Dec 2011
+  !         Modified, Matthias Cuntz, Jan 2013 - swap first and status in call list 
 
-  SUBROUTINE position_nml(name, unit, first, status)
+  SUBROUTINE position_nml(name, unit, status, first)
 
     IMPLICIT NONE
 
     CHARACTER(len=*), INTENT(in)            :: name   ! namelist group name
-    INTEGER,          INTENT(in)  ,OPTIONAL :: unit   ! file unit number
-    LOGICAL,          INTENT(in)  ,OPTIONAL :: first ! default: true
-    INTEGER(i4),      INTENT(out) ,OPTIONAL :: status ! error return value
+    INTEGER,          INTENT(in),  OPTIONAL :: unit   ! file unit number
+    INTEGER(i4),      INTENT(out), OPTIONAL :: status ! error return value
+    LOGICAL,          INTENT(in),  OPTIONAL :: first  ! default: true
 
     CHARACTER(len=256) :: yline    ! line read
     CHARACTER(len=256) :: test     ! uppercase namelist group name
