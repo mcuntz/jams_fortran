@@ -69,9 +69,9 @@ MODULE mo_constants
   !> degree to radian conversion (pi/180) in double precision
   REAL(sp), PARAMETER :: deg2rad_sp = PI_sp/180._sp
   !> radian to conversion (180/pi) in double precision
-  REAL(dp), PARAMETER :: deg2rad_dp = 180._dp/PI_dp                       ! rad2deg
+  REAL(dp), PARAMETER :: rad2deg_dp = 180._dp/PI_dp                       ! rad2deg
   !> radian to degree conversion (180/pi) in single precision
-  REAL(sp), PARAMETER :: deg2rad_sp = 180._sp/PI_sp
+  REAL(sp), PARAMETER :: rad2deg_sp = 180._sp/PI_sp
 
   ! Physical
   !> Seconds per day [s] in double precision
