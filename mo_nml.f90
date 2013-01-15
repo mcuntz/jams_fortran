@@ -124,7 +124,7 @@ CONTAINS
 
     CHARACTER(len=*), INTENT(IN) :: file
     INTEGER         , INTENT(IN) :: unit
-    INTEGER         , INTENT(IN), OPTIONAL :: quiet
+    LOGICAL         , INTENT(IN), OPTIONAL :: quiet
     INTEGER :: istat
     LOGICAL :: iquiet
 
@@ -132,7 +132,7 @@ CONTAINS
     if (present(quiet)) iquiet=quiet
 
     nunitnml = unit
-    if (.not. quiet) CALL message('    This is namelist ', trim(file))
+    if (.not. iquiet) CALL message('    This is namelist ', trim(file))
     OPEN (nunitnml, file=file, iostat=istat, status='old', action='read', delim='apostrophe')
 
     IF (istat /= 0) THEN
@@ -206,7 +206,7 @@ CONTAINS
 
     IF (istat /= 0) CALL finish('CLOSE_NML','Could not close namelist file.')
 
-    if (not present(unit)) nunitnml = -1
+    if (.not. present(unit)) nunitnml = -1
 
   END SUBROUTINE close_nml
 
