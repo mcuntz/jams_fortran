@@ -236,7 +236,7 @@ CONTAINS
   !>        \author Written,  Matthias Cuntz
   !>        \date Jan 2013
 
-  FUNCTION date2dec(dd,mm,yy,hh,ii,ss)
+  ELEMENTAL PURE FUNCTION date2dec(dd,mm,yy,hh,ii,ss)
 
     IMPLICIT NONE
 
@@ -267,7 +267,7 @@ CONTAINS
 
     ! Julian day as in julday
     jy = iyy
-    if (jy == 0) stop 'date2dec: there is no year zero'
+    !if (jy == 0) stop 'date2dec: there is no year zero'
     if (jy < 0) jy = jy+1
     if (imm > 2) then
        jm = imm+1
@@ -357,7 +357,7 @@ CONTAINS
   !>        \author Written,  Matthias Cuntz
   !>        \date Jan 2013
 
-  SUBROUTINE dec2date(julian,dd,mm,yy,hh,ii,ss)
+  ELEMENTAL PURE SUBROUTINE dec2date(julian,dd,mm,yy,hh,ii,ss)
 
     IMPLICIT NONE
 
