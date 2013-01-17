@@ -47,8 +47,12 @@ PROGRAM anneal_test
   seeds(1) = 854_i8
   seeds(2) = seeds(1) + 1000_i8
   print*, 'seeds used:                        ', seeds(1:2)
-  temperature = GetTemperature( para, cost_dp, range_dp, 0.95_dp, samplesize_in=500_i4, &
-       seeds_in=seeds(1:2), printflag_in=.true.)
+  temperature = GetTemperature( para, cost_dp, 0.95_dp, &
+       ! optionals
+       prange_func=range_dp, &
+       samplesize=500_i4, &
+       seeds=seeds(1:2), &
+       printflag=.true.)
 
   print*, '-----------------------------------'
   print*, '   SIMULATED ANNEALING             '
@@ -63,11 +67,31 @@ PROGRAM anneal_test
      print*, 'seeds used: ', seeds(1:3)
      !
      call cpu_time(Tstart)
-     parabest = anneal(cost_dp, para, range_dp, maxit_in=.false., &
-          temp_in=temperature, seeds_in=seeds,&
-          LEN_in=250_i4,nITERmax_in=150000_i4,eps_in=0.00001_dp,&
-          printflag_in=.false., &
-          funcbest=costbest, history=history)
+     parabest = anneal(cost_dp, para, &
+          ! optionals
+          prange_func=range_dp, &
+          maxit=.false., &
+          temp=temperature, &
+          seeds=seeds,&
+          LEN=250_i4, &
+          nST=5_i4, &
+          nITERmax=150000_i4, &
+          eps=0.00001_dp,&
+          acc=0.1_dp,&
+          DT=0.90_dp, &
+          printflag=.false., &
+          funcbest=costbest, history=history, &
+          weight=(/ 1.0_dp, 1.0_dp, 1.0_dp, 1.0_dp  /), &
+          maskpara=(/ .true., .true., .true., .true. /), &
+          undef_funcval=9999.0_dp, &
+          ! settings for standard simulated annealing
+          reflectionFlag=.False., &
+          pertubFlexFlag=.True., &
+          changeParaMode=1_i4)
+          ! settings for dds generation of new parameter sets
+          ! reflectionFlag=.True., &
+          ! pertubFlexFlag=.False., &
+          ! changeParaMode=3_i4)
      call cpu_time(Tend)
      if (costbestAll .gt. costbest) then
         costbestAll = costbest
@@ -82,9 +106,9 @@ PROGRAM anneal_test
   print*, '   costbest = ', costbestAll
   print*, '   parabest = ', parabestAll
 
-  ! Is program running properly?   costbestAll = 1.5875139874607314E-02
+  ! Is program running properly?   costbestAll = 3.1142480812726376E-02
   print*, '-----------------------------------'
-  if ( anint(costbestAll*100000) .eq. 1588._dp ) then
+  if ( anint(costbestAll*100000) .eq. 3114._dp ) then
      print*, 'mo_anneal: o.k.'
   else
      print*, 'mo_anneal: failed '
