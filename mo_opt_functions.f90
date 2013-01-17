@@ -3550,6 +3550,7 @@ CONTAINS
   !
   !  The Rastrigin function, N >= 2.
   !  Solution: x(1:n) = 0.0_dp
+  !  Search domain: -5.12 <= xi <= 5.12
   !
   !  Author:
   !
