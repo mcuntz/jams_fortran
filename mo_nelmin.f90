@@ -934,7 +934,7 @@ CONTAINS
              p0(i) = min( prange(i,2) , max( prange(i,1) , 1.01_dp*p0(i) ) )
           else
              ! bound to range
-             p0(i) = min( prange(i,2) , max( prange(i,1) , 0.01_dp*p0(i) ) )
+             p0(i) = min( prange(i,2) , max( prange(i,1) , 0.01_dp ) )
           endif
           istep(i) = abs(func(p0) - y0)
        enddo
