@@ -7,12 +7,13 @@
 
 !> \author Juliane Mai
 !> \date Aug 2012
+
 MODULE mo_append
 
   ! This module is appending and pasting scalars, vectors, and matrixes into one.
   ! and is part of the UFZ CHS Fortran library.
 
-  !
+
   ! Written  Juliane Mai,    Aug 2012
   ! Modified Juliane Mai,    Aug 2012 - character append & paste
   ! Modified Matthias Cuntz, Jan 2013 - removed 256 character restriction
@@ -63,10 +64,10 @@ MODULE mo_append
   !     CALLING SEQUENCE
   !         input1 = (/ 1.0_dp , 2.0_dp /)
   !         input2 = 3.0_dp
-  !
+
   !         call append(input1, input2)
   !         --> input1 = (/ 1.0_dp , 2.0_dp, 3.0_dp /)
-  !
+
   !         See also test folder for a detailed example.
 
 
@@ -134,11 +135,11 @@ MODULE mo_append
   !     CALLING SEQUENCE
   !         input1 = (/ 1.0_dp , 2.0_dp /)
   !         input2 = (/ 3.0_dp , 4.0_dp /)
-  !
+
   !         call paste(input1, input2)
   !         --> input1(1,:) = (/ 1.0_dp , 3.0_dp /)
   !             input1(2,:) = (/ 2.0_dp , 4.0_dp /)
-  !
+
   !         See also test folder for a detailed example.
 
   !     INTENT(IN)

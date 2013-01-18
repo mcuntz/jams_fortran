@@ -429,21 +429,21 @@ CONTAINS
   !         Written,  Matthias Zink, Oct 2012
 
   SUBROUTINE DIVIDE_STRING(string, delim, strArr)
-    !
+
     IMPLICIT NONE
-    !
+
     CHARACTER(len=*)             , INTENT(IN)        :: string
     CHARACTER(len=*)             , INTENT(IN)        :: delim
     CHARACTER(len=*), DIMENSION(:), ALLOCATABLE, &
          INTENT(OUT)      :: strArr
-    !
+
     CHARACTER(256)                                   :: stringDummy   ! string in fisrt place but cutted in pieces
     CHARACTER(256), DIMENSION(:) , ALLOCATABLE       :: strDummyArr   ! Dummy arr until number of substrings is known
     INTEGER(i4)                                      :: pos           ! position of dilimiter
     INTEGER(i4)                                      :: nosubstr      ! number of substrings in string
-    !
+
     stringDummy = string
-    !
+
     allocate(strDummyArr(len_trim(stringDummy)))
     pos=999_i4
     nosubstr=0_i4
@@ -456,7 +456,7 @@ CONTAINS
           StrDummyArr(nosubstr) = trim(stringDummy)
           exit
        end if
-       !
+
        nosubstr = nosubstr + 1_i4
        strDummyArr(nosubstr) = stringDummy(1:pos-1)
        stringDummy = stringDummy(pos+1:len_trim(stringDummy))
@@ -469,9 +469,9 @@ CONTAINS
        allocate(strArr(nosubstr))
        strArr = StrDummyArr(1:nosubstr)
     end if
-    !
+
     deallocate(strDummyArr)
-    !
+
   END SUBROUTINE DIVIDE_STRING
 #endif
 

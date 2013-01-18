@@ -1,3 +1,12 @@
+!> \file mo_message.f90
+
+!> \brief Write out concatenated strings
+
+!> \details Write out several strings concatenated on standard out or a given unit, either advancing or not.
+
+!> \author Matthias Cuntz
+!> \date Jul 2011
+
 MODULE mo_message
 
   ! This module supplies routines to write out text
@@ -44,7 +53,7 @@ CONTAINS
   !         message
 
   !     PURPOSE
-  !         Write out several string concatenated either on screen or in a file.
+  !>        \brief Write out several string concatenated either on screen or in a file.
 
   !     CALLING SEQUENCE
   !         call message(t01=t01, t02=t02, t03=t03, t04=t04, t05=t05, t06=t06, t07=t07, &
@@ -60,20 +69,20 @@ CONTAINS
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !         character(len=*) :: t01        1st string
-  !         character(len=*) :: t02        2nd string
-  !         character(len=*) :: t03        3rd string
-  !         character(len=*) :: t04        4th string
-  !         character(len=*) :: t05        5th string
-  !         character(len=*) :: t06        6th string
-  !         character(len=*) :: t07        7th string
-  !         character(len=*) :: t08        8th string
-  !         character(len=*) :: t09        9th string
-  !         character(len=*) :: t10        10th string
-  !         integer          :: unit       Unit to write to (default: nout)
-  !         character(len=*) :: advance    WRITE advance keyword (default: 'yes')
-  !                                        yes: newline will be written after message
-  !                                        no:  no newline at end of message
+  !>        \param[in] "character(len=*), optional :: t01"        1st string
+  !>        \param[in] "character(len=*), optional :: t02"        2nd string
+  !>        \param[in] "character(len=*), optional :: t03"        3rd string
+  !>        \param[in] "character(len=*), optional :: t04"        4th string
+  !>        \param[in] "character(len=*), optional :: t05"        5th string
+  !>        \param[in] "character(len=*), optional :: t06"        6th string
+  !>        \param[in] "character(len=*), optional :: t07"        7th string
+  !>        \param[in] "character(len=*), optional :: t08"        8th string
+  !>        \param[in] "character(len=*), optional :: t09"        9th string
+  !>        \param[in] "character(len=*), optional :: t10"        10th string
+  !>        \param[in] "integer         , optional :: unit"       Unit to write to (default: nout)
+  !>        \param[in] "character(len=*), optional :: advance"    WRITE advance keyword (default: 'yes')\n
+  !>                                       yes: newline will be written after message\n
+  !>                                       no:  no newline at end of message
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -93,7 +102,8 @@ CONTAINS
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \date Dec 2011
 
   SUBROUTINE message(t01, t02, t03, t04, t05, t06, t07, t08, t09, t10, uni, advance)
 

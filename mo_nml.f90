@@ -6,6 +6,7 @@
 
 !> \authors Matthias Cuntz
 !> \date Jan 2011 
+
 MODULE mo_nml
 
   ! Adapted from Echam5, (C) MPI-MET, Hamburg, Germany
@@ -217,7 +218,7 @@ CONTAINS
 
   !     PURPOSE
   !>        \brief Position a namlist file.
-  !
+
   !>        \details Position namelist file pointer for reading a new namelist next.\n
   !>        It positions the namelist file at the correct place for reading\n
   !>        namelist /name/ (case independent).

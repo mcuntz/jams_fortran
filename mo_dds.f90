@@ -9,6 +9,7 @@
 !> \authors Original by Bryan Tolson and later modified by Rohini Kumar.
 !> Matthias Cuntz and Juliane Mai for the module, MDDS, etc.
 !> \date Jul 2012
+
 module mo_dds
 
   ! This module contains routines for Dynamically Dimensioned Search (DDS)
@@ -59,7 +60,7 @@ CONTAINS
   !>        DDS is an n-dimensional continuous global optimization algorithm.
   !>        It is coded as a minimizer but one can give maxit=True in a maximization problem,
   !>        so that the algorithm minimizes the negative of the objective function F=(-1*F).
-  !
+
   !>        The function to be minimized is the first argument of DDS and must be defined as
   !>            function func(p)
   !>              use mo_kind, only: dp
@@ -67,7 +68,7 @@ CONTAINS
   !>              real(dp), dimension(:), intent(in) :: p
   !>              real(dp) :: func
   !>            end function func
-  !
+
   !     CALLING SEQUENCE
   !         popt = DDS(obj_func, pini, prange, r=r, seed=seed, maxiter=maxiter, maxit=maxit, funcbest=funcbest)
 
@@ -89,7 +90,7 @@ CONTAINS
   !>                                                       (default: 1000)
   !>        \param[in] "logical, optinal     :: maxit"     Maximization (.True.) or minimization (.False.) of function
   !>                                                       (default: .False.)
-  !>
+  !>        
   !>        \param[in] "real(dp), optinal    :: r"         DDS perturbation parameter (default: 0.2)\n
 
   !     INTENT(INOUT), OPTIONAL
@@ -174,7 +175,7 @@ CONTAINS
     logical, dimension(size(pini))          :: maske                  ! parameter to be optimized (true or false)
     integer(i4), dimension(:), allocatable  :: truepara               ! parameter to be optimized (their indexes)
 
-    !
+
     ! Check input
     pnum = size(pini)
     if (size(prange,1) /= pnum) stop 'Error DDS: size(prange,1) /= size(pini)'
@@ -200,7 +201,7 @@ CONTAINS
     iseed = 0
     if (present(seed)) iseed = seed
     iseed = max(iseed, 0_i8)
-    !
+
     if (present(mask)) then
        if (count(mask) .eq. 0_i4) then
           stop 'Input argument mask: At least one element has to be true'
@@ -219,7 +220,7 @@ CONTAINS
           truepara(idummy) = j
        end if
     end do
-    !
+
     ! Seed random numbers
     if (iseed == 0) then
        call date_and_time(values=sdate)
@@ -239,15 +240,15 @@ CONTAINS
     of_new     = imaxit * obj_func(pini)
     of_best    = of_new
     if (present(history)) history(1) = of_new
-    !
+
     ! Code below is now the DDS algorithm as presented in Figure 1 of Tolson and Shoemaker (2007)
-    !
+
     do i=1, imaxiter-1
        ! Determine Decision Variable (DV) selected for perturbation:
        Pn        = 1.0_dp - log(real(i,dp))/log(real(imaxiter-1,dp)) ! probability each DV selected
        dvn_count = 0                                                 ! counter for how many DVs selected for perturbation
        pnew      = DDS                                               ! define pnew initially as best current solution
-       !
+
        ! Step 3 of Fig 1 of Tolson and Shoemaker (2007)
        do j=1, size(truepara) !pnum
           call xor4096(0_i8,ranval)                           ! selects next uniform random number in sequence
@@ -259,7 +260,7 @@ CONTAINS
              pnew(truepara(j)) = new_value
           end if
        end do
-       !
+
        ! Step 3 of Fig 1 of Tolson and Shoemaker (2007) in case {N} empty
        if (dvn_count == 0) then                               ! no DVs selected at random, so select one
           call xor4096(0_i8,ranval)                           ! selects next uniform random number in sequence
@@ -268,7 +269,7 @@ CONTAINS
           call neigh_value(DDS(dv), prange(dv,1), prange(dv,2), ir, new_value)
           pnew(dv) = new_value                                ! change relevant DV value in stest
        end if
-       !
+
        ! Step 5 of Fig 1 of Tolson and Shoemaker (2007)
        ! Evaluate obj function value for test
        of_new = imaxit * obj_func(pnew)                       ! imaxit handles min(=1) and max(=-1) problems
@@ -280,7 +281,7 @@ CONTAINS
        if (present(history)) history(i+1) = of_best
     end do
     if (present(funcbest)) funcbest = of_best
-    !
+
   end function DDS
 
   ! ------------------------------------------------------------------
@@ -291,7 +292,7 @@ CONTAINS
   !     PURPOSE
   !>        \details Searches Minimum or Maximum of a user-specified function using the
   !>        Modified Dynamically Dimensioned Search (DDS).
-  !
+
   !>        DDS is an n-dimensional continuous global optimization algorithm.
   !>        It is coded as a minimizer but one can give maxit=True in a maximization problem,
   !>        so that the algorithm minimizes the negative of the objective function F=(-1*F).
@@ -306,7 +307,7 @@ CONTAINS
   !>
   !>       MDDS extents normal DDS by a continuous reduction of the DDS pertubation parameter r from 0.3 to 0.05,
   !>       and by allowing a larger function value with a certain probablity.
-  !
+
   !     CALLING SEQUENCE
   !         popt = MDDS(obj_func, pini, prange, seed=seed, maxiter=maxiter, maxit=maxit, funcbest=funcbest)
 
@@ -411,7 +412,7 @@ CONTAINS
     logical, dimension(size(pini))          :: maske                  ! parameter to be optimized (true or false)
     integer(i4), dimension(:), allocatable  :: truepara               ! parameter to be optimized (their indexes)
 
-    !
+
     ! Check input
     pnum = size(pini)
     if (size(prange,1) /= pnum) stop 'Error MDDS: size(prange,1) /= size(pini)'
@@ -433,7 +434,7 @@ CONTAINS
     iseed = 0
     if (present(seed)) iseed = seed
     iseed = max(iseed, 0_i8)
-    !
+
     ! Seed random numbers
     if (iseed == 0) then
        call date_and_time(values=sdate)
@@ -473,9 +474,9 @@ CONTAINS
     of_new  = imaxit * obj_func(pini)
     of_best = of_new
     if (present(history)) history(1) = of_new
-    !
+
     ! Code below is now the MDDS algorithm as presented in Figure 1 of Tolson and Shoemaker (2007)
-    !
+
     do i=1, imaxiter-1
        ! Determine Decision Variable (DV) selected for perturbation:
        Pn        = 1.0_dp - log(real(i,dp))/log(real(imaxiter-1,dp)) ! probability each DV selected
@@ -484,7 +485,7 @@ CONTAINS
        ! Modifications by Huang et al. (2010)
        Pn        = max(Pn, 0.05_dp)
        ir        = max(min(0.3_dp, Pn), 0.05_dp)
-       !
+
        ! Step 3 of Fig 1 of Tolson and Shoemaker (2007)
        do j=1, pnum
           call xor4096(0_i8,ranval)                           ! selects next uniform random number in sequence
@@ -496,7 +497,7 @@ CONTAINS
              pnew(truepara(j)) = new_value
           end if
        end do
-       !
+
        ! Step 3 of Fig 1 of Tolson and Shoemaker (2007) in case {N} empty
        if (dvn_count == 0) then                               ! no DVs selected at random, so select one
           call xor4096(0_i8,ranval)                           ! selects next uniform random number in sequence
@@ -505,7 +506,7 @@ CONTAINS
           call neigh_value(MDDS(dv), prange(dv,1), prange(dv,2), ir, new_value)
           pnew(dv) = new_value                                ! change relevant DV value in stest
        end if
-       !
+
        ! Step 5 of Fig 1 of Tolson and Shoemaker (2007)
        ! Evaluate obj function value for test
        of_new = imaxit * obj_func(pnew)                       ! imaxit handles min(=1) and max(=-1) problems
@@ -533,7 +534,7 @@ CONTAINS
        end if
     end do
     if (present(funcbest)) funcbest = of_best
-    !
+
   end function MDDS
 
   ! ------------------------------------------------------------------
@@ -542,7 +543,7 @@ CONTAINS
   !  decision variable value being perturbed by the DDS optimization algorithm.
   !  New DV value respects the upper and lower DV bounds.
   !  Coded by Bryan Tolson, Nov 2005.
-  !
+
   ! I/O variable definitions:
   !  x_cur     - current decision variable (DV) value
   !  x_min     - min DV value
@@ -556,7 +557,7 @@ CONTAINS
     use mo_xor4096, only: xor4096g
 
     implicit none
-    !
+
     real(dp), intent(in)   :: x_cur, x_min, x_max, r
     real(dp), intent(out)  :: new_value
     real(dp)               :: x_range

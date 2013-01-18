@@ -1,22 +1,22 @@
 module mo_timer
 
   ! -----------------------------------------------------------------------
-  !
+
   !     This module uses F90 cpu time routines to allowing setting of
   !     multiple CPU timers.
-  !
+
   ! -----------------------------------------------------------------------
-  !
+
   !     CVS:$Id: timers.f,v 1.2 2000/04/19 21:56:26 pwjones Exp $
-  !
+
   !     Copyright (c) 1997, 1998 the Regents of the University of
   !       California.
-  !
+
   !     This software and ancillary information (herein called software)
   !     called SCRIP is made available under the terms described here.
   !     The software has been approved for release with associated
   !     LA-CC Number 98-45.
-  !
+
   !     Unless otherwise indicated, this software has been authored
   !     by an employee or employees of the University of California,
   !     operator of the Los Alamos National Laboratory under Contract
@@ -27,15 +27,16 @@ module mo_timer
   !     are reproduced on all copies.  Neither the Government nor the
   !     University makes any warranty, express or implied, or assumes
   !     any liability or responsibility for the use of this software.
-  !
+
   !     If software is modified to produce derivative works, such modified
   !     software should be clearly marked, so as not to confuse it with
   !     the version available from Los Alamos National Laboratory.
-  !
+
   ! -----------------------------------------------------------------------
 
 
   ! Modified, Matthias Cuntz, Aug. 2012 - adapted to UFZ library, called mo_timer.f90
+  !           Matthias Cuntz, Jan. 2013 - clear one or all timers
 
   ! License
   ! -------
@@ -72,7 +73,7 @@ module mo_timer
   public :: status        ! timer status string
   ! Routines
   public :: timer_check   ! Checks a given timer
-  public :: timer_clear   ! Clears a given timer
+  public :: timer_clear   ! Clears (a given) timer(s)
   public :: timer_get     ! Returns the result of a given timer
   public :: timer_print   ! Prints the accumulated cpu time of a given timer
   public :: timer_start   ! Stops a given timer
@@ -93,11 +94,11 @@ module mo_timer
 contains
 
   !-----------------------------------------------------------------------
-  !
+
   !     This routine checks a given timer.  This is primarily used to
   !     periodically accumulate time in the timer to prevent timer cycles
   !     from wrapping around max_cycles.
-  !
+
   !-----------------------------------------------------------------------
 
   subroutine timer_check(timer)
@@ -115,27 +116,31 @@ contains
 
 
   !-----------------------------------------------------------------------
-  !
+
   !     This routine resets a given timer.
-  !
+
   !-----------------------------------------------------------------------
 
   subroutine timer_clear(timer)
 
     implicit none
 
-    integer(i4), intent(in) :: timer            ! timer number
+    integer(i4), intent(in), optional :: timer            ! timer number
 
-    cputime(timer) = 0.0_sp  ! clear the timer
+    if (present(timer)) then
+       cputime(timer) = 0.0_sp ! clear the timer
+    else
+       cputime(:)     = 0.0_sp ! clear all timers
+    endif
 
   end subroutine timer_clear
 
   !-----------------------------------------------------------------------
-  !
+
   !     This routine returns the result of a given timer.  This can be
   !     called instead of timer_print so that the calling routine can
   !     print it in desired format.
-  !
+
   !-----------------------------------------------------------------------
 
   function timer_get(timer)
@@ -157,9 +162,9 @@ contains
   end function timer_get
 
   !-----------------------------------------------------------------------
-  !
+
   !     This routine prints the accumulated cpu time in given timer.
-  !
+
   !-----------------------------------------------------------------------
 
   subroutine timer_print(timer)
@@ -186,9 +191,9 @@ contains
   end subroutine timer_print
 
   !-----------------------------------------------------------------------
-  !
+
   !     This routine starts a given timer.
-  !
+
   !-----------------------------------------------------------------------
 
   subroutine timer_start(timer)
@@ -209,9 +214,9 @@ contains
   end subroutine timer_start
 
   !-----------------------------------------------------------------------
-  !
+
   !     This routine stops a given timer.
-  !
+
   !-----------------------------------------------------------------------
 
   subroutine timer_stop(timer)
@@ -251,10 +256,10 @@ contains
   end subroutine timer_stop
 
   !-----------------------------------------------------------------------
-  !
+
   !     This routine initializes some machine parameters necessary for
   !     computing cpu time from F90 intrinsics.
-  !
+
   !-----------------------------------------------------------------------
 
   subroutine timers_init
@@ -268,10 +273,10 @@ contains
     !---
 
     clock_rate = 0.0_sp
-    cycles1    = 0
-    cycles2    = 0
-    cputime    = 0.0_sp
-    status     = 'stopped'
+    cycles1(:) = 0
+    cycles2(:) = 0
+    cputime(:) = 0.0_sp
+    status(:)  = 'stopped'
 
     !---
     !--- Call F90 intrinsic system_clock to determine clock rate

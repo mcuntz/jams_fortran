@@ -13,10 +13,11 @@
 
 !> \author Matthias Cuntz
 !> \date Dec 2011
+
 MODULE mo_julian
 
   ! This module provides Julian day conversion routines
-  !
+
   ! Written  Matthias Cuntz, Dec 2011
   ! Modified Matthias Cuntz, Jan 2013 - added date2dec and dec2date
 
