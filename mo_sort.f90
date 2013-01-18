@@ -1,3 +1,14 @@
+!> \file mo_sort.f90
+
+!> \brief Quicksort array or indices
+
+!> \details This module contains a sorting routines from numerical recipes
+!> 1. quicksort one array
+!> 2. return indeces that would sort the array
+
+!> \authors Matthias Cuntz - modified Numerical Recipes routines sort and indexx
+!> \date March 2011
+
 MODULE mo_sort
 
   ! This module contains a sorting routines from numerical recipes:
@@ -66,8 +77,7 @@ MODULE mo_sort
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
 
-  USE mo_kind,   ONLY: i4, sp, dp
-  USE mo_nrutil, ONLY: arth, swap
+  USE mo_kind,   ONLY: i4, sp, dp, spc, dpc, lgt
 
   IMPLICIT NONE
 
@@ -80,28 +90,28 @@ MODULE mo_sort
   !         sort
 
   !     PURPOSE
-  !         Sorts the input array in ascending order.
+  !>        \brief Sorts the input array in ascending order.
 
   !     CALLING SEQUENCE
   !         call sort(arr)
-
-  !     INTENT(IN)
+  
+  !     INDENT(IN)
   !         None
 
-  !     INTENT(INOUT)
-  !         real(sp/dp) :: arr(:)     On input:  unsorted 1D-array
-  !                                   On output: ascendingly sorted input array
+  !     INDENT(INOUT)
+  !>        \param[in,out] "real(sp/dp) :: arr(:)"     On input:  unsorted 1D-array\n
+  !>                                                   On output: ascendingly sorted input array
 
-  !     INTENT(OUT)
+  !     INDENT(OUT)
   !         None
 
-  !     INTENT(IN), OPTIONAL
+  !     INDENT(IN), OPTIONAL
   !         None
 
-  !     INTENT(INOUT), OPTIONAL
+  !     INDENT(INOUT), OPTIONAL
   !         None
 
-  !     INTENT(OUT), OPTIONAL
+  !     INDENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
@@ -118,7 +128,8 @@ MODULE mo_sort
   !             Cambridge University Press, UK, 1996
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011 - adapted routine sort from numerical recipes
+  !>        \author Matthias Cuntz - adapted routine sort from numerical recipes
+  !>        \date Nov 2011
   INTERFACE sort
      MODULE PROCEDURE sort_sp, sort_dp
   END INTERFACE sort
@@ -129,28 +140,31 @@ MODULE mo_sort
   !         sort_index
 
   !     PURPOSE
-  !         Gives the indeces that would sort an array in ascending order.
+  !>        \brief Gives the indeces that would sort an array in ascending order.
 
   !     CALLING SEQUENCE
   !         ii = sort_index(arr)
+  
+  !     INDENT(IN)
+  !>        \param[in] "real(sp/dp) :: arr(:)"     Unsorted 1D-array
 
-  !     INTENT(IN)
-  !         real(sp/dp) :: arr(:)     Unsorted 1D-array
-
-  !     INTENT(INOUT)
+  !     INDENT(INOUT)
   !         None
 
-  !     INTENT(OUT)
-  !         integer(i4)               Indeces that would sort arr in ascending order
-
-  !     INTENT(IN), OPTIONAL
+  !     INDENT(OUT)
   !         None
 
-  !     INTENT(INOUT), OPTIONAL
+  !     INDENT(IN), OPTIONAL
   !         None
 
-  !     INTENT(OUT), OPTIONAL
+  !     INDENT(INOUT), OPTIONAL
   !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURNS
+  !>       \return integer(i4) :: indices(:) &mdash; Indices that would sort arr in ascending order
 
   !     RESTRICTIONS
   !         No mask or undefined value provided.
@@ -167,25 +181,119 @@ MODULE mo_sort
   !             Cambridge University Press, UK, 1996
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Nov 2011 - adapted routine indexx from numerical recipes
+  !>        \author Matthias Cuntz - adapted routine indexx from numerical recipes
+  !>        \date Nov 2011
   INTERFACE sort_index
      MODULE PROCEDURE sort_index_i4, sort_index_sp, sort_index_dp
   END INTERFACE sort_index
 
-  ! ------------------------------------------------------------------
-
   PRIVATE
 
-  ! ------------------------------------------------------------------
-
   ! Local routine for indeces exchange, from numerical recipes
+  INTERFACE arth
+     MODULE PROCEDURE arth_r, arth_d, arth_i
+  END INTERFACE arth
   INTERFACE icomp_xchg
      MODULE PROCEDURE icomp_xchg_i4, icomp_xchg_sp, icomp_xchg_dp
   END INTERFACE icomp_xchg
+  INTERFACE swap
+     MODULE PROCEDURE swap_i,  swap_r,  swap_d,  swap_c,  swap_z, &
+          swap_iv, swap_rv, swap_dv, swap_cv, swap_zv, &
+          swap_im, swap_rm, swap_dm, swap_cm, swap_zm, &
+          masked_swap_is, masked_swap_iv, masked_swap_im, &
+          masked_swap_rs, masked_swap_rv, masked_swap_rm, &
+          masked_swap_ds, masked_swap_dv, masked_swap_dm, &
+          masked_swap_cs, masked_swap_cv, masked_swap_cm, &
+          masked_swap_zs, masked_swap_zv, masked_swap_zm
+  END INTERFACE swap
+
+  INTEGER(I4), PARAMETER :: NPAR_ARTH=16,NPAR2_ARTH=8
 
   ! ------------------------------------------------------------------
 
 CONTAINS
+
+  ! ------------------------------------------------------------------
+
+  ! Array function returning an arithmetic progression.
+  FUNCTION arth_r(first,increment,n)
+    REAL(SP), INTENT(IN) :: first,increment
+    INTEGER(I4), INTENT(IN) :: n
+    REAL(SP), DIMENSION(n) :: arth_r
+    INTEGER(I4) :: k,k2
+    REAL(SP) :: temp
+    if (n > 0) arth_r(1)=first
+    if (n <= NPAR_ARTH) then
+       do k=2,n
+          arth_r(k)=arth_r(k-1)+increment
+       end do
+    else
+       do k=2,NPAR2_ARTH
+          arth_r(k)=arth_r(k-1)+increment
+       end do
+       temp=increment*NPAR2_ARTH
+       k=NPAR2_ARTH
+       do
+          if (k >= n) exit
+          k2=k+k
+          arth_r(k+1:min(k2,n))=temp+arth_r(1:min(k,n-k))
+          temp=temp+temp
+          k=k2
+       end do
+    end if
+  END FUNCTION arth_r
+
+  FUNCTION arth_d(first,increment,n)
+    REAL(DP), INTENT(IN) :: first,increment
+    INTEGER(I4), INTENT(IN) :: n
+    REAL(DP), DIMENSION(n) :: arth_d
+    INTEGER(I4) :: k,k2
+    REAL(DP) :: temp
+    if (n > 0) arth_d(1)=first
+    if (n <= NPAR_ARTH) then
+       do k=2,n
+          arth_d(k)=arth_d(k-1)+increment
+       end do
+    else
+       do k=2,NPAR2_ARTH
+          arth_d(k)=arth_d(k-1)+increment
+       end do
+       temp=increment*NPAR2_ARTH
+       k=NPAR2_ARTH
+       do
+          if (k >= n) exit
+          k2=k+k
+          arth_d(k+1:min(k2,n))=temp+arth_d(1:min(k,n-k))
+          temp=temp+temp
+          k=k2
+       end do
+    end if
+  END FUNCTION arth_d
+
+  FUNCTION arth_i(first,increment,n)
+    INTEGER(I4), INTENT(IN) :: first,increment,n
+    INTEGER(I4), DIMENSION(n) :: arth_i
+    INTEGER(I4) :: k,k2,temp
+    if (n > 0) arth_i(1)=first
+    if (n <= NPAR_ARTH) then
+       do k=2,n
+          arth_i(k)=arth_i(k-1)+increment
+       end do
+    else
+       do k=2,NPAR2_ARTH
+          arth_i(k)=arth_i(k-1)+increment
+       end do
+       temp=increment*NPAR2_ARTH
+       k=NPAR2_ARTH
+       do
+          if (k >= n) exit
+          k2=k+k
+          arth_i(k+1:min(k2,n))=temp+arth_i(1:min(k,n-k))
+          temp=temp+temp
+          k=k2
+       end do
+    end if
+  END FUNCTION arth_i
 
   ! ------------------------------------------------------------------
 
@@ -247,6 +355,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+  ! quicksort
   SUBROUTINE sort_sp(arr)
 
     IMPLICIT NONE
@@ -389,6 +498,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+  ! quicksort but return indices
   FUNCTION sort_index_sp(arr)
 
     IMPLICIT NONE
@@ -611,6 +721,294 @@ CONTAINS
     end do
 
   END FUNCTION sort_index_i4
+
+  ! ------------------------------------------------------------------
+
+  ! Swap the contents of a and b.
+  SUBROUTINE swap_i(a,b)
+    INTEGER(I4), INTENT(INOUT) :: a,b
+    INTEGER(I4) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_i
+
+  SUBROUTINE swap_r(a,b)
+    REAL(SP), INTENT(INOUT) :: a,b
+    REAL(SP) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_r
+
+  SUBROUTINE swap_d(a,b)
+    REAL(DP), INTENT(INOUT) :: a,b
+    REAL(DP) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_d
+
+  SUBROUTINE swap_c(a,b)
+    COMPLEX(SPC), INTENT(INOUT) :: a,b
+    COMPLEX(SPC) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_c
+
+  SUBROUTINE swap_z(a,b)
+    COMPLEX(DPC), INTENT(INOUT) :: a,b
+    COMPLEX(DPC) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_z
+
+  SUBROUTINE swap_iv(a,b)
+    INTEGER(I4), DIMENSION(:), INTENT(INOUT) :: a,b
+    INTEGER(I4), DIMENSION(SIZE(a)) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_iv
+
+  SUBROUTINE swap_rv(a,b)
+    REAL(SP), DIMENSION(:), INTENT(INOUT) :: a,b
+    REAL(SP), DIMENSION(SIZE(a)) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_rv
+
+  SUBROUTINE swap_dv(a,b)
+    REAL(DP), DIMENSION(:), INTENT(INOUT) :: a,b
+    REAL(DP), DIMENSION(SIZE(a)) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_dv
+
+  SUBROUTINE swap_cv(a,b)
+    COMPLEX(SPC), DIMENSION(:), INTENT(INOUT) :: a,b
+    COMPLEX(SPC), DIMENSION(SIZE(a)) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_cv
+
+  SUBROUTINE swap_zv(a,b)
+    COMPLEX(DPC), DIMENSION(:), INTENT(INOUT) :: a,b
+    COMPLEX(DPC), DIMENSION(SIZE(a)) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_zv
+
+  SUBROUTINE swap_im(a,b)
+    INTEGER(I4), DIMENSION(:,:), INTENT(INOUT) :: a,b
+    INTEGER(I4), DIMENSION(size(a,1),size(a,2)) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_im
+
+  SUBROUTINE swap_rm(a,b)
+    REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: a,b
+    REAL(SP), DIMENSION(size(a,1),size(a,2)) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_rm
+
+  SUBROUTINE swap_dm(a,b)
+    REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: a,b
+    REAL(DP), DIMENSION(size(a,1),size(a,2)) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_dm
+
+  SUBROUTINE swap_cm(a,b)
+    COMPLEX(SPC), DIMENSION(:,:), INTENT(INOUT) :: a,b
+    COMPLEX(SPC), DIMENSION(size(a,1),size(a,2)) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_cm
+
+  SUBROUTINE swap_zm(a,b)
+    COMPLEX(DPC), DIMENSION(:,:), INTENT(INOUT) :: a,b
+    COMPLEX(DPC), DIMENSION(size(a,1),size(a,2)) :: dum
+    dum=a
+    a=b
+    b=dum
+  END SUBROUTINE swap_zm
+
+  SUBROUTINE masked_swap_is(a,b,mask)
+    INTEGER(I4), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), INTENT(IN) :: mask
+    INTEGER(I4) :: swp
+    if (mask) then
+       swp=a
+       a=b
+       b=swp
+    end if
+  END SUBROUTINE masked_swap_is
+
+  SUBROUTINE masked_swap_iv(a,b,mask)
+    INTEGER(I4), DIMENSION(:), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    INTEGER(I4), DIMENSION(size(a)) :: swp
+    where (mask)
+       swp=a
+       a=b
+       b=swp
+    end where
+  END SUBROUTINE masked_swap_iv
+
+  SUBROUTINE masked_swap_im(a,b,mask)
+    INTEGER(I4), DIMENSION(:,:), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    INTEGER(I4), DIMENSION(size(a,1),size(a,2)) :: swp
+    where (mask)
+       swp=a
+       a=b
+       b=swp
+    end where
+  END SUBROUTINE masked_swap_im
+
+  SUBROUTINE masked_swap_rs(a,b,mask)
+    REAL(SP), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), INTENT(IN) :: mask
+    REAL(SP) :: swp
+    if (mask) then
+       swp=a
+       a=b
+       b=swp
+    end if
+  END SUBROUTINE masked_swap_rs
+
+  SUBROUTINE masked_swap_rv(a,b,mask)
+    REAL(SP), DIMENSION(:), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    REAL(SP), DIMENSION(size(a)) :: swp
+    where (mask)
+       swp=a
+       a=b
+       b=swp
+    end where
+  END SUBROUTINE masked_swap_rv
+
+  SUBROUTINE masked_swap_rm(a,b,mask)
+    REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    REAL(SP), DIMENSION(size(a,1),size(a,2)) :: swp
+    where (mask)
+       swp=a
+       a=b
+       b=swp
+    end where
+  END SUBROUTINE masked_swap_rm
+
+  SUBROUTINE masked_swap_ds(a,b,mask)
+    REAL(DP), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), INTENT(IN) :: mask
+    REAL(DP) :: swp
+    if (mask) then
+       swp=a
+       a=b
+       b=swp
+    end if
+  END SUBROUTINE masked_swap_ds
+
+  SUBROUTINE masked_swap_dv(a,b,mask)
+    REAL(DP), DIMENSION(:), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    REAL(DP), DIMENSION(size(a)) :: swp
+    where (mask)
+       swp=a
+       a=b
+       b=swp
+    end where
+  END SUBROUTINE masked_swap_dv
+
+  SUBROUTINE masked_swap_dm(a,b,mask)
+    REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    REAL(DP), DIMENSION(size(a,1),size(a,2)) :: swp
+    where (mask)
+       swp=a
+       a=b
+       b=swp
+    end where
+  END SUBROUTINE masked_swap_dm
+
+  SUBROUTINE masked_swap_cs(a,b,mask)
+    COMPLEX(SPC), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), INTENT(IN) :: mask
+    COMPLEX(SPC) :: swp
+    if (mask) then
+       swp=a
+       a=b
+       b=swp
+    end if
+  END SUBROUTINE masked_swap_cs
+
+  SUBROUTINE masked_swap_cv(a,b,mask)
+    COMPLEX(SPC), DIMENSION(:), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    COMPLEX(SPC), DIMENSION(size(a)) :: swp
+    where (mask)
+       swp=a
+       a=b
+       b=swp
+    end where
+  END SUBROUTINE masked_swap_cv
+
+  SUBROUTINE masked_swap_cm(a,b,mask)
+    COMPLEX(SPC), DIMENSION(:,:), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    COMPLEX(SPC), DIMENSION(size(a,1),size(a,2)) :: swp
+    where (mask)
+       swp=a
+       a=b
+       b=swp
+    end where
+  END SUBROUTINE masked_swap_cm
+
+  SUBROUTINE masked_swap_zs(a,b,mask)
+    COMPLEX(DPC), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), INTENT(IN) :: mask
+    COMPLEX(DPC) :: swp
+    if (mask) then
+       swp=a
+       a=b
+       b=swp
+    end if
+  END SUBROUTINE masked_swap_zs
+
+  SUBROUTINE masked_swap_zv(a,b,mask)
+    COMPLEX(DPC), DIMENSION(:), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    COMPLEX(DPC), DIMENSION(size(a)) :: swp
+    where (mask)
+       swp=a
+       a=b
+       b=swp
+    end where
+  END SUBROUTINE masked_swap_zv
+
+  SUBROUTINE masked_swap_zm(a,b,mask)
+    COMPLEX(DPC), DIMENSION(:,:), INTENT(INOUT) :: a,b
+    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    COMPLEX(DPC), DIMENSION(size(a,1),size(a,2)) :: swp
+    where (mask)
+       swp=a
+       a=b
+       b=swp
+    end where
+  END SUBROUTINE masked_swap_zm
 
   ! ------------------------------------------------------------------
 
