@@ -1,11 +1,21 @@
+!> \file mo_append.f90
+
+!> \brief Append values on existing arrays.
+
+!> \details Provides routines to append (rows) and paste (columns) scalars, vectors, 
+!>          and matrixes onto existing arrays.
+
+!> \author Juliane Mai
+!> \date Aug 2012
 MODULE mo_append
 
   ! This module is appending and pasting scalars, vectors, and matrixes into one.
   ! and is part of the UFZ CHS Fortran library.
 
   !
-  ! Written  Juliane Mai, Aug 2012
-  ! Modified Juliane Mai, Aug 2012 : character append & paste
+  ! Written  Juliane Mai,    Aug 2012
+  ! Modified Juliane Mai,    Aug 2012 - character append & paste
+  ! Modified Matthias Cuntz, Jan 2013 - removed 256 character restriction
 
   ! License
   ! -------
@@ -31,8 +41,8 @@ MODULE mo_append
   IMPLICIT NONE
 
 #ifndef ABSOFT
-  PUBLIC :: append    ! Returns input1 appended with input2. (like bash cat)
-  PUBLIC :: paste     ! Returns input1 pasted with input2.   (like bash paste)
+  PUBLIC :: append    ! Returns input1 appended (on rows) with input2.  (like Unix cat)
+  PUBLIC :: paste     ! Returns input1 pasted (on columns) with input2. (like Unix paste)
 
   ! ------------------------------------------------------------------
 
@@ -40,33 +50,35 @@ MODULE mo_append
   !         append
 
   !     PURPOSE
-  !         appends one input to another input
-  !         The input might be a scalar, a vector or a matrix.
-  !         Possibilities:
-  !         (1)     append scalar to vector
-  !         (2)     append vector to vector
-  !         (3)     append matrix to matrix
+  !>        \brief Append (rows) scalars, vectors, and matrixes onto existing array.
+  
+  !>        \details Appends one input to the rows of another, i.e. append
+  !>        on the first dimension.\n
+  !>        The input might be a scalar, a vector or a matrix.\n
+  !>        Possibilities are:\n
+  !>        (1)     append scalar to vector\n
+  !>        (2)     append vector to vector\n
+  !>        (3)     append matrix to matrix
 
   !     CALLING SEQUENCE
   !         input1 = (/ 1.0_dp , 2.0_dp /)
   !         input2 = 3.0_dp
   !
-  !         call append (input1, input2)
+  !         call append(input1, input2)
   !         --> input1 = (/ 1.0_dp , 2.0_dp, 3.0_dp /)
   !
-  !         see also test folder for a detailed example
+  !         See also test folder for a detailed example.
 
 
   !     INTENT(IN)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE
-  !                                       :: input2 ... flexible kind, but same as input1
-  !                                                     scalar, vector, or matrix
+  !>        \param[in] "input2" values to append. Can be INTEGER(I4/I8), REAL(SP/DP), or CHARACTER(len=*)
+  !>                            and also scalar, DIMENSION(:), or DIMENSION(:,:)\n
+  !>                            If not scalar then the columns have to agree with input1
 
   !     INTENT(INOUT)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE
-  !                                       :: input1 ... flexible kind, but same as input2
-  !                                                     vector, or matrix
-  !                                                     has to be allocatable
+  !>        \param[in,out] "allocatable :: input1" array to be appended. Can be INTEGER(I4/I8), REAL(SP/DP),
+  !>                            or CHARACTER(len=*). Must be DIMENSION(:) or DIMENSION(:,:), and allocatable.\n
+  !>                            If input2 is not scalar then it must be size(input1,2) = size(input2,2).
 
   !     INTENT(OUT)
   !         None
@@ -83,8 +95,6 @@ MODULE mo_append
   !     RESTRICTIONS
   !         Size of input1 and input2 have to fit together,
   !         i.e. number of columns input1 = number of columns input2
-  !
-  !         Strings have to be less or equal 256 characters in length.
 
   !     EXAMPLE
   !         see test/test_mo_append/
@@ -92,7 +102,10 @@ MODULE mo_append
   !     LITERATURE
 
   !     HISTORY
-  !        Written  Juliane Mai, Aug   2012
+  !>       \author Juliane Mai
+  !>       \date Aug 2012
+  !        Modified Matthias Cuntz, Jan 2013 - removed 256 character restriction
+
   INTERFACE append
      MODULE PROCEDURE append_i4_v_s, append_i4_v_v, append_i4_m_m, &
           append_i8_v_s, append_i8_v_v, append_i8_m_m, &
@@ -108,34 +121,35 @@ MODULE mo_append
   !         paste
 
   !     PURPOSE
-  !         Pastes one input to another input
-  !         The input might be a scalar, a vector or a matrix.
-  !         Possibilities:
-  !         (1)     paste scalar to one-line matrix
-  !         (3)     paste vector to a matrix
-  !         (5)     paste matrix to matrix
+  !>        \brief Paste (columns) scalars, vectors, and matrixes onto existing array.
+  
+  !>        \details Pastes one input to the columns of another, i.e. append
+  !>        on the second dimension.\n
+  !>        The input might be a scalar, a vector or a matrix.\n
+  !>        Possibilities are:\n
+  !>        (1)     paste scalar to one-line matrix\n
+  !>        (3)     paste vector to a matrix\n
+  !>        (5)     paste matrix to matrix
 
   !     CALLING SEQUENCE
   !         input1 = (/ 1.0_dp , 2.0_dp /)
   !         input2 = (/ 3.0_dp , 4.0_dp /)
   !
-  !         call paste (input1, input2)
+  !         call paste(input1, input2)
   !         --> input1(1,:) = (/ 1.0_dp , 3.0_dp /)
   !             input1(2,:) = (/ 2.0_dp , 4.0_dp /)
   !
-  !         see also test folder for a detailed example
-
+  !         See also test folder for a detailed example.
 
   !     INTENT(IN)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), -/DIMENSION(:)/DIMENSION(:,:), -/ALLOCATABLE
-  !                                       :: input2 ... flexible kind, but same as input1
-  !                                                     scalar, vector, or matrix
+  !>        \param[in] "input2" values to paste. Can be INTEGER(I4/I8), REAL(SP/DP), or CHARACTER(len=*)
+  !>                            and also scalar, DIMENSION(:), or DIMENSION(:,:)\n
+  !>                            If not scalar then the rows have to agree with input1
 
   !     INTENT(INOUT)
-  !         INTEGER(I4/I8)/REAL(SP/DP)/CHARACTER(len=*), DIMENSION(:)/DIMENSION(:,:), ALLOCATABLE
-  !                                       :: input1 ... flexible kind, but same as input2
-  !                                                     vector, or matrix
-  !                                                     has to be allocatable
+  !>        \param[in,out] "allocatable :: input1" array to be pasted to. Can be INTEGER(I4/I8), REAL(SP/DP),
+  !>                            or CHARACTER(len=*). Must be DIMENSION(:) or DIMENSION(:,:), and allocatable.\n
+  !>                            If input2 is not scalar then it must be size(input1,1) = size(input2,1).
 
   !     INTENT(OUT)
   !         None
@@ -152,8 +166,6 @@ MODULE mo_append
   !     RESTRICTIONS
   !         Size of input1 and input2 have to fit together,
   !         i.e. number of rows input1 = number of rows input2
-  !
-  !         Strings have to be less or equal 256 characters in length.
 
   !     EXAMPLE
   !         see test/test_mo_append/
@@ -161,7 +173,10 @@ MODULE mo_append
   !     LITERATURE
 
   !     HISTORY
-  !        Written  Juliane Mai, Aug   2012
+  !>       \author Juliane Mai
+  !>       \date Aug 2012
+  !        Modified Matthias Cuntz, Jan 2013 - removed 256 character restriction
+
   INTERFACE paste
      MODULE PROCEDURE paste_i4_m_s, paste_i4_m_v, paste_i4_m_m, &
           paste_i8_m_s, paste_i8_m_v, paste_i8_m_m, &
@@ -610,7 +625,7 @@ CONTAINS
 
     ! local variables
     integer(i4)                               :: n1, n2
-    character(256), dimension(:), allocatable :: tmp
+    character(len(vec1)), dimension(:), allocatable :: tmp
 
     n2 = 1_i4
 
@@ -640,7 +655,7 @@ CONTAINS
 
     ! local variables
     integer(i4)                               :: n1, n2
-    character(256), dimension(:), allocatable :: tmp
+    character(len(vec1)), dimension(:), allocatable :: tmp
 
     n2 = size(vec2)
 
@@ -673,7 +688,7 @@ CONTAINS
     ! local variables
     integer(i4)                                 :: m1, m2    ! dim1 of matrixes: rows
     integer(i4)                                 :: n1, n2    ! dim2 of matrixes: columns
-    character(256), dimension(:,:), allocatable :: tmp
+    character(len(mat1)), dimension(:,:), allocatable :: tmp
 
     m2 = size(mat2,1)   ! rows
     n2 = size(mat2,2)    ! columns
@@ -1172,7 +1187,7 @@ CONTAINS
     ! local variables
     integer(i4)                                  :: m1    ! dim1 of matrix
     integer(i4)                                  :: n1    ! dim2 of matrix
-    character(256), dimension(:,:), allocatable  :: tmp
+    character(len(mat1)), dimension(:,:), allocatable :: tmp
 
     if (allocated(mat1)) then
        m1 = size(mat1,1)   ! rows
@@ -1206,7 +1221,7 @@ CONTAINS
     ! local variables
     integer(i4)                                  :: m1, m2    ! dim1 of matrixes
     integer(i4)                                  :: n1, n2    ! dim2 of matrixes
-    character(256), dimension(:,:), allocatable  :: tmp
+    character(len(mat1)), dimension(:,:), allocatable :: tmp
 
     m2 = size(vec2,1)   ! rows
     n2 = 1_i4           ! columns
@@ -1246,7 +1261,7 @@ CONTAINS
     ! local variables
     integer(i4)                                  :: m1, m2    ! dim1 of matrixes
     integer(i4)                                  :: n1, n2    ! dim2 of matrixes
-    character(256), dimension(:,:), allocatable  :: tmp
+    character(len(mat1)), dimension(:,:), allocatable :: tmp
 
     m2 = size(mat2,1)   ! rows
     n2 = size(mat2,2)   ! columns
