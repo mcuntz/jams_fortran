@@ -7,6 +7,7 @@
 !> \authors Original of Echam5, (C) MPI-MET, Hamburg, Germany.\n
 !> Modified Matthias Cuntz
 !> \date Jan 2011
+
 MODULE mo_finish
 
   ! This module supplies a routine to finish a program gracefully.
@@ -53,7 +54,7 @@ CONTAINS
   !>        \brief Finish a program gracefully
 
   !>        \details Stop a program but writing out a message first that is separated
-  !>        from earlier output by -------------- (i.e. the separator of mo_sting_utils)
+  !>        from earlier output by -------------- (i.e. the separator of mo_string_utils)
 
   !     CALLING SEQUENCE
   !         call finish(name, text=text, unit=unit)

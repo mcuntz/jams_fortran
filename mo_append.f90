@@ -77,7 +77,7 @@ MODULE mo_append
   !>                            If not scalar then the columns have to agree with input1
 
   !     INTENT(INOUT)
-  !>        \param[in,out] "allocatable :: input1" array to be appended. Can be INTEGER(I4/I8), REAL(SP/DP),
+  !>        \param[in,out] "allocatable :: input1" array to be appended to. Can be INTEGER(I4/I8), REAL(SP/DP),
   !>                            or CHARACTER(len=*). Must be DIMENSION(:) or DIMENSION(:,:), and allocatable.\n
   !>                            If input2 is not scalar then it must be size(input1,2) = size(input2,2).
 

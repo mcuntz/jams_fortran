@@ -1,3 +1,13 @@
+!> \file mo_timer.f90
+
+!> \brief Timing routines
+
+!> \details This module uses F90 cpu time routines to allowing setting of
+!>          multiple CPU timers.
+
+!> \authors Matthias Cuntz - from timers.f (c) the Regents of the University of Californi
+!> \date Dec 2012
+
 module mo_timer
 
   ! -----------------------------------------------------------------------
@@ -33,7 +43,6 @@ module mo_timer
   !     the version available from Los Alamos National Laboratory.
 
   ! -----------------------------------------------------------------------
-
 
   ! Modified, Matthias Cuntz, Aug. 2012 - adapted to UFZ library, called mo_timer.f90
   !           Matthias Cuntz, Jan. 2013 - clear one or all timers
@@ -81,25 +90,67 @@ module mo_timer
   public :: timers_init   ! Initialises the module
 
   ! Save variables
-  integer(i4), parameter :: max_timers = 99 ! max number of timers allowed
-  integer(i4), save :: cycles_max           ! max value of clock allowed by system
-  real(sp),    save :: clock_rate           ! clock_rate in seconds for each cycle
-  integer(i4),      dimension(max_timers), save :: cycles1 ! cycle number at start for each timer
-  integer(i4),      dimension(max_timers), save :: cycles2 ! cycle number at stop  for each timer
-  real(sp),         dimension(max_timers), save :: cputime ! accumulated cpu time in each timer
-  character(len=8), dimension(max_timers), save :: status  ! timer status string
+  !> max number of timers allowed
+  integer(i4),      parameter                   :: max_timers = 99
+  !> max value of clock allowed by system
+  integer(i4),                             save :: cycles_max
+  !> clock_rate in seconds for each cycle
+  real(sp),                                save :: clock_rate
+  !> cycle number at start for each timer
+  integer(i4),      dimension(max_timers), save :: cycles1
+  !> cycle number at stop  for each timer
+  integer(i4),      dimension(max_timers), save :: cycles2
+  !> accumulated cpu time in each timer
+  real(sp),         dimension(max_timers), save :: cputime
+  !>  timer status string
+  character(len=8), dimension(max_timers), save :: status
 
   ! -----------------------------------------------------------------------
 
 contains
 
-  !-----------------------------------------------------------------------
+  ! ------------------------------------------------------------------
 
-  !     This routine checks a given timer.  This is primarily used to
-  !     periodically accumulate time in the timer to prevent timer cycles
-  !     from wrapping around max_cycles.
+  !      NAME
+  !         timer_check
 
-  !-----------------------------------------------------------------------
+  !     PURPOSE
+  !>        \brief Check a timer
+
+  !>        \details This routine checks a given timer. This is primarily used to
+  !>        periodically accumulate time in the timer to prevent timer cycles
+  !>        from wrapping around max_cycles.
+
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4) :: timer"        timer number
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         call timer_check(3)
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date Aug 2012
 
   subroutine timer_check(timer)
 
@@ -114,12 +165,48 @@ contains
 
   end subroutine timer_check
 
+  ! ------------------------------------------------------------------
 
-  !-----------------------------------------------------------------------
+  !      NAME
+  !         timer_clear
 
-  !     This routine resets a given timer.
+  !     PURPOSE
+  !>        \brief Reset a timer
 
-  !-----------------------------------------------------------------------
+  !>        \details This routine resets a given timer or all timers to 0.
+
+  !     INTENT(IN)
+  !         None
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !>        \param[in] "integer(i4), optional :: timer"        timer number if given.\n
+  !>                                                           If missing, all timers will be reset.
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         call timer_clear(3)
+  !         call timer_clear()
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date Aug 2012
 
   subroutine timer_clear(timer)
 
@@ -135,13 +222,48 @@ contains
 
   end subroutine timer_clear
 
-  !-----------------------------------------------------------------------
+  ! ------------------------------------------------------------------
 
-  !     This routine returns the result of a given timer.  This can be
-  !     called instead of timer_print so that the calling routine can
-  !     print it in desired format.
+  !      NAME
+  !         timer_get
 
-  !-----------------------------------------------------------------------
+  !     PURPOSE
+  !>        \brief Return a timer
+
+  !>        \details This routine returns the result of a given timer. This can be
+  !>        called instead of timer_print so that the calling routine can
+  !>        print it in desired format.
+
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4) :: timer"        timer number
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         call timer_get(3)
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date Aug 2012
 
   function timer_get(timer)
 
@@ -161,11 +283,46 @@ contains
 
   end function timer_get
 
-  !-----------------------------------------------------------------------
+  ! ------------------------------------------------------------------
 
-  !     This routine prints the accumulated cpu time in given timer.
+  !      NAME
+  !         timer_print
 
-  !-----------------------------------------------------------------------
+  !     PURPOSE
+  !>        \brief Print a timer
+
+  !>        \details This routine prints the accumulated cpu time in given timer.
+
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4) :: timer"        timer number
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         call timer_print(3)
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date Aug 2012
 
   subroutine timer_print(timer)
 
@@ -190,11 +347,46 @@ contains
 
   end subroutine timer_print
 
-  !-----------------------------------------------------------------------
+  ! ------------------------------------------------------------------
 
-  !     This routine starts a given timer.
+  !      NAME
+  !         timer_start
 
-  !-----------------------------------------------------------------------
+  !     PURPOSE
+  !>        \brief Start a timer
+
+  !>        \details This routine starts a given timer.
+
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4) :: timer"        timer number
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         call timer_start(3)
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date Aug 2012
 
   subroutine timer_start(timer)
 
@@ -213,11 +405,46 @@ contains
 
   end subroutine timer_start
 
-  !-----------------------------------------------------------------------
+  ! ------------------------------------------------------------------
 
-  !     This routine stops a given timer.
+  !      NAME
+  !         timer_stop
 
-  !-----------------------------------------------------------------------
+  !     PURPOSE
+  !>        \brief Stop a timer
+
+  !>        \details This routine stops a given timer.
+
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4) :: timer"        timer number
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         call timer_stop(3)
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date Aug 2012
 
   subroutine timer_stop(timer)
 
@@ -260,7 +487,47 @@ contains
   !     This routine initializes some machine parameters necessary for
   !     computing cpu time from F90 intrinsics.
 
-  !-----------------------------------------------------------------------
+  ! ------------------------------------------------------------------
+
+  !      NAME
+  !         timers_init
+
+  !     PURPOSE
+  !>        \brief Initialise timer module
+
+  !>        \details This routine initializes some machine parameters necessary for
+  !>        computing cpu time from F90 intrinsics.
+
+  !     INTENT(IN)
+  !         None
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         call timers_init()
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date Aug 2012
 
   subroutine timers_init
 

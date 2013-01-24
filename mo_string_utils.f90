@@ -1,3 +1,12 @@
+!> \file mo_string_utils.f90
+
+!> \brief String utilities
+
+!> \details This module provides string conversion and checking utilities.
+
+!> \authors Matthias Cuntz
+!> \date Dec 2011
+
 MODULE mo_string_utils
 
   ! This module holds string conversion utilities
@@ -19,7 +28,7 @@ MODULE mo_string_utils
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2012 Matthias Cuntz
+  ! Copyright 2011-2012 Matthias Cuntz
 
   USE mo_kind, ONLY: i4, i8, sp, dp
 
@@ -40,38 +49,43 @@ MODULE mo_string_utils
   !         num2str
 
   !     PURPOSE
-  !         Convert a number or logical to a string with an optional format.
+  !>        \brief Convert to string.
+
+  !>        \details Convert a number or logical to a string with an optional format.
 
   !     CALLING SEQUENCE
   !         str = num2str(num,form=form)
 
   !     INTENT(IN)
-  !         integer(i4/i8)/real(sp/dp)/logical :: num    Number or logical
+  !>        \param[in] "integer(i4/i8)/real(sp/dp)/logical :: num"    Number or logical
 
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         character(len=X) :: str              String of formatted input number or logical
-  !                                              Ouput length X is:
-  !                                              i4    - 10
-  !                                              i8    - 20
-  !                                              sp/dp - 32
-  !                                              log   - 10
+  !         None
 
   !     INTENT(IN), OPTIONAL
-  !         character(len=*) :: form             Format string
-  !                                              Defaults are:
-  !                                              i4    - '(I10)'
-  !                                              i8    - '(I20)'
-  !                                              sp/dp - '(G32.5)'
-  !                                              log   - '(L10)'
+  !>        \param[in] "character(len=*), optinal :: form"   Format string\n
+  !>                                                         Defaults are:\n
+  !>                                                         i4    - '(I10)'\n
+  !>                                                         i8    - '(I20)'\n
+  !>                                                         sp/dp - '(G32.5)'\n
+  !>                                                         log   - '(L10)'
 
   !     INTENT(INOUT), OPTIONAL
   !         None
 
   !     INTENT(OUT), OPTIONAL
   !         None
+
+  !     RETURN
+  !>        \return character(len=X) :: str &mdash; String of formatted input number or logical\n
+  !>                                                Ouput length X is:\n
+  !>                                                i4    - 10\n
+  !>                                                i8    - 20\n
+  !>                                                sp/dp - 32\n
+  !>                                                log   - 10
 
   !     RESTRICTIONS
   !         Uses WRITE to write into string. Recursive write is not permitted before Fortran 2003
@@ -92,7 +106,8 @@ MODULE mo_string_utils
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \date Dec 2011
   INTERFACE num2str
      MODULE PROCEDURE i42str, i82str, sp2str, dp2str, log2str
   END INTERFACE num2str
@@ -109,25 +124,31 @@ MODULE mo_string_utils
 
 CONTAINS
 
+#ifndef ABSOFT
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         nonull
+  !         DIVIDE_STRING
 
   !     PURPOSE
-  !         Checks if string was already used, i.e. does not contain NULL character anymore.
+  !>        \brief Divide string in substrings.
+
+  !>        \details Divides a string in several substrings (array of strings) with the help of a user
+  !>        specified delimiter.
 
   !     CALLING SEQUENCE
-  !         used = nonull(str)
+  !         call DIVIDE_STRING(string, delim, strArr(:))
 
   !     INTENT(IN)
-  !         character(len=*) :: str    String
+  !>        \param[in] "CHARACTER(len=*), INTENT(IN) :: string"     - string to be divided
+  !>        \param[in] "CHARACTER(len=*), INTENT(IN) :: delim"      - delimiter specifying places for division
 
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         logical :: used    .true.: string was already set; .false.: string still in initialised state
+  !>        \param[out] "CHARACTER(len=*), DIMENSION(:), ALLOCATABLE,  INTENT(OUT) :: strArr"
+  !>                     Array of substrings, has to be allocateable and is handed to the routine unallocated
 
   !     INTENT(IN), OPTIONAL
   !         None
@@ -137,6 +158,103 @@ CONTAINS
 
   !     INTENT(OUT), OPTIONAL
   !         None
+
+  !     RESTRICTIONS
+  !         only character types allowed
+  !         output array should be allocateable array, which is unallocated handed to the subroutine
+  !             allocation is done in in devide_string
+
+  !     EXAMPLE
+  !        DIVIDE_STRING('I want to test this routine!', ' ', strArr(:))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Matthias Zink
+  !>        \date Oct 2012
+
+  SUBROUTINE DIVIDE_STRING(string, delim, strArr)
+
+    IMPLICIT NONE
+
+    CHARACTER(len=*)             , INTENT(IN)        :: string
+    CHARACTER(len=*)             , INTENT(IN)        :: delim
+    CHARACTER(len=*), DIMENSION(:), ALLOCATABLE, &
+         INTENT(OUT)      :: strArr
+
+    CHARACTER(256)                                   :: stringDummy   ! string in fisrt place but cutted in pieces
+    CHARACTER(256), DIMENSION(:) , ALLOCATABLE       :: strDummyArr   ! Dummy arr until number of substrings is known
+    INTEGER(i4)                                      :: pos           ! position of dilimiter
+    INTEGER(i4)                                      :: nosubstr      ! number of substrings in string
+
+    stringDummy = string
+
+    allocate(strDummyArr(len_trim(stringDummy)))
+    pos=999_i4
+    nosubstr=0_i4
+    ! search for substrings and theirs count
+    do
+       pos = index(trim(adjustl(stringDummy)), delim)
+       ! exit if no more delimiter is find and save the last part of the string
+       if (pos .EQ. 0_i4) then
+          nosubstr = nosubstr + 1_i4
+          StrDummyArr(nosubstr) = trim(stringDummy)
+          exit
+       end if
+
+       nosubstr = nosubstr + 1_i4
+       strDummyArr(nosubstr) = stringDummy(1:pos-1)
+       stringDummy = stringDummy(pos+1:len_trim(stringDummy))
+    end do
+    ! hand over results to strArr
+    if (nosubstr .EQ. 0_i4) then
+       print*, '***WARNING: string does not contain delimiter. There are no substrings. (subroutine DIVIDE_STRING)'
+       return
+    else
+       allocate(strArr(nosubstr))
+       strArr = StrDummyArr(1:nosubstr)
+    end if
+
+    deallocate(strDummyArr)
+
+  END SUBROUTINE DIVIDE_STRING
+#endif
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         nonull
+
+  !     PURPOSE
+  !>        \brief Checks if string was already used
+
+  !>        \details Checks if string was already used, i.e. does not contain NULL character anymore.
+
+  !     CALLING SEQUENCE
+  !         used = nonull(str)
+
+  !     INTENT(IN)
+  !>        \param[in] "character(len=*) :: str"    String
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !>        \return logical :: used &mdash;  .true.: string was already set; .false.: string still in initialised state
 
   !     RESTRICTIONS
   !         None
@@ -149,7 +267,8 @@ CONTAINS
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Jan 2012
+  !>        \author Matthias Cuntz
+  !>        \date Jan 2012
 
   FUNCTION nonull(str)
 
@@ -258,19 +377,21 @@ CONTAINS
   !         tolower
 
   !     PURPOSE
-  !         Convert all upper case letters in string to lower case letters.
+  !>        \brief Convert to lower case
+
+  !>        \details Convert all upper case letters in string to lower case letters.
 
   !     CALLING SEQUENCE
   !         low = tolower(upper)
 
   !     INTENT(IN)
-  !         character(len=*) :: upper    String
+  !>        \param[in] "character(len=*) :: upper"    String
 
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         character(len=len_trim(upper)) :: low    String where all uppercase in input is converted to lowercase
+  !         None
 
   !     INTENT(IN), OPTIONAL
   !         None
@@ -280,6 +401,9 @@ CONTAINS
 
   !     INTENT(OUT), OPTIONAL
   !         None
+
+  !     RETURN
+  !>        \return character(len=len_trim(upper)) :: low  &mdash;  String where all uppercase in input is converted to lowercase
 
   !     RESTRICTIONS
   !         None
@@ -293,7 +417,8 @@ CONTAINS
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \date Dec 2011
 
   FUNCTION tolower(upper)
 
@@ -322,19 +447,21 @@ CONTAINS
   !         toupper
 
   !     PURPOSE
-  !         Convert all lower case letters in string to upper case letters.
+  !         \brief Convert to upper case
+
+  !         \details Convert all lower case letters in string to upper case letters.
 
   !     CALLING SEQUENCE
   !         up = toupper(lower)
 
   !     INTENT(IN)
-  !         character(len=*) :: lower    String
+  !         \param[in] "character(len=*) :: lower"    String
 
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         character(len=len_trim(lower)) :: up    String where all lowercase in input is converted to uppercase
+  !         None
 
   !     INTENT(IN), OPTIONAL
   !         None
@@ -344,6 +471,9 @@ CONTAINS
 
   !     INTENT(OUT), OPTIONAL
   !         None
+
+  !     RETURN
+  !         \return character(len=len_trim(lower)) :: up  &mdash;  String where all lowercase in input is converted to uppercase
 
   !     RESTRICTIONS
   !         None
@@ -357,7 +487,8 @@ CONTAINS
   !         None
 
   !     HISTORY
-  !         Written,  Matthias Cuntz, Dec 2011 - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !         \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !         \date Dec 2011
 
   FUNCTION toupper (lower)
 
@@ -379,100 +510,5 @@ CONTAINS
     END DO
 
   END FUNCTION toupper
-
-#ifndef ABSOFT
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         DIVIDE_STRING
-
-  !     PURPOSE
-  !         Divides a string in several substrings (array of strings) with the help of a user specified delimiter.
-
-  !     CALLING SEQUENCE
-  !         DIVIDE_STRING(string, delim, strArr(:))
-
-  !     INTENT(IN)
-  !         CHARACTER(len=*), INTENT(IN)        :: string     - string to be divided
-  !         CHARACTER(len=*), INTENT(IN)        :: delim      - delimiter specifying places for division
-
-  !     INTENT(INOUT)
-  !         None
-
-  !     INTENT(OUT)
-  !         CHARACTER(len=*), DIMENSION(:) ,   &
-  !                  ALLOCATABLE,  INTENT(OUT)  :: strArr     -  Array of substrings, has to be allocateable and is
-  !                                                              handed to the routine unallocated
-
-  !     INTENT(IN), OPTIONAL
-  !         None
-
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-
-  !     INTENT(OUT), OPTIONAL
-  !         None
-
-  !     RESTRICTIONS
-  !         only character types allowed
-  !         output array should be allocateable array, which is unallocated handed to the subroutine
-  !             allocation is done in in devide_string
-
-  !     EXAMPLE
-  !        DIVIDE_STRING('I want to test this routine!', ' ', strArr(:))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         None
-
-  !     HISTORY
-  !         Written,  Matthias Zink, Oct 2012
-
-  SUBROUTINE DIVIDE_STRING(string, delim, strArr)
-
-    IMPLICIT NONE
-
-    CHARACTER(len=*)             , INTENT(IN)        :: string
-    CHARACTER(len=*)             , INTENT(IN)        :: delim
-    CHARACTER(len=*), DIMENSION(:), ALLOCATABLE, &
-         INTENT(OUT)      :: strArr
-
-    CHARACTER(256)                                   :: stringDummy   ! string in fisrt place but cutted in pieces
-    CHARACTER(256), DIMENSION(:) , ALLOCATABLE       :: strDummyArr   ! Dummy arr until number of substrings is known
-    INTEGER(i4)                                      :: pos           ! position of dilimiter
-    INTEGER(i4)                                      :: nosubstr      ! number of substrings in string
-
-    stringDummy = string
-
-    allocate(strDummyArr(len_trim(stringDummy)))
-    pos=999_i4
-    nosubstr=0_i4
-    ! search for substrings and theirs count
-    do
-       pos = index(trim(adjustl(stringDummy)), delim)
-       ! exit if no more delimiter is find and save the last part of the string
-       if (pos .EQ. 0_i4) then
-          nosubstr = nosubstr + 1_i4
-          StrDummyArr(nosubstr) = trim(stringDummy)
-          exit
-       end if
-
-       nosubstr = nosubstr + 1_i4
-       strDummyArr(nosubstr) = stringDummy(1:pos-1)
-       stringDummy = stringDummy(pos+1:len_trim(stringDummy))
-    end do
-    ! hand over results to strArr
-    if (nosubstr .EQ. 0_i4) then
-       print*, '***WARNING: string does not contain delimiter. There are no substrings. (subroutine DIVIDE_STRING)'
-       return
-    else
-       allocate(strArr(nosubstr))
-       strArr = StrDummyArr(1:nosubstr)
-    end if
-
-    deallocate(strDummyArr)
-
-  END SUBROUTINE DIVIDE_STRING
-#endif
 
 END MODULE mo_string_utils

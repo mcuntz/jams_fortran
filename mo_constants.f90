@@ -8,6 +8,7 @@
 
 !> \author Matthias Cuntz
 !> \date Nov 2011
+
 MODULE mo_constants
 
   !  This module contains basic and derived constants
@@ -31,7 +32,7 @@ MODULE mo_constants
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011-2012 Matthias Cuntz
+  ! Copyright 2011-2013 Matthias Cuntz
 
   USE mo_kind, ONLY: sp, dp
 
@@ -87,9 +88,9 @@ MODULE mo_constants
   !> Gravity accelaration [m^2 s^-1] in single precision
   REAL(sp), PARAMETER :: Gravity_sp   = 9.81_sp
   !>  Solar constant in [MJ m^-2 s^-1] in double precision
-  REAL(dp), PARAMETER :: GSolarConst_dp  = 1367._dp                  ! Global solar constant in [W m-2 = kg s-3]
+  REAL(dp), PARAMETER :: SolarConst_dp  = 1367._dp                   ! Solar constant in [W m-2 = kg s-3]
   !>  Solar constant in [MJ m^-2 s^-1] in single precision
-  REAL(sp), PARAMETER :: GSolarConst_sp  = 1367._sp
+  REAL(sp), PARAMETER :: SolarConst_sp  = 1367._sp
   !> Specific heat for vaporization of water in [J m-2 mm-1] in double precision
   REAL(dp), PARAMETER :: SpecHeatET_dp   = 2.45e06_dp                ! Specific heat in [W s m-2 mm-1 = kg s-2 mm-1]
   !> Specific heat for vaporization of water in [J m-2 mm-1] in single precision

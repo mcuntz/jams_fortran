@@ -9,7 +9,7 @@ module mo_xor4096
   ! modify it under the terms of the GNU General Public License,
   ! version 2, June 1991, as published by the Free Software Foundation.
   ! For details see http://www.gnu.org/copyleft/gpl.html .
-  !
+
   ! Author: Richard P. Brent (random@rpbrent.co.uk)
   ! -----------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ module mo_xor4096
   !         dependent on time.
   !         This returned values can be used a seed for initializing
   !         random number generators like xor4096.
-  !
+
   !         If the return variable is a vector, only the first entry
   !         depends on time while the others are just the entry before
   !         increased by 1000.
@@ -87,13 +87,13 @@ module mo_xor4096
   !         integer(i4) :: seed
   !         call get_timeseed(seed)
   !         --> e.g. seed = 327_i4
-  !
+
   !         integer(i8), dimension(3) :: seed
   !         call get_timeseed(seed)
   !         --> e.g. seed = (/ 327_i8, 1327_i8, 2327_i8 /)
 
   !     LITERATURE
-  !
+
 
   !     HISTORY
   !         Written,  Juliane Mai, Aug 2012
@@ -119,21 +119,21 @@ module mo_xor4096
   !         modify it under the terms of the GNU General Public License,
   !         version 2, June 1991, as published by the Free Software Foundation.
   !         For details see http://www.gnu.org/copyleft/gpl.html .
-  !
+
   !         Author: Richard P. Brent (random@rpbrent.co.uk)
   !         ****************************************************************************************
   !         The period of the generator is
   !              (2^4096 - 1)*2^32 for single precision version and
   !              (2^4096 - 1)*2^64 for double precision version.
-  !
+
   !         The generator is based on bitwise XOR compositions of left- and right-shifted numbers.
-  !
+
   !         The generator has to be called once with a non-zero seed value which initializes a new
   !         random number stream. The subsequent calls are with seed=0 which returns the following
   !         numbers within the beforehand initialized stream. Since the random numbers are based on
   !         the initial seed, the precison of the seed (sp/dp) determines the precision of the
   !         returned random number (sp/dp).
-  !
+
   !         If one initialize the generator with an array of seeds, one initializes n independent
   !         streams of random numbers.
   !         Lets assume that the streams with seed 1_sp is 10, 20, 30 ...
@@ -146,7 +146,7 @@ module mo_xor4096
   !             call xor( (/ 0_SP, 0_SP, 0_SP /), RN )   --> RN = (/ 20, 50, 80 /)
   !         3rd call
   !             call xor( (/ 0_SP, 0_SP, 0_SP /), RN )   --> RN = (/ 30, 60, 90 /)
-  !
+
   !         Since after every initialization one looses the old stream of random numbers,
   !         it might be necessary to switch between different streams. Therefore, one needs ALL
   !         of the three optional arguments.
@@ -203,7 +203,7 @@ module mo_xor4096
   !         seed = (/ 1_SP, 100_SP, 2_SP /)
   !         call xor4096(seed,RN)
   !         print*, RN --> (/ 10, 20, 30 /)
-  !
+
   !         seed = (/ 0_SP, 0_SP, 0_SP /)
   !         call xor4096(seed,RN)
   !         print*, RN --> (/ 20, 10, 50 /)
@@ -232,7 +232,7 @@ module mo_xor4096
   !         number based on xor4096 algorithm is generated. Second, this number is transformed
   !         using the Polar method of Box-Mueller-transform to calculate the gaussian distributed
   !         numbers.
-  !
+
   !         ****************************************************************************************
   !         The original version of this source code (without multiple streams,
   !         optional arguments and gaussian distributed RN) is under GNU General Public Licence
@@ -242,18 +242,18 @@ module mo_xor4096
   !         modify it under the terms of the GNU General Public License,
   !         version 2, June 1991, as published by the Free Software Foundation.
   !         For details see http://www.gnu.org/copyleft/gpl.html .
-  !
+
   !         Author: Richard P. Brent (random@rpbrent.co.uk)
   !         ****************************************************************************************
-  !
+
   !         The generator has to be called once with a non-zero seed value which initializes a new
   !         random number stream. The subsequent calls are with seed=0 which returns the following
   !         numbers within the beforehand initialized stream. Since the random numbers are based on
   !         the initial seed, the precison of the seed (sp/dp) determines the precision of the
   !         returned random number (sp/dp).
-  !
+
   !         The returned values are gaussian distributed with mean 0 and variance 1.
-  !
+
   !         The polar method of the Box-Mueller transform transforms two uniform distributed
   !         random numbers u1 and u2 into two gaussian distributed random numbers x1 and x2.
   !         First, two uniform numbers a1, a2 distributed between (-1,1) are calculated:
@@ -297,7 +297,7 @@ module mo_xor4096
   !         integer(i4/i8), dimension(size(seed),0:127/0:63)   :: x
   !         integer(i4/i8), dimension(size(seed))              :: Flag
   !         real(sp/dp),    dimension(size(seed))              :: y
-  !
+
 
   !     INTENT(OUT), OPTIONAL
   !         None
@@ -314,7 +314,7 @@ module mo_xor4096
   !         seed = (/ 1_SP, 100_SP, 2_SP /)
   !         call xor4096g(seed,RN)
   !         print*, RN --> (/ 0.1, 0.05, 0.3 /)
-  !
+
   !         seed = (/ 0_SP, 0_SP, 0_SP /)
   !         call xor4096(seed,RN)
   !         print*, RN --> (/ 0.2, 0.9, 0.4 /)

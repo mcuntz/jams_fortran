@@ -61,13 +61,15 @@ CONTAINS
   !>        It is coded as a minimizer but one can give maxit=True in a maximization problem,
   !>        so that the algorithm minimizes the negative of the objective function F=(-1*F).
 
-  !>        The function to be minimized is the first argument of DDS and must be defined as
+  !>        The function to be minimized is the first argument of DDS and must be defined as \n
+  !>        \code
   !>            function func(p)
   !>              use mo_kind, only: dp
   !>              implicit none
   !>              real(dp), dimension(:), intent(in) :: p
   !>              real(dp) :: func
   !>            end function func
+  !>        \endcode
 
   !     CALLING SEQUENCE
   !         popt = DDS(obj_func, pini, prange, r=r, seed=seed, maxiter=maxiter, maxit=maxit, funcbest=funcbest)
@@ -298,12 +300,14 @@ CONTAINS
   !>        so that the algorithm minimizes the negative of the objective function F=(-1*F).
   !>
   !>        The function to be minimized is the first argument of DDS and must be defined as
+  !>        \code
   !>            function func(p)
   !>              use mo_kind, only: dp
   !>              implicit none
   !>              real(dp), dimension(:), intent(in) :: p
   !>              real(dp) :: func
   !>            end function func
+  !>        \endcode
   !>
   !>       MDDS extents normal DDS by a continuous reduction of the DDS pertubation parameter r from 0.3 to 0.05,
   !>       and by allowing a larger function value with a certain probablity.
