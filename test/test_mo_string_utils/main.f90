@@ -1,7 +1,7 @@
 PROGRAM main
   
   USE mo_kind,   ONLY: i4, i8, dp, sp
-  USE mo_string_utils, ONLY: tolower, toupper, separator, num2str, nonull
+  USE mo_string_utils, ONLY: tolower, toupper, separator, num2str, nonull, compress
 #ifndef ABSOFT
   USE mo_string_utils, ONLY: DIVIDE_STRING
 #endif
@@ -37,6 +37,8 @@ PROGRAM main
   if (.not.(lle(trim(sout),'T') .and. lge(trim(sout),'T'))) isgood =.false.
   if (.not. nonull(sout)) isgood =.false.
   if (nonull(sundef)) isgood =.false.
+  sout = compress('H a      l l o       ')
+  if (.not.(lle(trim(sout),'Hallo') .and. lge(trim(sout),'Hallo'))) isgood =.false.
 #ifndef ABSOFT
   call DIVIDE_STRING('I want to test this routine!', ' ', strArr)
   isgood = isgood .and. (strArr(1) .EQ. 'I')
