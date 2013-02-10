@@ -3574,12 +3574,21 @@ CONTAINS
     integer(i4) :: n
     integer(i4) :: j
 
-    n = size(x)
+    n = size(x,dim=1)
     rastrigin = 0.0_dp
     do j=1, n
        rastrigin = rastrigin+ (x(j)**2 - 10.0_dp*cos(2.0_dp*pi_dp*x(j)))
     enddo
     rastrigin = rastrigin + 10.0_dp * real(n,dp)
+
+    ! FUNCTN04 of SCEUA F77 source code
+    !   Bound: X1=[-1,1], X2=[-1,1]
+    !   Global Optimum: -2, (0,0)
+    ! n = size(x,dim=1)
+    ! rastrigin = 0.0_dp
+    ! do j=1, n
+    !    rastrigin = rastrigin+ (x(j)**2 - cos(18.0_dp*x(j)))
+    ! enddo
 
   end function rastrigin
 
