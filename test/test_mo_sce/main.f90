@@ -1,6 +1,6 @@
 program test_sce
 
-  use mo_kind,             only: i4, dp
+  use mo_kind,             only: i4, i8, dp
   use mo_sce,              only: sce
   use mo_opt_functions,    only: ackley
 
@@ -36,7 +36,7 @@ program test_sce
   end do
 
   opt  = sce(ackley, pini, prange,                                                                  & ! Mandatory IN 
-       mymaxn=30000_i4, mykstop=10_i4, mypcento=0.0001_dp, myseed=10987_i4,                         & ! Optional  IN
+       mymaxn=30000_i8, mymaxit=.false., mykstop=10_i4, mypcento=0.0001_dp, myseed=10987_i8,        & ! Optional  IN
        myngs=2_i4, mynpg=2*n+1, mynps=n+1, mynspl=2*n+1, mymings=2_i4, myiniflg=1_i4, myprint=2_i4, & ! Optional  IN
        myalpha=0.8_dp, mybeta=0.45_dp,                                                              & ! Optional  IN
        bestf=bestf,neval=neval,history=history                                                      & ! Optional  OUT

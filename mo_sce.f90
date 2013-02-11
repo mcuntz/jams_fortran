@@ -160,13 +160,13 @@ MODULE mo_sce
 CONTAINS
 
   function sce(functn,pini,prange,                        & ! IN
-       mymaxn,mykstop,mypcento,myseed,                    & ! Optional IN
+       mymaxn,mymaxit,mykstop,mypcento,myseed,            & ! Optional IN
        myngs,mynpg,mynps,mynspl,mymings,myiniflg,myprint, & ! Optional IN
        myalpha, mybeta,                                   & ! Optional IN
        bestf,neval,history                                & ! Optional OUT
     ) result(bestx)
 
-    use mo_kind,    only: i4, dp
+    use mo_kind,    only: i4, i8, dp
     use mo_sort,    only: sort
     use mo_xor4096, only: get_timeseed
 
@@ -184,43 +184,57 @@ CONTAINS
     real(dp), dimension(:,:), intent(in)             :: prange      ! lower and upper bound on parameters
     !
     ! algorithmic control & convergence parameter 
-    integer(i4), optional,               intent(in)  :: mymaxn      ! max no. of trials allowed before optimization is terminated
+    integer(i8), optional,               intent(in)  :: mymaxn      ! max no. of trials allowed before optimization is terminated
+    !                                                               !     DEFAULT: 1000_i8
+    logical,     optional,               intent(in)  :: mymaxit     ! maximization (.true.) or minimization (.false.) of function
+    !                                                               !     DEFAULT: false
     integer(i4), optional,               intent(in)  :: mykstop     ! number of shuffling loops in which the criterion value must
-    !                                                               !      change by given percentage before optimiz. is terminated
+    !                                                               !     change by given percentage before optimiz. is terminated
+    !                                                               !     DEFAULT: 10_i4
     real(dp),    optional,               intent(in)  :: mypcento    ! percentage by which the criterion value must change in
-    !                                                               !      given number of shuffling loops
-    integer(i4), optional,               intent(in)  :: myseed      ! initial random seed
+    !                                                               !     given number of shuffling loops
+    !                                                               !     DEFAULT: 0.0001_dp
+    integer(i8), optional,               intent(in)  :: myseed      ! initial random seed
+    !                                                               !     DEFAULT: get_timeseed
     integer(i4), optional,               intent(in)  :: myngs       ! number of complexes in the initial population
+    !                                                               !     DEFAULT: 2_i4
     integer(i4), optional,               intent(in)  :: mynpg       ! number of points in each complex
+    !                                                               !     DEFAULT: 2*n+1
     integer(i4), optional,               intent(in)  :: mynps       ! number of points in a sub-complex
+    !                                                               !     DEFAULT: n+1
     integer(i4), optional,               intent(in)  :: mynspl      ! number of evolution steps allowed for each complex before
     !                                                               !     complex shuffling
+    !                                                               !     DEFAULT: 2*n+1
     integer(i4), optional,               intent(in)  :: mymings     ! minimum number of complexes required, if the number of 
     !                                                               !     complexes is allowed to reduce as the 
     !                                                               !     optimization proceeds
+    !                                                               !     DEFAULT: ngs = number of complexes in initial population
     integer(i4), optional,               intent(in)  :: myiniflg    ! flag on whether to include the initial point in population
     !                                                               !     0, not included
-    !                                                               !     1, included
+    !                                                               !     1, included (DEFAULT)
     integer(i4), optional,               intent(in)  :: myprint     ! flag for controlling print-out after each shuffling loop
     !                                                               !     0, print information on the best point of the population
     !                                                               !     1, print information on every point of the population
-    !                                                               !     2, no printing
+    !                                                               !     2, no printing (DEFAULT)
     real(dp),    optional,               intent(in)  :: myalpha     ! parameter for reflection  of points in complex
+    !                                                               !     DEFAULT: 0.8_dp
     real(dp),    optional,               intent(in)  :: mybeta      ! parameter for contraction of points in complex
+    !                                                               !     DEFAULT: 0.45_dp
     real(dp),    optional,               intent(out) :: bestf       ! function value of bestx(.)
     integer(i4), optional,               intent(out) :: neval       ! number of function evaluations
     real(dp),    optional, &
          dimension(:), allocatable,      intent(out) :: history     ! history of best function values after each iteration
     real(dp), dimension(size(pini,1))                :: bestx       ! best point at current shuffling loop (is RETURN)
-                                                                    !
-                                                                    ! optionals transfer
+    !
+    ! optionals transfer
     real(dp), dimension(size(pini,1))                :: bl          ! lower bound on parameters
     real(dp), dimension(size(pini,1))                :: bu          ! upper bound on parameters
-    integer(i4)                                      :: maxn        ! max no. of trials allowed before optimization is terminated
+    integer(i8)                                      :: maxn        ! max no. of trials allowed before optimization is terminated
+    logical                                          :: maxit       ! minimization (false) or maximization (true)
     integer(i4)                                      :: kstop       ! number of shuffling loops in which the criterion value
     !                                                               !     must change
     real(dp)                                         :: pcento      ! percentage by which the criterion value must change
-    integer(i4)                                      :: iseed       ! initial random seed  
+    integer(i8)                                      :: iseed       ! initial random seed  
     integer(i4)                                      :: ngs         ! number of complexes in the initial population
     integer(i4)                                      :: npg         ! number of points in each complex
     integer(i4)                                      :: nps         ! number of points in a sub-complex
@@ -254,7 +268,7 @@ CONTAINS
     real(dp),    dimension(:),   allocatable         :: unit        ! ?????
     integer(i4)                                      :: ngs1        ! number of complexes in current population
     integer(i4)                                      :: ngs2        ! number of complexes in last population
-    integer(i4)                                      :: iseed1      ! current random seed
+    integer(i8)                                      :: iseed1      ! current random seed
     real(dp),    dimension(:),   allocatable         :: criter      ! vector containing the best criterion values of the last
     !                                                               !     (kstop+1) shuffling loops
     integer(i4)                                      :: ipcnvg      ! flag indicating whether parameter convergence is reached
@@ -268,7 +282,7 @@ CONTAINS
     logical                                          :: lpos_ok     ! for selction of points based on triangular 
     !                                                               ! probability distribution
     integer(i4)                                      :: npt1
-    integer(i4)                                      :: icall       ! counter for function evaluations
+    integer(i8)                                      :: icall       ! counter for function evaluations
     integer(i4)                                      :: igs, ipr
     integer(i4)                                      :: k1, k2
     real(dp)                                         :: denomi      ! for checking improvement of last steps
@@ -293,21 +307,30 @@ CONTAINS
     !
     ! optionals checking
     if (present(mymaxn)) then
+       if (mymaxn .lt. 2_i4) stop 'sceua: maxn has to be at least 2'
        maxn = mymaxn
     else
-       maxn = 1000_i4
+       maxn = 1000_i8
+    end if
+    if (present(mymaxit)) then
+       maxit = mymaxit
+    else
+       maxit = .false.
     end if
     if(present(mykstop)) then
+       if (mykstop .lt. 1_i4) stop 'sceua: kstop has to be at least 1'
        kstop = mykstop
     else
        kstop = 10_i4
     end if
     if(present(mypcento)) then
+       if (mypcento .lt. 0_dp) stop 'sceua: pcento should be positive'
        pcento = mypcento
     else
        pcento = 0.0001_dp
     end if
     if(present(myseed)) then
+       if (myseed .lt. 1_i8) stop 'sceua: seed should be non-negative'
        iseed = myseed
     else
        call get_timeseed(iseed)
@@ -422,14 +445,23 @@ CONTAINS
     !  compute the function value of the initial point
     !--------------------------------------------------
     ! function evaluation will be counted later...
-    fpini = functn(pini)
-    history_tmp(1) = fpini
+    if (.not. maxit) then
+       fpini = functn(pini)
+       history_tmp(1) = fpini
+    else
+       fpini = -functn(pini)
+       history_tmp(1) = -fpini
+    end if
 
     !  print the initial point and its criterion value
     if (iprint .lt. 2) then
        write(ipr,500)
        write(ipr,510) (xname(j),j=1,nopt2)
-       write(ipr,520) fpini,(pini(j),j=1,nopt2)
+       if (.not. maxit) then
+          write(ipr,520) fpini,(pini(j),j=1,nopt2)
+       else
+          write(ipr,520) -fpini,(pini(j),j=1,nopt2)
+       end if
        if (nopt.gt.12) then
           write(ipr,530) (xname(j),j=13,nopt)
           write(ipr,540) (pini(j),j=13,nopt)
@@ -451,10 +483,15 @@ CONTAINS
           x(1,j) = xx(j)
        end do
        xf(1) = functn(xx)
+       if (.not. maxit) then
+          xf(1) = functn(pini)
+       else
+          xf(1) = -functn(pini)
+       end if
     end if
     !
     ! count function evaluation of the first point
-    icall = 1
+    icall = 1_i8
     ! if (icall .ge. maxn) return 
     !
     !  generate npt1-1 random points distributed uniformly in the parameter
@@ -464,9 +501,16 @@ CONTAINS
        do j = 1, nopt
           x(i,j) = xx(j)
        end do
-       xf(i) = functn(xx)
-       icall = icall + 1
-       history_tmp(icall) = min(history_tmp(icall-1),xf(i))
+       if (.not. maxit) then
+          xf(i) = functn(xx)
+          icall = icall + 1_i8
+          history_tmp(icall) = min(history_tmp(icall-1),xf(i))
+       else
+          xf(i) = -functn(xx)
+          icall = icall + 1_i8
+          history_tmp(icall) = max(history_tmp(icall-1),-xf(i))
+       end if
+       
        if (icall .ge. maxn) then
           npt1 = i
           exit
@@ -483,6 +527,13 @@ CONTAINS
     end do
     bestf_tmp = xf(1)
     worstf = xf(npt1)
+    ! if (.not. maxit) then
+    !    bestf_tmp = xf(1)
+    !    worstf = xf(npt1)
+    ! else
+    !    bestf_tmp = -xf(1)
+    !    worstf    = -xf(npt1)
+    ! end if
     !
     !  compute the parameter range for the initial population
     call parstt(x(1:npt1,1:nopt),bound,xnstd,gnrng,ipcnvg)
@@ -494,7 +545,11 @@ CONTAINS
        if (nopt .gt. 8) then 
           write(ipr,620) (xname(j),j=9,nopt)
        end if
-       write(ipr,630) nloop,icall,ngs1,bestf_tmp,worstf,gnrng, (bestx(j),j=1,nopt1)
+       if (.not. maxit) then
+          write(ipr,630) nloop,icall,ngs1,bestf_tmp,worstf,gnrng, (bestx(j),j=1,nopt1)
+       else
+          write(ipr,630) nloop,icall,ngs1,-bestf_tmp,-worstf,gnrng, (bestx(j),j=1,nopt1)
+       end if
        if (nopt .gt. 8) then
           write(ipr,640) (bestx(j),j=9,nopt)
        end if
@@ -517,14 +572,19 @@ CONTAINS
           ! parameter set
           write(ipr,830)
           write(ipr,510) (xname(j),j=1,nopt2)
-          write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+          if (.not. maxit) then
+             write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+          else
+             write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
+          end if
           if (nopt .gt. 12) then 
              write(ipr,530) (xname(j),j=13,nopt)
              write(ipr,540) (bestx(j),j=13,nopt)
           end if
        end if
        if (present(neval)) neval = icall
-       if (present(bestf)) bestf = bestf_tmp
+       if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
+       if (present(bestf) .and. maxit) bestf = -bestf_tmp
        if (present(history)) then
           allocate(history(icall))
           history(:) = history_tmp(1:icall)
@@ -543,14 +603,19 @@ CONTAINS
           ! parameter set
           write(ipr,830)
           write(ipr,510) (xname(j),j=1,nopt2)
-          write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+          if (.not. maxit) then
+             write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+          else
+             write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
+          end if
           if (nopt .gt. 12) then
              write(ipr,530) (xname(j),j=13,nopt)
              write(ipr,540) (bestx(j),j=13,nopt)
           end if
        end if
        if (present(neval)) neval = icall
-       if (present(bestf)) bestf = bestf_tmp
+       if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
+       if (present(bestf) .and. maxit)       bestf = -bestf_tmp
        if (present(history)) then
           allocate(history(icall))
           history(:) = history_tmp(1:icall)
@@ -626,7 +691,7 @@ CONTAINS
              !
              !  use the sub-complex to generate new point(s)
              call cce(s(1:nps,1:nopt),sf(1:nps),bl(1:nopt),bu(1:nopt),xnstd(1:nopt),  &
-                      icall,maxn,iseed1, functn, alpha,beta,history_tmp)
+                      icall,maxn,maxit,iseed1,functn, alpha,beta,history_tmp)
              !
              !  if the sub-complex is accepted, replace the new sub-complex
              !  into the complex
@@ -667,7 +732,14 @@ CONTAINS
           worstx(j) = x(npt1,j)
        end do
        bestf_tmp = xf(1)
-       worstf = xf(npt1)
+       worstf    = xf(npt1)
+       ! if (.not. maxit) then
+       !    bestf_tmp = xf(1)
+       !    worstf    = xf(npt1)
+       ! else
+       !    bestf_tmp = -xf(1)
+       !    worstf    = -xf(npt1)
+       ! end if
        !
        !  test the population for parameter convergence
        call parstt(x(1:npt1,1:nopt),bound,xnstd,gnrng,ipcnvg)
@@ -680,7 +752,11 @@ CONTAINS
                 write(ipr,620) (xname(j),j=9,nopt)
              end if
           end if
-          write(ipr,630) nloop,icall,ngs1,bestf_tmp,worstf,gnrng, (bestx(j),j=1,nopt1)
+          if (.not. maxit) then
+             write(ipr,630) nloop,icall,ngs1,bestf_tmp,worstf,gnrng, (bestx(j),j=1,nopt1)
+          else
+             write(ipr,630) nloop,icall,ngs1,-bestf_tmp,-worstf,gnrng, (bestx(j),j=1,nopt1)
+          end if
           if (nopt .gt. 8) then 
              write(ipr,640) (bestx(j),j=9,nopt)
           end if
@@ -704,14 +780,19 @@ CONTAINS
              ! parameter set
              write(ipr,830)
              write(ipr,510) (xname(j),j=1,nopt2)
-             write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+             if (.not. maxit) then
+                write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+             else
+                write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
+              end if
              if (nopt .gt. 12) then
                 write(ipr,530) (xname(j),j=13,nopt)
                 write(ipr,540) (bestx(j),j=13,nopt)
              end if
           end if
           if (present(neval)) neval = icall
-          if (present(bestf)) bestf = bestf_tmp
+          if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
+          if (present(bestf) .and. maxit)       bestf = -bestf_tmp
           if (present(history)) then
              allocate(history(icall))
              history(:) = history_tmp(1:icall)
@@ -736,14 +817,19 @@ CONTAINS
                 ! parameter set
                 write(ipr,830)
                 write(ipr,510) (xname(j),j=1,nopt2)
-                write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+                if (.not. maxit) then
+                   write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+                else
+                   write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
+                end if
                 if (nopt .gt. 12) then 
                    write(ipr,530) (xname(j),j=13,nopt)
                    write(ipr,540) (bestx(j),j=13,nopt)
                 end if
              end if
              if (present(neval)) neval = icall
-             if (present(bestf)) bestf = bestf_tmp
+             if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
+             if (present(bestf) .and. maxit)       bestf = -bestf_tmp
              if (present(history)) then
                 allocate(history(icall))
                 history(:) = history_tmp(1:icall)
@@ -766,14 +852,19 @@ CONTAINS
              ! parameter set
              write(ipr,830)
              write(ipr,510) (xname(j),j=1,nopt2)
-             write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+             if (.not. maxit) then
+                write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+             else
+                write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
+             end if
              if (nopt .gt. 12) then
                 write(ipr,530) (xname(j),j=13,nopt)
                 write(ipr,540) (bestx(j),j=13,nopt)
              end if
           end if
           if (present(neval)) neval = icall
-          if (present(bestf)) bestf = bestf_tmp
+          if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
+          if (present(bestf) .and. maxit)       bestf = -bestf_tmp
           if (present(history)) then
              allocate(history(icall))
              history(:) = history_tmp(1:icall)
@@ -796,7 +887,8 @@ CONTAINS
     end do mainloop
     
     if (present(neval)) neval = icall
-    if (present(bestf)) bestf = bestf_tmp
+    if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
+    if (present(bestf) .and. maxit)       bestf = -bestf_tmp
     if (present(history)) then
        allocate(history(icall))
        history(:) = history_tmp(1:icall)
@@ -991,26 +1083,26 @@ CONTAINS
 
     !  This subroutine is from "Numerical Recipes" by Press et al.
 
-    use mo_kind, only: i4, dp
+    use mo_kind, only: i4, i8, dp
     implicit none 
 
-    integer(i4), intent(inout)    :: seed
+    integer(i8), intent(inout)    :: seed
     real(dp)                      :: ran1
 
     ! local variables to be saved for next call
-    integer(i4), parameter        :: m1 = 259200, m2 = 134456, m3 = 243000
-    integer(i4), parameter        :: ia1 = 7141,  ia2 = 8121,  ia3 = 4561
-    integer(i4), parameter        :: ic1 = 54773, ic2 = 28411, ic3 = 51349
+    integer(i8), parameter        :: m1 = 259200, m2 = 134456, m3 = 243000
+    integer(i8), parameter        :: ia1 = 7141,  ia2 = 8121,  ia3 = 4561
+    integer(i8), parameter        :: ic1 = 54773, ic2 = 28411, ic3 = 51349
     real(dp),    parameter        :: rm1 = 3.8580247e-6, rm2 = 7.4373773e-6
     real(dp), dimension(97), save :: r
-    integer(i4),             save :: iff = 0       ! for first call 0, afterwards 1
-    integer(i4),             save :: ix1, ix2, ix3
+    integer(i8),             save :: iff = 0       ! for first call 0, afterwards 1
+    integer(i8),             save :: ix1, ix2, ix3
 
     ! local variables
     integer(i4) :: j
 
     if ((seed .lt. 0) .or. (iff .eq. 0)) then
-       iff = 1
+       iff = 1_i8
        ix1 = mod(ic1 - seed,m1)
        ix1 = mod((ia1 * ix1) + ic1,m1)
        ix2 = mod(ix1,m2)
@@ -1021,7 +1113,7 @@ CONTAINS
           ix2 = mod((ia2 * ix2) + ic2,m2)
           r(j) = (real(ix1,dp) + (real(ix2,dp) * rm2)) * rm1
        end do
-       seed = 1
+       seed = 1_i8
     end if
     ix1 = mod((ia1 * ix1) + ic1,m1)
     ix2 = mod((ia2 * ix2) + ic2,m2)
@@ -1037,10 +1129,10 @@ CONTAINS
 
     !  THIS SUBROUTINE IS FROM "NUMERICAL RECIPES" BY PRESS ET AL.
 
-    use mo_kind, only: i4, dp
+    use mo_kind, only: i4, i8, dp
     implicit none
 
-    integer(i4), intent(inout) :: seed 
+    integer(i8), intent(inout) :: seed 
     real(dp)                   :: gasdev
 
     ! local variables to be saved for next call
@@ -1050,7 +1142,6 @@ CONTAINS
     real(dp) :: r
     real(dp) :: fac
     real(dp) :: gset
-    !real(dp) :: ran1
 
     iset = 0
     r    = 2.0_dp
@@ -1114,7 +1205,7 @@ CONTAINS
     !
     !     Note: checking of implicit constraints removed
     !
-    use mo_kind, only: i4, dp
+    use mo_kind, only: i4, i8, dp
 
     implicit none 
 
@@ -1125,7 +1216,7 @@ CONTAINS
     real(dp), dimension(:),          intent(in)    :: bu      ! upper bound
     real(dp), dimension(:),          intent(in)    :: std     ! standard deviation of probability distribution
     real(dp), dimension(:),          intent(in)    :: xi      ! focal point
-    integer(i4),                     intent(inout) :: iseed   ! seed for random number generator
+    integer(i8),                     intent(inout) :: iseed   ! seed for random number generator
     real(dp), dimension(size(xi,1)), intent(out)   :: x       ! new point
     ! 
     ! local variables
@@ -1150,7 +1241,7 @@ CONTAINS
 
   end subroutine getpnt
 
-  subroutine cce(s,sf,bl,bu,xnstd,icall,maxn,iseed, functn, &
+  subroutine cce(s,sf,bl,bu,xnstd,icall,maxn,maxit,iseed, functn, &
        alpha,beta,history)
     !
     !  ALGORITHM GENERATE A NEW POINT(S) FROM A SUB-COMPLEX
@@ -1158,7 +1249,7 @@ CONTAINS
     !  Note: new intent IN    variables for flexible reflection & contraction: alpha, beta
     !        new intent INOUT variable for history of objective function values
     !
-    use mo_kind, only: i4, dp
+    use mo_kind, only: i4, i8, dp
 
     implicit none    
 
@@ -1168,9 +1259,10 @@ CONTAINS
     real(dp),    dimension(:),   intent(in)    :: bl      ! lower bound per parameter
     real(dp),    dimension(:),   intent(in)    :: bu      ! upper bound per parameter
     real(dp),    dimension(:),   intent(in)    :: xnstd   ! standard deviation of points in sub-complex per parameter
-    integer(i4),                 intent(inout) :: icall   ! number of function evaluations
-    integer(i4),                 intent(in)    :: maxn    ! maximal number of function evaluations allowed
-    integer(i4),                 intent(inout) :: iseed   ! seed for random number generation
+    integer(i8),                 intent(inout) :: icall   ! number of function evaluations
+    integer(i8),                 intent(in)    :: maxn    ! maximal number of function evaluations allowed
+    logical,                     intent(in)    :: maxit   ! minimization (true) or maximization (false)
+    integer(i8),                 intent(inout) :: iseed   ! seed for random number generation
     interface
        function functn(paraset)
          ! calculates the cost function at a certain parameter set paraset
@@ -1239,9 +1331,15 @@ CONTAINS
     end if
     !
     ! compute the function value at snew
-    fnew = functn(snew)
-    icall = icall + 1
-    history(icall) = min(history(icall-1),fnew)
+    if (.not. maxit) then
+       fnew = functn(snew)
+       icall = icall + 1_i8
+       history(icall) = min(history(icall-1),fnew)
+    else
+       fnew = -functn(snew)
+       icall = icall + 1_i8
+       history(icall) = max(history(icall-1),-fnew)
+    end if
     !
     ! maximum numbers of function evaluations reached
     if (icall .ge. maxn) return
@@ -1254,9 +1352,15 @@ CONTAINS
        end do
        !
        ! compute the function value of the contracted point
-       fnew = functn(snew)
-       icall = icall + 1
-       history(icall) = min(history(icall-1),fnew)
+       if (.not. maxit) then
+          fnew = functn(snew)
+          icall = icall + 1_i8
+          history(icall) = min(history(icall-1),fnew)
+       else
+          fnew = -functn(snew)
+          icall = icall + 1_i8
+          history(icall) = max(history(icall-1),-fnew)
+       end if
        !
        ! maximum numbers of function evaluations reached
        if (icall .ge. maxn) return
@@ -1271,9 +1375,15 @@ CONTAINS
           call getpnt(2,bl(1:nopt),bu(1:nopt),xnstd(1:nopt),sb(1:nopt),iseed,snew)
           !
           ! compute the function value at the random point
-          fnew = functn(snew)
-          icall = icall + 1
-          history(icall) = min(history(icall-1),fnew)
+          if (.not. maxit) then
+             fnew = functn(snew)
+             icall = icall + 1_i8
+             history(icall) = min(history(icall-1),fnew)
+          else
+             fnew = -functn(snew)
+             icall = icall + 1_i8
+             history(icall) = max(history(icall-1),-fnew)
+          end if
           !
           ! maximum numbers of function evaluations reached
           if (icall .ge. maxn) return
