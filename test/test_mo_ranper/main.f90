@@ -7,7 +7,8 @@ PROGRAM main
   
   
   LOGICAL :: isgood
-  integer(i4), dimension(10) :: A
+  integer(i4), dimension(10) :: A1
+  integer(i4), dimension(10) :: A2
   integer(i8), dimension(10) :: B
 
   Write(*,*) ''
@@ -15,8 +16,10 @@ PROGRAM main
 
   isgood = .true.
   
-  call ranper( A, .true.)
-  isgood = ( sum( A ) == (size(A,1) * (size(A,1)+1)) / 2 )
+  call ranper( A1, .true.)
+  call ranper( A2, .true., .false.)
+  
+  isgood = any(A1 /= A2) .and. (sum( A1 ) == (size(A1,1) * (size(A1,1)+1)) / 2)
 
   B = (/ 2_i4, 4_i4, 5_i4, 3_i4, 9_i4, 7_i4, 1_i4, 10_i4, 8_i4, 6_i4 /)
   call ranper( B, .false.)

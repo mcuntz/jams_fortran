@@ -79,6 +79,11 @@ module mo_ranper
   !
   !     RESTRICTIONS
   !>       \note If setup is .false., then A must contain positive numbers.
+  !>       ranper uses the random number generator xor4096 for generating
+  !>       i4 integer random numbers. If this random number generator is used
+  !>       elsewhere in the code, then the parameters of the random number
+  !>       generator have to be stored to restart the actual random number
+  !>       stream, since ranper requires its own stream.
   !
   !     EXAMPLE
   !         A = (/ 5, 2, 3, 41, 4, 6 /)
@@ -98,17 +103,19 @@ module mo_ranper
   END INTERFACE ranper
   !
 contains
-  subroutine ranper_i4( A, Setup )
+  subroutine ranper_i4( A, Setup, init_xor )
     !
     use mo_kind,    only: i4, sp
     use mo_xor4096, only: get_timeseed, xor4096
     !
     implicit none
     !
+    logical,     optional,     intent(in)    :: init_xor
     logical,                   intent(in)    :: setup
     integer(i4), dimension(:), intent(inout) :: A
     !
     ! local variables
+    logical     :: init
     integer(i4) :: seed
     integer(i4) :: i
     integer(i4) :: m
@@ -116,7 +123,12 @@ contains
     integer(i4) :: L1
     real(sp)    :: rn ! random number
     !
-    call get_timeseed( seed )
+    init = .true.
+    !
+    if ( present( init_xor ) ) init = init_xor
+    !
+    seed = 0_i4
+    if ( init ) call get_timeseed( seed )
     call xor4096( seed, rn )
     !
     if ( setup ) then
