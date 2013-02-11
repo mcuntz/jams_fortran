@@ -101,8 +101,8 @@ CONTAINS
   !     INTENT(OUT), OPTIONAL
   !>        \param[out] "real(dp), optional              :: funcbest"    the best value of the function.
   !>        \param[out] "real(dp), optional, allocatable :: history(:)"  the history of best function values,
-  !                                                                      history(maxiter)=funcbest\n
-  !                                          allocatable only to be in correspondance with other optimization routines
+  !>                                                                     history(maxiter)=funcbest\n
+  !>                                          allocatable only to be in correspondance with other optimization routines
 
   !     RETURN
   !>        \return real(dp) :: DDS  &mdash;  The parameters of the point which is estimated to minimize the function.

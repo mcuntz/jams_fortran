@@ -74,7 +74,7 @@ MODULE mo_sce
   !         sce
 
   !     PURPOSE
-  !>        \brief Shuffled Complex Evolution algorithm for global optimization.
+  !>        \brief Shuffled Complex Evolution (SCE) algorithm for global optimization.
   !
   !>        \details  Shuffled Complex Evolution method for global optimization/n
   !>                  -- version 2.1/n
@@ -101,10 +101,22 @@ MODULE mo_sce
   !>                     users of this program make proper reference to the paper entitled
   !>                     'Effective and Efficient Global Optimization for Conceptual
   !>                     Rainfall-runoff Models' by Duan, Q., S. Sorooshian, and V.K. Gupta,
-  !>                     Water Resources Research, Vol 28(4), pp.1015-1031, 1992.
+  !>                     Water Resources Research, Vol 28(4), pp.1015-1031, 1992./n
+  !>                  /n
+  !>                 The function to be minimized is the first argument of DDS and must be defined as \n
+  !>                 \code
+  !>                     function functn(p)
+  !>                          use mo_kind, only: dp
+  !>                          implicit none
+  !>                          real(dp), dimension(:), intent(in) :: p
+  !>                          real(dp) :: functn
+  !>                     end function functn
+  !>                 \endcode
   !
   !     INTENT(IN)
-  !         None
+  !>        \param[in] "real(dp) :: functn(p)"               Function on which to search the optimum
+  !>        \param[in] "real(dp) :: pini(:)"                 inital value of decision variables
+  !>        \param[in] "real(dp) :: prange(size(pini),2)"    Min/max range of decision variables
   !
   !     INTENT(INOUT)
   !         None
@@ -113,24 +125,69 @@ MODULE mo_sce
   !         None
   !
   !     INTENT(IN), OPTIONAL
-  !         None
+  !>        \param[out] "integer(i8), optional :: mymaxn"    max no. of trials allowed before optimization is terminated/n
+  !>                                                             DEFAULT: 1000_i8
+  !>        \param[out] "logical,     optional :: mymaxit"   maximization (.true.) or minimization (.false.) of function/n
+  !>                                                             DEFAULT: false
+  !>        \param[out] "integer(i4), optional :: mykstop"   number of shuffling loops in which the criterion value must
+  !>                                                             change by given percentage before optimiz. is terminated/n
+  !>                                                             DEFAULT: 10_i4
+  !>        \param[out] "real(dp),    optional :: mypcento"  percentage by which the criterion value must change in
+  !>                                                             given number of shuffling loops/n
+  !>                                                             DEFAULT: 0.0001_dp
+  !>        \param[out] "integer(i8), optional :: myseed"    initial random seed/n
+  !>                                                             DEFAULT: get_timeseed
+  !>        \param[out] "integer(i4), optional :: myngs"     number of complexes in the initial population/n
+  !>                                                             DEFAULT: 2_i4
+  !>        \param[out] "integer(i4), optional :: mynpg"     number of points in each complex/n
+  !>                                                             DEFAULT: 2*n+1
+  !>        \param[out] "integer(i4), optional :: mynps"     number of points in a sub-complex/n
+  !>                                                             DEFAULT: n+1
+  !>        \param[out] "integer(i4), optional :: mynspl"    number of evolution steps allowed for each complex before
+  !>                                                             complex shuffling/n
+  !>                                                             DEFAULT: 2*n+1
+  !>        \param[out] "integer(i4), optional :: mymings"   minimum number of complexes required, if the number of 
+  !>                                                             complexes is allowed to reduce as the 
+  !>                                                             optimization proceeds/n
+  !>                                                             DEFAULT: ngs = number of complexes in initial population
+  !>        \param[out] "integer(i4), optional :: myiniflg"  flag on whether to include the initial point in population/n
+  !>                                                             0, not included/n
+  !>                                                             1, included (DEFAULT)
+  !>        \param[out] "integer(i4), optional :: myprint"   flag for controlling print-out after each shuffling loop/n
+  !>                                                             0, print information on the best point of the population/n
+  !>                                                             1, print information on every point of the population/n
+  !>                                                             2, no printing (DEFAULT)
+  !>        \param[out] "real(dp),    optional :: myalpha"   parameter for reflection  of points in complex/n
+  !>                                                             DEFAULT: 0.8_dp
+  !>        \param[out] "real(dp),    optional :: mybeta"    parameter for contraction of points in complex/n
+  !>                                                             DEFAULT: 0.45_dp
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
   !
   !     INTENT(OUT), OPTIONAL
-  !         None
+  !>        \param[out] "real(dp),    optional              :: bestf"       the best value of the function.
+  !>        \param[out] "integer(i8), optional              :: neval"       number of function evaluations needed.
+  !>        \param[out] "real(dp),    optional, allocatable :: history(:)"  the history of best function values,
+  !>                                                                        history(neval)=bestf
   !
   !     RETURN
-  !>       \return     real(dp) :: bestx &mdash; best parameter set found
+  !>        \return real(dp) :: bestx(size(pini))  &mdash;  The parameters of the point which is estimated 
+  !>                                                        to minimize/maximize the function.
   !
   !     RESTRICTIONS
-  !>       \note Function will be minimized./n
-  !>             No mask of parameters implemented yet./n
-  !>             No maximization implemented yet. /n
+  !>       \note No mask of parameters implemented yet.
   !
   !     EXAMPLE
-  !         None
+  !         use mo_opt_functions, only: griewank
+  !
+  !         prange(:,1) = (/ -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0, -600.0 /)
+  !         prange(:,2) = (/ 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0, 600.0 /)
+  !         pini        = (/ -.226265E+01, -.130187E+01, -.151219E+01, 0.133983E+00, 0.988159E+00, &
+  !                            -.495074E+01, -.126574E+02, 0.572684E+00, 0.303864E+01, 0.343031E+01 /)
+  !
+  !         opt = sce(griewank, pini, prange)
+  !
   !         -> see also example in test directory
 
   !     LITERATURE  
@@ -527,13 +584,6 @@ CONTAINS
     end do
     bestf_tmp = xf(1)
     worstf = xf(npt1)
-    ! if (.not. maxit) then
-    !    bestf_tmp = xf(1)
-    !    worstf = xf(npt1)
-    ! else
-    !    bestf_tmp = -xf(1)
-    !    worstf    = -xf(npt1)
-    ! end if
     !
     !  compute the parameter range for the initial population
     call parstt(x(1:npt1,1:nopt),bound,xnstd,gnrng,ipcnvg)
@@ -584,7 +634,7 @@ CONTAINS
        end if
        if (present(neval)) neval = icall
        if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
-       if (present(bestf) .and. maxit) bestf = -bestf_tmp
+       if (present(bestf) .and. maxit)       bestf = -bestf_tmp
        if (present(history)) then
           allocate(history(icall))
           history(:) = history_tmp(1:icall)
@@ -733,13 +783,6 @@ CONTAINS
        end do
        bestf_tmp = xf(1)
        worstf    = xf(npt1)
-       ! if (.not. maxit) then
-       !    bestf_tmp = xf(1)
-       !    worstf    = xf(npt1)
-       ! else
-       !    bestf_tmp = -xf(1)
-       !    worstf    = -xf(npt1)
-       ! end if
        !
        !  test the population for parameter convergence
        call parstt(x(1:npt1,1:nopt),bound,xnstd,gnrng,ipcnvg)
