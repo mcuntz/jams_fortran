@@ -513,16 +513,7 @@ CONTAINS
     !  print the initial point and its criterion value
     if (iprint .lt. 2) then
        write(ipr,500)
-       write(ipr,510) (xname(j),j=1,nopt2)
-       if (.not. maxit) then
-          write(ipr,520) fpini,(pini(j),j=1,nopt2)
-       else
-          write(ipr,520) -fpini,(pini(j),j=1,nopt2)
-       end if
-       if (nopt.gt.12) then
-          write(ipr,530) (xname(j),j=13,nopt)
-          write(ipr,540) (pini(j),j=13,nopt)
-       end if
+       call write_best()
     end if
     !
     !  generate an initial set of npt1 points in the parameter space
@@ -621,24 +612,9 @@ CONTAINS
           write(ipr,800) maxn,loop,igs,nloop
           ! parameter set
           write(ipr,830)
-          write(ipr,510) (xname(j),j=1,nopt2)
-          if (.not. maxit) then
-             write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
-          else
-             write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
-          end if
-          if (nopt .gt. 12) then 
-             write(ipr,530) (xname(j),j=13,nopt)
-             write(ipr,540) (bestx(j),j=13,nopt)
-          end if
+          call write_best()
        end if
-       if (present(neval)) neval = icall
-       if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
-       if (present(bestf) .and. maxit)       bestf = -bestf_tmp
-       if (present(history)) then
-          allocate(history(icall))
-          history(:) = history_tmp(1:icall)
-       end if
+       call set_optional()
        ! -----------------------
        ! Abort subroutine
        ! -----------------------
@@ -652,24 +628,9 @@ CONTAINS
           write(ipr,820) gnrng*100.
           ! parameter set
           write(ipr,830)
-          write(ipr,510) (xname(j),j=1,nopt2)
-          if (.not. maxit) then
-             write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
-          else
-             write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
-          end if
-          if (nopt .gt. 12) then
-             write(ipr,530) (xname(j),j=13,nopt)
-             write(ipr,540) (bestx(j),j=13,nopt)
-          end if
+          call write_best()
        end if
-       if (present(neval)) neval = icall
-       if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
-       if (present(bestf) .and. maxit)       bestf = -bestf_tmp
-       if (present(history)) then
-          allocate(history(icall))
-          history(:) = history_tmp(1:icall)
-       end if
+       call set_optional()
        ! -----------------------
        ! Abort subroutine
        ! -----------------------
@@ -822,24 +783,9 @@ CONTAINS
              write(ipr,800) maxn,loop,igs,nloop
              ! parameter set
              write(ipr,830)
-             write(ipr,510) (xname(j),j=1,nopt2)
-             if (.not. maxit) then
-                write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
-             else
-                write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
-              end if
-             if (nopt .gt. 12) then
-                write(ipr,530) (xname(j),j=13,nopt)
-                write(ipr,540) (bestx(j),j=13,nopt)
-             end if
+             call write_best()
           end if
-          if (present(neval)) neval = icall
-          if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
-          if (present(bestf) .and. maxit)       bestf = -bestf_tmp
-          if (present(history)) then
-             allocate(history(icall))
-             history(:) = history_tmp(1:icall)
-          end if
+          call set_optional()
           ! -----------------------
           ! Abort subroutine
           ! -----------------------
@@ -859,24 +805,9 @@ CONTAINS
                 write(ipr,810) pcento*100.,kstop
                 ! parameter set
                 write(ipr,830)
-                write(ipr,510) (xname(j),j=1,nopt2)
-                if (.not. maxit) then
-                   write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
-                else
-                   write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
-                end if
-                if (nopt .gt. 12) then 
-                   write(ipr,530) (xname(j),j=13,nopt)
-                   write(ipr,540) (bestx(j),j=13,nopt)
-                end if
+                call write_best()
              end if
-             if (present(neval)) neval = icall
-             if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
-             if (present(bestf) .and. maxit)       bestf = -bestf_tmp
-             if (present(history)) then
-                allocate(history(icall))
-                history(:) = history_tmp(1:icall)
-             end if
+             call set_optional()
              ! -----------------------
              ! Abort subroutine
              ! -----------------------
@@ -894,24 +825,9 @@ CONTAINS
              write(ipr,820) gnrng*100.
              ! parameter set
              write(ipr,830)
-             write(ipr,510) (xname(j),j=1,nopt2)
-             if (.not. maxit) then
-                write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
-             else
-                write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
-             end if
-             if (nopt .gt. 12) then
-                write(ipr,530) (xname(j),j=13,nopt)
-                write(ipr,540) (bestx(j),j=13,nopt)
-             end if
+             call write_best()
           end if
-          if (present(neval)) neval = icall
-          if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
-          if (present(bestf) .and. maxit)       bestf = -bestf_tmp
-          if (present(history)) then
-             allocate(history(icall))
-             history(:) = history_tmp(1:icall)
-          end if
+          call set_optional()
           ! -----------------------
           ! Abort subroutine
           ! -----------------------
@@ -929,23 +845,12 @@ CONTAINS
        end if
     end do mainloop
     
-    if (present(neval)) neval = icall
-    if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
-    if (present(bestf) .and. maxit)       bestf = -bestf_tmp
-    if (present(history)) then
-       allocate(history(icall))
-       history(:) = history_tmp(1:icall)
-    end if
+    call set_optional()
 
 400 format('==================================================',/, &
          'ENTER THE SHUFFLED COMPLEX EVOLUTION GLOBAL SEARCH',/, &
          '==================================================',/   )
 500 format(//,'*** PRINT THE INITIAL POINT AND ITS CRITERION VALUE ***')
-510 format(/,' CRITERION',12(6x,a4),/, &
-              '------------------------------------------------------------')
-520 format(g10.3,12f10.3)
-530 format(10x,12(6x,a4))
-540 format(10x,12f10.3)
 600 format(//,1x,'*** PRINT THE RESULTS OF THE SCE SEARCH ***')
 610 format(/,1x,'LOOP',1x,'TRIALS',1x,'COMPLXS',2x,'BEST F',3x,'WORST F',3x,'PAR RNG',1x,8(6x,a4))
 620 format(49x,8(6x,a4))
@@ -966,7 +871,48 @@ CONTAINS
 830 format(//,'*** PRINT THE FINAL PARAMETER ESTIMATE AND ITS', &
          ' CRITERION VALUE ***')
 
+  contains
+
+    subroutine write_best()
+
+      implicit none
+
+      ! parameter set
+      write(ipr,510) (xname(j),j=1,nopt2)
+      if (.not. maxit) then
+         write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+      else
+         write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
+      end if
+      if (nopt .gt. 12) then
+         write(ipr,530) (xname(j),j=13,nopt)
+         write(ipr,540) (bestx(j),j=13,nopt)
+      end if
+
+510   format(/,' CRITERION',12(6x,a4),/, &
+              '------------------------------------------------------------')
+520   format(g10.3,12f10.3)
+530   format(10x,12(6x,a4))
+540   format(10x,12f10.3)
+      
+    end subroutine write_best
+
+    subroutine set_optional()
+
+      implicit none
+      
+      if (present(neval))                   neval = icall
+      if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
+      if (present(bestf) .and. maxit)       bestf = -bestf_tmp
+      if (present(history)) then
+         allocate(history(icall))
+         history(:) = history_tmp(1:icall)
+      end if
+
+    end subroutine set_optional
+
   end function sce
+
 
   subroutine parstt(x,bound,xnstd,gnrng,ipcnvg)   
     !

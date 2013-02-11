@@ -37,14 +37,15 @@ program test_sce
 
   opt  = sce(ackley, pini, prange,                                                                  & ! Mandatory IN 
        mymaxn=30000_i8, mymaxit=.false., mykstop=10_i4, mypcento=0.0001_dp, myseed=10987_i8,        & ! Optional  IN
-       myngs=2_i4, mynpg=2*n+1, mynps=n+1, mynspl=2*n+1, mymings=2_i4, myiniflg=1_i4, myprint=2_i4, & ! Optional  IN
+       myngs=2_i4, mynpg=2*n+1, mynps=n+1, mynspl=2*n+1, mymings=2_i4, myiniflg=1_i4, myprint=0_i4, & ! Optional  IN
        myalpha=0.8_dp, mybeta=0.45_dp,                                                              & ! Optional  IN
-       bestf=bestf,neval=neval,history=history                                                      & ! Optional  OUT
+       bestf=bestf, neval=neval, history=history                                                    & ! Optional  OUT
        )
 
   write(*,*) 'number of function evaluations: neval = ', neval
   write(*,*) 'best function value found:      bestf = ', ackley(opt)
   write(*,*) 'global minimal function value:  optf  = ', 0.0_dp
+  print*, bestf, neval
 
   isgood = isgood .and. (neval .eq. 4446_i4)
   isgood = isgood .and. (nint(9.2581722680624701E-03*10000000_dp) .eq. 92582)
