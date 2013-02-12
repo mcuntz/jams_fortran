@@ -128,8 +128,10 @@ contains
     if ( present( init_xor ) ) init = init_xor
     !
     seed = 0_i4
-    if ( init ) call get_timeseed( seed )
-    call xor4096( seed, rn )
+    if ( init ) then
+       call get_timeseed( seed )
+       call xor4096( seed, rn )
+    end if
     !
     if ( setup ) then
        do i = 1, size(A)
@@ -147,17 +149,19 @@ contains
     !
   end subroutine ranper_i4
   !
-  subroutine ranper_i8( A, Setup )
+  subroutine ranper_i8( A, Setup, init_xor )
     !
     use mo_kind,    only: i8, dp
     use mo_xor4096, only: get_timeseed, xor4096
     !
     implicit none
     !
+    logical,     optional,     intent(in)    :: init_xor
     logical,                   intent(in)    :: setup
     integer(i8), dimension(:), intent(inout) :: A
     !
     ! local variables
+    logical     :: init
     integer(i8) :: seed
     integer(i8) :: i
     integer(i8) :: m
@@ -165,8 +169,13 @@ contains
     integer(i8) :: L1
     real(dp)    :: rn ! random number
     !
-    call get_timeseed( seed )
-    call xor4096( seed, rn )
+    init = .true.
+    if ( present( init_xor ) ) init = init_xor
+    !
+    if ( init ) then
+       call get_timeseed( seed )
+       call xor4096( seed, rn )
+    end if
     !
     if ( setup ) then
        do i = 1, size(A)
