@@ -66,7 +66,8 @@ module mo_ranper
   !         None
   !
   !     INTENT(IN), OPTIONAL
-  !         None
+  !>        \param[in]    "logical        :: init_xor" When present and set .true., the random
+  !>        number generator is reset with a new seed
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -123,11 +124,10 @@ contains
     integer(i4) :: L1
     real(sp)    :: rn ! random number
     !
-    init = .true.
+    init = .false.
     !
     if ( present( init_xor ) ) init = init_xor
     !
-    seed = 0_i4
     if ( init ) then
        call get_timeseed( seed )
        call xor4096( seed, rn )
@@ -169,7 +169,7 @@ contains
     integer(i8) :: L1
     real(dp)    :: rn ! random number
     !
-    init = .true.
+    init = .false.
     if ( present( init_xor ) ) init = init_xor
     !
     if ( init ) then

@@ -16,12 +16,12 @@ PROGRAM main
 
   isgood = .true.
   
-  call ranper( A1, .true.)
+  call ranper( A1, .true., .true.)
   call ranper( A2, .true., .false.)
   
   isgood = any(A1 /= A2) .and. (sum( A1 ) == (size(A1,1) * (size(A1,1)+1)) / 2)
 
-  B = (/ 2_i4, 4_i4, 5_i4, 3_i4, 9_i4, 7_i4, 1_i4, 10_i4, 8_i4, 6_i4 /)
+  B = (/ 2_i8, 4_i8, 5_i8, 3_i8, 9_i8, 7_i8, 1_i8, 10_i8, 8_i8, 6_i8 /)
   call ranper( B, .false.)
   isgood = isgood .and. ( sum( B ) == size(B,1) * (size(B,1)+1) / 2 )
 
