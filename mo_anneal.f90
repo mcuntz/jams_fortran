@@ -4,25 +4,26 @@ MODULE mo_anneal
   ! and is part of the UFZ CHS Fortran library.
 
   !
-  ! Written  Juliane Mai, March 2012 : module implementation
-  ! Modified Juliane Mai, May   2012 : anneal: sp version
-  !          Juliane Mai, May   2012 : anneal: documentation
-  !          Juliane Mai, May   2012 : GetTemperature: sp and dp version
-  !          Juliane Mai, June  2012 : weighted parameter selection
-  !          Juliane Mai, Aug   2012 : - function anneal instead of subroutine
-  !                                    - using new module get_timeseed as default for seeding
-  !                                    - new optional for minimization or maximization
-  !                                    - fixed parameter ranges possible instead of interface range
-  !          Juliane Mai, Nov   2012 : history of achieved objective function values as optional out
-  !                                    only in anneal but not anneal_valid
-  !          Juliane Mai, Jan   2013 : - including DDS features in anneal, i.e. reflection at parameter boundaries,
-  !                                      different parameter selection modes (one, all, neighborhood), and
-  !                                      different parameter pertubation modes (flexible r=dR (anneal version) or
-  !                                      constant r=0.2 (dds version))
-  !                                    - remove sp versions
-  !                                    - fixed and flexible parameter ranges are now in one function
-  !                                      using optional arguments
-  !                                    - undef_funcval instead of anneal_valid function
+  ! Written  Juliane Mai, Mar 2012 : module implementation
+  ! Modified Juliane Mai, May 2012 : anneal: sp version
+  !          Juliane Mai, May 2012 : anneal: documentation
+  !          Juliane Mai, May 2012 : GetTemperature: sp and dp version
+  !          Juliane Mai, Jun 2012 : weighted parameter selection
+  !          Juliane Mai, Aug 2012 : - function anneal instead of subroutine
+  !                                  - using new module get_timeseed as default for seeding
+  !                                  - new optional for minimization or maximization
+  !                                  - fixed parameter ranges possible instead of interface range
+  !          Juliane Mai, Nov 2012 : history of achieved objective function values as optional out
+  !                                  only in anneal but not anneal_valid
+  !          Juliane Mai, Jan 2013 : - including DDS features in anneal, i.e. reflection at parameter boundaries,
+  !                                    different parameter selection modes (one, all, neighborhood), and
+  !                                    different parameter pertubation modes (flexible r=dR (anneal version) or
+  !                                    constant r=0.2 (dds version))
+  !                                  - remove sp versions
+  !                                  - fixed and flexible parameter ranges are now in one function
+  !                                    using optional arguments
+  !                                  - undef_funcval instead of anneal_valid function
+  !          Juliane Mai, Feb 2013 : - xor4096 optionals combined in save_state
 
   ! License
   ! -------
@@ -41,16 +42,16 @@ MODULE mo_anneal
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2012 Juliane Mai
+  ! Copyright 2012-13 Juliane Mai
 
   USE mo_kind,    ONLY: i4, i8, dp
-  USE mo_xor4096, ONLY: get_timeseed, xor4096, xor4096g
+  USE mo_xor4096, ONLY: get_timeseed, xor4096, xor4096g, n_save_state
 
   IMPLICIT NONE
 
   PUBLIC :: anneal                  ! Minimization of a cost function via Simaulated Annealing
   PUBLIC :: GetTemperature          ! Function which returns the optimal initial temperature for
-  ! a given acceptance ratio and initial parameter set
+  !                                 ! a given acceptance ratio and initial parameter set
 
   ! ------------------------------------------------------------------
 
@@ -182,8 +183,7 @@ MODULE mo_anneal
   !
   !         Only double precision version.
   !         If single precision is needed not only DP has to be replaced by SP
-  !         but also for random number variables I8 has to be replaced by I4 and
-  !         optional xin is (0:127) instead of (0:63).
+  !         but also I8 of save_state (random number variables) has to be replaced by I4.
   !
   !         ParaChangeMode > 1 is not applied in GetTemperature.
   !         For Temperature estimation always only one single parameter is changed (ParaChangeMode=1)
@@ -315,8 +315,7 @@ MODULE mo_anneal
   !
   !         Only double precision version.
   !         If single precision is needed not only DP has to be replaced by SP
-  !         but also for random number variables I8 has to be replaced by I4 and
-  !         optional xin is (0:127) instead of (0:63).
+  !         but also I8 of save_state (random number variables) has to be replaced by I4.
   !
   !         ParaChangeMode > 1 is not applied in GetTemperature.
   !         For Temperature estimation always only one single parameter is changed (ParaChangeMode=1)
@@ -502,11 +501,9 @@ CONTAINS
 
     ! for random numbers
     real(DP)                                :: RN1, RN2, RN3     ! Random numbers
-    integer(I8)                             :: iin1, iin2, iin3  ! optional arguments for restarting RN streams
-    integer(I8)                             :: win1, win2, win3  ! optional arguments for restarting RN streams
-    integer(I8), dimension(0:63)            :: xin1, xin2,xin3   ! optional arguments for restarting RN streams
-    integer(I8)                             :: Flag              ! optional arguments for restarting RN streams
-    real(dp)                                :: y                 ! optional arguments for restarting RN streams
+    integer(I8), dimension(n_save_state)    :: save_state_1      ! optional arguments for restarting RN stream 1
+    integer(I8), dimension(n_save_state)    :: save_state_2      ! optional arguments for restarting RN stream 2
+    integer(I8), dimension(n_save_state)    :: save_state_3      ! optional arguments for restarting RN stream 3
     ! for dds parameter selection
     logical, dimension(size(para,1))        :: neighborhood      ! selected parameter in neighborhood
     real(dp)                                :: pertubationR      ! neighborhood pertubation size parameter
@@ -730,9 +727,9 @@ CONTAINS
        weightUni(i) = weightUni(i) + weightUni(i-1)
     end do
 
-    call xor4096 (seeds_in(1), RN1,    iin=iin1, win=win1, xin=xin1)
-    call xor4096 (seeds_in(2), RN2,    iin=iin2, win=win2, xin=xin2)
-    call xor4096g(seeds_in(3), RN3,    iin=iin3, win=win3, xin=xin3, FlagIn=Flag, y2in=y)
+    call xor4096 (seeds_in(1), RN1,    save_state=save_state_1)
+    call xor4096 (seeds_in(2), RN2,    save_state=save_state_2)
+    call xor4096g(seeds_in(3), RN3,    save_state=save_state_3)
     seeds_in = 0_i8
 
     ! Start Simulated Annealing routine
@@ -810,7 +807,7 @@ CONTAINS
           select case(changeParaMode_inin)
           case(1_i4)  ! only one parameter is changed
              ! (1a) Change one parameter traditionally
-             call xor4096(seeds_in(2),RN2, iin=iin2, win=win2, xin=xin2)
+             call xor4096(seeds_in(2),RN2, save_state=save_state_2)
              iPar=1_i4
              !
              do while (weightGrad(iPar) .lt. RN2)
@@ -825,11 +822,11 @@ CONTAINS
              gamma(iPar)%min = iParRange(1)
              gamma(iPar)%max = iParRange(2)
              if (reflectionFlag_inin) then
-                call xor4096g(seeds_in(3),RN3, iin=iin3, win=win3, xin=xin3, FlagIn=Flag, y2in=y)
+                call xor4096g(seeds_in(3),RN3, save_state=save_state_3)
                 gamma(iPar)%new = parGen_dds_dp( gamma(iPar)%old, pertubationR, &
                      gamma(iPar)%min, gamma(iPar)%max,RN3)
              else
-                call xor4096(seeds_in(2),RN2, iin=iin2, win=win2, xin=xin2)
+                call xor4096(seeds_in(2),RN2, save_state=save_state_2)
                 gamma(iPar)%new = parGen_anneal_dp( gamma(iPar)%old, dR, &
                      gamma(iPar)%min, gamma(iPar)%max,RN2)
              end if
@@ -845,18 +842,18 @@ CONTAINS
                 gamma(iPar)%min = iParRange(1)
                 gamma(iPar)%max = iParRange(2)
                 if (reflectionFlag_inin) then
-                   call xor4096g(seeds_in(3),RN3, iin=iin3, win=win3, xin=xin3, FlagIn=Flag, y2in=y)
+                   call xor4096g(seeds_in(3),RN3, save_state=save_state_3)
                    gamma(iPar)%new = parGen_dds_dp( gamma(iPar)%old, pertubationR, &
                         gamma(iPar)%min, gamma(iPar)%max,RN3)
                 else
-                   call xor4096(seeds_in(2),RN2, iin=iin2, win=win2, xin=xin2)
+                   call xor4096(seeds_in(2),RN2, save_state=save_state_2)
                    gamma(iPar)%new = parGen_anneal_dp( gamma(iPar)%old, dR, &
                         gamma(iPar)%min, gamma(iPar)%max,RN2)
                 end if
              end do
           case(3_i4)  ! parameter in neighborhood are changed
              ! Generate new neighborhood
-             call generate_neighborhood_weight_dp( truepara, weightGrad, iin1, win1, xin1, &
+             call generate_neighborhood_weight_dp( truepara, weightGrad, save_state_1, &
                   iTotalCounter, nIterMax_in, neighborhood)
              !
              ! change parameter in neighborhood
@@ -874,12 +871,12 @@ CONTAINS
                    !
                    if (reflectionFlag_inin) then
                       ! generate gaussian distributed new parameter value which is reflected if out of bound
-                      call xor4096g(seeds_in(3),RN3, iin=iin3, win=win3, xin=xin3, FlagIn=Flag, y2in=y)
+                      call xor4096g(seeds_in(3),RN3, save_state=save_state_3)
                       gamma(iPar)%new = parGen_dds_dp( gamma(iPar)%old, pertubationR, &
                            gamma(iPar)%min, gamma(iPar)%max,RN3)
                    else
                       ! generate new parameter value uniform distributed in range (no reflection)
-                      call xor4096(seeds_in(2),RN2, iin=iin2, win=win2, xin=xin2)
+                      call xor4096(seeds_in(2),RN2, save_state=save_state_2)
                       gamma(iPar)%new = parGen_anneal_dp( gamma(iPar)%old, dR, &
                            gamma(iPar)%min, gamma(iPar)%max,RN2)
                    end if
@@ -924,7 +921,7 @@ CONTAINS
                       pa=EXP(rho)
                    end if
   	           !
-                   call xor4096(seeds_in(1), RN1, iin=iin1, win=win1, xin=xin1)
+                   call xor4096(seeds_in(1), RN1, save_state=save_state_1)
                    !
                    if (pa > RN1) then
                       ! accept new state with certain probability
@@ -1167,11 +1164,10 @@ CONTAINS
     type (paramLim), dimension (size(paraset,1)), target   :: gamma    ! Parameter
 
     ! for random numbers
-    INTEGER(I8)                  :: seeds_in(2)
-    real(DP)                     :: RN1, RN2     ! Random numbers
-    integer(I8)                  :: iin1, iin2   ! optional arguments for restarting RN streams
-    integer(I8)                  :: win1, win2   ! optional arguments for restarting RN streams
-    integer(I8), dimension(0:63) :: xin1, xin2   ! optional arguments for restarting RN streams
+    INTEGER(I8)                             :: seeds_in(2)
+    real(DP)                                :: RN1, RN2     ! Random numbers
+    integer(I8), dimension(n_save_state)    :: save_state_1      ! optional arguments for restarting RN stream 1
+    integer(I8), dimension(n_save_state)    :: save_state_2      ! optional arguments for restarting RN stream 2
 
     ! for initial temperature estimate
     real(DP)                              :: acc_estim  ! estimate of acceptance probability
@@ -1265,8 +1261,8 @@ CONTAINS
     ! Setting up the RNG
     ! (1) Seeds depend on actual time or on input seeds
     ! (2) Initialize the streams
-    call xor4096(seeds_in(1), RN1, iin=iin1, win=win1, xin=xin1)
-    call xor4096(seeds_in(2), RN2, iin=iin2, win=win2, xin=xin2)
+    call xor4096(seeds_in(1), RN1, save_state=save_state_1)
+    call xor4096(seeds_in(2), RN2, save_state=save_state_2)
     seeds_in = 0_i8
     ! (3) Now ready for calling
 
@@ -1288,7 +1284,7 @@ CONTAINS
        dR=1.0_DP
        !
        ! (1a) Select parameter to be changed
-       call xor4096(seeds_in(1),RN1, iin=iin1, win=win1, xin=xin1)
+       call xor4096(seeds_in(1),RN1, save_state=save_state_1)
        iPar=1_i4
        do while (weight_in(iPar) .lt. RN1)
           iPar = iPar + 1_i4
@@ -1303,7 +1299,7 @@ CONTAINS
        end if
        gamma(iPar)%min = iParRange(1)
        gamma(iPar)%max = iParRange(2)
-       call xor4096(seeds_in(2),RN2, iin=iin2, win=win2, xin=xin2)
+       call xor4096(seeds_in(2),RN2, save_state=save_state_2)
        gamma(iPar)%new = parGen_anneal_dp( gamma(iPar)%old, gamma(iPar)%dMult*dR, &
             gamma(iPar)%min, gamma(iPar)%max, RN2)
        !
@@ -1448,7 +1444,7 @@ CONTAINS
     dChange_dp=real(iDelta,dp)/real(ioszt,dp)
   end function  dChange_dp
 
-  subroutine generate_neighborhood_weight_dp(truepara, cum_weight, i_xor, w_xor, x_xor, iTotalCounter, &
+  subroutine generate_neighborhood_weight_dp(truepara, cum_weight, save_state_xor, iTotalCounter, &
        nITERmax, neighborhood)
     ! PURPOSE:
     !    generates a new neighborhood
@@ -1456,9 +1452,7 @@ CONTAINS
     !
     integer(i4), dimension(:),                intent(in)    :: truepara
     real(dp),    dimension(:),                intent(in)    :: cum_weight
-    integer(i8),                              intent(inout) :: i_xor
-    integer(i8),                              intent(inout) :: w_xor
-    integer(i8), dimension(0:63),             intent(inout) :: x_xor
+    integer(i8), dimension(n_save_state),     intent(inout) :: save_state_xor
     integer(i4),                              intent(in)    :: iTotalCounter
     integer(i4),                              intent(in)    :: nITERmax
     logical,     dimension(size(cum_weight)), intent(out)   :: neighborhood
@@ -1481,7 +1475,7 @@ CONTAINS
     ! How many parameters will be selected for neighborhood?
     size_neighbor = 0_i4
     do ipar=1, size(truepara)
-       call xor4096(0_i8, rn, iin=i_xor, win=w_xor, xin=x_xor)
+       call xor4096(0_i8, rn, save_state=save_state_xor)
        if (rn < prob) then
           size_neighbor = size_neighbor + 1_i4
        end if
@@ -1492,7 +1486,7 @@ CONTAINS
     ! Which parameter will be used for neighborhood?
     do iSize = 1, size_neighbor
        ! (1) generate RN
-       call xor4096(0_i8, rn, iin=i_xor, win=w_xor, xin=x_xor)
+       call xor4096(0_i8, rn, save_state=save_state_xor)
        !
        ! (2) find location <iPar> in cummulative distribution function
        iPar = 1_i4

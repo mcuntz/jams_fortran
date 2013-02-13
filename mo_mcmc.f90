@@ -24,7 +24,7 @@ MODULE mo_mcmc
   ! Copyright 2012
 
   USE mo_kind,    only: i4, i8, dp
-  USE mo_xor4096, only: xor4096, xor4096g, get_timeseed
+  USE mo_xor4096, only: xor4096, xor4096g, get_timeseed, n_save_state
   USE mo_append,  only: append
   USE mo_moment,  only: stddev
   !$ USE omp_lib,    only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
@@ -270,37 +270,37 @@ CONTAINS
     REAL(DP),    DIMENSION(:,:), INTENT(IN)    :: rangePar           ! range for each parameter
     REAL(DP),    DIMENSION(:),   INTENT(IN)    :: para               ! initial parameter i
     INTEGER(I8), OPTIONAL,       INTENT(IN)    :: seeds_in(:,:)      ! Seeds of random numbers: dim1=chains, dim2=3
-    ! (DEFAULT: Get_timeseed)
+    !                                                                ! (DEFAULT: Get_timeseed)
     LOGICAL,     OPTIONAL,       INTENT(IN)    :: printflag_in       ! If command line output is written (.true.)
-    ! (DEFAULT: .false.)
+    !                                                                ! (DEFAULT: .false.)
     LOGICAL,     OPTIONAL, DIMENSION(size(para,1)), &
-         INTENT(IN)    :: maskpara_in        ! true if parameter will be optimized
-    ! false if parameter is discarded in optimization
-    ! DEFAULT = .true.
+         INTENT(IN)    :: maskpara_in                                ! true if parameter will be optimized
+    !                                                                ! false if parameter is discarded in optimization
+    !                                                                ! DEFAULT = .true.
     LOGICAL,     OPTIONAL,       INTENT(IN)    :: loglike_in         ! true if loglikelihood is given instead of likelihood
-    ! DEFAULT: .false.
+    !                                                                ! DEFAULT: .false.
     INTEGER(I4), OPTIONAL,       INTENT(IN)    :: ParaSelectMode_in  ! how many parameters changed per iteration:
-    !   1: half of the parameters
-    !   2: only one (DEFAULT)
-    !   3: all
-    INTEGER(I4), OPTIONAL,       INTENT(IN)    :: iter_burnin_in       ! # iterations before checking ac_ratio
-    ! DEFAULT= MIN(250, 20_i4*n)
+    !                                                                !   1: half of the parameters
+    !                                                                !   2: only one (DEFAULT)
+    !                                                                !   3: all
+    INTEGER(I4), OPTIONAL,       INTENT(IN)    :: iter_burnin_in     ! # iterations before checking ac_ratio
+    !                                                                ! DEFAULT= MIN(250, 20_i4*n)
     INTEGER(I4), OPTIONAL,       INTENT(IN)    :: iter_mcmc_in       ! # iterations per chain for posterior sampling
-    ! DEFAULT= 1000_i4*n
+    !                                                                ! DEFAULT= 1000_i4*n
     INTEGER(I4), OPTIONAL,       INTENT(IN)    :: chains_in          ! number of parallel mcmc chains
-    ! DEFAULT= 5_i4
+    !                                                                ! DEFAULT= 5_i4
     REAL(DP),    OPTIONAL, DIMENSION(size(para,1)), &
-         INTENT(IN)    :: stepsize_in        ! stepsize for each parameter
-    ! if given burn-in is discarded
-    CHARACTER(len=*), OPTIONAL,  INTENT(IN)    :: tmp_file           ! filename for temporal data saving:
-    ! every iter_mcmc_in iterations parameter sets are appended to this file
-    ! the number of the chain will be prepended to filename
-    ! DEFAULT= no file writing
+         INTENT(IN)    :: stepsize_in                                ! stepsize for each parameter
+    !                                                                ! if given burn-in is discarded
+    CHARACTER(len=*), OPTIONAL,  INTENT(IN)    :: tmp_file           ! filename for temporal data saving: every iter_mcmc_in 
+    !                                                                ! iterations parameter sets are appended to this file
+    !                                                                ! the number of the chain will be prepended to filename
+    !                                                                ! DEFAULT= no file writing
     REAL(DP), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT)    :: mcmc_paras
-    ! array to save para values of MCMC runs,
-    ! dim1=sets of all chains, dim2=paras
+    !                                                                ! array to save para values of MCMC runs,
+    !                                                                ! dim1=sets of all chains, dim2=paras
     REAL(DP), DIMENSION(:,:),   ALLOCATABLE, INTENT(OUT)  :: burnin_paras
-    ! array to save para values of Burn in run
+    !                                                                ! array to save para values of Burn in run
 
 
     ! local variables
@@ -313,12 +313,10 @@ CONTAINS
     ! for random numbers
     INTEGER(I8), dimension(:,:), allocatable  :: seeds             ! Seeds of random numbers: dim1=chains, dim2=3
     REAL(DP)                                  :: RN1, RN2, RN3     ! Random numbers
-    integer(I8), dimension(:),   allocatable  :: iin1, iin2, iin3  ! optional arguments for restarting RN streams: dim1=chains
-    integer(I8), dimension(:),   allocatable  :: win1, win2, win3  ! optional arguments for restarting RN streams: dim1=chains
-    integer(I8), dimension(:,:), allocatable  :: xin1, xin2,xin3   ! optional arguments for restarting RN streams:
-    !     dim1=chains, dim2=0:63
-    integer(I8), dimension(:),   allocatable  :: RNflag
-    real(DP),    dimension(:),   allocatable  :: RNy2
+    integer(I8), dimension(:,:), allocatable  :: save_state_1      ! optional argument for restarting RN stream 1: 
+    integer(I8), dimension(:,:), allocatable  :: save_state_2      ! optional argument for restarting RN stream 2: 
+    integer(I8), dimension(:,:), allocatable  :: save_state_3      ! optional argument for restarting RN stream 3: 
+    !                                                              !     dim1=chains, dim2=n_save_state
 
     ! Dummies
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE        :: tmp
@@ -329,7 +327,7 @@ CONTAINS
 
     ! FOR BURN-IN AND MCMC
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE        :: mcmc_paras_3d     ! array to save para values of MCMC runs,
-    ! dim1=sets, dim2=paras, dim3=chain
+    !                                                                   ! dim1=sets, dim2=paras, dim3=chain
     integer(I4)                                    :: i
     integer(I4), dimension(:), allocatable         :: Ipos, Ineg
     logical                                        :: iStop
@@ -464,10 +462,9 @@ CONTAINS
     end if
 
     allocate(seeds(chains,3))
-    allocate(iin1(chains), iin2(chains), iin3(chains))
-    allocate(win1(chains), win2(chains), win3(chains))
-    allocate(xin1(chains,0:63), xin2(chains,0:63), xin3(chains,0:63))
-    allocate(RNflag(chains), RNy2(chains))
+    allocate(save_state_1(chains,n_save_state))
+    allocate(save_state_2(chains,n_save_state))
+    allocate(save_state_3(chains,n_save_state))
     allocate(Ipos(chains), Ineg(chains), accRatio(chains))
     allocate(vDotJ(chains), s2(chains))
     allocate(sqrtR(size(para)))
@@ -483,10 +480,9 @@ CONTAINS
     end do
 
     do chain=1,chains
-       call xor4096(seeds(chain,1), RN1, iin=iin1(chain), win=win1(chain), xin=xin1(chain,0:63))
-       call xor4096(seeds(chain,2), RN2, iin=iin2(chain), win=win2(chain), xin=xin2(chain,0:63))
-       call xor4096g(seeds(chain,3), RN3, iin=iin3(chain), win=win3(chain), xin=xin3(chain,0:63), &
-            FlagIn=RNflag(chain),y2In=RNy2(chain))
+       call xor4096(seeds(chain,1),  RN1, save_state=save_state_1(chain,:))
+       call xor4096(seeds(chain,2),  RN2, save_state=save_state_2(chain,:))
+       call xor4096g(seeds(chain,3), RN3, save_state=save_state_3(chain,:))
     end do
     seeds = 0_i8
 
@@ -562,9 +558,8 @@ CONTAINS
 
                 ! using RN from chain #1
                 call GenerateNewParameterset_dp(ParaSelectMode, paraold, truepara, rangePar, stepsize, &
-                     iin2(1),win2(1),xin2(1,0:63),&
-                     iin3(1),win3(1),xin3(1,0:63),&
-                     RNflag(1), RNy2(1), &
+                     save_state_2(1,:),&
+                     save_state_3(1,:),&
                      paranew,ChangePara)
 
                 ! (B) new likelihood
@@ -602,7 +597,7 @@ CONTAINS
 
                 else
 
-                   call xor4096(seeds(1,1), RN1, iin=iin1(1), win=win1(1), xin=xin1(1,0:63))
+                   call xor4096(seeds(1,1), RN1, save_state=save_state_1(1,:))
                    oddsSwitch2 = .false.
                    if (loglike) then
                       if (oddsRatio .lt. -700.0_dp) oddsRatio = -700.0_dp     ! to avoid underflow
@@ -743,9 +738,8 @@ CONTAINS
              paranew    = paraold
 
              call GenerateNewParameterset_dp(ParaSelectMode, paraold, truepara, rangePar, stepsize, &
-                  iin2(chain),win2(chain),xin2(chain,0:63),&
-                  iin3(chain),win3(chain),xin3(chain,0:63),&
-                  RNflag(chain), RNy2(chain), &
+                  save_state_2(chain,:),&
+                  save_state_3(chain,:),&
                   paranew,ChangePara)
 
              ! (B) new likelihood
@@ -788,7 +782,7 @@ CONTAINS
 
              else
 
-                call xor4096(seeds(chain,1), RN1, iin=iin1(chain), win=win1(chain), xin=xin1(chain,0:63))
+                call xor4096(seeds(chain,1), RN1, save_state=save_state_1(chain,:))
                 oddsSwitch2 = .false.
                 if (loglike) then
                    if (rn1 .lt. exp(oddsRatio)) oddsSwitch2 = .true.
@@ -1012,20 +1006,17 @@ CONTAINS
   end function parGenNorm_dp
 
   recursive subroutine GenerateNewParameterset_dp(ParaSelectMode, paraold, truepara, rangePar, stepsize, &
-       iin2,win2,xin2,iin3,win3,xin3,RNflag, RNy2,paranew,ChangePara)
+       save_state_2,save_state_3,paranew,ChangePara)
 
-    integer(i4),                        intent(in)    :: ParaSelectMode
-    real(dp),    dimension(:),          intent(in)    :: paraold
-    integer(i4), dimension(:),          intent(in)    :: truepara
-    real(dp),    dimension(:,:),        intent(in)    :: rangePar
-    real(dp),    dimension(:),          intent(in)    :: stepsize
-    integer(I8),                        intent(inout) :: iin2, iin3  ! optional arguments for restarting RN streams
-    integer(I8),                        intent(inout) :: win2, win3  ! optional arguments for restarting RN streams
-    integer(I8), dimension(0:63),       intent(inout) :: xin2,xin3   ! optional arguments for restarting RN streams
-    integer(I8),                        intent(inout) :: RNflag      ! optional arguments for restarting RN streams
-    real(dp),                           intent(inout) :: RNy2        ! optional arguments for restarting RN streams
-    real(dp), dimension(size(paraold)), intent(out)   :: paranew
-    logical, dimension(size(paraold)),  intent(out)   :: ChangePara
+    integer(i4),                           intent(in)    :: ParaSelectMode
+    real(dp),    dimension(:),             intent(in)    :: paraold
+    integer(i4), dimension(:),             intent(in)    :: truepara
+    real(dp),    dimension(:,:),           intent(in)    :: rangePar
+    real(dp),    dimension(:),             intent(in)    :: stepsize
+    integer(I8), dimension(n_save_state),  intent(inout) :: save_state_2  ! optional argument for restarting RN stream 2
+    integer(I8), dimension(n_save_state),  intent(inout) :: save_state_3  ! optional argument for restarting RN stream 3
+    real(dp),    dimension(size(paraold)), intent(out)   :: paranew
+    logical,     dimension(size(paraold)), intent(out)   :: ChangePara
 
     ! local variables
     REAL(DP)       :: RN2, RN3
@@ -1038,30 +1029,30 @@ CONTAINS
     select case(ParaSelectMode)
     case(1_i4) ! change half of the parameters
        do i=1,size(truepara)
-          call xor4096(0_i8,RN2, iin=iin2, win=win2, xin=xin2)
+          call xor4096(0_i8,RN2, save_state=save_state_2)
           if ( RN2 > 0.5_dp ) then
              iPar = truepara(i)
              inbound = .false.
-             call xor4096(0_i8,RN3, iin=iin3, win=win3, xin=xin3)
+             call xor4096(0_i8,RN3, save_state=save_state_3)
              paranew(iPar) = parGenNorm_dp( paraold(iPar), stepsize(iPar), rangePar(iPar,1), rangePar(iPar,2),RN3,inbound)
              ChangePara(iPar) = .True.
           end if
        end do
        ! if no parameter was selected, recall and change one
        if (count(ChangePara) .eq. 0_i4) then
-          call xor4096(0_i8,RN2, iin=iin2, win=win2, xin=xin2)
+          call xor4096(0_i8,RN2, save_state=save_state_2)
           iPar = truepara(int(( RN2 * real(size(truepara),dp))  + 1.0_dp, i4 ))
           inbound = .false.
-          call xor4096(0_i8,RN3, iin=iin3, win=win3, xin=xin3)
+          call xor4096(0_i8,RN3, save_state=save_state_3)
           paranew(iPar) = parGenNorm_dp( paraold(iPar), stepsize(iPar), rangePar(iPar,1), rangePar(iPar,2),RN3,inbound)
           ChangePara(iPar) = .True.
        end if
 
     case(2_i4)     ! change only one
-       call xor4096(0_i8,RN2, iin=iin2, win=win2, xin=xin2)
+       call xor4096(0_i8,RN2, save_state=save_state_2)
        iPar = truepara(int(( RN2 * real(size(truepara),dp))  + 1.0_dp, i4 ))
        inbound = .false.
-       call xor4096g(0_i8,RN3, iin=iin3, win=win3, xin=xin3, flagin=RNflag, y2in=Rny2)
+       call xor4096g(0_i8,RN3, save_state=save_state_3)
        paranew(iPar) = parGenNorm_dp( paraold(iPar), stepsize(iPar), rangePar(iPar,1), rangePar(iPar,2),RN3,inbound)
        ChangePara(iPar) = .True.
 
@@ -1070,7 +1061,7 @@ CONTAINS
           iPar = truepara(i)
           inbound = .false.
           do while( .not. inbound)
-             call xor4096(0_i8,RN3, iin=iin3, win=win3, xin=xin3)
+             call xor4096g(0_i8,RN2, save_state=save_state_3)
              paranew(iPar) = parGenNorm_dp( paraold(iPar), stepsize(iPar), rangePar(iPar,1), rangePar(iPar,2),RN3,inbound)
           end do
           ChangePara(iPar) = .True.

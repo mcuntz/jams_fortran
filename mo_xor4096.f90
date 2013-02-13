@@ -32,11 +32,13 @@ module mo_xor4096
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011 Juliane Mai
+  ! Copyright 2011-13 Juliane Mai
 
   use mo_kind, only: i4, i8, sp, dp
 
   Implicit NONE
+
+  PUBLIC :: n_save_state    ! dimension of vector keeping the state of a stream 
 
   PUBLIC :: get_timeseed    ! Returns a seed dependend on time
   PUBLIC :: xor4096         ! Generates uniform distributed random number
@@ -97,6 +99,7 @@ module mo_xor4096
 
   !     HISTORY
   !         Written,  Juliane Mai, Aug 2012
+
   INTERFACE get_timeseed
      MODULE PROCEDURE   get_timeseed_i4_0d, get_timeseed_i4_1d, &
           get_timeseed_i8_0d, get_timeseed_i8_1d
@@ -148,23 +151,23 @@ module mo_xor4096
   !             call xor( (/ 0_SP, 0_SP, 0_SP /), RN )   --> RN = (/ 30, 60, 90 /)
 
   !         Since after every initialization one looses the old stream of random numbers,
-  !         it might be necessary to switch between different streams. Therefore, one needs ALL
-  !         of the three optional arguments.
+  !         it might be necessary to switch between different streams. Therefore, one needs
+  !         the optional save_state argument.
   !         What you get is:
   !         1st call of 1st stream
-  !                                   call xor( 1_SP, RN, opt1_1, opt2_1, opt3_1 )   RN = 10
+  !                                   call xor( 1_SP, RN, save_state=save_stream_1 )   RN = 10
   !         2nd call of 1st stream
-  !                                   call xor( 0_SP, RN, opt1_1, opt2_1, opt3_1 )   RN = 20
+  !                                   call xor( 0_SP, RN, save_state=save_stream_1 )   RN = 20
   !         1st call of 2nd stream
-  !                                   call xor( 2_SP, RN, opt1_2, opt2_2, opt3_2 )   RN = 40
+  !                                   call xor( 2_SP, RN, save_state=save_stream_2 )   RN = 40
   !         3rd call of 1st stream
-  !                                   call xor( 0_SP, RN, opt1_1, opt2_1, opt3_1 )   RN = 30
-  !         Note: If you would have called 4 times without optional arguments,
+  !                                   call xor( 0_SP, RN, save_state=save_stream_1 )   RN = 30
+  !         Note: If you would have called 4 times without optional argument,
   !               you would have get 50 in the 4th call.
 
   !     CALLING SEQUENCE
-  !         call xor4096(seed, rn) or
-  !         call xor4096(seed, rn, i, w, x)
+  !         call xor4096(seed, rn)
+  !         call xor4096(seed, rn, save_state=save_state)
 
   !     INTENT(IN)
   !         integer(i4/i8) :: seed/seed(:)     value or 1D-array with non-zero seeds for
@@ -186,27 +189,31 @@ module mo_xor4096
   !         none
 
   !     INTENT(INOUT), OPTIONAL
-  !         integer(i4/i8), dimension(size(seed))              :: i
-  !         integer(i4/i8), dimension(size(seed))              :: w
-  !         integer(i4/i8), dimension(size(seed),0:127/0:63)   :: x
+  !         integer(i4/i8), dimension(size(seed), n_save_state) :: save_state
 
   !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
-  !         In case of optional arguments all three (i,w,x) have to be given.
-  !         If random numbers are in single precision (sp), one needs a seed, i, w, x in (i4).
-  !         If random numbers are in double precision (dp), one needs a seed, i, w, x in (i8).
-  !         The size of optional x array depends on precision.
+  !         The dimension of the optional argument can be set using the public module parameter n_save_state.
+  !         If random numbers are in single precision (sp), one needs seed and save_state in (i4).
+  !         If random numbers are in double precision (dp), one needs seed and save_state in (i8).
 
   !     EXAMPLE
-  !         seed = (/ 1_SP, 100_SP, 2_SP /)
+  !         I4 seeds are generating I4 or SP random numbers
+  !         I8 seeds are generating I8 or DP random numbers
+  !
+  !         ! Initializing 
+  !         real(SP) :: RN(3)
+  !         seed = (/ 1_I4, 100_I4, 2_I4 /)
   !         call xor4096(seed,RN)
-  !         print*, RN --> (/ 10, 20, 30 /)
-
-  !         seed = (/ 0_SP, 0_SP, 0_SP /)
+  !         print*, RN --> (/ 0.1_sp, 0.2_sp, 0.6_sp /)
+  !
+  !         ! proper usage after initialization
+  !         seed = (/ 0_I4, 0_I4, 0_I4 /)
   !         call xor4096(seed,RN)
-  !         print*, RN --> (/ 20, 10, 50 /)
+  !         print*, RN --> (/ 0.3_sp, 0.1_sp, 0.5_sp /)
+  !
   !         -> see also example in test_mo_xor4096 directory
 
   !     LITERATURE
@@ -217,6 +224,7 @@ module mo_xor4096
 
   !     HISTORY
   !         Written,  Juliane Mai, Nov 2011
+
   INTERFACE xor4096
      MODULE PROCEDURE   xor4096s_0d, xor4096s_1d, xor4096f_0d, xor4096f_1d, &
           xor4096l_0d, xor4096l_1d, xor4096d_0d, xor4096d_1d
@@ -272,7 +280,7 @@ module mo_xor4096
 
   !     CALLING SEQUENCE
   !         call xor4096g(seed, rn) or
-  !         call xor4096g(seed, rn, i, w, x, Flag, y)
+  !         call xor4096g(seed, rn, save_state=save_state)
 
   !     INTENT(IN)
   !         integer(i4/i8) :: seed/seed(:)     value or 1D-array with non-zero seeds for
@@ -292,32 +300,31 @@ module mo_xor4096
   !         none
 
   !     INTENT(INOUT), OPTIONAL
-  !         integer(i4/i8), dimension(size(seed))              :: i
-  !         integer(i4/i8), dimension(size(seed))              :: w
-  !         integer(i4/i8), dimension(size(seed),0:127/0:63)   :: x
-  !         integer(i4/i8), dimension(size(seed))              :: Flag
-  !         real(sp/dp),    dimension(size(seed))              :: y
-
+  !         integer(i4/i8), dimension(size(seed),n_save_state) :: save_state
 
   !     INTENT(OUT), OPTIONAL
   !         None
 
   !     RESTRICTIONS
-  !         In case of optional arguments all five (i,w,x,Flag,y) have to be given.
-  !         If random numbers are in single precision (sp), one needs a seed, i, w, x, Flag in (i4)
-  !         and y in (sp).
-  !         If random numbers are in double precision (dp), one needs a seed, i, w, x, Flag in (i8)
-  !         and y in (dp).
-  !         The size of optional x array depends on precision.
+  !         The dimension of the optional argument can be set using the public module parameter n_save_state.
+  !         If random numbers are in single precision (sp), one needs seed and save_state in (i4).
+  !         If random numbers are in double precision (dp), one needs seed and save_state in (i8).
 
   !     EXAMPLE
-  !         seed = (/ 1_SP, 100_SP, 2_SP /)
-  !         call xor4096g(seed,RN)
-  !         print*, RN --> (/ 0.1, 0.05, 0.3 /)
-
-  !         seed = (/ 0_SP, 0_SP, 0_SP /)
+  !         I4 seeds are generating I4 or SP random numbers
+  !         I8 seeds are generating I8 or DP random numbers
+  !
+  !         ! Initializing 
+  !         real(SP) :: RN(3)
+  !         seed = (/ 1_I4, 100_I4, 2_I4 /)
   !         call xor4096(seed,RN)
-  !         print*, RN --> (/ 0.2, 0.9, 0.4 /)
+  !         print*, RN --> (/ 0.1_sp, -0.2_sp, 0.3_sp /)
+  !
+  !         ! proper usage after initialization
+  !         seed = (/ 0_I4, 0_I4, 0_I4 /)
+  !         call xor4096(seed,RN)
+  !         print*, RN --> (/ 0.2_sp, 0.1_sp, -0.1_sp /)
+  !
   !         -> see also example in test_mo_xor4096 directory
 
   !     LITERATURE
@@ -330,6 +337,8 @@ module mo_xor4096
 
   !     HISTORY
   !         Written,  Juliane Mai, Nov 2011
+  !         Modified, Juliane Mai, Feb 2013 - all optionals combined in save_state
+
   INTERFACE xor4096g
      MODULE PROCEDURE xor4096gf_0d, xor4096gf_1d, xor4096gd_0d, xor4096gd_1d
   END INTERFACE xor4096g
@@ -337,6 +346,9 @@ module mo_xor4096
   ! ------------------------------------------------------------------
 
   PRIVATE
+
+  !> Dimension of vector saving the state of a stream
+  integer(i4), parameter :: n_save_state=132_i4
 
   ! ------------------------------------------------------------------
 
@@ -422,20 +434,18 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  subroutine xor4096s_0d(seed,SingleIntegerRN,iin,win,xin)
+  subroutine xor4096s_0d(seed,SingleIntegerRN,save_state)
     implicit none
 
-    integer(i4), intent(in)              :: seed
-    integer(i4), intent(out)             :: SingleIntegerRN
-    integer(i4), optional, intent(inout) :: iin
-    integer(i4), optional, intent(inout) :: win
-    integer(i4), optional, intent(inout) :: xin(0:127)
+    integer(i4),                                    intent(in)    :: seed
+    integer(i4),                                    intent(out)   :: SingleIntegerRN
+    integer(i4), optional, dimension(n_save_state), intent(inout) :: save_state
 
     integer(i4)        :: wlen, r, s, a, b, c, d
 
     integer(i4), save  :: w
     integer(i4), save  :: x(0:127)                 ! x(0) ... x(r-1)
-    integer(i4)        :: weyl = 1640531527_i4    !Z'61C88647'       ! Hexadecimal notation
+    integer(i4)        :: weyl = 1640531527_i4     !Z'61C88647'       ! Hexadecimal notation
     integer(i4)        :: t,v
     integer(i4), save  :: i = -1                   ! i<0 indicates first call
     integer(i4)        :: k
@@ -450,9 +460,11 @@ CONTAINS
     c = 13
     d = 15
 
-    if ( present(iin) .and. (seed .eq. 0) ) i = iin
-    if ( present(win) .and. (seed .eq. 0) ) w = win
-    if ( present(xin) .and. (seed .eq. 0) ) x = xin
+    if ( present(save_state) .and. (seed .eq. 0) ) then
+       x(0:r-1) = save_state(1:r)
+       i        = save_state(r+1)
+       w        = save_state(r+2)
+    end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
        If (seed .ne. 0) then                   ! v must be nonzero
@@ -506,29 +518,22 @@ CONTAINS
 
     SingleIntegerRN = v+w
 
-    if ( present(iin) ) then
-       iin=i
-    End if
+    if( present(save_state) ) then
+       save_state(1:r)   = x(0:r-1)
+       save_state(r+1)   = i
+       save_state(r+2)   = w
+    end if
 
-    if ( present(win) ) then
-       win=w
-    End if
-
-    If ( present(xin) ) then
-       xin=x
-    End if
   end subroutine xor4096s_0d
 
   ! -----------------------------------------------------------------------------
 
-  subroutine xor4096s_1d(seed,SingleIntegerRN,iin,win,xin)
+  subroutine xor4096s_1d(seed,SingleIntegerRN,save_state)
     implicit none
 
-    integer(i4), dimension(:),          intent(in)     :: seed
-    integer(i4), dimension(size(seed,1)), intent(out)    :: SingleIntegerRN
-    integer(i4), optional, dimension(size(seed,1)),       intent(inout) :: iin
-    integer(i4), optional, dimension(size(seed,1)),       intent(inout) :: win
-    integer(i4), optional, dimension(size(seed,1),0:127), intent(inout) :: xin
+    integer(i4),           dimension(:),                         intent(in)    :: seed
+    integer(i4),           dimension(size(seed,1)),              intent(out)   :: SingleIntegerRN
+    integer(i4), optional, dimension(size(seed,1),n_save_state), intent(inout) :: save_state
 
     integer(i4)                        :: m
     integer(i4)                        :: wlen, r, s, a, b, c, d
@@ -540,22 +545,6 @@ CONTAINS
 
     !$omp   threadprivate(x,i,w)
 
-    if ( present(iin) .and. (Any(seed .eq. 0)) ) i = iin
-    if ( present(win) .and. (Any(seed .eq. 0)) ) w = win
-    if ( present(xin) .and. (Any(seed .eq. 0)) ) x = xin
-
-    m = size(seed,1)
-    if (.not. allocated(i)) then
-       allocate(i(m))
-       i = -1
-    end if
-    if (.not. allocated(x)) then
-       allocate(x(m,0:127))
-    end if
-    if (.not. allocated(w)) then
-       allocate(w(m))
-    end if
-
     wlen = 32
     r = 128
     s = 95
@@ -563,6 +552,24 @@ CONTAINS
     b = 12
     c = 13
     d = 15
+
+    if ( present(save_state) .and. any(seed .eq. 0) ) then
+       x(:,0:r-1)  = save_state(:,1:r)
+       i(:)        = save_state(:,r+1)
+       w(:)        = save_state(:,r+2)
+    end if
+
+    m = size(seed,1)
+    if (.not. allocated(i)) then
+       allocate(i(m))
+       i = -1
+    end if
+    if (.not. allocated(x)) then
+       allocate(x(m,0:r-1))
+    end if
+    if (.not. allocated(w)) then
+       allocate(w(m))
+    end if
 
     Do j = 1, m
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
@@ -621,31 +628,23 @@ CONTAINS
 
     SingleIntegerRN = v+w
 
-    if ( present(iin) ) then
-       iin=i
-    End if
-
-    if ( present(win) ) then
-       win=w
-    End if
-
-    If ( present(xin) ) then
-       xin=x
-    End if
+    if( present(save_state) ) then
+       save_state(:,1:r)   = x(:,0:r-1)
+       save_state(:,r+1)   = i(:)
+       save_state(:,r+2)   = w(:)
+    end if
 
   end subroutine xor4096s_1d
 
   ! -----------------------------------------------------------------------------
 
-  subroutine xor4096f_0d(seed,SingleRealRN,iin,win,xin)
+  subroutine xor4096f_0d(seed,SingleRealRN,save_state)
 
     implicit none
 
-    integer(i4),  intent(in)  :: seed
-    real(SP),      intent(out) :: SingleRealRN
-    integer(i4), optional, intent(inout) :: iin
-    integer(i4), optional, intent(inout) :: win
-    integer(i4), optional, intent(inout) :: xin(0:127)
+    integer(i4),                                    intent(in)    :: seed
+    real(SP),                                       intent(out)   :: SingleRealRN
+    integer(i4), optional, dimension(n_save_state), intent(inout) :: save_state
 
     integer(i4)        :: wlen, r, s, a, b, c, d
     integer(i4), save  :: w
@@ -670,9 +669,11 @@ CONTAINS
     c = 13
     d = 15
 
-    if ( present(iin) .and. (seed .eq. 0) ) i = iin
-    if ( present(win) .and. (seed .eq. 0) ) w = win
-    if ( present(xin) .and. (seed .eq. 0) ) x = xin
+    if ( present(save_state) .and. (seed .eq. 0) ) then
+       x(0:r-1) = save_state(1:r)
+       i        = save_state(r+1)
+       w        = save_state(r+2)
+    end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
        If (seed .ne. 0) then                   ! v must be nonzero
@@ -730,31 +731,23 @@ CONTAINS
 
     SingleRealRN = t24*v
 
-    if ( present(iin) ) then
-       iin=i
-    End if
-
-    if ( present(win) ) then
-       win=w
-    End if
-
-    If ( present(xin) ) then
-       xin=x
-    End if
+    if( present(save_state) ) then
+       save_state(1:r)   = x(0:r-1)
+       save_state(r+1)   = i
+       save_state(r+2)   = w
+    end if
 
   end subroutine xor4096f_0d
 
   ! -----------------------------------------------------------------------------
 
-  subroutine xor4096f_1d(seed,SingleRealRN,iin,win,xin)
+  subroutine xor4096f_1d(seed,SingleRealRN,save_state)
 
     implicit none
 
-    integer(i4), dimension(:),          intent(in)  :: seed
-    real(SP),     dimension(size(seed)), intent(out) :: SingleRealRN
-    integer(i4), optional, dimension(size(seed)),       intent(inout) :: iin
-    integer(i4), optional, dimension(size(seed)),       intent(inout) :: win
-    integer(i4), optional, dimension(size(seed),0:127), intent(inout) :: xin
+    integer(i4),           dimension(:),                         intent(in)  :: seed
+    real(SP),              dimension(size(seed)),                intent(out) :: SingleRealRN
+    integer(i4), optional, dimension(size(seed,1),n_save_state), intent(inout) :: save_state
 
     integer(i4)                         :: m
     integer(i4)                         :: wlen, r, s, a, b, c, d
@@ -767,11 +760,21 @@ CONTAINS
 
     !$omp   threadprivate(x,i,w)
 
+    wlen = 32
+    r = 128
+    s = 95
+    a = 17
+    b = 12
+    c = 13
+    d = 15
+
     m= size(seed)
 
-    if ( present(iin) .and. (Any(seed .eq. 0)) ) i = iin
-    if ( present(win) .and. (Any(seed .eq. 0)) ) w = win
-    if ( present(xin) .and. (Any(seed .eq. 0)) ) x = xin
+    if ( present(save_state) .and. any(seed .eq. 0) ) then
+       x(:,0:r-1)  = save_state(:,1:r)
+       i(:)        = save_state(:,r+1)
+       w(:)        = save_state(:,r+2)
+    end if
 
     ! produces a 24bit Integer Random Number (0...16777216) and
     ! scales it afterwards to (0.0,1.0)
@@ -781,19 +784,11 @@ CONTAINS
        i = -1
     end if
     if (.not. allocated(x)) then
-       allocate(x(m,0:127))
+       allocate(x(m,0:r-1))
     end if
     if (.not. allocated(w)) then
        allocate(w(m))
     end if
-
-    wlen = 32
-    r = 128
-    s = 95
-    a = 17
-    b = 12
-    c = 13
-    d = 15
 
     Do j = 1,m !Loop over every stream
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
@@ -855,31 +850,23 @@ CONTAINS
 
     SingleRealRN = t24*v
 
-    if ( present(iin) ) then
-       iin=i
-    End if
-
-    if ( present(win) ) then
-       win=w
-    End if
-
-    If ( present(xin) ) then
-       xin=x
-    End if
+    if( present(save_state) ) then
+       save_state(:,1:r)   = x(:,0:r-1)
+       save_state(:,r+1)   = i(:)
+       save_state(:,r+2)   = w(:)
+    end if
 
   end subroutine xor4096f_1d
 
   ! -----------------------------------------------------------------------------
 
-  subroutine xor4096l_0d(seed,DoubleIntegerRN,iin,win,xin)
+  subroutine xor4096l_0d(seed,DoubleIntegerRN,save_state)
 
     implicit none
 
-    integer(i8), intent(in)  :: seed
-    integer(i8), intent(out) :: DoubleIntegerRN
-    integer(i8), optional, intent(inout) :: iin
-    integer(i8), optional, intent(inout) :: win
-    integer(i8), optional, intent(inout) :: xin(0:63)
+    integer(i8),                                    intent(in)  :: seed
+    integer(i8),                                    intent(out) :: DoubleIntegerRN
+    integer(i8), optional, dimension(n_save_state), intent(inout) :: save_state
 
     integer(i8)        :: wlen, r, s, a, b, c, d
     integer(i8), save  :: w
@@ -891,10 +878,6 @@ CONTAINS
 
     !$omp   threadprivate(x,i,w)
 
-    if ( present(iin) .and. (seed .eq. 0) ) i = iin
-    if ( present(win) .and. (seed .eq. 0) ) w = win
-    if ( present(xin) .and. (seed .eq. 0) ) x = xin
-
     wlen = 64_i8
     r = 64_i8
     s = 53_i8
@@ -902,6 +885,12 @@ CONTAINS
     b = 26_i8
     c = 27_i8
     d = 29_i8
+
+    if ( present(save_state) .and. (seed .eq. 0_i8) ) then
+       x(0:r-1)  = save_state(1:r)
+       i         = save_state(r+1)
+       w         = save_state(r+2)
+    end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
        If (seed .ne. 0) then                   ! v must be nonzero
@@ -953,31 +942,23 @@ CONTAINS
 
     DoubleIntegerRN = v+w
 
-    if ( present(iin) ) then
-       iin=i
-    End if
-
-    if ( present(win) ) then
-       win=w
-    End if
-
-    If ( present(xin) ) then
-       xin=x
-    End if
+    if( present(save_state) ) then
+       save_state(1:r)   = x(0:r-1)
+       save_state(r+1)   = i
+       save_state(r+2)   = w
+    end if
 
   end subroutine xor4096l_0d
 
   ! -----------------------------------------------------------------------------
 
-  subroutine xor4096l_1d(seed, DoubleIntegerRN, iin, win, xin)
+  subroutine xor4096l_1d(seed, DoubleIntegerRN, save_state)
 
     implicit none
 
-    integer(i8), dimension(:), intent(in)  :: seed
-    integer(i8), dimension(size(seed)), intent(out) :: DoubleIntegerRN
-    integer(i8), optional, dimension(size(seed)),      intent(inout) :: iin
-    integer(i8), optional, dimension(size(seed)),      intent(inout) :: win
-    integer(i8), optional, dimension(size(seed),0:63), intent(inout) :: xin
+    integer(i8),           dimension(:),                         intent(in)    :: seed
+    integer(i8),           dimension(size(seed,1)),              intent(out)   :: DoubleIntegerRN
+    integer(i8), optional, dimension(size(seed,1),n_save_state), intent(inout) :: save_state
 
     integer(i4)        :: m
     integer(i8)        :: wlen, r, s, a, b, c, d
@@ -989,11 +970,6 @@ CONTAINS
 
     !$omp   threadprivate(x,i,w)
 
-    if ( present(iin) .and. (Any(seed .eq. 0)) ) i = iin
-    if ( present(win) .and. (Any(seed .eq. 0)) ) w = win
-    if ( present(xin) .and. (Any(seed .eq. 0)) ) x = xin
-
-    m = size(seed)
     wlen = 64_i8
     r = 64_i8
     s = 53_i8
@@ -1001,6 +977,14 @@ CONTAINS
     b = 26_i8
     c = 27_i8
     d = 29_i8
+
+    m = size(seed)
+
+    if ( present(save_state) .and. any(seed .eq. 0_i8) ) then
+       x(:,0:r-1)  = save_state(:,1:r)
+       i(:)        = save_state(:,r+1)
+       w(:)        = save_state(:,r+2)
+    end if
 
     if (.not. allocated(i)) then
        allocate(i(m))
@@ -1067,31 +1051,23 @@ CONTAINS
 
     DoubleIntegerRN = v+w
 
-    if ( present(iin) ) then
-       iin=i
-    End if
-
-    if ( present(win) ) then
-       win=w
-    End if
-
-    If ( present(xin) ) then
-       xin=x
-    End if
+    if( present(save_state) ) then
+       save_state(:,1:r)   = x(:,0:r-1)
+       save_state(:,r+1)   = i(:)
+       save_state(:,r+2)   = w(:)
+    end if
 
   end subroutine xor4096l_1d
 
   ! -----------------------------------------------------------------------------
 
-  subroutine xor4096d_0d(seed,DoubleRealRN,iin,win,xin)
+  subroutine xor4096d_0d(seed,DoubleRealRN,save_state)
 
     implicit none
 
-    integer(i8), intent(in)  :: seed
-    real(DP),     intent(out) :: DoubleRealRN
-    integer(i8), optional, intent(inout) :: iin
-    integer(i8), optional, intent(inout) :: win
-    integer(i8), optional, intent(inout) :: xin(0:63)
+    integer(i8),                                    intent(in)    :: seed
+    real(DP),                                       intent(out)   :: DoubleRealRN
+    integer(i8), optional, dimension(n_save_state), intent(inout) :: save_state
 
     integer(i8)        :: wlen, r, s, a, b, c, d
 
@@ -1109,10 +1085,6 @@ CONTAINS
     ! produces a 53bit Integer Random Number (0...9 007 199 254 740 992) and
     ! scales it afterwards to (0.0,1.0)
 
-    if ( present(iin) .and. (seed .eq. 0) ) i = iin
-    if ( present(win) .and. (seed .eq. 0) ) w = win
-    if ( present(xin) .and. (seed .eq. 0) ) x = xin
-
     wlen = 64_i8
     r = 64_i8
     s = 53_i8
@@ -1120,6 +1092,12 @@ CONTAINS
     b = 26_i8
     c = 27_i8
     d = 29_i8
+
+    if ( present(save_state) .and. (seed .eq. 0_i8) ) then
+       x(0:r-1)  = save_state(1:r)
+       i         = save_state(r+1)
+       w         = save_state(r+2)
+    end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
        If (seed .ne. 0) then                   ! v must be nonzero
@@ -1175,31 +1153,23 @@ CONTAINS
 
     DoubleRealRN = t53*v
 
-    if ( present(iin) ) then
-       iin=i
-    End if
-
-    if ( present(win) ) then
-       win=w
-    End if
-
-    If ( present(xin) ) then
-       xin=x
-    End if
+    if( present(save_state) ) then
+       save_state(1:r)   = x(0:r-1)
+       save_state(r+1)   = i
+       save_state(r+2)   = w
+    end if
 
   end subroutine xor4096d_0d
 
   ! -----------------------------------------------------------------------------
 
-  subroutine xor4096d_1d(seed,DoubleRealRN,iin,win,xin)
+  subroutine xor4096d_1d(seed,DoubleRealRN,save_state)
 
     implicit none
 
-    integer(i8), dimension(:),          intent(in)  :: seed
-    real(DP),     dimension(size(seed)), intent(out) :: DoubleRealRN
-    integer(i8), optional, dimension(size(seed)),      intent(inout) :: iin
-    integer(i8), optional, dimension(size(seed)),      intent(inout) :: win
-    integer(i8), optional, dimension(size(seed),0:63), intent(inout) :: xin
+    integer(i8),           dimension(:),                         intent(in)    :: seed
+    real(DP),              dimension(size(seed,1)),              intent(out)   :: DoubleRealRN
+    integer(i8), optional, dimension(size(seed,1),n_save_state), intent(inout) :: save_state
 
     integer(i4)                       :: m
     integer(i8)                       :: wlen, r, s, a, b, c, d
@@ -1216,11 +1186,21 @@ CONTAINS
     ! produces a 53bit Integer Random Number (0...9 007 199 254 740 992) and
     ! scales it afterwards to (0.0,1.0)
 
-    if ( present(iin) .and. (Any(seed .eq. 0)) ) i = iin
-    if ( present(win) .and. (Any(seed .eq. 0)) ) w = win
-    if ( present(xin) .and. (Any(seed .eq. 0)) ) x = xin
+    wlen = 64_i8
+    r = 64_i8
+    s = 53_i8
+    a = 33_i8
+    b = 26_i8
+    c = 27_i8
+    d = 29_i8
 
     m = size(seed)
+
+    if ( present(save_state) .and. any(seed .eq. 0_i8) ) then
+       x(:,0:r-1)  = save_state(:,1:r)
+       i(:)        = save_state(:,r+1)
+       w(:)        = save_state(:,r+2)
+    end if
 
     if (.not. allocated(i)) then
        allocate(i(m))
@@ -1232,14 +1212,6 @@ CONTAINS
     if (.not. allocated(w)) then
        allocate(w(m))
     end if
-
-    wlen = 64_i8
-    r = 64_i8
-    s = 53_i8
-    a = 33_i8
-    b = 26_i8
-    c = 27_i8
-    d = 29_i8
 
     Do j=1,m
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
@@ -1299,33 +1271,23 @@ CONTAINS
 
     DoubleRealRN = t53*v
 
-    if ( present(iin) ) then
-       iin=i
-    End if
-
-    if ( present(win) ) then
-       win=w
-    End if
-
-    If ( present(xin) ) then
-       xin=x
-    End if
+    if( present(save_state) ) then
+       save_state(:,1:r)   = x(:,0:r-1)
+       save_state(:,r+1)   = i(:)
+       save_state(:,r+2)   = w(:)
+    end if
 
   end subroutine xor4096d_1d
 
   ! ------------------------------------------------------------------
 
-  subroutine xor4096gf_0d(seed,SingleRealRN,iIn,wIn,xIn,FlagIn,y2In)
+  subroutine xor4096gf_0d(seed,SingleRealRN,save_state) 
 
     implicit none
 
-    integer(i4),                intent(in)        :: seed
-    real(SP),                    intent(out)      :: SingleRealRN
-    integer(i4), optional,      intent(inout)     :: iin
-    integer(i4), optional,      intent(inout)     :: win
-    integer(i4), optional,      intent(inout)     :: xin(0:127)
-    integer(i4), optional,      intent(inout)     :: FlagIn
-    real(SP),     optional,      intent(inout)    :: y2In
+    integer(i4),                                    intent(in)    :: seed
+    real(SP),                                       intent(out)   :: SingleRealRN
+    integer(i4), optional, dimension(n_save_state), intent(inout) :: save_state
 
     integer(i4)        :: wlen, r, s, a, b, c, d
     integer(i4), save  :: w
@@ -1347,12 +1309,6 @@ CONTAINS
     ! scales it afterwards to (0.0,1.0)
     ! transform using polar-method
 
-    if ( present(iin) .and. seed .eq. 0 )    i    = iin
-    if ( present(win) .and. seed .eq. 0 )    w    = win
-    if ( present(xin) .and. seed .eq. 0 )    x    = xin
-    if ( present(Flagin) .and. seed .eq. 0 ) Flag = Flagin
-    if ( present(y2in) .and. seed .eq. 0 )   y2   = y2in
-
     wlen = 32
     r = 128
     s = 95
@@ -1360,6 +1316,14 @@ CONTAINS
     b = 12
     c = 13
     d = 15
+
+    if( present(save_state) .and. (seed .eq. 0) ) then
+       x(0:r-1)  = save_state(1:r)
+       i         = save_state(r+1)
+       w         = save_state(r+2)
+       flag      = save_state(r+3)
+       y2        = transfer(save_state(r+4),1.0_sp)
+    end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
        If (seed .ne. 0) then                   ! v must be nonzero
@@ -1460,27 +1424,25 @@ CONTAINS
        SingleRealRN = y2
     end if
 
-    If ( present(iin) )    iin=i
-    If ( present(win) )    win=w
-    If ( present(xin) )    xin=x
-    If ( present(Flagin) ) Flagin=Flag
-    If ( present(y2in) )   y2in=y2
+    if( present(save_state) ) then
+       save_state(1:r) = x(0:r-1)
+       save_state(r+1) = i
+       save_state(r+2) = w
+       save_state(r+3) = flag
+       save_state(r+4) = transfer(y2, 1_i4)
+    end if
 
   end subroutine xor4096gf_0d
 
   ! -----------------------------------------------------------------------------
 
-  subroutine xor4096gf_1d(seed,SingleRealRN,iin,win,xin,FlagIn,y2In)
+  subroutine xor4096gf_1d(seed,SingleRealRN,save_state) 
 
     implicit none
 
-    integer(i4), dimension(:),                          intent(in)        :: seed
-    real(SP),    dimension(size(seed)),                 intent(out)       :: SingleRealRN
-    integer(i4), dimension(size(seed)),       optional, intent(inout)     :: iin
-    integer(i4), dimension(size(seed)),       optional, intent(inout)     :: win
-    integer(i4), dimension(size(seed),0:127), optional, intent(inout)     :: xin
-    integer(i4), dimension(size(seed)),       optional, intent(inout)     :: FlagIn
-    real(SP),    dimension(size(seed)),       optional, intent(inout)     :: y2In
+    integer(i4), dimension(:),                                 intent(in)    :: seed
+    real(SP),    dimension(size(seed)),                        intent(out)   :: SingleRealRN
+    integer(i4), optional, dimension(size(seed),n_save_state), intent(inout) :: save_state
 
     integer(i4)                         :: m
     integer(i4)                         :: wlen, r, s, a, b, c, d
@@ -1500,11 +1462,13 @@ CONTAINS
 
     m= size(seed)
 
-    if ( present(iin) .and. (Any(seed .eq. 0)) )    i    = iin
-    if ( present(win) .and. (Any(seed .eq. 0)) )    w    = win
-    if ( present(xin) .and. (Any(seed .eq. 0)) )    x    = xin
-    if ( present(Flagin) .and. (Any(seed .eq. 0)) ) Flag = Flagin
-    if ( present(y2in) .and. (Any(seed .eq. 0)) )   y2   = y2in
+    if( present(save_state) .and. any(seed .eq. 0) ) then
+       x(:,0:r-1)   = save_state(:,1:r)
+       i(:)         = save_state(:,r+1)
+       w(:)         = save_state(:,r+2)
+       flag(:)      = save_state(:,r+3)
+       y2(:)        = transfer(save_state(:,r+4),1.0_sp)
+    end if
 
     ! produces a 24bit Integer Random Number (0...16777216) and
     ! scales it afterwards to (0.0,1.0)
@@ -1640,27 +1604,25 @@ CONTAINS
        end if
     end Do
 
-    If ( present(iin) )    iin=i
-    If ( present(win) )    win=w
-    If ( present(xin) )    xin=x
-    If ( present(Flagin) ) Flagin=Flag
-    If ( present(y2in) )   y2in=y2
+    if( present(save_state) ) then
+       save_state(:,1:r) = x(:,0:r-1)
+       save_state(:,r+1) = i(:)
+       save_state(:,r+2) = w(:)
+       save_state(:,r+3) = flag(:)
+       save_state(:,r+4) = transfer(y2(:), 1_i4)
+    end if
 
   end subroutine xor4096gf_1d
 
   ! -----------------------------------------------------------------------------
 
-  subroutine xor4096gd_0d(seed,DoubleRealRN,iin,win,xin,FlagIn,y2In)
+  subroutine xor4096gd_0d(seed,DoubleRealRN,save_state) 
 
     implicit none
 
-    integer(i8),                intent(in)        :: seed
-    real(DP),                   intent(out)       :: DoubleRealRN
-    integer(i8), optional,      intent(inout)     :: iin
-    integer(i8), optional,      intent(inout)     :: win
-    integer(i8), optional,      intent(inout)     :: xin(0:63)
-    integer(i8), optional,      intent(inout)     :: FlagIn
-    real(DP),    optional,      intent(inout)     :: y2In
+    integer(i8),                                    intent(in)    :: seed
+    real(DP),                                       intent(out)   :: DoubleRealRN
+    integer(i8), optional, dimension(n_save_state), intent(inout) :: save_state
 
     integer(i8)        :: wlen, r, s, a, b, c, d
 
@@ -1684,12 +1646,6 @@ CONTAINS
     ! scales it afterwards to (0.0,1.0)
     ! transform using polar-method
 
-    if ( present(iin) .and. seed .eq. 0_i8 )    i    = iin
-    if ( present(win) .and. seed .eq. 0_i8 )    w    = win
-    if ( present(xin) .and. seed .eq. 0_i8 )    x    = xin
-    if ( present(Flagin) .and. seed .eq. 0_i8 ) Flag = Flagin
-    if ( present(y2in) .and. seed .eq. 0_i8 )   y2   = y2in
-
     wlen = 64_i8
     r = 64_i8
     s = 53_i8
@@ -1697,6 +1653,14 @@ CONTAINS
     b = 26_i8
     c = 27_i8
     d = 29_i8
+
+    if( present(save_state) .and. (seed .eq. 0) ) then
+       x(0:r-1)  = save_state(1:r)
+       i         = save_state(r+1)
+       w         = save_state(r+2)
+       flag      = save_state(r+3)
+       y2        = transfer(save_state(r+4),1.0_dp)
+    end if
 
     If ((i .lt. 0_i8) .or. (seed .ne. 0_i8)) then     ! Initialization necessary
        If (seed .ne. 0) then                   ! v must be nonzero
@@ -1794,27 +1758,26 @@ CONTAINS
        DoubleRealRN = y2
     end if
 
-    If ( present(iin) )    iin=i
-    If ( present(win) )    win=w
-    If ( present(xin) )    xin=x
-    If ( present(Flagin) ) Flagin=Flag
-    If ( present(y2in) )   y2in=y2
+    if( present(save_state) ) then
+       save_state(1:r) = x(0:r-1)
+       save_state(r+1) = i
+       save_state(r+2) = w
+       save_state(r+3) = flag
+       save_state(r+4) = transfer(y2, 1_i8)
+    end if
+
 
   end subroutine xor4096gd_0d
 
   ! -----------------------------------------------------------------------------
 
-  subroutine xor4096gd_1d(seed,DoubleRealRN,iin,win,xin,FlagIn,y2In)
+  subroutine xor4096gd_1d(seed,DoubleRealRN,save_state) 
 
     implicit none
 
-    integer(i8), dimension(:),                          intent(in)        :: seed
-    real(DP),    dimension(size(seed)),                 intent(out)       :: DoubleRealRN
-    integer(i8), dimension(size(seed)),       optional, intent(inout)     :: iin
-    integer(i8), dimension(size(seed)),       optional, intent(inout)     :: win
-    integer(i8), dimension(size(seed),0:63),  optional, intent(inout)     :: xin
-    integer(i8), dimension(size(seed)),       optional, intent(inout)     :: FlagIn
-    real(DP),    dimension(size(seed)),       optional, intent(inout)     :: y2In
+    integer(i8),           dimension(:),                       intent(in)    :: seed
+    real(DP),              dimension(size(seed)),              intent(out)   :: DoubleRealRN
+    integer(i8), optional, dimension(size(seed),n_save_state), intent(inout) :: save_state
 
     integer(i4)                         :: m
     integer(i8)                         :: wlen, r, s, a, b, c, d
@@ -1838,12 +1801,6 @@ CONTAINS
 
     m= size(seed)
 
-    if ( present(iin) .and. (Any(seed .eq. 0)) )    i    = iin
-    if ( present(win) .and. (Any(seed .eq. 0)) )    w    = win
-    if ( present(xin) .and. (Any(seed .eq. 0)) )    x    = xin
-    if ( present(Flagin) .and. (Any(seed .eq. 0)) ) Flag = Flagin
-    if ( present(y2in) .and. (Any(seed .eq. 0)) )   y2   = y2in
-
     wlen = 64_i8
     r = 64_i8
     s = 53_i8
@@ -1851,6 +1808,14 @@ CONTAINS
     b = 26_i8
     c = 27_i8
     d = 29_i8
+
+    if( present(save_state) .and. any(seed .eq. 0) ) then
+       x(:,0:r-1)   = save_state(:,1:r)
+       i(:)         = save_state(:,r+1)
+       w(:)         = save_state(:,r+2)
+       flag(:)      = save_state(:,r+3)
+       y2(:)        = transfer(save_state(:,r+4),1.0_dp)
+    end if
 
     if (.not. allocated(i)) then
        allocate(i(m))
@@ -1973,11 +1938,13 @@ CONTAINS
        end if
     End do
 
-    If ( present(iin) )    iin=i
-    If ( present(win) )    win=w
-    If ( present(xin) )    xin=x
-    If ( present(Flagin) ) Flagin=Flag
-    If ( present(y2in) )   y2in=y2
+    if( present(save_state) ) then
+       save_state(:,1:r) = x(:,0:r-1)
+       save_state(:,r+1) = i(:)
+       save_state(:,r+2) = w(:)
+       save_state(:,r+3) = flag(:)
+       save_state(:,r+4) = transfer(y2(:), 1_i8)
+    end if
 
   end subroutine xor4096gd_1d
 

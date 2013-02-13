@@ -7,7 +7,7 @@
 program RNG
 
     use mo_kind,  only: i4, i8, SP, DP
-    use mo_xor4096, only: xor4096
+    use mo_xor4096, only: xor4096, n_save_state
 
     implicit none
 
@@ -30,8 +30,7 @@ program RNG
     integer(i8)                    :: i,j
     
     ! Needed for optional versions: Single
-    integer(i4)                    :: SingleIin_D0, SingleWin_D0
-    integer(i4),dimension(0:127)   :: SingleXin_D0
+    integer(i4), dimension(n_save_state) :: save_state_d0
 
     allocate(ISeedSP(NumberOfStreams))
     allocate(ISeedDP(NumberOfStreams))
@@ -102,7 +101,7 @@ program RNG
     CheckString = 'mo_xor4096: Uniform Single Integer (with optional) o.k.'
     CheckStringShort = 'ok'
     do i=1,3
-        call xor4096(ISeedSP_D0,SingleIntegerRN_D0,SingleIin_D0,SingleWin_D0,SingleXin_D0)
+        call xor4096(ISeedSP_D0,SingleIntegerRN_D0,save_state=save_state_d0)
         if (SingleIntegerRN_D0 .eq. CheckISP_D0(i)) then
             CheckStringShort = 'ok'
         else
@@ -126,7 +125,7 @@ program RNG
     ! Go back to the old stream
     CheckStringShort = 'ok'
     do i=4,5
-        call xor4096(ISeedSP_D0,SingleIntegerRN_D0,SingleIin_D0,SingleWin_D0,SingleXin_D0)
+        call xor4096(ISeedSP_D0,SingleIntegerRN_D0,save_state=save_state_d0)
         if (SingleIntegerRN_D0 .eq. CheckISP_D0(i)) then
             CheckStringShort = 'ok'
         else
