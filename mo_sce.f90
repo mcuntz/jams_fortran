@@ -350,6 +350,9 @@ CONTAINS
     character(4), dimension(:),  allocatable         :: xname       ! only for printing of parameter sets
     real(dp)                                         :: rand        ! random number
     !
+    ! Unit for printing, i.e. standard output
+    ipr = 6
+
     nopt = size(pini,dim=1)
     bl(:)   = prange(:,1)
     bu(:)   = prange(:,2)
@@ -511,6 +514,8 @@ CONTAINS
     end if
 
     !  print the initial point and its criterion value
+    bestx = pini
+    bestf_tmp = fpini
     if (iprint .lt. 2) then
        write(ipr,500)
        call write_best()
