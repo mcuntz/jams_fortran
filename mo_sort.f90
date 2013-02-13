@@ -77,7 +77,7 @@ MODULE mo_sort
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
 
-  USE mo_kind,   ONLY: i4, sp, dp, spc, dpc, lgt
+  USE mo_kind,   ONLY: i4, sp, dp, spc, dpc
 
   IMPLICIT NONE
 
@@ -918,7 +918,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_is(a,b,mask)
     INTEGER(I4), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), INTENT(IN) :: mask
+    LOGICAL, INTENT(IN) :: mask
     INTEGER(I4) :: swp
     if (mask) then
        swp=a
@@ -929,7 +929,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_iv(a,b,mask)
     INTEGER(I4), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     INTEGER(I4), DIMENSION(size(a)) :: swp
     where (mask)
        swp=a
@@ -940,7 +940,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_im(a,b,mask)
     INTEGER(I4), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
     INTEGER(I4), DIMENSION(size(a,1),size(a,2)) :: swp
     where (mask)
        swp=a
@@ -951,7 +951,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_rs(a,b,mask)
     REAL(SP), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), INTENT(IN) :: mask
+    LOGICAL, INTENT(IN) :: mask
     REAL(SP) :: swp
     if (mask) then
        swp=a
@@ -962,7 +962,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_rv(a,b,mask)
     REAL(SP), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     REAL(SP), DIMENSION(size(a)) :: swp
     where (mask)
        swp=a
@@ -973,7 +973,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_rm(a,b,mask)
     REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
     REAL(SP), DIMENSION(size(a,1),size(a,2)) :: swp
     where (mask)
        swp=a
@@ -984,7 +984,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_ds(a,b,mask)
     REAL(DP), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), INTENT(IN) :: mask
+    LOGICAL, INTENT(IN) :: mask
     REAL(DP) :: swp
     if (mask) then
        swp=a
@@ -995,7 +995,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_dv(a,b,mask)
     REAL(DP), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     REAL(DP), DIMENSION(size(a)) :: swp
     where (mask)
        swp=a
@@ -1006,7 +1006,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_dm(a,b,mask)
     REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
     REAL(DP), DIMENSION(size(a,1),size(a,2)) :: swp
     where (mask)
        swp=a
@@ -1017,7 +1017,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_cs(a,b,mask)
     COMPLEX(SPC), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), INTENT(IN) :: mask
+    LOGICAL, INTENT(IN) :: mask
     COMPLEX(SPC) :: swp
     if (mask) then
        swp=a
@@ -1028,7 +1028,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_cv(a,b,mask)
     COMPLEX(SPC), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     COMPLEX(SPC), DIMENSION(size(a)) :: swp
     where (mask)
        swp=a
@@ -1039,7 +1039,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_cm(a,b,mask)
     COMPLEX(SPC), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
     COMPLEX(SPC), DIMENSION(size(a,1),size(a,2)) :: swp
     where (mask)
        swp=a
@@ -1050,7 +1050,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_zs(a,b,mask)
     COMPLEX(DPC), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), INTENT(IN) :: mask
+    LOGICAL, INTENT(IN) :: mask
     COMPLEX(DPC) :: swp
     if (mask) then
        swp=a
@@ -1061,7 +1061,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_zv(a,b,mask)
     COMPLEX(DPC), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     COMPLEX(DPC), DIMENSION(size(a)) :: swp
     where (mask)
        swp=a
@@ -1072,7 +1072,7 @@ CONTAINS
 
   SUBROUTINE masked_swap_zm(a,b,mask)
     COMPLEX(DPC), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
     COMPLEX(DPC), DIMENSION(size(a,1),size(a,2)) :: swp
     where (mask)
        swp=a
