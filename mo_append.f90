@@ -17,6 +17,7 @@ MODULE mo_append
   ! Written  Juliane Mai,    Aug 2012
   ! Modified Juliane Mai,    Aug 2012 - character append & paste
   ! Modified Matthias Cuntz, Jan 2013 - removed 256 character restriction
+  ! Modified Matthias Cuntz, Feb 2013 - logical append and paste
 
   ! License
   ! -------
@@ -35,7 +36,7 @@ MODULE mo_append
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2012 Juliane Mai
+  ! Copyright 2012-2013 Juliane Mai, Matthias Cuntz
 
   USE mo_kind, only: i4, i8, sp, dp
 
@@ -106,6 +107,7 @@ MODULE mo_append
   !>       \author Juliane Mai
   !>       \date Aug 2012
   !        Modified Matthias Cuntz, Jan 2013 - removed 256 character restriction
+  !        Modified Matthias Cuntz, Feb 2013 - logical append and paste
 
   INTERFACE append
      MODULE PROCEDURE append_i4_v_s, append_i4_v_v, append_i4_m_m, &
@@ -178,6 +180,7 @@ MODULE mo_append
   !>       \author Juliane Mai
   !>       \date Aug 2012
   !        Modified Matthias Cuntz, Jan 2013 - removed 256 character restriction
+  !        Modified Matthias Cuntz, Feb 2013 - logical append and paste
 
   INTERFACE paste
      MODULE PROCEDURE paste_i4_m_s, paste_i4_m_v, paste_i4_m_m, &
