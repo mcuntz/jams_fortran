@@ -190,6 +190,9 @@ module mo_xor4096
 
   !     INTENT(INOUT), OPTIONAL
   !         integer(i4/i8), dimension(size(seed), n_save_state) :: save_state
+  !                                            array carrying state of random number stream
+  !                                            this should be used if several streams are used, i.e.
+  !                                            each stream has its own save_state
 
   !     INTENT(OUT), OPTIONAL
   !         None
