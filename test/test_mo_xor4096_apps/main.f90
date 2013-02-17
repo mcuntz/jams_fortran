@@ -27,6 +27,7 @@ program xor4096_apps
 
   integer(i4) :: i
   logical     :: isgood
+  integer     :: info
 
   external DPOTRF   ! Lapack routine for calculating the cholesky factor
 
@@ -50,7 +51,7 @@ program xor4096_apps
      write(*,*) i, rn1(i)
   end do
 
-  if ( nint(rn1(20)*10000.0_dp, i4) .eq. 8767_i4 ) isgood = isgood .and. isgood
+  if ( nint(rn1(20)*10000.0_dp, i4) /= 8767_i4 ) isgood = .false.
 
   write(*,*) ''
   write(*,*) 'Testing xor4096_array: multiple streams'
@@ -66,7 +67,7 @@ program xor4096_apps
      write(*,*) i, rn2(i,:)
   end do
 
-  if ( nint(rn2(20,3)*10000.0_dp, i4) .eq. 8125_i4 ) isgood = isgood .and. isgood
+  if ( nint(rn2(20,3)*10000.0_dp, i4) /= 8125_i4 ) isgood = .false.
 
   ! *********************************************************************
   ! TEST XOR4096_MVN
@@ -85,7 +86,8 @@ program xor4096_apps
   cov(1,:) = (/ 1.0_dp, 0.25_dp /)
   cov(2,:) = (/ 0.25_dp, 1.0_dp /)
   lcho = cov
-  call DPOTRF('L', size(lcho,1), lcho, size(lcho,1), 0_i4) ! changes lower triangular (incl. main diagonal) of Lcho
+!MC  call DPOTRF('L', size(lcho,1), lcho, size(lcho,1), 0_i4) ! changes lower triangular (incl. main diagonal) of Lcho
+  call DPOTRF('L', size(lcho,2), lcho, size(lcho,1), info) ! changes lower triangular (incl. main diagonal) of Lcho
   ! DONT forget to set upper triangular matrix to zero
   lcho(1,2) = 0._dp
 
@@ -94,7 +96,7 @@ program xor4096_apps
      write(*,*) i, rn_mvn(i,:)
   end do
 
-  if ( nint(rn_mvn(20,2)*10000.0_dp, i4) .eq. 771_i4 ) isgood = isgood .and. isgood
+  if ( nint(rn_mvn(20,2)*10000.0_dp, i4) /= 771_i4 ) isgood = .false.
 
   ! *********************************************************************
   ! TEST XOR4096_RANGE
@@ -114,7 +116,9 @@ program xor4096_apps
      write(*,*) i, rn1(i)
   end do
 
-  if ( nint(rn1(20)*10000.0_dp, i4) .eq. 45608_i4 ) isgood = isgood .and. isgood
+!MC looks like a typo
+print*, '????? ', nint(rn1(20)*10000.0_dp, i4), ' /= ', 45608_i4
+  if ( nint(rn1(20)*10000.0_dp, i4) /= 45608_i4 ) isgood = .false.
 
   write(*,*) ''
   write(*,*) 'Testing xor4096_range: multiple streams'
@@ -130,7 +134,7 @@ program xor4096_apps
      write(*,*) i, rn2(i,:)
   end do
 
-  if ( nint(rn2(20,3)*10000.0_dp, i4) .eq. 42501_i4 ) isgood = isgood .and. isgood
+  if ( nint(rn2(20,3)*10000.0_dp, i4) /= 42501_i4 ) isgood = .false.
 
   write(*,*) ''
   if (isgood) then
