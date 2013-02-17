@@ -116,9 +116,7 @@ program xor4096_apps
      write(*,*) i, rn1(i)
   end do
 
-!MC looks like a typo
-print*, '????? ', nint(rn1(20)*10000.0_dp, i4), ' /= ', 45608_i4
-  if ( nint(rn1(20)*10000.0_dp, i4) /= 45608_i4 ) isgood = .false.
+  if ( nint(rn1(20)*10000.0_dp, i4) /= 45068_i4 ) isgood = .false.
 
   write(*,*) ''
   write(*,*) 'Testing xor4096_range: multiple streams'
