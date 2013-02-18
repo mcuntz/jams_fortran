@@ -276,7 +276,7 @@ CONTAINS
     real(dp),    optional,               intent(in)  :: mybeta      ! parameter for contraction of points in complex
     !                                                               !     DEFAULT: 0.45_dp
     real(dp),    optional,               intent(out) :: bestf       ! function value of bestx(.)
-    integer(i4), optional,               intent(out) :: neval       ! number of function evaluations
+    integer(i8), optional,               intent(out) :: neval       ! number of function evaluations
     real(dp),    optional, &
          dimension(:), allocatable,      intent(out) :: history     ! history of best function values after each iteration
     real(dp), dimension(size(pini,1))                :: bestx       ! best point at current shuffling loop (is RETURN)
@@ -493,7 +493,6 @@ CONTAINS
     iseed = iseed + 1000_i8
     call xor4096g(iseed, rand, save_state=save_state_gauss)
     iseed = 0_i8
-    pause
     !
     !  compute the total number of points in initial popualtion
     npt = ngs * npg

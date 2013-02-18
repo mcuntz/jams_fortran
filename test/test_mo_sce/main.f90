@@ -11,7 +11,7 @@ program test_sce
   real(dp), dimension(:),   allocatable :: opt
 
   real(dp)                              :: bestf      ! best function value = history(-1) = ackley(opt)
-  integer(i4)                           :: neval      ! number of function evaluations = size(history,1)
+  integer(i8)                           :: neval      ! number of function evaluations = size(history,1)
   real(dp), dimension(:),   allocatable :: history    ! best function value found after ith iteration
 
   integer(i4)   :: n, iPar
@@ -48,7 +48,7 @@ program test_sce
   write(*,*) ''
 
   isgood = isgood .and. (neval .eq. 4455_i4)
-  isgood = isgood .and. (nint(1.0443851441259699E-02*10000000_dp) .eq. 104439)
+  isgood = isgood .and. (nint(bestf*10000000_dp) .eq. 104439)
 
   if (isgood) then
      write(*,*) 'mo_sce o.k.'
