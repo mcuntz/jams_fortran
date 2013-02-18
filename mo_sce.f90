@@ -205,8 +205,6 @@ MODULE mo_sce
   PRIVATE
 
   ! chkcst   ! check if a trial point satisfies all constraints.
-  ! ran1     ! returns uniform distributed random numbers
-  ! gasdev   ! return gaussian distributed random numbers
   ! comp     ! reduces the number of complexes and points in a population
   ! parstt   ! checks for parameter convergence
   ! getpnt   ! generated a new point within its range
@@ -225,7 +223,7 @@ CONTAINS
 
     use mo_kind,    only: i4, i8, dp
     use mo_sort,    only: sort
-    use mo_xor4096, only: get_timeseed
+    use mo_xor4096, only: get_timeseed, n_save_state, xor4096, xor4096g
 
     implicit none
     ! 
@@ -291,7 +289,6 @@ CONTAINS
     integer(i4)                                      :: kstop       ! number of shuffling loops in which the criterion value
     !                                                               !     must change
     real(dp)                                         :: pcento      ! percentage by which the criterion value must change
-    integer(i8)                                      :: iseed       ! initial random seed  
     integer(i4)                                      :: ngs         ! number of complexes in the initial population
     integer(i4)                                      :: npg         ! number of points in each complex
     integer(i4)                                      :: nps         ! number of points in a sub-complex
@@ -325,7 +322,6 @@ CONTAINS
     real(dp),    dimension(:),   allocatable         :: unit        ! ?????
     integer(i4)                                      :: ngs1        ! number of complexes in current population
     integer(i4)                                      :: ngs2        ! number of complexes in last population
-    integer(i8)                                      :: iseed1      ! current random seed
     real(dp),    dimension(:),   allocatable         :: criter      ! vector containing the best criterion values of the last
     !                                                               !     (kstop+1) shuffling loops
     integer(i4)                                      :: ipcnvg      ! flag indicating whether parameter convergence is reached
@@ -348,7 +344,11 @@ CONTAINS
     integer(i4)                                      :: nopt1       ! only for printing of parameter sets
     integer(i4)                                      :: nopt2       ! only for printing of parameter sets
     character(4), dimension(:),  allocatable         :: xname       ! only for printing of parameter sets
+    ! for random numbers
     real(dp)                                         :: rand        ! random number
+    integer(i8)                                      :: iseed       ! initial random seed  
+    integer(i8), dimension(n_save_state)             :: save_state_unif    ! save state of uniform stream
+    integer(i8), dimension(n_save_state)             :: save_state_gauss   ! save state of gaussian stream
     !
     ! Unit for printing, i.e. standard output
     ipr = 6
@@ -462,7 +462,7 @@ CONTAINS
     allocate(lcs(nps))
     allocate(bound(nopt))
     allocate(unit(nopt))
-    allocate(criter(kstop+1))   ! kstop+1
+    allocate(criter(kstop+1))  
     allocate(xname(nopt))
     allocate(history_tmp(maxn))
 
@@ -483,8 +483,17 @@ CONTAINS
     nopt2 = 12_i4
     if (nopt .lt. 12) nopt2 = nopt
     !
-    !  initialize random seed to a negative integer
-    iseed1 = -abs(iseed)
+    !  Print seed
+    if (iprint .lt. 2) then
+       write (*,*) ' Seed used : ',iseed
+    end if
+    !  initialize random number generator: Uniform
+    call xor4096(iseed, rand, save_state=save_state_unif)
+    !  initialize random number generator: Gaussian
+    iseed = iseed + 1000_i8
+    call xor4096g(iseed, rand, save_state=save_state_gauss)
+    iseed = 0_i8
+    pause
     !
     !  compute the total number of points in initial popualtion
     npt = ngs * npg
@@ -531,7 +540,7 @@ CONTAINS
        !
        !  else, generate a point randomly and set it equal to x(1,.)
     else
-       call getpnt(1,bl(1:nopt),bu(1:nopt),unit(1:nopt),bl(1:nopt),iseed1,xx)
+       call getpnt(1,bl(1:nopt),bu(1:nopt),unit(1:nopt),bl(1:nopt),save_state_unif,xx)
        do j=1, nopt
           x(1,j) = xx(j)
        end do
@@ -550,7 +559,7 @@ CONTAINS
     !  generate npt1-1 random points distributed uniformly in the parameter
     !  space, and compute the corresponding function values
     do i = 2, npt1
-       call getpnt(1,bl(1:nopt),bu(1:nopt),unit(1:nopt),bl(1:nopt),iseed1,xx)
+       call getpnt(1,bl(1:nopt),bu(1:nopt),unit(1:nopt),bl(1:nopt),save_state_unif,xx)
        do j = 1, nopt
           x(i,j) = xx(j)
        end do
@@ -677,13 +686,13 @@ CONTAINS
                    lcs(k) = k
                 end do
              else
-                rand = ran1(iseed1)
+                call xor4096(iseed, rand, save_state=save_state_unif)
                 lcs(1) = 1 + int(npg + 0.5_dp - sqrt( (npg+.5)**2 - npg * (npg+1) * rand ))
                 do k = 2, nps
                    lpos_ok = .false.
                    do while (.not. lpos_ok)
                       lpos_ok = .true.
-                      rand = ran1(iseed1)
+                      call xor4096(iseed, rand, save_state=save_state_unif)
                       lpos = 1 + int(npg + 0.5_dp - sqrt((npg+.5)**2 -  npg * (npg+1) * rand ))
                       ! test if point already chosen: returns lpos_ok=false if any point already exists
                       do k1 = 1, k-1
@@ -707,7 +716,7 @@ CONTAINS
              !
              !  use the sub-complex to generate new point(s)
              call cce(s(1:nps,1:nopt),sf(1:nps),bl(1:nopt),bu(1:nopt),xnstd(1:nopt),  &
-                      icall,maxn,maxit,iseed1,functn, alpha,beta,history_tmp)
+                      icall,maxn,maxit,save_state_gauss,functn, alpha,beta,history_tmp)
              !
              !  if the sub-complex is accepted, replace the new sub-complex
              !  into the complex
@@ -1073,89 +1082,6 @@ CONTAINS
 
   end subroutine sort_matrix
 
-  function ran1(seed)
-
-    !  This subroutine is from "Numerical Recipes" by Press et al.
-
-    use mo_kind, only: i4, i8, dp
-    implicit none 
-
-    integer(i8), intent(inout)    :: seed
-    real(dp)                      :: ran1
-
-    ! local variables to be saved for next call
-    integer(i8), parameter        :: m1 = 259200, m2 = 134456, m3 = 243000
-    integer(i8), parameter        :: ia1 = 7141,  ia2 = 8121,  ia3 = 4561
-    integer(i8), parameter        :: ic1 = 54773, ic2 = 28411, ic3 = 51349
-    real(dp),    parameter        :: rm1 = 3.8580247e-6, rm2 = 7.4373773e-6
-    real(dp), dimension(97), save :: r
-    integer(i8),             save :: iff = 0       ! for first call 0, afterwards 1
-    integer(i8),             save :: ix1, ix2, ix3
-
-    ! local variables
-    integer(i4) :: j
-
-    if ((seed .lt. 0) .or. (iff .eq. 0)) then
-       iff = 1_i8
-       ix1 = mod(ic1 - seed,m1)
-       ix1 = mod((ia1 * ix1) + ic1,m1)
-       ix2 = mod(ix1,m2)
-       ix1 = mod((ia1 * ix1) + ic1,m1)
-       ix3 = mod(ix1,m3)
-       do j = 1, 97
-          ix1 = mod((ia1 * ix1) + ic1,m1)
-          ix2 = mod((ia2 * ix2) + ic2,m2)
-          r(j) = (real(ix1,dp) + (real(ix2,dp) * rm2)) * rm1
-       end do
-       seed = 1_i8
-    end if
-    ix1 = mod((ia1 * ix1) + ic1,m1)
-    ix2 = mod((ia2 * ix2) + ic2,m2)
-    ix3 = mod((ia3 * ix3) + ic3,m3)
-    j = 1 + ((97 * ix3) / m3)
-    if ((j .gt. 97) .or. (j .lt. 1)) stop 'Error ran1: j out of range'
-    ran1 = r(j)
-    r(j) = (real(ix1,dp) + (real(ix2,dp) * rm2)) * rm1
-
-  end function ran1
-
-  function gasdev(seed)
-
-    !  THIS SUBROUTINE IS FROM "NUMERICAL RECIPES" BY PRESS ET AL.
-
-    use mo_kind, only: i4, i8, dp
-    implicit none
-
-    integer(i8), intent(inout) :: seed 
-    real(dp)                   :: gasdev
-
-    ! local variables to be saved for next call
-    integer(i4) :: iset = 0
-    ! local variables
-    real(dp) :: v1, v2
-    real(dp) :: r
-    real(dp) :: fac
-    real(dp) :: gset
-
-    iset = 0
-    r    = 2.0_dp
-    if (iset .eq. 0) then
-       do while (r .gt. 1._dp)
-          v1 = (2._dp * ran1(seed)) - 1._dp
-          v2 = (2._dp * ran1(seed)) - 1._dp
-          r = (v1 ** 2) + (v2 ** 2)
-       end do
-       fac    = sqrt(- ((2._dp * log(r)) / r))
-       gset   = v1 * fac
-       gasdev = v2 * fac
-       iset   = 1
-    else
-       gasdev = gset
-       iset   = 0
-    end if
-
-  end function gasdev
-
   subroutine chkcst(x,bl,bu,ibound)
     !
     !     This subroutine check if the trial point satisfies all
@@ -1193,25 +1119,27 @@ CONTAINS
 
   end subroutine chkcst
 
-  subroutine getpnt(idist,bl,bu,std,xi,iseed,x)
+  subroutine getpnt(idist,bl,bu,std,xi,save_state,x)
     !
     !     This subroutine generates a new point within feasible region
     !
     !     Note: checking of implicit constraints removed
     !
     use mo_kind, only: i4, i8, dp
+    use mo_xor4096, only: n_save_state, xor4096, xor4096g
 
     implicit none 
 
-    integer(i4),                     intent(in)    :: idist   ! idist = probability flag
-    !                                                         !       = 1 - uniform distribution
-    !                                                         !       = 2 - Gaussian distribution
-    real(dp), dimension(:),          intent(in)    :: bl      ! lower bound
-    real(dp), dimension(:),          intent(in)    :: bu      ! upper bound
-    real(dp), dimension(:),          intent(in)    :: std     ! standard deviation of probability distribution
-    real(dp), dimension(:),          intent(in)    :: xi      ! focal point
-    integer(i8),                     intent(inout) :: iseed   ! seed for random number generator
-    real(dp), dimension(size(xi,1)), intent(out)   :: x       ! new point
+    integer(i4),                          intent(in)    :: idist            ! idist = probability flag
+    !                                                                       !       = 1 - uniform distribution
+    !                                                                       !       = 2 - Gaussian distribution
+    real(dp),    dimension(:),            intent(in)    :: bl               ! lower bound
+    real(dp),    dimension(:),            intent(in)    :: bu               ! upper bound
+    real(dp),    dimension(:),            intent(in)    :: std              ! standard deviation of probability distribution
+    real(dp),    dimension(:),            intent(in)    :: xi               ! focal point
+    integer(i8), dimension(n_save_state), intent(inout) :: save_state       ! save state of random number stream
+    !                                                                       ! --> stream has to be according to idist
+    real(dp),    dimension(size(xi,1)),   intent(out)   :: x                ! new point
     ! 
     ! local variables
     integer(i4) :: nopt    ! number of parameters
@@ -1223,8 +1151,8 @@ CONTAINS
     do j=1, nopt
        ibound = 1
        do while (ibound .eq. 1)
-          if (idist .eq. 1) rand = ran1(iseed)
-          if (idist .eq. 2) rand = gasdev(iseed)
+          if (idist .eq. 1) call xor4096(0_i8, rand, save_state=save_state)  
+          if (idist .eq. 2) call xor4096g(0_i8, rand, save_state=save_state)  
           x(j) = xi(j) + std(j) * rand * (bu(j) - bl(j))
           !
           !     Check explicit constraints
@@ -1235,28 +1163,30 @@ CONTAINS
 
   end subroutine getpnt
 
-  subroutine cce(s,sf,bl,bu,xnstd,icall,maxn,maxit,iseed, functn, &
+  subroutine cce(s,sf,bl,bu,xnstd,icall,maxn,maxit,save_state_gauss, functn, &
        alpha,beta,history)
     !
-    !  ALGORITHM GENERATE A NEW POINT(S) FROM A SUB-COMPLEX
+    !  algorithm generate a new point(s) from a sub-complex
     !
     !  Note: new intent IN    variables for flexible reflection & contraction: alpha, beta
     !        new intent INOUT variable for history of objective function values
     !
     use mo_kind, only: i4, i8, dp
+    use mo_xor4096, only: n_save_state
 
     implicit none    
 
-    real(dp),    dimension(:,:), intent(inout) :: s       ! points in sub-complex, cols=nopt, rows=nps
-    real(dp),    dimension(:),   intent(inout) :: sf      ! objective function value of points in 
-    !                                                     ! sub-complex, rows=nps
-    real(dp),    dimension(:),   intent(in)    :: bl      ! lower bound per parameter
-    real(dp),    dimension(:),   intent(in)    :: bu      ! upper bound per parameter
-    real(dp),    dimension(:),   intent(in)    :: xnstd   ! standard deviation of points in sub-complex per parameter
-    integer(i8),                 intent(inout) :: icall   ! number of function evaluations
-    integer(i8),                 intent(in)    :: maxn    ! maximal number of function evaluations allowed
-    logical,                     intent(in)    :: maxit   ! minimization (true) or maximization (false)
-    integer(i8),                 intent(inout) :: iseed   ! seed for random number generation
+    real(dp),    dimension(:,:),          intent(inout) :: s                ! points in sub-complex, cols=nopt, rows=nps
+    real(dp),    dimension(:),            intent(inout) :: sf               ! objective function value of points in 
+    !                                                                       ! sub-complex, rows=nps
+    real(dp),    dimension(:),            intent(in)    :: bl               ! lower bound per parameter
+    real(dp),    dimension(:),            intent(in)    :: bu               ! upper bound per parameter
+    real(dp),    dimension(:),            intent(in)    :: xnstd            ! standard deviation of points in 
+    !                                                                       ! sub-complex per parameter
+    integer(i8),                          intent(inout) :: icall            ! number of function evaluations
+    integer(i8),                          intent(in)    :: maxn             ! maximal number of function evaluations allowed
+    logical,                              intent(in)    :: maxit            ! minimization (true) or maximization (false)
+    integer(i8), dimension(n_save_state), intent(inout) :: save_state_gauss ! seed for random number generation
     interface
        function functn(paraset)
          ! calculates the cost function at a certain parameter set paraset
@@ -1287,6 +1217,7 @@ CONTAINS
 
     nps  = size(s,1)
     nopt = size(s,2)
+    !
     ! equivalence of variables for readabilty of code
     n = nps
     m = nopt
@@ -1321,7 +1252,7 @@ CONTAINS
     ! a normal distribution with best point of the sub-complex
     ! as mean and standard deviation of the population as std
     if (ibound .eq. 1) then
-       call getpnt(2,bl(1:nopt),bu(1:nopt),xnstd(1:nopt),sb(1:nopt),iseed,snew)
+       call getpnt(2,bl(1:nopt),bu(1:nopt),xnstd(1:nopt),sb(1:nopt),save_state_gauss,snew)
     end if
     !
     ! compute the function value at snew
@@ -1366,7 +1297,7 @@ CONTAINS
           ! if both reflection and contraction fail, choose another point
           ! according to a normal distribution with best point of the sub-complex
           ! as mean and standard deviation of the population as std
-          call getpnt(2,bl(1:nopt),bu(1:nopt),xnstd(1:nopt),sb(1:nopt),iseed,snew)
+          call getpnt(2,bl(1:nopt),bu(1:nopt),xnstd(1:nopt),sb(1:nopt),save_state_gauss,snew)
           !
           ! compute the function value at the random point
           if (.not. maxit) then

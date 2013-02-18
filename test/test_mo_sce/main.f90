@@ -45,10 +45,10 @@ program test_sce
   write(*,*) 'number of function evaluations: neval = ', neval
   write(*,*) 'best function value found:      bestf = ', ackley(opt)
   write(*,*) 'global minimal function value:  optf  = ', 0.0_dp
-  print*, bestf, neval
+  write(*,*) ''
 
-  isgood = isgood .and. (neval .eq. 4446_i4)
-  isgood = isgood .and. (nint(9.2581722680624701E-03*10000000_dp) .eq. 92582)
+  isgood = isgood .and. (neval .eq. 4455_i4)
+  isgood = isgood .and. (nint(1.0443851441259699E-02*10000000_dp) .eq. 104439)
 
   if (isgood) then
      write(*,*) 'mo_sce o.k.'
