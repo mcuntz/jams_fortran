@@ -556,21 +556,36 @@ CONTAINS
     c = 13
     d = 15
 
-    if ( present(save_state) .and. any(seed .eq. 0) ) then
-       x(:,0:r-1)  = save_state(:,1:r)
-       i(:)        = save_state(:,r+1)
-       w(:)        = save_state(:,r+2)
+    m = size(seed,1)
+
+    if (any(seed .eq. 0_i4) .and. any(seed .ne. 0_i4)) then
+       stop 'xor4096: seeds have to be eigther all 0 or all larger than 0'
     end if
 
-    m = size(seed,1)
-    if (.not. allocated(i)) then
+    if ( present(save_state) .and. all(seed .eq. 0_i4) ) then
+        if (allocated(x) .and. size(save_state,1) .ne. m) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+           allocate(i(m))
+           allocate(x(m,0:r-1))
+           allocate(w(m))
+        end if
+        x(:,0:r-1)  = save_state(:,1:r)
+        i(:)        = save_state(:,r+1)
+        w(:)        = save_state(:,r+2)
+    end if 
+
+    if(all(seed .ne. 0_i4)) then
+       if ( allocated(x) ) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+        end if
+
        allocate(i(m))
        i = -1
-    end if
-    if (.not. allocated(x)) then
        allocate(x(m,0:r-1))
-    end if
-    if (.not. allocated(w)) then
        allocate(w(m))
     end if
 
@@ -761,6 +776,9 @@ CONTAINS
     integer(i4), dimension(:,:), allocatable, save  :: x                   ! x(0) ... x(r-1)
     integer(i4), dimension(:),   allocatable, save  :: i,w                 ! i<0 indicates first call
 
+    ! produces a 24bit Integer Random Number (0...16777216) and
+    ! scales it afterwards to (0.0,1.0)
+
     !$omp   threadprivate(x,i,w)
 
     wlen = 32
@@ -771,25 +789,36 @@ CONTAINS
     c = 13
     d = 15
 
-    m= size(seed)
+    m = size(seed,1)
 
-    if ( present(save_state) .and. any(seed .eq. 0) ) then
-       x(:,0:r-1)  = save_state(:,1:r)
-       i(:)        = save_state(:,r+1)
-       w(:)        = save_state(:,r+2)
+    if (any(seed .eq. 0_i4) .and. any(seed .ne. 0_i4)) then
+       stop 'xor4096: seeds have to be eigther all 0 or all larger than 0'
     end if
 
-    ! produces a 24bit Integer Random Number (0...16777216) and
-    ! scales it afterwards to (0.0,1.0)
+    if ( present(save_state) .and. all(seed .eq. 0_i4) ) then
+        if (allocated(x) .and. size(save_state,1) .ne. m) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+           allocate(i(m))
+           allocate(x(m,0:r-1))
+           allocate(w(m))
+        end if
+        x(:,0:r-1)  = save_state(:,1:r)
+        i(:)        = save_state(:,r+1)
+        w(:)        = save_state(:,r+2)
+    end if 
 
-    if (.not. allocated(i)) then
+    if(all(seed .ne. 0_i4)) then
+       if ( allocated(x) ) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+        end if
+
        allocate(i(m))
        i = -1
-    end if
-    if (.not. allocated(x)) then
        allocate(x(m,0:r-1))
-    end if
-    if (.not. allocated(w)) then
        allocate(w(m))
     end if
 
@@ -981,22 +1010,36 @@ CONTAINS
     c = 27_i8
     d = 29_i8
 
-    m = size(seed)
+    m = size(seed,1)
 
-    if ( present(save_state) .and. any(seed .eq. 0_i8) ) then
-       x(:,0:r-1)  = save_state(:,1:r)
-       i(:)        = save_state(:,r+1)
-       w(:)        = save_state(:,r+2)
+    if (any(seed .eq. 0_i8) .and. any(seed .ne. 0_i8)) then
+       stop 'xor4096: seeds have to be eigther all 0 or all larger than 0'
     end if
 
-    if (.not. allocated(i)) then
+    if ( present(save_state) .and. all(seed .eq. 0_i8) ) then
+        if (allocated(x) .and. size(save_state,1) .ne. m) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+           allocate(i(m))
+           allocate(x(m,0:r-1))
+           allocate(w(m))
+        end if
+        x(:,0:r-1)  = save_state(:,1:r)
+        i(:)        = save_state(:,r+1)
+        w(:)        = save_state(:,r+2)
+    end if 
+
+    if(all(seed .ne. 0_i4)) then
+       if ( allocated(x) ) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+        end if
+
        allocate(i(m))
        i = -1
-    end if
-    if (.not. allocated(x)) then
-       allocate(x(m,0:63))
-    end if
-    if (.not. allocated(w)) then
+       allocate(x(m,0:r-1))
        allocate(w(m))
     end if
 
@@ -1197,22 +1240,36 @@ CONTAINS
     c = 27_i8
     d = 29_i8
 
-    m = size(seed)
+    m = size(seed,1)
 
-    if ( present(save_state) .and. any(seed .eq. 0_i8) ) then
-       x(:,0:r-1)  = save_state(:,1:r)
-       i(:)        = save_state(:,r+1)
-       w(:)        = save_state(:,r+2)
+    if (any(seed .eq. 0_i8) .and. any(seed .ne. 0_i8)) then
+       stop 'xor4096: seeds have to be eigther all 0 or all larger than 0'
     end if
 
-    if (.not. allocated(i)) then
+    if ( present(save_state) .and. all(seed .eq. 0_i8) ) then
+        if (allocated(x) .and. size(save_state,1) .ne. m) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+           allocate(i(m))
+           allocate(x(m,0:r-1))
+           allocate(w(m))
+        end if
+        x(:,0:r-1)  = save_state(:,1:r)
+        i(:)        = save_state(:,r+1)
+        w(:)        = save_state(:,r+2)
+    end if 
+
+    if(all(seed .ne. 0_i4)) then
+       if ( allocated(x) ) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+        end if
+
        allocate(i(m))
        i = -1
-    end if
-    if (.not. allocated(x)) then
-       allocate(x(m,0:63))
-    end if
-    if (.not. allocated(w)) then
+       allocate(x(m,0:r-1))
        allocate(w(m))
     end if
 
@@ -1463,16 +1520,6 @@ CONTAINS
 
     !$omp   threadprivate(x,i,w,y2,flag)
 
-    m= size(seed)
-
-    if( present(save_state) .and. any(seed .eq. 0) ) then
-       x(:,0:r-1)   = save_state(:,1:r)
-       i(:)         = save_state(:,r+1)
-       w(:)         = save_state(:,r+2)
-       flag(:)      = save_state(:,r+3)
-       y2(:)        = transfer(save_state(:,r+4),1.0_sp)
-    end if
-
     ! produces a 24bit Integer Random Number (0...16777216) and
     ! scales it afterwards to (0.0,1.0)
     ! transform using polar-method
@@ -1485,23 +1532,52 @@ CONTAINS
     c = 13
     d = 15
 
-    if (.not. allocated(i)) then
+    m = size(seed,1)
+
+    if (any(seed .eq. 0_i4) .and. any(seed .ne. 0_i4)) then
+       stop 'xor4096g: seeds have to be eigther all 0 or all larger than 0'
+    end if
+
+    if ( present(save_state) .and. all(seed .eq. 0_i4) ) then
+        if (allocated(x) .and. size(save_state,1) .ne. m) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+           deallocate(flag)
+           deallocate(y2)
+           allocate(i(m))
+           allocate(x(m,0:r-1))
+           allocate(w(m))
+           allocate(Flag(m))
+           allocate(y2(m))
+        end if
+        x(:,0:r-1)   = save_state(:,1:r)
+        i(:)         = save_state(:,r+1)
+        w(:)         = save_state(:,r+2)
+        flag(:)      = save_state(:,r+3)
+        do j=1,m
+           y2(j) = transfer(save_state(j,r+4),1.0_sp)
+        end do
+    end if 
+
+    if(all(seed .ne. 0_i4)) then
+       if ( allocated(x) ) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+           deallocate(Flag)
+           deallocate(y2)
+        end if
+
        allocate(i(m))
        i = -1
-    end if
-    if (.not. allocated(x)) then
-       allocate(x(m,0:127))
-    end if
-    if (.not. allocated(w)) then
+       allocate(x(m,0:r-1))
        allocate(w(m))
-    end if
-    if (.not. allocated(Flag)) then
        allocate(Flag(m))
        Flag = 1
-    end if
-    if (.not. allocated(y2)) then
        allocate(y2(m))
     end if
+
 
     Do j=1,m !Loop over every stream
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
@@ -1612,7 +1688,9 @@ CONTAINS
        save_state(:,r+1) = i(:)
        save_state(:,r+2) = w(:)
        save_state(:,r+3) = flag(:)
-       save_state(:,r+4) = transfer(y2(:), 1_i4)
+       do j=1,m
+          save_state(j,r+4) = transfer(y2(j), 1_i4)
+       end do
     end if
 
   end subroutine xor4096gf_1d
@@ -1802,8 +1880,6 @@ CONTAINS
     ! scales it afterwards to (0.0,1.0)
     ! transform using polar-method
 
-    m= size(seed)
-
     wlen = 64_i8
     r = 64_i8
     s = 53_i8
@@ -1812,29 +1888,49 @@ CONTAINS
     c = 27_i8
     d = 29_i8
 
-    if( present(save_state) .and. any(seed .eq. 0) ) then
-       x(:,0:r-1)   = save_state(:,1:r)
-       i(:)         = save_state(:,r+1)
-       w(:)         = save_state(:,r+2)
-       flag(:)      = save_state(:,r+3)
-       y2(:)        = transfer(save_state(:,r+4),1.0_dp)
+    m = size(seed,1)
+
+    if (any(seed .eq. 0_i8) .and. any(seed .ne. 0_i8)) then
+       stop 'xor4096g: seeds have to be eigther all 0 or all larger than 0'
     end if
 
-    if (.not. allocated(i)) then
+    if ( present(save_state) .and. all(seed .eq. 0_i8) ) then
+        if (allocated(x) .and. size(save_state,1) .ne. m) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+           deallocate(flag)
+           deallocate(y2)
+           allocate(i(m))
+           allocate(x(m,0:r-1))
+           allocate(w(m))
+           allocate(Flag(m))
+           allocate(y2(m))
+        end if
+        x(:,0:r-1)   = save_state(:,1:r)
+        i(:)         = save_state(:,r+1)
+        w(:)         = save_state(:,r+2)
+        flag(:)      = save_state(:,r+3)
+        do j=1,m
+           y2(j) = transfer(save_state(j,r+4),1.0_dp)
+        end do
+    end if 
+
+    if(all(seed .ne. 0_i4)) then
+       if ( allocated(x) ) then
+           deallocate(x)
+           deallocate(i)
+           deallocate(w)
+           deallocate(Flag)
+           deallocate(y2)
+        end if
+
        allocate(i(m))
-       i = -1_i8
-    end if
-    if (.not. allocated(x)) then
-       allocate(x(m,0:63))
-    end if
-    if (.not. allocated(w)) then
+       i = -1
+       allocate(x(m,0:r-1))
        allocate(w(m))
-    end if
-    if (.not. allocated(Flag)) then
        allocate(Flag(m))
        Flag = 1
-    end if
-    if (.not. allocated(y2)) then
        allocate(y2(m))
     end if
 
@@ -1946,7 +2042,9 @@ CONTAINS
        save_state(:,r+1) = i(:)
        save_state(:,r+2) = w(:)
        save_state(:,r+3) = flag(:)
-       save_state(:,r+4) = transfer(y2(:), 1_i8)
+       do j=1,m
+          save_state(j,r+4) = transfer(y2(j), 1_i8)
+       end do
     end if
 
   end subroutine xor4096gd_1d

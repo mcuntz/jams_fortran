@@ -7,7 +7,7 @@
 program RNG
 
     use mo_kind,  only: i4, i8, SP, DP
-    use mo_xor4096, only: xor4096, n_save_state
+    use mo_xor4096, only: xor4096, xor4096g, n_save_state
 
     implicit none
 
@@ -30,7 +30,9 @@ program RNG
     integer(i8)                    :: i,j
     
     ! Needed for optional versions: Single
-    integer(i4), dimension(n_save_state) :: save_state_d0
+    integer(i4), dimension(n_save_state)   :: save_state_d0
+    integer(i4), dimension(3, n_save_state) :: save_state_d1_3
+    integer(i4), dimension(2, n_save_state) :: save_state_d1_2
 
     allocate(ISeedSP(NumberOfStreams))
     allocate(ISeedDP(NumberOfStreams))
@@ -137,6 +139,40 @@ program RNG
     end do
     print *, CheckString
     deallocate (CheckISP_D0)
+
+    print*,'----------------------------------------'
+    print*,'GAUSSIAN Single Precision               '
+    print*,'          3 STREAMS and 2 STREAMS       '
+    print*,'----------------------------------------'
+
+    print*, '3 streams'
+    ISeedSP = (/ 3_i4, 5_i4, 7_i4 /)
+    call xor4096g(ISeedSP,SingleRealRN, save_state=save_state_d1_3)
+    print*, SingleRealRN
+    ISeedSP = 0_i4
+    call xor4096g(ISeedSP,SingleRealRN, save_state=save_state_d1_3)
+    print*, SingleRealRN
+    call xor4096g(ISeedSP,SingleRealRN, save_state=save_state_d1_3)
+    print*, SingleRealRN
+
+    print*, '2 streams'
+    call xor4096g( (/ 2_i4, 37_i4 /), SingleRealRN(1:2), save_state=save_state_d1_2)
+    print*, SingleRealRN(1:2)
+    ISeedSP = 0_i4
+    call xor4096g((/ 0_i4, 0_i4 /), SingleRealRN(1:2), save_state=save_state_d1_2)
+    print*, SingleRealRN(1:2)
+    call xor4096g((/ 0_i4, 0_i4 /), SingleRealRN(1:2), save_state=save_state_d1_2)
+    print*, SingleRealRN(1:2)
+
+    print*, 'again 3 streams'
+    ISeedSP = (/ 3_i4, 5_i4, 7_i4 /)
+    call xor4096g(ISeedSP,SingleRealRN, save_state=save_state_d1_3)
+    print*, SingleRealRN
+    ISeedSP = 0_i4
+    call xor4096g(ISeedSP,SingleRealRN, save_state=save_state_d1_3)
+    print*, SingleRealRN
+    call xor4096g(ISeedSP,SingleRealRN, save_state=save_state_d1_3)
+    print*, SingleRealRN
 
     deallocate(ISeedSP)
     deallocate(ISeedDP)
