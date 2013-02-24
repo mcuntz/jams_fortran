@@ -67,12 +67,13 @@ MODULE mo_combinatorics
   IMPLICIT NONE
 
   PUBLIC :: binomcoeffi     ! Binomial coefficient (n choose k)
-  PUBLIC :: random_kofn    ! Random selection of k of n
-  PUBLIC :: next_kofn      ! Next selection of k of n to a given one
-  PUBLIC :: all_kofn       ! All selections of k of n
-  ! PUBLIC :: random_permut  ! Random permutation to a given one
-  ! PUBLIC :: next_permut    ! Next permutation to a given one
-  ! PUBLIC :: all_permut     ! All permutations of n
+  PUBLIC :: factorial       ! Factorial (n!)
+  PUBLIC :: random_kofn     ! Random selection of k of n
+  PUBLIC :: next_kofn       ! Next selection of k of n to a given one
+  PUBLIC :: all_kofn        ! All selections of k of n
+  PUBLIC :: random_permut   ! Random permutation to a given one
+  PUBLIC :: next_permut     ! Next permutation to a given one
+  PUBLIC :: all_permut      ! All permutations of n
 
   ! ------------------------------------------------------------------
 
@@ -128,6 +129,60 @@ MODULE mo_combinatorics
   INTERFACE binomcoeffi
      MODULE PROCEDURE binomcoeffi_i4_d0, binomcoeffi_i8_d0, binomcoeffi_i4_d1, binomcoeffi_i8_d1
   END INTERFACE binomcoeffi
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         factorial
+
+  !     PURPOSE
+  !
+  !>        \brief The factorial.
+  !
+  !>        \details Calculates the factorial F:
+  !>                     \f[ F(n) = n! = 1 \dot 2 \dot ... \dot n} \f], 
+  !>                 i.e. the number of possible permutations of n integers 1..n
+  !
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4/i8) :: n/n(:)"       n
+  !
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !>        \return     integer(i4/i8) :: factorial/factorial(:) &mdash; Factorial (n!)
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         fact = factorial(5)
+  !         fact --> 120
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         
+
+  !     HISTORY
+  !>        \author Matthias Cuntz, Juliane Mai
+  !>        \date Feb 2013
+  !         Modified, 
+  
+  INTERFACE factorial
+     MODULE PROCEDURE factorial_i4_d0, factorial_i8_d0, factorial_i4_d1, factorial_i8_d1
+  END INTERFACE factorial
 
   ! ------------------------------------------------------------------
 
@@ -303,6 +358,179 @@ MODULE mo_combinatorics
 
   ! ------------------------------------------------------------------
 
+  !     NAME
+  !         all_permut
+
+  !     PURPOSE
+  !
+  !>        \brief All possible permutations of n integers 1..n.
+  !
+  !>        \details Determines all possible permutations of n integers 1..n. /n
+  !>                 The number of possibilities is the factorial of n (n!).
+  !>                 The code is adapted from Nijenhuis (1978) - routine NEXPER.
+  !
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4/i8) :: n"                 permutation of n integers 1..n
+  !
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !>        \return     integer(i4/i8), allocatable :: permut(:,:) &mdash; All permutations of n integers /n
+  !>                                                         size(permut,1) = n! /n
+  !>                                                         size(permut,2) = n
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         permut = all_permut(3)
+  !         permut --> (/ (/ 1,2,3 /), (/2,1,3/), (/3,1,2/), (/ 1,3,2 /), (/2,3,1/), (/3,2,1/) /)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Nijenhuis, A., & Wilf, H. S. (1978). 
+  !         Combinatorial algorithms for computers and calculators (2nd ed.). 
+  !         Academic Pr.
+
+  !     HISTORY
+  !>        \author Juliane Mai
+  !>        \date Feb 2013
+  !         Modified, 
+
+  INTERFACE all_permut
+     MODULE PROCEDURE all_permut_i4, all_permut_i8
+  END INTERFACE all_permut
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         next_permut
+
+  !     PURPOSE
+  !
+  !>        \brief The next permutation of n integers 1..n to a given one.
+  !
+  !>        \details Determines the next permutation of n integers 1..n to a given one./n
+  !>                 If one has n=5 numbers, the first possible permutation is (1,2,3,4,5).
+  !>                 The next selection will be (2,1,3,4,5). /n
+  !>                 The code is adapted from Nijenhuis (1978) - routine NEXPER.
+  !
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4/i8) :: n"                 permutation of n integers 1..n
+  !>        \param[in] "integer(i4/i8) :: previous(:)"       previous permutation (dim_1 = n)
+  !
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !>        \return     integer(i4/i8) :: next(n) &mdash; Next permutation of n integers
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         next = next_permut(5, (/1,2,3,4,5/))
+  !         next --> (/ 2,1,3,4,5 /)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Nijenhuis, A., & Wilf, H. S. (1978). 
+  !         Combinatorial algorithms for computers and calculators (2nd ed.). 
+  !         Academic Pr.
+
+  !     HISTORY
+  !>        \author Juliane Mai
+  !>        \date Feb 2013
+  !         Modified, 
+
+  INTERFACE next_permut
+     MODULE PROCEDURE next_permut_i4, next_permut_i8
+  END INTERFACE next_permut
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         random_permut
+
+  !     PURPOSE
+  !
+  !>        \brief A random permutation of the integers 1..n.
+  !
+  !>        \details Returns a random permutation of n numbers (1..n)/n
+  !>                 The code adapted from the Fortran library of A. Miller.
+  !
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4/i8) :: n"       permutation of integers 1..n
+  !
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !>        \param[in,out] "integer(i4/i8), optional :: save_state(n_save_state)"  an array for saving the state 
+  !>                                                                               of an uniform random number stream
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !>        \return     integer(i4/i8) :: set(n) &mdash; Random permutation of n integers 1..n
+  !
+  !     RESTRICTIONS
+  !>        \note A random number stream for generating uniform random numbers has to be 
+  !>              initialized before running this function. 
+  !
+  !     EXAMPLE
+  !         set = random_permut(5, 3)
+  !         set --> (/ 2,1,3,5,4 /)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         A. Miller, CSIRO Mathematical & Information Sciences, 
+  !         Clayton 3169, Victoria, Australia, Version 1.13, 2 October 2000.
+  !         http://jblevins.org/mirror/amiller/
+
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date Feb 2013
+  !         Modified, 
+
+  INTERFACE random_permut
+     MODULE PROCEDURE random_permut_i4, random_permut_i8
+  END INTERFACE random_permut
+
+  ! ------------------------------------------------------------------
+
   PRIVATE
 
   INTERFACE factln
@@ -370,6 +598,50 @@ CONTAINS
     binomcoeffi_i8_d1 = nint(exp(factln(n)-factln(k)-factln(n-k)))
 
   END FUNCTION binomcoeffi_i8_d1
+
+  FUNCTION factorial_i4_d0(n)
+    ! Returns the factorial n!
+    IMPLICIT NONE
+
+    INTEGER(i4), INTENT(IN) :: n
+    INTEGER(i4)             :: factorial_i4_d0
+
+    factorial_i4_d0 = nint(exp(factln(n)))
+
+  END FUNCTION factorial_i4_d0
+
+  FUNCTION factorial_i8_d0(n)
+    ! Returns the factorial n!
+    IMPLICIT NONE
+
+    INTEGER(i8), INTENT(IN) :: n
+    INTEGER(i8)             :: factorial_i8_d0
+
+    factorial_i8_d0 = nint(exp(factln(n)))
+
+  END FUNCTION factorial_i8_d0
+
+  FUNCTION factorial_i4_d1(n)
+    ! Returns the factorial n!
+    IMPLICIT NONE
+
+    INTEGER(i4), DIMENSION(:), INTENT(IN) :: n
+    INTEGER(i4), DIMENSION(size(n))       :: factorial_i4_d1
+
+    factorial_i4_d1 = nint(exp(factln(n)))
+
+  END FUNCTION factorial_i4_d1
+
+  FUNCTION factorial_i8_d1(n)
+    ! Returns the factorial n!
+    IMPLICIT NONE
+
+    INTEGER(i8), DIMENSION(:), INTENT(IN) :: n
+    INTEGER(i8), DIMENSION(size(n))       :: factorial_i8_d1
+
+    factorial_i8_d1 = nint(exp(factln(n)))
+
+  END FUNCTION factorial_i8_d1
 
   FUNCTION all_kofn_i4(n, k) result(all)
 
@@ -543,6 +815,7 @@ CONTAINS
     i = 0
     p = 0
     s = k
+    m = 0
 
     ! (C)
     gout = .false.
@@ -574,7 +847,9 @@ CONTAINS
        if (p .le. 0) gout = .true.
     end do
     l = k
-     
+    m0 = 1+int(real((set(k)-1)*n,sp)/real(k,sp),i4)
+    r = 0
+
     do while( l .ne. 0)
        
        ! (E)
@@ -656,9 +931,10 @@ CONTAINS
        set(l) = set(l) + 1
        c = c - 1
     end do
-    i = 0
-    p = 0
+    i = 0_i8
+    p = 0_i8
     s = k
+    m = 0_i8
 
     ! (C)
     gout = .false.
@@ -690,7 +966,9 @@ CONTAINS
        if (p .le. 0) gout = .true.
     end do
     l = k
-     
+    m0 = 1_i8+int(real((set(k)-1)*n,dp)/real(k,dp),i8)
+    r = 0_i8
+
     do while( l .ne. 0)
        
        ! (E)
@@ -734,6 +1012,353 @@ CONTAINS
 
   END FUNCTION random_kofn_i8
 
+  FUNCTION all_permut_i4(n) result(all)
+
+    IMPLICIT NONE
+
+    INTEGER(I4),                         INTENT(IN)  :: n             ! n numbers will be permuted
+    INTEGER(I4), DIMENSION(:,:), allocatable         :: all           ! all permutations
+
+    ! local variables
+    integer(i4)         :: fact
+    integer(i4)         :: i
+
+    fact = factorial(n)
+    allocate(all(fact,n))
+
+    do i=1,n
+       all(1,i) = i
+    end do
+
+    do i=2,fact
+       all(i,:) = next_permut(n, all(i-1,:))
+    end do
+
+  END FUNCTION all_permut_i4
+
+  FUNCTION all_permut_i8(n) result(all)
+
+    IMPLICIT NONE
+
+    INTEGER(I8),                         INTENT(IN)  :: n             ! n numbers will be permuted
+    INTEGER(I8), DIMENSION(:,:), allocatable         :: all           ! all permutations
+
+    ! local variables
+    integer(i8)         :: fact
+    integer(i8)         :: i
+
+    fact = factorial(n)
+    allocate(all(fact,n))
+
+    do i=1,n
+       all(1,i) = i
+    end do
+
+    do i=2,fact
+       all(i,:) = next_permut(n, all(i-1,:))
+    end do
+
+  END FUNCTION all_permut_i8
+
+  FUNCTION next_permut_i4(n, previous) result(next)
+
+    implicit none
+
+    integer(i4),               intent(in) :: n
+    integer(i4), dimension(n), intent(in) :: previous
+    integer(i4), dimension(n)             :: next
+
+    ! local variables
+    integer(i4)                 :: i, j
+    integer(i4), dimension(n-1) :: s, d
+    integer(i4)                 :: indx, indx2, found_case
+    integer(i4)                 :: largest, smallest
+    logical                     :: last
+
+    ! calculate d
+    do i=1,n-1
+       d(i) = 0
+       s(i) = 0
+       do j=1,i
+          if (previous(j) .gt. previous(i+1)) then
+             d(i) = d(i)+1
+          end if
+       end do
+       do j=1, i
+          s(i) = s(i) + d(j)
+       end do
+    end do
+
+    ! check if last one
+    last = .true.
+    if( mod(n,2_i4) .eq. 0_i4 ) then
+       ! (a) n odd:  last sequence is (2, 3, 4 ... n, 1)
+       do i=1,n-1
+          last = last .and. (previous(i) .eq. (i+1))
+       end do
+       last = last .and. (previous(n) .eq. 1)
+    else
+       ! (b) n even: last sequence is (3, 4, 5, ..., n, 2, 1)
+       do i=1,n-2
+          last = last .and. (previous(i) .eq. (i+2))
+       end do
+       last = last .and. (previous(n-1) .eq. 2)
+       last = last .and. (previous(n)   .eq. 1)
+    end if
+    if (last) then
+       do i=1,n
+          next(i) = i
+       end do
+       ! stop already here
+       return
+    end if
+    
+    if ( mod(s(n-1),2_i4) .eq. 0_i4) then
+       ! if s(n-1) is even interchange previous(1) and previous(2)
+       next = previous
+       next(2) = previous(1)
+       next(1) = previous(2)
+    else
+       ! if s(n-1) is odd do some more work...
+       ! (1) find index and case: 
+       !         case 1 :  d(indx) < indx && s(indx) odd
+       !         case 2 :  d(indx) > 0    && s(indx) even
+       !         indx where case 1 or 2 fullfilled first time
+       found_case = 0_i4
+       indx = 0_i4
+       do while (found_case .eq. 0_i4)
+          indx = indx + 1_i4
+          ! case 1 ?
+          if ( (mod(s(indx),2_i4) .eq. 1_i4) .and. (d(indx) .lt. indx) ) then
+             found_case = 1_i4
+          else 
+             ! case 2 ?
+             if( (mod(s(indx),2_i4) .eq. 0_i4) .and. (d(indx) .gt. 0_i4) ) then
+                found_case = 2_i4
+             end if
+          end if
+       end do
+       ! (2a) case 1 fulfilled: search largest number previous(i),(i=1,indx) 
+       !                        less than previous(indx+1)
+       ! (2b) case 2 fulfilled: search smallest number previous(i),(i=1,indx) 
+       !                        greater than previous(indx+1)
+       select case(found_case)
+          case(1)
+             indx2 = indx+1
+             largest = 1
+             do i=1,indx
+                if( (previous(i) .lt. previous(indx+1)) .and. (largest .le. previous(i)) ) then
+                   indx2 = i
+                   largest = previous(i)
+                end if
+             end do
+          case(2)
+             indx2 = indx+1
+             smallest = n
+             do i=1,indx
+                if( (previous(i) .gt. previous(indx+1)) .and. (smallest .ge. previous(i)) ) then
+                   indx2 = i
+                   smallest = previous(i)
+                end if
+             end do
+          case default
+             stop 'next_permut: something went wrong here'
+       end select
+       ! (3) swap previous(indx2) and previous(indx+1)
+       next = previous
+       next(indx2) = previous(indx+1)
+       next(indx+1) = previous(indx2)
+    end if
+
+  END FUNCTION next_permut_i4
+
+  FUNCTION next_permut_i8(n, previous) result(next)
+
+    implicit none
+
+    integer(i8),               intent(in) :: n
+    integer(i8), dimension(n), intent(in) :: previous
+    integer(i8), dimension(n)             :: next
+
+    ! local variables
+    integer(i8)                 :: i, j
+    integer(i8), dimension(n-1) :: s, d
+    integer(i8)                 :: indx, indx2, found_case
+    integer(i8)                 :: largest, smallest
+    logical                     :: last
+
+    ! calculate d
+    do i=1,n-1
+       d(i) = 0
+       s(i) = 0
+       do j=1,i
+          if (previous(j) .gt. previous(i+1)) then
+             d(i) = d(i)+1
+          end if
+       end do
+       do j=1, i
+          s(i) = s(i) + d(j)
+       end do
+    end do
+
+    ! check if last one
+    last = .true.
+    if( mod(n,2_i8) .eq. 0_i8 ) then
+       ! (a) n odd:  last sequence is (2, 3, 4 ... n, 1)
+       do i=1,n-1
+          last = last .and. (previous(i) .eq. (i+1))
+       end do
+       last = last .and. (previous(n) .eq. 1)
+    else
+       ! (b) n even: last sequence is (3, 4, 5, ..., n, 2, 1)
+       do i=1,n-2
+          last = last .and. (previous(i) .eq. (i+2))
+       end do
+       last = last .and. (previous(n-1) .eq. 2)
+       last = last .and. (previous(n)   .eq. 1)
+    end if
+    if (last) then
+       do i=1,n
+          next(i) = i
+       end do
+       ! stop already here
+       return
+    end if
+    
+    if ( mod(s(n-1),2_i8) .eq. 0_i8) then
+       ! if s(n-1) is even interchange previous(1) and previous(2)
+       next = previous
+       next(2) = previous(1)
+       next(1) = previous(2)
+    else
+       ! if s(n-1) is odd do some more work...
+       ! (1) find index and case: 
+       !         case 1 :  d(indx) < indx && s(indx) odd
+       !         case 2 :  d(indx) > 0    && s(indx) even
+       !         indx where case 1 or 2 fullfilled first time
+       found_case = 0_i8
+       indx = 0_i8
+       do while (found_case .eq. 0_i8)
+          indx = indx + 1_i8
+          ! case 1 ?
+          if ( (mod(s(indx),2_i8) .eq. 1_i8) .and. (d(indx) .lt. indx) ) then
+             found_case = 1_i8
+          else 
+             ! case 2 ?
+             if( (mod(s(indx),2_i8) .eq. 0_i8) .and. (d(indx) .gt. 0_i8) ) then
+                found_case = 2_i8
+             end if
+          end if
+       end do
+       ! (2a) case 1 fulfilled: search largest number previous(i),(i=1,indx) 
+       !                        less than previous(indx+1)
+       ! (2b) case 2 fulfilled: search smallest number previous(i),(i=1,indx) 
+       !                        greater than previous(indx+1)
+       select case(found_case)
+          case(1)
+             indx2 = indx+1
+             largest = 1
+             do i=1,indx
+                if( (previous(i) .lt. previous(indx+1)) .and. (largest .le. previous(i)) ) then
+                   indx2 = i
+                   largest = previous(i)
+                end if
+             end do
+          case(2)
+             indx2 = indx+1
+             smallest = n
+             do i=1,indx
+                if( (previous(i) .gt. previous(indx+1)) .and. (smallest .ge. previous(i)) ) then
+                   indx2 = i
+                   smallest = previous(i)
+                end if
+             end do
+          case default
+             stop 'next_permut: something went wrong here'
+       end select
+       ! (3) swap previous(indx2) and previous(indx+1)
+       next = previous
+       next(indx2) = previous(indx+1)
+       next(indx+1) = previous(indx2)
+    end if
+
+  END FUNCTION next_permut_i8
+
+  FUNCTION random_permut_i4(n, save_state)
+    !
+    ! Generate a random ordering of the integers 1 ... n.
+    !
+    use mo_xor4096,      only: n_save_state
+    use mo_xor4096_apps, only: xor4096_array
+
+    implicit none
+
+    INTEGER(i4),                                    INTENT(IN)    :: n
+    INTEGER(i4), DIMENSION(n_save_state), OPTIONAL, INTENT(INOUT) :: save_state
+    INTEGER(i4), DIMENSION(n)                                     :: random_permut_i4
+
+    !     Local variables
+    INTEGER(i4)                 :: i, k
+    REAL(sp),    DIMENSION(1:n) :: wk
+    INTEGER(i4), DIMENSION(1:n) :: ii, jj
+
+    random_permut_i4(1:n) = (/ (i, i=1, n) /)
+    !     Starting at the end, swap the current last indicator with one
+    !     randomly chosen from those preceeding it.
+    ii(1:n) = (/ (i, i=1, n) /)
+    if( present(save_state) ) then
+       call xor4096_array(wk, save_state=save_state)
+    else
+       call xor4096_array(wk)
+    end if
+    jj = 1 + int(real(ii,sp)*wk)
+    do i=n, 2, -1
+       if (jj(i) < i) then
+          k = random_permut_i4(i)
+          random_permut_i4(i) = random_permut_i4(jj(i))
+          random_permut_i4(jj(i)) = k
+       end if
+    end do
+
+  END FUNCTION random_permut_i4
+
+  FUNCTION random_permut_i8(n, save_state)
+    !
+    ! Generate a random ordering of the integers 1 ... n.
+    !
+    use mo_xor4096,      only: n_save_state
+    use mo_xor4096_apps, only: xor4096_array
+
+    implicit none
+
+    INTEGER(i8),                                    INTENT(IN)    :: n
+    INTEGER(i8), DIMENSION(n_save_state), OPTIONAL, INTENT(INOUT) :: save_state
+    INTEGER(i8), DIMENSION(n)                                     :: random_permut_i8
+
+    !     Local variables
+    INTEGER(i8)                 :: i, k
+    REAL(dp),    DIMENSION(1:n) :: wk
+    INTEGER(i8), DIMENSION(1:n) :: ii, jj
+
+    random_permut_i8(1:n) = (/ (i, i=1, n) /)
+    !     Starting at the end, swap the current last indicator with one
+    !     randomly chosen from those preceeding it.
+    ii(1:n) = (/ (i, i=1, n) /)
+    if( present(save_state) ) then
+       call xor4096_array(wk, save_state=save_state)
+    else
+       call xor4096_array(wk)
+    end if
+    jj = 1 + int(real(ii,dp)*wk)
+    do i=n, 2, -1
+       if (jj(i) < i) then
+          k = random_permut_i8(i)
+          random_permut_i8(i) = random_permut_i8(jj(i))
+          random_permut_i8(jj(i)) = k
+       end if
+    end do
+
+  END FUNCTION random_permut_i8
 
   ! ------------------------------------------------------------------
   ! PRIVATE
