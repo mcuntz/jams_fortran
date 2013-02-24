@@ -12,17 +12,14 @@ program combinatorics
   implicit none
 
   integer(i4)                          :: c_i4
-  integer(i4)                          :: i, j
+  integer(i4)                          :: i
   integer(i4)                          :: next_i4(3)
   integer(i4)                          :: iseed
   real(sp)                             :: rn
   integer(i4), dimension(n_save_state) :: save_state_i4
   integer(i4)                          :: random_i4(3)
   integer(i4), allocatable             :: all_i4(:,:)
-
-  integer(i4) :: counter(5)
-
-  logical :: isgood
+  logical                              :: isgood
 
 
   isgood = .true.
