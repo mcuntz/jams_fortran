@@ -445,8 +445,7 @@ CONTAINS
           found = .true.
        end if
     end do
-
-    if( indx .gt. 1) then
+    if( (indx .gt. 1) .or. ((indx .eq. 1) .and. (previous(1) .ne. (n-k+1))) ) then
        ! it is a subset in between
        next = previous
        next(indx) = previous(indx) + 1
@@ -487,7 +486,7 @@ CONTAINS
        end if
     end do
 
-    if( indx .gt. 1) then
+    if( (indx .gt. 1) .or. ((indx .eq. 1) .and. (previous(1) .ne. (n-k+1))) ) then
        ! it is a subset in between
        next = previous
        next(indx) = previous(indx) + 1

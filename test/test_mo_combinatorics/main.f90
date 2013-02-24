@@ -11,14 +11,16 @@ program combinatorics
 
   implicit none
 
-  integer(i4) :: c_i4
-  integer(i4) :: i
-  integer(i4) :: next_i4(3)
-  integer(i4) :: iseed
-  real(sp)    :: rn
+  integer(i4)                          :: c_i4
+  integer(i4)                          :: i, j
+  integer(i4)                          :: next_i4(3)
+  integer(i4)                          :: iseed
+  real(sp)                             :: rn
   integer(i4), dimension(n_save_state) :: save_state_i4
-  integer(i4) :: random_i4(3)
-  integer(i4), allocatable :: all_i4(:,:)
+  integer(i4)                          :: random_i4(3)
+  integer(i4), allocatable             :: all_i4(:,:)
+
+  integer(i4) :: counter(5)
 
   logical :: isgood
 
@@ -39,10 +41,10 @@ program combinatorics
   ! Test: Next k of n subset
   !--------------------------------------------------
 
-  next_i4 = next_kofn(5,3,(/1,3,5/))
+  next_i4 = next_kofn(5,3,(/1,4,5/))
 
   write(*,*) 'NEXT_KOFN subset after (/1,3,5/) : ', next_i4
-  if ( any(next_i4 .ne. (/ 1_i4, 4_i4, 5_i4 /)) ) isgood = .false.
+  if ( any(next_i4 .ne. (/ 2_i4, 3_i4, 4_i4 /)) ) isgood = .false.
 
   !--------------------------------------------------
   ! Test: All k of n subset
@@ -54,6 +56,7 @@ program combinatorics
   do i=1,size(all_i4,1)
      write(*,*) '                              subset #',i,'   ',all_i4(i,:)
   end do
+
   if ( any(all_i4(5,:) .ne. (/ 1_i4, 3_i4, 5_i4 /)) ) isgood = .false.
 
   !--------------------------------------------------
