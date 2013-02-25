@@ -30,7 +30,7 @@ module mo_ncwrite
        nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, &
        NF90_close, nf90_noerr, nf90_strerror, NF90_CLOBBER, &
        NF90_MAX_NAME, NF90_WRITE, nf90_inq_varid, nf90_inquire_variable, &
-       nf90_inquire_dimension, nf90_open
+       nf90_inquire_dimension, nf90_open, NF90_64BIT_OFFSET
 
   ! public routines -------------------------------------------------------------------
   public :: close_netcdf         ! save and close the netcdf file
@@ -256,8 +256,9 @@ contains
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
+  !              Stephan Thober  Feb 2013 - added flag for large file support
 
-  subroutine create_netcdf(Filename,ncid,Info)
+  subroutine create_netcdf(Filename,ncid,Info,LFS)
     !
     implicit none
     !
@@ -265,14 +266,22 @@ contains
     character(len=*), intent(in)           :: Filename
     integer(i4),      intent(out)          :: ncid
     logical,          intent(in), optional :: Info
+    logical,          intent(in), optional :: LFS   ! Large File Support
     !
+    logical                                   :: LargeFile
     integer(i4)                               :: i, j, k
     integer(i4), dimension(nAttDim)           :: att_INT
     real(sp),    dimension(nAttDim)           :: att_FLOAT
     character(len=maxLen), dimension(nAttDim) :: att_CHAR
     !
+    LargeFile = .false.
+    if ( present( LFS ) ) LargeFile = LFS
     ! 1  Create netcdf dataset: enter define mode     ->  get ncId
-    call check(nf90_create(trim(Filename), NF90_CLOBBER, ncId ))
+    if ( LargeFile ) then
+       call check(nf90_create(trim(Filename), NF90_64BIT_OFFSET, ncId ))
+    else
+       call check(nf90_create(trim(Filename), NF90_CLOBBER, ncId ))
+    end if
     !
     ! 2  Define dimensions                                 -> get dimId
     do i=1, nDims
