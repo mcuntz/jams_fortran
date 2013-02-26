@@ -8,7 +8,7 @@ program combinatorics
   use mo_kind,          only: i4, sp
   use mo_combinatorics, only: binomcoeffi, factorial
   use mo_combinatorics, only: next_kofn,   all_kofn,   random_kofn
-  use mo_combinatorics, only: next_permut, all_permut, random_permut
+  use mo_combinatorics, only: next_index_permut, all_index_permut, random_index_permut, random_permut
   use mo_xor4096,       only: xor4096, n_save_state
 
   implicit none
@@ -24,6 +24,8 @@ program combinatorics
   integer(i4), allocatable             :: all_i4(:,:)
   integer(i4), dimension(4)            :: permut_i4
   logical                              :: isgood
+  ! integer(i4)                          :: j, nn
+  ! integer(i4), dimension(4,4)          :: count_permut_i4
 
 
   isgood = .true.
@@ -62,7 +64,7 @@ program combinatorics
   !--------------------------------------------------
 
   next_i4 = next_kofn(5,3,(/1,4,5/))
-  write(*,*) 'NEXT_KOFN subset after (/1,3,5/) : ', next_i4
+  write(*,*) 'NEXT_KOFN subset after (/1,4,5/) : ', next_i4
   if ( any(next_i4 .ne. (/ 2_i4, 3_i4, 4_i4 /)) ) isgood = .false.
 
   !--------------------------------------------------
@@ -79,29 +81,39 @@ program combinatorics
   write(*,*) ' '
 
   !--------------------------------------------------
-  ! Test: Random permutation
+  ! Test: Random index permutation
   !--------------------------------------------------
 
   iseed=1206_i4
   call xor4096(iSeed, rn, save_state=save_state_i4)
 
-  permut_i4 = random_permut(4_i4)
-  write(*,*) 'RANDOM_PERMUT of 4                        : ',permut_i4
-  if ( any(permut_i4(:) .ne. (/ 1_i4, 3_i4, 2_i4, 4_i4 /)) ) isgood = .false.
+  ! count_permut_i4 = 0
+  ! nn = 100000
+  ! do i=1, nn
+  !    permut_i4 = random_index_permut(4_i4)
+  !    forall(j=1:4) count_permut_i4(permut_i4(j),j) = count_permut_i4(permut_i4(j),j) + 1
+  !    !write(*,*) 'RANDOM_INDEX_PERMUT of 4                  : ',permut_i4
+  ! end do
+  ! print*, nn/4
+  ! print*, count_permut_i4
+  permut_i4 = random_index_permut(4_i4)
+  write(*,*) 'RANDOM_INDEX_PERMUT of 4                  : ',permut_i4
+  if ( any(permut_i4(:) .ne. (/ 4_i4, 1_i4, 2_i4, 3_i4 /)) ) isgood = .false.
 
   !--------------------------------------------------
-  ! Test: Next permutation
+  ! Test: Next index permutation
   !--------------------------------------------------
 
-  next_4_i4 = next_permut(4,(/1,4,2,3/))
-  write(*,*) 'NEXT_PERMUT permutation after (/1,4,2,3/) : ', next_4_i4
+  next_4_i4 = next_index_permut(4,(/4,1,2,3/))
+  write(*,*) 'NEXT_INDEX_PERMUT permutation after (/4,1,2,3/) : ', next_4_i4
+  if ( any(next_4_i4(:) .ne. (/ 2_i4, 1_i4, 4_i4, 3_i4 /)) ) isgood = .false.
 
   !--------------------------------------------------
-  ! Test: All permutations
+  ! Test: All index permutations
   !--------------------------------------------------
 
-  all_i4 = all_permut(3)
-  write(*,*) 'ALL_PERMUT of 3                           : '
+  all_i4 = all_index_permut(3)
+  write(*,*) 'ALL_INDEX_PERMUT of 3                     : '
   do i=1,size(all_i4,1)
      write(*,*) '    permutation #',i,'   ',all_i4(i,:)
   end do
@@ -109,7 +121,17 @@ program combinatorics
 
   deallocate(all_i4)
 
+  !--------------------------------------------------
+  ! Test: Random permutation
+  !--------------------------------------------------
 
+  iseed=1206_i4
+  call xor4096(iSeed, rn, save_state=save_state_i4)
+
+  forall(i=1:4) permut_i4(i) = i+6
+  call random_permut(permut_i4)
+  write(*,*) 'RANDOM_PERMUT of 4                  : ',permut_i4
+  if ( any(permut_i4(:) .ne. (/ 10_i4, 7_i4, 8_i4, 9_i4 /)) ) isgood = .false.
 
 
   write(*,*) ''

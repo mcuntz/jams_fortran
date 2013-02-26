@@ -66,14 +66,15 @@ MODULE mo_combinatorics
 
   IMPLICIT NONE
 
-  PUBLIC :: binomcoeffi     ! Binomial coefficient (n choose k)
-  PUBLIC :: factorial       ! Factorial (n!)
-  PUBLIC :: random_kofn     ! Random selection of k of n
-  PUBLIC :: next_kofn       ! Next selection of k of n to a given one
-  PUBLIC :: all_kofn        ! All selections of k of n
-  PUBLIC :: random_permut   ! Random permutation to a given one
-  PUBLIC :: next_permut     ! Next permutation to a given one
-  PUBLIC :: all_permut      ! All permutations of n
+  PUBLIC :: binomcoeffi         ! Binomial coefficient (n choose k)
+  PUBLIC :: factorial           ! Factorial (n!)
+  PUBLIC :: random_kofn         ! Random selection of k of n
+  PUBLIC :: next_kofn           ! Next selection of k of n to a given one
+  PUBLIC :: all_kofn            ! All selections of k of n
+  PUBLIC :: random_permut       ! Random permutation of a vector
+  PUBLIC :: random_index_permut ! Random permutation of (1..n)
+  PUBLIC :: next_index_permut   ! Next permutation of (1..n) to a given one
+  PUBLIC :: all_index_permut    ! All permutations of (1..n)
 
   ! ------------------------------------------------------------------
 
@@ -215,14 +216,14 @@ MODULE mo_combinatorics
   !         None
   !
   !     RETURN
-  !>        \return     integer(i4/i8), allocatable, dimension(:,:) :: all &mdash; All selections. Dim_2=k.
+  !>        \return     integer(i4/i8), allocatable, dimension(:,:) :: alle &mdash; All selections. Dim_2=k.
   !
   !     RESTRICTIONS
   !         None
   !
   !     EXAMPLE
-  !         all = all_kofn(3, 2)
-  !         all --> (/ (/ 1,2 /), (/ 1,3 /), (/ 2,3 /) /) 
+  !         alle = all_kofn(3, 2)
+  !         alle --> (/ (/ 1,2 /), (/ 1,3 /), (/ 2,3 /) /) 
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -359,7 +360,7 @@ MODULE mo_combinatorics
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         all_permut
+  !         all_index_permut
 
   !     PURPOSE
   !
@@ -396,7 +397,7 @@ MODULE mo_combinatorics
   !         None
   !
   !     EXAMPLE
-  !         permut = all_permut(3)
+  !         permut = all_index_permut(3)
   !         permut --> (/ (/ 1,2,3 /), (/2,1,3/), (/3,1,2/), (/ 1,3,2 /), (/2,3,1/), (/3,2,1/) /)
   !         -> see also example in test directory
 
@@ -410,14 +411,14 @@ MODULE mo_combinatorics
   !>        \date Feb 2013
   !         Modified, 
 
-  INTERFACE all_permut
-     MODULE PROCEDURE all_permut_i4, all_permut_i8
-  END INTERFACE all_permut
+  INTERFACE all_index_permut
+     MODULE PROCEDURE all_index_permut_i4, all_index_permut_i8
+  END INTERFACE all_index_permut
 
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         next_permut
+  !         next_index_permut
 
   !     PURPOSE
   !
@@ -454,7 +455,7 @@ MODULE mo_combinatorics
   !         None
   !
   !     EXAMPLE
-  !         next = next_permut(5, (/1,2,3,4,5/))
+  !         next = next_index_permut(5, (/1,2,3,4,5/))
   !         next --> (/ 2,1,3,4,5 /)
   !         -> see also example in test directory
 
@@ -468,20 +469,20 @@ MODULE mo_combinatorics
   !>        \date Feb 2013
   !         Modified, 
 
-  INTERFACE next_permut
-     MODULE PROCEDURE next_permut_i4, next_permut_i8
-  END INTERFACE next_permut
+  INTERFACE next_index_permut
+     MODULE PROCEDURE next_index_permut_i4, next_index_permut_i8
+  END INTERFACE next_index_permut
 
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         random_permut
+  !         random_index_permut
 
   !     PURPOSE
   !
   !>        \brief A random permutation of the integers 1..n.
   !
-  !>        \details Returns a random permutation of n numbers (1..n)/n
+  !>        \details Returns a random permutation of n numbers (1..n)\n
   !>                 The code adapted from the Fortran library of A. Miller.
   !
   !     INTENT(IN)
@@ -511,7 +512,7 @@ MODULE mo_combinatorics
   !>              initialized before running this function. 
   !
   !     EXAMPLE
-  !         set = random_permut(5, 3)
+  !         set = random_index_permut(5, 3)
   !         set --> (/ 2,1,3,5,4 /)
   !         -> see also example in test directory
 
@@ -525,8 +526,65 @@ MODULE mo_combinatorics
   !>        \date Feb 2013
   !         Modified, 
 
+  INTERFACE random_index_permut
+     MODULE PROCEDURE random_index_permut_i4, random_index_permut_i8
+  END INTERFACE random_index_permut
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         random_permut
+
+  !     PURPOSE
+  !         Calculates a random permutation of n numbers
+  !
+  !>        \brief Random permutation.
+  !
+  !>        \details Randomly permutes the elements of a given vector.
+  !
+  !     INTENT(IN)
+  !         None
+  !
+  !     INTENT(INOUT)
+  !>        \param[inout] "integer(i4/i8)/real(sp/dp) :: vec(:)"   1D-array to be shuffled
+
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !>        \param[in,out] "integer(i4/i8), optional :: save_state(n_save_state)"  an array for saving the state 
+  !>                                                                               of a uniform random number stream
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !         None
+  !
+  !     RESTRICTIONS
+  !>        \note A random number stream for generating uniform random numbers has to be 
+  !>              initialized before running this function. 
+  !
+  !     EXAMPLE
+  !         a = (/5,3,2/)
+  !         call random_permut(a)
+  !         a --> (/ 2,5,3 /)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         Nijenhuis, A., & Wilf, H. S. (1978).\n
+  !         Combinatorial algorithms for computers and calculators (2nd ed.). Academic Pr., p. 63
+  !         Algorithm RANPER
+
+  !     HISTORY
+  !>        \author Stephan Thober, Juliane Mai, Matthias Cuntz
+  !>        \date Feb 2013
+
   INTERFACE random_permut
-     MODULE PROCEDURE random_permut_i4, random_permut_i8
+     MODULE PROCEDURE random_permut_i4, random_permut_i8, random_permut_sp, random_permut_dp
   END INTERFACE random_permut
 
   ! ------------------------------------------------------------------
@@ -599,6 +657,8 @@ CONTAINS
 
   END FUNCTION binomcoeffi_i8_d1
 
+  ! ------------------------------------------------------------------
+
   FUNCTION factorial_i4_d0(n)
     ! Returns the factorial n!
     IMPLICIT NONE
@@ -643,55 +703,55 @@ CONTAINS
 
   END FUNCTION factorial_i8_d1
 
-  FUNCTION all_kofn_i4(n, k) result(all)
+  ! ------------------------------------------------------------------
+
+  FUNCTION all_kofn_i4(n, k) result(alle)
 
     IMPLICIT NONE
 
     INTEGER(I4),                         INTENT(IN)  :: n             ! from n numbers will be selected
     INTEGER(I4),                         INTENT(IN)  :: k             ! k numbers will be selected
-    INTEGER(I4), DIMENSION(:,:), allocatable         :: all           ! all subsets
+    INTEGER(I4), DIMENSION(:,:), allocatable         :: alle           ! all subsets
 
     ! local variables
     integer(i4)         :: bico
     integer(i4)         :: i
 
     bico = binomcoeffi(n,k)
-    allocate(all(bico,k))
+    allocate(alle(bico,k))
 
-    do i=1,k
-       all(1,i) = i
-    end do
+    forall(i=1:k) alle(1,i) = i
 
     do i=2,bico
-       all(i,:) = next_kofn(n, k,  all(i-1,:))
+       alle(i,:) = next_kofn(n, k,  alle(i-1,:))
     end do
 
   END FUNCTION all_kofn_i4
 
-  FUNCTION all_kofn_i8(n, k) result(all)
+  FUNCTION all_kofn_i8(n, k) result(alle)
 
     IMPLICIT NONE
 
     INTEGER(I8),                         INTENT(IN)  :: k             ! k numbers will be selected
     INTEGER(I8),                         INTENT(IN)  :: n             ! from n numbers will be selected
-    INTEGER(I8), DIMENSION(:,:), allocatable         :: all           ! all subsets
+    INTEGER(I8), DIMENSION(:,:), allocatable         :: alle          ! all subsets
 
     ! local variables
     integer(i8)         :: bico
     integer(i8)         :: i
 
     bico = binomcoeffi(n,k)
-    allocate(all(bico,k))
+    allocate(alle(bico,k))
 
-    do i=1,k
-       all(1,i) = i
-    end do
+    forall(i=1:k) alle(1,i) = i
 
     do i=2,bico
-       all(i,:) = next_kofn(n, k,  all(i-1,:))
+       alle(i,:) = next_kofn(n, k,  alle(i-1,:))
     end do
 
   END FUNCTION all_kofn_i8
+
+  ! ------------------------------------------------------------------
 
   FUNCTION next_kofn_i4(n, k, previous) result(next)
 
@@ -721,14 +781,10 @@ CONTAINS
        ! it is a subset in between
        next = previous
        next(indx) = previous(indx) + 1
-       do i=indx+1,k
-          next(i) = next(i-1) + 1
-       end do
+       forall(i=indx+1:k) next(i) = next(indx) + i-indx
     else
        ! there do not exist a next subset and first one (/1, ..., k/) is returned
-       do i=1, k
-          next(i) = i
-       end do
+       forall(i=1:k) next(i) = i
     end if        
 
   END FUNCTION next_kofn_i4
@@ -760,19 +816,17 @@ CONTAINS
 
      if( (indx .gt. 1) .or. ( previous(1) .ne. (n-k+1)) ) then
        ! it is a subset in between
-       next = previous
+       next       = previous
        next(indx) = previous(indx) + 1
-       do i=indx+1,k
-          next(i) = next(i-1) + 1
-       end do
+       forall(i=indx+1:k) next(i) = next(indx) + i-indx
     else
        ! there do not exist a next subset and first one (/1, ..., k/) is returned
-       do i=1, k
-          next(i) = i
-       end do
+       forall(i=1:k) next(i) = i
     end if        
 
   END FUNCTION next_kofn_i8
+
+  ! ------------------------------------------------------------------
 
   FUNCTION random_kofn_i4(n, k, save_state) result(set)
     
@@ -795,9 +849,7 @@ CONTAINS
 
     ! (A)
     c=k
-    do  i=1,k
-       set(i)=(i-1)*n/k
-    end do
+    forall(i=1:k) set(i) = ((i-1)*n)/k
     
     ! (B)
     do while (c .gt. 0)
@@ -914,9 +966,7 @@ CONTAINS
 
     ! (A)
     c=k
-    do  i=1,k
-       set(i)=(i-1)*n/k
-    end do
+    forall(i=1:k) set(i) = ((i-1)*n)/k
     
     ! (B)
     do while (c .gt. 0)
@@ -1012,55 +1062,55 @@ CONTAINS
 
   END FUNCTION random_kofn_i8
 
-  FUNCTION all_permut_i4(n) result(all)
+  ! ------------------------------------------------------------------
+
+  FUNCTION all_index_permut_i4(n) result(alle)
 
     IMPLICIT NONE
 
     INTEGER(I4),                         INTENT(IN)  :: n             ! n numbers will be permuted
-    INTEGER(I4), DIMENSION(:,:), allocatable         :: all           ! all permutations
+    INTEGER(I4), DIMENSION(:,:), allocatable         :: alle           ! all permutations
 
     ! local variables
     integer(i4)         :: fact
     integer(i4)         :: i
 
     fact = factorial(n)
-    allocate(all(fact,n))
+    allocate(alle(fact,n))
 
-    do i=1,n
-       all(1,i) = i
-    end do
+    forall(i=1:n) alle(1,i) = i
 
     do i=2,fact
-       all(i,:) = next_permut(n, all(i-1,:))
+       alle(i,:) = next_index_permut(n, alle(i-1,:))
     end do
 
-  END FUNCTION all_permut_i4
+  END FUNCTION all_index_permut_i4
 
-  FUNCTION all_permut_i8(n) result(all)
+  FUNCTION all_index_permut_i8(n) result(alle)
 
     IMPLICIT NONE
 
     INTEGER(I8),                         INTENT(IN)  :: n             ! n numbers will be permuted
-    INTEGER(I8), DIMENSION(:,:), allocatable         :: all           ! all permutations
+    INTEGER(I8), DIMENSION(:,:), allocatable         :: alle           ! all permutations
 
     ! local variables
     integer(i8)         :: fact
     integer(i8)         :: i
 
     fact = factorial(n)
-    allocate(all(fact,n))
+    allocate(alle(fact,n))
 
-    do i=1,n
-       all(1,i) = i
-    end do
+    forall(i=1:n) alle(1,i) = i
 
     do i=2,fact
-       all(i,:) = next_permut(n, all(i-1,:))
+       alle(i,:) = next_index_permut(n, alle(i-1,:))
     end do
 
-  END FUNCTION all_permut_i8
+  END FUNCTION all_index_permut_i8
 
-  FUNCTION next_permut_i4(n, previous) result(next)
+  ! ------------------------------------------------------------------
+
+  FUNCTION next_index_permut_i4(n, previous) result(next)
 
     implicit none
 
@@ -1123,7 +1173,7 @@ CONTAINS
        ! (1) find index and case: 
        !         case 1 :  d(indx) < indx && s(indx) odd
        !         case 2 :  d(indx) > 0    && s(indx) even
-       !         indx where case 1 or 2 fullfilled first time
+       !         indx where case 1 or 2 fulfilled first time
        found_case = 0_i4
        indx = 0_i4
        do while (found_case .eq. 0_i4)
@@ -1162,7 +1212,7 @@ CONTAINS
                 end if
              end do
           case default
-             stop 'next_permut: something went wrong here'
+             stop 'next_index_permut_i4: something went wrong here'
        end select
        ! (3) swap previous(indx2) and previous(indx+1)
        next = previous
@@ -1170,9 +1220,9 @@ CONTAINS
        next(indx+1) = previous(indx2)
     end if
 
-  END FUNCTION next_permut_i4
+  END FUNCTION next_index_permut_i4
 
-  FUNCTION next_permut_i8(n, previous) result(next)
+  FUNCTION next_index_permut_i8(n, previous) result(next)
 
     implicit none
 
@@ -1235,7 +1285,7 @@ CONTAINS
        ! (1) find index and case: 
        !         case 1 :  d(indx) < indx && s(indx) odd
        !         case 2 :  d(indx) > 0    && s(indx) even
-       !         indx where case 1 or 2 fullfilled first time
+       !         indx where case 1 or 2 fulfilled first time
        found_case = 0_i8
        indx = 0_i8
        do while (found_case .eq. 0_i8)
@@ -1274,7 +1324,7 @@ CONTAINS
                 end if
              end do
           case default
-             stop 'next_permut: something went wrong here'
+             stop 'next_index_permut_i8: something went wrong here'
        end select
        ! (3) swap previous(indx2) and previous(indx+1)
        next = previous
@@ -1282,9 +1332,149 @@ CONTAINS
        next(indx+1) = previous(indx2)
     end if
 
-  END FUNCTION next_permut_i8
+  END FUNCTION next_index_permut_i8
 
-  FUNCTION random_permut_i4(n, save_state)
+  ! ------------------------------------------------------------------
+
+  SUBROUTINE random_permut_i4(vec, save_state)
+    !
+    ! Generate a random permuation of the inout vector vec
+    !
+    use mo_xor4096, only: xor4096, n_save_state
+
+    implicit none
+
+    INTEGER(i4), DIMENSION(:),                      INTENT(INOUT) :: vec
+    INTEGER(i4), DIMENSION(n_save_state), OPTIONAL, INTENT(INOUT) :: save_state
+
+    !     Local variables
+    INTEGER(i4) :: l, m, nvec
+    INTEGER(i4) :: iSeed
+    INTEGER(i4) :: L1
+    REAL(sp)    :: rn
+
+    iSeed = 0_i4
+
+    nvec = size(vec)
+    do m = 1, nvec
+       if (present(save_state)) then
+          call xor4096(iSeed, rn, save_state=save_state)
+       else
+          call xor4096(iSeed, rn)
+       end if
+       l      = m + int(rn * real(nvec + 1 - m, sp), i4)
+       L1     = vec(l)
+       vec(l) = vec(m)
+       vec(m) = L1
+    end do
+
+  END SUBROUTINE random_permut_i4
+
+  SUBROUTINE random_permut_i8(vec, save_state)
+    !
+    ! Generate a random permuation of the inout vector vec
+    !
+    use mo_xor4096, only: xor4096, n_save_state
+
+    implicit none
+
+    INTEGER(i8), DIMENSION(:),                      INTENT(INOUT) :: vec
+    INTEGER(i8), DIMENSION(n_save_state), OPTIONAL, INTENT(INOUT) :: save_state
+
+    !     Local variables
+    INTEGER(i4) :: l, m, nvec
+    INTEGER(i8) :: iSeed
+    INTEGER(i8) :: L1
+    REAL(dp)    :: rn
+
+    iSeed = 0_i8
+
+    nvec = size(vec)
+    do m = 1, nvec
+       if (present(save_state)) then
+          call xor4096(iSeed, rn, save_state=save_state)
+       else
+          call xor4096(iSeed, rn)
+       end if
+       l      = m + int(rn * real(nvec + 1 - m, dp), i4)
+       L1     = vec(l)
+       vec(l) = vec(m)
+       vec(m) = L1
+    end do
+
+  END SUBROUTINE random_permut_i8
+
+  SUBROUTINE random_permut_sp(vec, save_state)
+    !
+    ! Generate a random permuation of the inout vector vec
+    !
+    use mo_xor4096, only: xor4096, n_save_state
+
+    implicit none
+
+    REAL(sp),    DIMENSION(:),                      INTENT(INOUT) :: vec
+    INTEGER(i4), DIMENSION(n_save_state), OPTIONAL, INTENT(INOUT) :: save_state
+
+    !     Local variables
+    INTEGER(i4) :: l, m, nvec
+    INTEGER(i4) :: iSeed
+    REAL(sp)    :: L1
+    REAL(sp)    :: rn
+
+    iSeed = 0_i4
+
+    nvec = size(vec)
+    do m = 1, nvec
+       if (present(save_state)) then
+          call xor4096(iSeed, rn, save_state=save_state)
+       else
+          call xor4096(iSeed, rn)
+       end if
+       l      = m + int(rn * real(nvec + 1 - m, sp), i4)
+       L1     = vec(l)
+       vec(l) = vec(m)
+       vec(m) = L1
+    end do
+
+  END SUBROUTINE random_permut_sp
+
+  SUBROUTINE random_permut_dp(vec, save_state)
+    !
+    ! Generate a random permuation of the inout vector vec
+    !
+    use mo_xor4096, only: xor4096, n_save_state
+
+    implicit none
+
+    REAL(dp),    DIMENSION(:),                      INTENT(INOUT) :: vec
+    INTEGER(i8), DIMENSION(n_save_state), OPTIONAL, INTENT(INOUT) :: save_state
+
+    !     Local variables
+    INTEGER(i4) :: l, m, nvec
+    INTEGER(i8) :: iSeed
+    REAL(dp)    :: L1
+    REAL(dp)    :: rn
+
+    iSeed = 0_i8
+
+    nvec = size(vec)
+    do m = 1, nvec
+       if (present(save_state)) then
+          call xor4096(iSeed, rn, save_state=save_state)
+       else
+          call xor4096(iSeed, rn)
+       end if
+       l      = m + int(rn * real(nvec + 1 - m, dp), i4)
+       L1     = vec(l)
+       vec(l) = vec(m)
+       vec(m) = L1
+    end do
+
+  END SUBROUTINE random_permut_dp
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION random_index_permut_i4(n, save_state)
     !
     ! Generate a random ordering of the integers 1 ... n.
     !
@@ -1295,34 +1485,20 @@ CONTAINS
 
     INTEGER(i4),                                    INTENT(IN)    :: n
     INTEGER(i4), DIMENSION(n_save_state), OPTIONAL, INTENT(INOUT) :: save_state
-    INTEGER(i4), DIMENSION(n)                                     :: random_permut_i4
+    INTEGER(i4), DIMENSION(n)                                     :: random_index_permut_i4
 
-    !     Local variables
-    INTEGER(i4)                 :: i, k
-    REAL(sp),    DIMENSION(1:n) :: wk
-    INTEGER(i4), DIMENSION(1:n) :: ii, jj
+    INTEGER(i4) :: i
 
-    random_permut_i4(1:n) = (/ (i, i=1, n) /)
-    !     Starting at the end, swap the current last indicator with one
-    !     randomly chosen from those preceeding it.
-    ii(1:n) = (/ (i, i=1, n) /)
-    if( present(save_state) ) then
-       call xor4096_array(wk, save_state=save_state)
+    forall(i=1:n) random_index_permut_i4(i) = i
+    if (present(save_state)) then
+       call random_permut(random_index_permut_i4, save_state=save_state)
     else
-       call xor4096_array(wk)
-    end if
-    jj = 1 + int(real(ii,sp)*wk)
-    do i=n, 2, -1
-       if (jj(i) < i) then
-          k = random_permut_i4(i)
-          random_permut_i4(i) = random_permut_i4(jj(i))
-          random_permut_i4(jj(i)) = k
-       end if
-    end do
+       call random_permut(random_index_permut_i4)
+    endif
 
-  END FUNCTION random_permut_i4
+  END FUNCTION random_index_permut_i4
 
-  FUNCTION random_permut_i8(n, save_state)
+  FUNCTION random_index_permut_i8(n, save_state)
     !
     ! Generate a random ordering of the integers 1 ... n.
     !
@@ -1333,32 +1509,18 @@ CONTAINS
 
     INTEGER(i8),                                    INTENT(IN)    :: n
     INTEGER(i8), DIMENSION(n_save_state), OPTIONAL, INTENT(INOUT) :: save_state
-    INTEGER(i8), DIMENSION(n)                                     :: random_permut_i8
+    INTEGER(i8), DIMENSION(n)                                     :: random_index_permut_i8
 
-    !     Local variables
-    INTEGER(i8)                 :: i, k
-    REAL(dp),    DIMENSION(1:n) :: wk
-    INTEGER(i8), DIMENSION(1:n) :: ii, jj
+    INTEGER(i4) :: i
 
-    random_permut_i8(1:n) = (/ (i, i=1, n) /)
-    !     Starting at the end, swap the current last indicator with one
-    !     randomly chosen from those preceeding it.
-    ii(1:n) = (/ (i, i=1, n) /)
-    if( present(save_state) ) then
-       call xor4096_array(wk, save_state=save_state)
+    forall(i=1:n) random_index_permut_i8(i) = i
+    if (present(save_state)) then
+       call random_permut(random_index_permut_i8, save_state=save_state)
     else
-       call xor4096_array(wk)
-    end if
-    jj = 1 + int(real(ii,dp)*wk)
-    do i=n, 2, -1
-       if (jj(i) < i) then
-          k = random_permut_i8(i)
-          random_permut_i8(i) = random_permut_i8(jj(i))
-          random_permut_i8(jj(i)) = k
-       end if
-    end do
+       call random_permut(random_index_permut_i8)
+    endif
 
-  END FUNCTION random_permut_i8
+  END FUNCTION random_index_permut_i8
 
   ! ------------------------------------------------------------------
   ! PRIVATE
@@ -1463,6 +1625,8 @@ CONTAINS
     where (.not. mask) factln_i8_v_dp = a(n+1)
 
   END FUNCTION factln_i8_v_dp
+
+  ! ------------------------------------------------------------------
 
   FUNCTION gammln_s_sp(z)
     !  Uses Lanczos-type approximation to ln(gamma) for z > 0.
@@ -1639,6 +1803,8 @@ CONTAINS
     gammln_v_dp = LOG(gammln_v_dp) + lnsqrt2pi - (z + sixpt5) + (z - half)*LOG(z + sixpt5)
 
   END FUNCTION gammln_v_dp
+
+  ! ------------------------------------------------------------------
 
   ! Return an arithmetic progression as an array.
   FUNCTION arth_sp_i4(first,increment,n)
