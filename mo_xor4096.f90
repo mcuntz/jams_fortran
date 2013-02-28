@@ -563,14 +563,21 @@ CONTAINS
     end if
 
     if ( present(save_state) .and. all(seed .eq. 0_i4) ) then
-        if (allocated(x) .and. size(save_state,1) .ne. m) then
-           deallocate(x)
-           deallocate(i)
-           deallocate(w)
+        if (allocated(x)) then
+           if (size(x,1) .ne. m) then
+              deallocate(x)
+              deallocate(i)
+              deallocate(w)
+              allocate(i(m))
+              allocate(x(m,0:r-1))
+              allocate(w(m))
+           end if
+        end if
+       if (.not. allocated(x) ) then
            allocate(i(m))
            allocate(x(m,0:r-1))
            allocate(w(m))
-        end if
+       end if
         x(:,0:r-1)  = save_state(:,1:r)
         i(:)        = save_state(:,r+1)
         w(:)        = save_state(:,r+2)
@@ -796,14 +803,21 @@ CONTAINS
     end if
 
     if ( present(save_state) .and. all(seed .eq. 0_i4) ) then
-        if (allocated(x) .and. size(save_state,1) .ne. m) then
-           deallocate(x)
-           deallocate(i)
-           deallocate(w)
+        if (allocated(x)) then
+           if (size(x,1) .ne. m) then
+              deallocate(x)
+              deallocate(i)
+              deallocate(w)
+              allocate(i(m))
+              allocate(x(m,0:r-1))
+              allocate(w(m))
+           end if
+        end if
+       if (.not. allocated(x) ) then
            allocate(i(m))
            allocate(x(m,0:r-1))
            allocate(w(m))
-        end if
+       end if
         x(:,0:r-1)  = save_state(:,1:r)
         i(:)        = save_state(:,r+1)
         w(:)        = save_state(:,r+2)
@@ -1016,15 +1030,22 @@ CONTAINS
        stop 'xor4096: seeds have to be eigther all 0 or all larger than 0'
     end if
 
-    if ( present(save_state) .and. all(seed .eq. 0_i8) ) then
-        if (allocated(x) .and. size(save_state,1) .ne. m) then
-           deallocate(x)
-           deallocate(i)
-           deallocate(w)
+    if ( present(save_state) .and. all(seed .eq. 0_i4) ) then
+        if (allocated(x)) then
+           if (size(x,1) .ne. m) then
+              deallocate(x)
+              deallocate(i)
+              deallocate(w)
+              allocate(i(m))
+              allocate(x(m,0:r-1))
+              allocate(w(m))
+           end if
+        end if
+       if (.not. allocated(x) ) then
            allocate(i(m))
            allocate(x(m,0:r-1))
            allocate(w(m))
-        end if
+       end if
         x(:,0:r-1)  = save_state(:,1:r)
         i(:)        = save_state(:,r+1)
         w(:)        = save_state(:,r+2)
@@ -1246,15 +1267,22 @@ CONTAINS
        stop 'xor4096: seeds have to be eigther all 0 or all larger than 0'
     end if
 
-    if ( present(save_state) .and. all(seed .eq. 0_i8) ) then
-        if (allocated(x) .and. size(save_state,1) .ne. m) then
-           deallocate(x)
-           deallocate(i)
-           deallocate(w)
+    if ( present(save_state) .and. all(seed .eq. 0_i4) ) then
+        if (allocated(x)) then
+           if (size(x,1) .ne. m) then
+              deallocate(x)
+              deallocate(i)
+              deallocate(w)
+              allocate(i(m))
+              allocate(x(m,0:r-1))
+              allocate(w(m))
+           end if
+        end if
+       if (.not. allocated(x) ) then
            allocate(i(m))
            allocate(x(m,0:r-1))
            allocate(w(m))
-        end if
+       end if
         x(:,0:r-1)  = save_state(:,1:r)
         i(:)        = save_state(:,r+1)
         w(:)        = save_state(:,r+2)
@@ -1539,26 +1567,36 @@ CONTAINS
     end if
 
     if ( present(save_state) .and. all(seed .eq. 0_i4) ) then
-        if (allocated(x) .and. size(save_state,1) .ne. m) then
-           deallocate(x)
-           deallocate(i)
-           deallocate(w)
-           deallocate(flag)
-           deallocate(y2)
+        if (allocated(x)) then
+           if (size(x,1) .ne. m) then
+              deallocate(x)
+              deallocate(i)
+              deallocate(w)
+              deallocate(flag)
+              deallocate(y2)
+              allocate(i(m))
+              allocate(x(m,0:r-1))
+              allocate(w(m))
+              allocate(Flag(m))
+              allocate(y2(m))
+           end if
+        end if
+       if (.not. allocated(x) ) then
            allocate(i(m))
            allocate(x(m,0:r-1))
            allocate(w(m))
            allocate(Flag(m))
            allocate(y2(m))
-        end if
-        x(:,0:r-1)   = save_state(:,1:r)
-        i(:)         = save_state(:,r+1)
-        w(:)         = save_state(:,r+2)
+       end if
+        x(:,0:r-1)  = save_state(:,1:r)
+        i(:)        = save_state(:,r+1)
+        w(:)        = save_state(:,r+2)
         flag(:)      = save_state(:,r+3)
         do j=1,m
            y2(j) = transfer(save_state(j,r+4),1.0_sp)
         end do
     end if 
+
 
     if(all(seed .ne. 0_i4)) then
        if ( allocated(x) ) then
@@ -1895,28 +1933,37 @@ CONTAINS
     end if
 
     if ( present(save_state) .and. all(seed .eq. 0_i8) ) then
-        if (allocated(x) .and. size(save_state,1) .ne. m) then
-           deallocate(x)
-           deallocate(i)
-           deallocate(w)
-           deallocate(flag)
-           deallocate(y2)
+        if (allocated(x)) then
+           if (size(x,1) .ne. m) then
+              deallocate(x)
+              deallocate(i)
+              deallocate(w)
+              deallocate(flag)
+              deallocate(y2)
+              allocate(i(m))
+              allocate(x(m,0:r-1))
+              allocate(w(m))
+              allocate(Flag(m))
+              allocate(y2(m))
+           end if
+        end if
+       if (.not. allocated(x) ) then
            allocate(i(m))
            allocate(x(m,0:r-1))
            allocate(w(m))
            allocate(Flag(m))
            allocate(y2(m))
-        end if
-        x(:,0:r-1)   = save_state(:,1:r)
-        i(:)         = save_state(:,r+1)
-        w(:)         = save_state(:,r+2)
+       end if
+        x(:,0:r-1)  = save_state(:,1:r)
+        i(:)        = save_state(:,r+1)
+        w(:)        = save_state(:,r+2)
         flag(:)      = save_state(:,r+3)
         do j=1,m
            y2(j) = transfer(save_state(j,r+4),1.0_dp)
         end do
     end if 
 
-    if(all(seed .ne. 0_i4)) then
+    if(all(seed .ne. 0_i8)) then
        if ( allocated(x) ) then
            deallocate(x)
            deallocate(i)
