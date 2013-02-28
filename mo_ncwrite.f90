@@ -27,7 +27,7 @@ module mo_ncwrite
   ! functions and constants of netcdf4 library
   use netcdf,  only: nf90_create, nf90_def_dim, NF90_UNLIMITED, nf90_def_var, &
        NF90_CHAR, nf90_put_att, NF90_INT, NF90_INT, NF90_GLOBAL, &
-       nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, &
+       nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, NF90_BYTE, &
        NF90_close, nf90_noerr, nf90_strerror, NF90_CLOBBER, &
        NF90_MAX_NAME, NF90_WRITE, nf90_inq_varid, nf90_inquire_variable, &
        nf90_inquire_dimension, nf90_open, NF90_64BIT_OFFSET
@@ -79,6 +79,11 @@ module mo_ncwrite
      integer(i4), dimension(nMaxDim)        :: start               ! starting indices for netcdf
      integer(i4), dimension(nMaxDim)        :: count               ! counter          for netcdf
      logical                                :: wFlag               ! write flag
+     integer(1),                      pointer :: G0_b              ! array pointing model variables
+     integer(1),  dimension(:      ), pointer :: G1_b              ! array pointing model variables
+     integer(1),  dimension(:,:    ), pointer :: G2_b              ! array pointing model variables
+     integer(1),  dimension(:,:,:  ), pointer :: G3_b              ! array pointing model variables
+     integer(1),  dimension(:,:,:,:), pointer :: G4_b              ! array pointing model variables
      integer(i4),                     pointer :: G0_i              ! array pointing model variables
      integer(i4), dimension(:      ), pointer :: G1_i              ! array pointing model variables
      integer(i4), dimension(:,:    ), pointer :: G2_i              ! array pointing model variables
@@ -2095,6 +2100,19 @@ contains
        end if
        V(i)%start ( V(i)%nDims ) = iRec
        select case (V(i)%xtype)
+       case(NF90_BYTE)
+          select case (V(i)%nDims)
+          case (0)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_b, V(i)%start ))
+          case (1)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_b, V(i)%start, V(i)%count ))
+          case (2)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_b, V(i)%start, V(i)%count ))
+          case (3)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_b, V(i)%start, V(i)%count ))
+          case (4)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_b, V(i)%start, V(i)%count ))
+          end select           
        case (NF90_INT)
           select case (V(i)%nDims-1)
           case (0)
@@ -2191,6 +2209,19 @@ contains
           if (Info) write(*,*) "Var. ", trim(V(i)%name) ," is  static"
        end if
        select case (V(i)%xtype)
+       case(NF90_BYTE)
+          select case (V(i)%nDims)
+          case (0)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G0_b ))
+          case (1)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G1_b ))
+          case (2)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G2_b ))
+          case (3)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_b ))
+          case (4)
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_b ))
+          end select             
        case (NF90_INT)
           select case (V(i)%nDims)
           case (0)
@@ -2215,7 +2246,7 @@ contains
           case (3)
              call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G3_f ))
           case (4)
-             call check( nf90_put_var( ncId,  V(i)%varId, V(i)%G4_f ))
+             call check(nf90_put_var( ncId,  V(i)%varId, V(i)%G4_f ))
           end select
        case (NF90_DOUBLE)
           select case (V(i)%nDims)
