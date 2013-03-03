@@ -31,10 +31,6 @@ real(sp), dimension(:,:,:,:,:), allocatable :: data9, data10
 real(dp), dimension(:,:,:),     allocatable :: ddata2
 integer(i4), dimension(:,:,:),  allocatable :: idata2
 
-logical     :: LargeFile
-logical     :: netcdf4
-integer(i4) :: deflate_level
-
 isgood   = .true.
 Filename = '../FORTRAN_chs_lib/test/test_mo_ncwrite/pr_1961-2000.nc'
 

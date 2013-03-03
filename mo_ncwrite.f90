@@ -30,7 +30,8 @@ module mo_ncwrite
        nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, NF90_BYTE, &
        NF90_close, nf90_noerr, nf90_strerror, NF90_CLOBBER, &
        NF90_MAX_NAME, NF90_WRITE, nf90_inq_varid, nf90_inquire_variable, &
-       nf90_inquire_dimension, nf90_open, NF90_64BIT_OFFSET, NF90_NETCDF4
+       nf90_inquire_dimension, nf90_open, NF90_64BIT_OFFSET
+  use netcdf,  only: NF90_NETCDF4
 
   ! public routines -------------------------------------------------------------------
   public :: close_netcdf         ! save and close the netcdf file
@@ -136,7 +137,9 @@ module mo_ncwrite
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !         None
+  !         logical ::     LFS              True: enable netcdf3 large file support
+  !         logical ::     logical,         True: use netcdf4 format
+  !         integer(i4) :: deflate_level    compression level in netcdf4 (default: 1)
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -157,10 +160,11 @@ module mo_ncwrite
   !     HISTORY
   !         Written,  Matthias Cuntz, Nov 2012
   !         Modified, Stephan Thober, Nov 2012 - added functions for i4 variables
-  !         Modified, Matthias Cuntz and Juliane Mai
+  !                   Matthias Cuntz and Juliane Mai
   !                                   Nov 2012 - append
   !                                            - fake time dimension for 1D and 2D
   !                                            - make i4 behave exactly as sp and dp
+  !                                   Mar 2013 - LFS, netcdf4, deflate_level
   interface dump_netcdf
      module procedure dump_netcdf_1d_sp, dump_netcdf_2d_sp, dump_netcdf_3d_sp, &
           dump_netcdf_4d_sp, dump_netcdf_5d_sp, &
@@ -239,13 +243,16 @@ contains
   !     call create_netcdf(File, nc, Info=Info)
 
   ! INTENT(IN)
-  !     character(len=maxLen) :: File ! Filename of File to be written
+  !     character(len=maxLen) :: File             Filename of file to be written
 
   ! INTENT(IN), OPTIONAL
-  !     logical               :: Info ! if given and true, progress information will be written
+  !     logical               :: LFS              True: enable netcdf3 large file support
+  !     logical               :: logical          True: use netcdf4 format
+  !     integer(i4)           :: deflate_level    compression level in netcdf4 (default: 1)
+  !     logical               :: Info             if given and true, progress information will be written
 
   ! INTENT(OUT)
-  !     integer(i4)           :: nc   ! integer value of the stream for the opened file
+  !     integer(i4)           :: nc               integer value of the stream for the opened file
 
   ! RESTRICTIONS
   !     This routine only writes attributes and variables which have been stored in V
@@ -262,6 +269,7 @@ contains
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
   !              Stephan Thober  Feb 2013 - added flag for large file support
+  !              Matthias Cuntz  Mar 2013 - netcdf4, deflate_level
 
   subroutine create_netcdf(Filename, ncid, Info, LFS, netcdf4, deflate_level)
 
