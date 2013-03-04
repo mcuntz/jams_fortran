@@ -270,6 +270,7 @@ contains
   !              Matthias Cuntz  Jan 2012 - Info
   !              Stephan Thober  Feb 2013 - added flag for large file support
   !              Matthias Cuntz  Mar 2013 - netcdf4, deflate_level
+  !              Stephan Thober  Mar 2013 - buffersize
 
   subroutine create_netcdf(Filename, ncid, Info, LFS, netcdf4, deflate_level)
 
@@ -290,6 +291,8 @@ contains
     logical                                   :: LargeFile
     logical                                   :: inetcdf4
     integer(i4)                               :: deflate
+    integer(i4)                               :: initsize
+    integer(i4)                               :: buffersize
     integer(i4), dimension(:), allocatable    :: chunksizes ! Size of chunks in netcdf4 writing
 
     LargeFile = .false.
@@ -305,7 +308,15 @@ contains
        if (LargeFile) then
           call check(nf90_create(trim(Filename), NF90_64BIT_OFFSET, ncId))
        else
-          call check(nf90_create(trim(Filename), NF90_CLOBBER, ncId))
+          ! let the netcdf library chose a buffersize, that results in lesser
+          ! write system calls
+          call check(nf90_create(trim(Filename), NF90_CLOBBER, ncId, initsize, buffersize))
+
+          if (present(Info)) then
+             if (Info) then 
+                write(*,*) "chosen Buffersize (default 8172): ", buffersize
+             end If
+          end if
        end if
     endif
 
@@ -339,7 +350,7 @@ contains
     do i=1, nVars
        if (.not. V(i)%wFlag) cycle
        if (inetcdf4) then
-          chunksizes(1:V(i)%nDims-1) = Dnc(V(i)%dimTypes(1:V(i)%nDims))%len
+          chunksizes(1:V(i)%nDims) = Dnc(V(i)%dimTypes(1:V(i)%nDims))%len
           chunksizes(V(i)%nDims)     = 1
           call check(nf90_def_var(ncId, V(i)%name, V(i)%xtype, V(i)%dimids(1:V(i)%nDims), V(i)%varId, &
                chunksizes=chunksizes(1:V(i)%nDims), shuffle=.true., deflate_level=deflate))
@@ -372,7 +383,9 @@ contains
     ! 6 end definitions: leave define mode
     call check(nf90_enddef(ncId))
     if (present(Info)) then
-       if (Info) write(*,*) "NetCDF file was created", ncId
+       if (Info) then 
+          write(*,*) "NetCDF file was created", ncId
+       end If
     end if
 
     deallocate(chunksizes)
