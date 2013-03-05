@@ -286,11 +286,12 @@ call Get_NcVar(Filename,Varname,data11)
 if (any(abs(data-data11) > epsilon(1.0_sp))) isgood = .false.
 
 ! ! 3D - netcdf4, deflate=0
-! deallocate(ddata2)
+! Filename = 'Test.nc'
+! !deallocate(ddata2)
 ! allocate(ddata2(1000,1000,100))
-! !call random_number(ddata2)
 ! ddata2 = 1.0_dp
-! call dump_netcdf(Filename, ddata2, netcdf4=.true.)
+! call random_number(ddata2(:,:,1:50))
+! call dump_netcdf(Filename, ddata2, netcdf4=.false., lfs=.true., deflate_level=0)
 
 
 if (isgood) then

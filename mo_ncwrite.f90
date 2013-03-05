@@ -30,8 +30,7 @@ module mo_ncwrite
        nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, NF90_BYTE, &
        NF90_close, nf90_noerr, nf90_strerror, NF90_CLOBBER, &
        NF90_MAX_NAME, NF90_WRITE, nf90_inq_varid, nf90_inquire_variable, &
-       nf90_inquire_dimension, nf90_open, NF90_64BIT_OFFSET
-  use netcdf,  only: NF90_NETCDF4
+       nf90_inquire_dimension, nf90_open, NF90_64BIT_OFFSET, NF90_NETCDF4
 
   ! public routines -------------------------------------------------------------------
   public :: close_netcdf         ! save and close the netcdf file
@@ -124,34 +123,23 @@ module mo_ncwrite
   !         The Variable will be called var.
 
   !     CALLING SEQUENCE
-  !         call dump_netcdf(filename, arr)
+  !         call dump_netcdf(filename, arr, append, lfs, netcdf4, deflate_level)
 
   !     INTENT(IN)
   !         character(len=*) :: filename                  name of netcdf output file
-  !         real(sp/dp) ::      arr(:[,:[,:[,:[,:]]]])    1D to 5D-array with input numbers
-
-  !     INTENT(INOUT)
-  !         None
-
-  !     INTENT(OUT)
-  !         None
+  !         real(sp/dp)      :: arr(:[,:[,:[,:[,:]]]])    1D to 5D-array with input numbers
 
   !     INTENT(IN), OPTIONAL
-  !         logical ::     LFS              True: enable netcdf3 large file support
-  !         logical ::     logical,         True: use netcdf4 format
-  !         integer(i4) :: deflate_level    compression level in netcdf4 (default: 1)
-
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-
-  !     INTENT(OUT), OPTIONAL
-  !         None
+  !         logical          :: lfs                       True: enable netcdf3 large file support, i.e. 64-bit offset
+  !         logical          :: logical,                  True: use netcdf4 format
+  !         integer(i4)      :: deflate_level             Compression level in netcdf4 (default: 1)
 
   !     RESTRICTIONS
   !         If dimension
 
   !     EXAMPLE
   !         call dump_netcdf('test.nc, myarray)
+  !         call dump_netcdf('test.nc, myarray, netcdf4=.true.)
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -164,7 +152,7 @@ module mo_ncwrite
   !                                   Nov 2012 - append
   !                                            - fake time dimension for 1D and 2D
   !                                            - make i4 behave exactly as sp and dp
-  !                                   Mar 2013 - LFS, netcdf4, deflate_level
+  !                                   Mar 2013 - lfs, netcdf4, deflate_level
   interface dump_netcdf
      module procedure dump_netcdf_1d_sp, dump_netcdf_2d_sp, dump_netcdf_3d_sp, &
           dump_netcdf_4d_sp, dump_netcdf_5d_sp, &
@@ -191,19 +179,16 @@ contains
   !     closes a stream of an open netcdf file and saves the file.
 
   ! CALLING SEQUENCE
-  !     call close_netcdf(nc, Info=Info)
+  !     call close_netcdf(nc)
 
   ! INTENT(IN)
-  !     integer(i4) :: nc - stream id of an open netcdf file which shall be closed
-
-  ! INTENT(IN), OPTIONAL
-  !     logical :: Info - if given and true, progress information will be written
+  !     integer(i4) :: ncid - stream id of an open netcdf file which shall be closed
 
   ! RESTRICTIONS
-  !     closes only an already open stream
+  !     Closes only an already open stream
 
   ! EXAMPLE
-  !     see test_mo_ncwrite
+  !     See test_mo_ncwrite
 
   ! LITERATURE
   !     http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
@@ -212,19 +197,16 @@ contains
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
+  !              Matthias Cuntz  Mar 2013 - removed Info
 
-  subroutine close_netcdf(ncId,Info)
+  subroutine close_netcdf(ncId)
 
     implicit none
 
     integer(i4), intent(in)           :: ncId
-    logical,     intent(in), optional :: Info
 
     ! close: save new netcdf dataset
     call check(nf90_close(ncId))
-    if (present(Info)) then
-       if (Info) write(*,*) "NetCDF file was saved."
-    end if
 
   end subroutine close_netcdf
 
@@ -240,19 +222,18 @@ contains
   !     for an example.
 
   ! CALLING SEQUENCE
-  !     call create_netcdf(File, nc, Info=Info)
+  !     call create_netcdf(File, ncid, lfs, netcdf4, deflate_level)
 
   ! INTENT(IN)
   !     character(len=maxLen) :: File             Filename of file to be written
 
   ! INTENT(IN), OPTIONAL
-  !     logical               :: LFS              True: enable netcdf3 large file support
+  !     logical               :: lfs              True: enable netcdf3 large file support, i.e. 64-bit offset
   !     logical               :: logical          True: use netcdf4 format
   !     integer(i4)           :: deflate_level    compression level in netcdf4 (default: 1)
-  !     logical               :: Info             if given and true, progress information will be written
 
   ! INTENT(OUT)
-  !     integer(i4)           :: nc               integer value of the stream for the opened file
+  !     integer(i4)           :: ncid             integer value of the stream for the opened file
 
   ! RESTRICTIONS
   !     This routine only writes attributes and variables which have been stored in V
@@ -271,16 +252,16 @@ contains
   !              Stephan Thober  Feb 2013 - added flag for large file support
   !              Matthias Cuntz  Mar 2013 - netcdf4, deflate_level
   !              Stephan Thober  Mar 2013 - buffersize
+  !              Matthias Cuntz  Mar 2013 - removed Info
 
-  subroutine create_netcdf(Filename, ncid, Info, LFS, netcdf4, deflate_level)
+  subroutine create_netcdf(Filename, ncid, lfs, netcdf4, deflate_level)
 
     implicit none
 
     ! netcdf related variables
     character(len=*), intent(in)           :: Filename
     integer(i4),      intent(out)          :: ncid
-    logical,          intent(in), optional :: Info
-    logical,          intent(in), optional :: LFS           ! netcdf3 Large File Support
+    logical,          intent(in), optional :: lfs           ! netcdf3 Large File Support
     logical,          intent(in), optional :: netcdf4       ! netcdf4
     integer(i4),      intent(in), optional :: deflate_level ! compression level in netcdf4
 
@@ -291,12 +272,11 @@ contains
     logical                                   :: LargeFile
     logical                                   :: inetcdf4
     integer(i4)                               :: deflate
-    integer(i4)                               :: initsize
     integer(i4)                               :: buffersize
     integer(i4), dimension(:), allocatable    :: chunksizes ! Size of chunks in netcdf4 writing
 
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -306,17 +286,10 @@ contains
        call check(nf90_create(trim(Filename), NF90_NETCDF4, ncId))
     else
        if (LargeFile) then
-          call check(nf90_create(trim(Filename), NF90_64BIT_OFFSET, ncId))
+          call check(nf90_create(trim(Filename), NF90_64BIT_OFFSET, ncId, chunksize=buffersize))
        else
-          ! let the netcdf library chose a buffersize, that results in lesser
-          ! write system calls
-          call check(nf90_create(trim(Filename), NF90_CLOBBER, ncId, initsize, buffersize))
-
-          if (present(Info)) then
-             if (Info) then 
-                write(*,*) "chosen Buffersize (default 8172): ", buffersize
-             end If
-          end if
+          ! let the netcdf library chose a buffersize, that results in lesser write system calls
+          call check(nf90_create(trim(Filename), NF90_CLOBBER, ncId, chunksize=buffersize))
        end if
     endif
 
@@ -351,7 +324,7 @@ contains
        if (.not. V(i)%wFlag) cycle
        if (inetcdf4) then
           chunksizes(1:V(i)%nDims) = Dnc(V(i)%dimTypes(1:V(i)%nDims))%len
-          chunksizes(V(i)%nDims)     = 1
+          chunksizes(V(i)%nDims)   = 1
           call check(nf90_def_var(ncId, V(i)%name, V(i)%xtype, V(i)%dimids(1:V(i)%nDims), V(i)%varId, &
                chunksizes=chunksizes(1:V(i)%nDims), shuffle=.true., deflate_level=deflate))
        else
@@ -382,11 +355,6 @@ contains
 
     ! 6 end definitions: leave define mode
     call check(nf90_enddef(ncId))
-    if (present(Info)) then
-       if (Info) then 
-          write(*,*) "NetCDF file was created", ncId
-       end If
-    end if
 
     deallocate(chunksizes)
 
@@ -394,14 +362,14 @@ contains
 
   ! ------------------------------------------------------------------
 
-  subroutine dump_netcdf_1d_sp(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_1d_sp(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     real(sp),         dimension(:),     intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -421,6 +389,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -433,7 +402,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -478,9 +447,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -496,16 +465,14 @@ contains
        ! define dim variables
        do i=1, ndim
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        endif
@@ -545,14 +512,14 @@ contains
   end subroutine dump_netcdf_1d_sp
 
 
-  subroutine dump_netcdf_2d_sp(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_2d_sp(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     real(sp),         dimension(:,:),   intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -572,6 +539,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -584,7 +552,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -629,9 +597,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -647,16 +615,14 @@ contains
        ! define dim variables
        do i=1, ndim
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        endif
@@ -696,14 +662,14 @@ contains
   end subroutine dump_netcdf_2d_sp
 
 
-  subroutine dump_netcdf_3d_sp(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_3d_sp(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     real(sp),         dimension(:,:,:), intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -723,6 +689,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -735,7 +702,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -780,9 +747,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -797,16 +764,14 @@ contains
        ! define dim variables
        do i=1, ndim-1
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        endif
@@ -846,14 +811,14 @@ contains
   end subroutine dump_netcdf_3d_sp
 
 
-  subroutine dump_netcdf_4d_sp(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_4d_sp(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     real(sp),         dimension(:,:,:,:), intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -873,6 +838,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -885,7 +851,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -930,9 +896,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -947,16 +913,14 @@ contains
        ! define dim variables
        do i=1, ndim-1
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        endif
@@ -996,14 +960,14 @@ contains
   end subroutine dump_netcdf_4d_sp
 
 
-  subroutine dump_netcdf_5d_sp(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_5d_sp(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     real(sp),         dimension(:,:,:,:,:), intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -1023,6 +987,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -1035,7 +1000,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -1080,9 +1045,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -1097,16 +1062,14 @@ contains
        ! define dim variables
        do i=1, ndim-1
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        endif
@@ -1146,14 +1109,14 @@ contains
   end subroutine dump_netcdf_5d_sp
 
 
-  subroutine dump_netcdf_1d_dp(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_1d_dp(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     real(dp),         dimension(:),     intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -1173,6 +1136,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -1185,7 +1149,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -1230,9 +1194,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -1248,16 +1212,14 @@ contains
        ! define dim variables
        do i=1, ndim
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        endif
@@ -1297,14 +1259,14 @@ contains
   end subroutine dump_netcdf_1d_dp
 
 
-  subroutine dump_netcdf_2d_dp(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_2d_dp(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     real(dp),         dimension(:,:),   intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -1324,6 +1286,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -1336,7 +1299,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -1381,9 +1344,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -1399,16 +1362,14 @@ contains
        ! define dim variables
        do i=1, ndim
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        endif
@@ -1448,14 +1409,14 @@ contains
   end subroutine dump_netcdf_2d_dp
 
 
-  subroutine dump_netcdf_3d_dp(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_3d_dp(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     real(dp),         dimension(:,:,:), intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -1475,6 +1436,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -1487,7 +1449,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -1530,11 +1492,12 @@ contains
        ! open file
        if (inetcdf4) then
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
+          ! call check(nf90_set_fill(ncid, NF90_NOFILL, old_fill_mode))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(Filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -1556,8 +1519,7 @@ contains
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        endif
@@ -1567,7 +1529,7 @@ contains
           chunksizes(1:ndim-1) = dims(1:ndim-1)
           chunksizes(ndim)     = 1
           call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+1), &
-               chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
+              chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
        else
           call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+1)))
        endif
@@ -1597,14 +1559,14 @@ contains
   end subroutine dump_netcdf_3d_dp
 
 
-  subroutine dump_netcdf_4d_dp(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_4d_dp(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     real(dp),         dimension(:,:,:,:), intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -1624,6 +1586,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -1636,7 +1599,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -1681,9 +1644,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -1698,16 +1661,14 @@ contains
        ! define dim variables
        do i=1, ndim-1
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        endif
@@ -1747,14 +1708,14 @@ contains
   end subroutine dump_netcdf_4d_dp
 
 
-  subroutine dump_netcdf_5d_dp(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_5d_dp(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     real(dp),         dimension(:,:,:,:,:), intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -1774,6 +1735,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -1786,7 +1748,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -1831,9 +1793,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -1848,16 +1810,14 @@ contains
        ! define dim variables
        do i=1, ndim-1
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        endif
@@ -1897,14 +1857,14 @@ contains
   end subroutine dump_netcdf_5d_dp
 
 
-  subroutine dump_netcdf_1d_i4(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_1d_i4(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     integer(i4),         dimension(:),     intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -1924,6 +1884,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -1936,7 +1897,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -1981,9 +1942,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -1999,16 +1960,14 @@ contains
        ! define dim variables
        do i=1, ndim
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        endif
@@ -2048,14 +2007,14 @@ contains
   end subroutine dump_netcdf_1d_i4
 
 
-  subroutine dump_netcdf_2d_i4(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_2d_i4(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     integer(i4),         dimension(:,:),   intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -2075,6 +2034,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -2087,7 +2047,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -2132,9 +2092,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -2150,16 +2110,14 @@ contains
        ! define dim variables
        do i=1, ndim
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim+1), varid(ndim+1)))
        endif
@@ -2199,14 +2157,14 @@ contains
   end subroutine dump_netcdf_2d_i4
 
 
-  subroutine dump_netcdf_3d_i4(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_3d_i4(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     integer(i4),      dimension(:,:,:), intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -2226,6 +2184,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -2238,7 +2197,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -2283,9 +2242,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -2300,16 +2259,14 @@ contains
        ! define dim variables
        do i=1, ndim-1
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        endif
@@ -2349,14 +2306,14 @@ contains
   end subroutine dump_netcdf_3d_i4
 
 
-  subroutine dump_netcdf_4d_i4(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_4d_i4(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     integer(i4),         dimension(:,:,:,:), intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -2376,6 +2333,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -2388,7 +2346,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -2433,9 +2391,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -2450,16 +2408,14 @@ contains
        ! define dim variables
        do i=1, ndim-1
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        endif
@@ -2499,14 +2455,14 @@ contains
   end subroutine dump_netcdf_4d_i4
 
 
-  subroutine dump_netcdf_5d_i4(filename, arr, append, LFS, netcdf4, deflate_level)
+  subroutine dump_netcdf_5d_i4(filename, arr, append, lfs, netcdf4, deflate_level)
 
     implicit none
 
     character(len=*),                   intent(in) :: filename ! netcdf file name
     integer(i4),      dimension(:,:,:,:,:), intent(in) :: arr      ! input array
     logical,          optional,         intent(in) :: append   ! append to existing file
-    logical,          optional,         intent(in) :: LFS           ! netcdf3 Large File Support
+    logical,          optional,         intent(in) :: lfs           ! netcdf3 Large File Support
     logical,          optional,         intent(in) :: netcdf4       ! netcdf4
     integer(i4),      optional,         intent(in) :: deflate_level ! compression level in netcdf4
 
@@ -2526,6 +2482,7 @@ contains
     logical                  :: LargeFile
     logical                  :: inetcdf4
     integer(i4)              :: deflate
+    integer(i4)              :: buffersize
 
     ! append or not
     if (present(append)) then
@@ -2538,7 +2495,7 @@ contains
        iappend = .false.
     endif
     LargeFile = .false.
-    if (present(LFS)) LargeFile = LFS
+    if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
@@ -2583,9 +2540,9 @@ contains
           call check(nf90_create(trim(filename), NF90_NETCDF4, ncid))
        else
           if (LargeFile) then
-             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid))
+             call check(nf90_create(trim(filename), NF90_64BIT_OFFSET, ncid, chunksize=buffersize))
           else
-             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid))
+             call check(nf90_create(trim(filename), NF90_CLOBBER, ncid, chunksize=buffersize))
           end if
        endif
 
@@ -2600,16 +2557,14 @@ contains
        ! define dim variables
        do i=1, ndim-1
           if (inetcdf4) then
-             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i), &
-               deflate_level=deflate))
+             call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           else
              call check(nf90_def_var(ncid, dnames(i), NF90_INT, dimid(i), varid(i)))
           endif
        end do
        ! define time variable
        if (inetcdf4) then
-          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim), &
-               deflate_level=deflate))
+          call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        else
           call check(nf90_def_var(ncid, 'time', NF90_INT, dimid(ndim), varid(ndim)))
        endif
@@ -2659,7 +2614,7 @@ contains
   !     specified.
 
   ! CALLING SEQUENCE
-  !     call write_dynamic_netcdf(nc, rec, Info=Info)
+  !     call write_dynamic_netcdf(nc, rec)
 
   ! INTENT(IN)
   !     integer(i4) :: nc - stream id of an open netcdf file where data should be written
@@ -2667,9 +2622,6 @@ contains
 
   ! INTENT(IN)
   !     integer(i4) :: rec - record id of record which will be written in the file
-
-  ! INTENT(IN), OPTIONAL
-  !     logical :: Info - if given and true, progress information will be written
 
   ! RESTRICTIONS
   !     Writes only data, where the data pointers of the structure V are assigned
@@ -2688,15 +2640,15 @@ contains
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
   !              Stephan Thober  Jan 2012 - iRec is not optional
+  !              Matthias Cuntz  Mar 2013 - removed Info
 
-  subroutine write_dynamic_netcdf(ncId, irec, Info)
+  subroutine write_dynamic_netcdf(ncId, irec)
 
     implicit none
 
     ! netcdf related variables
     integer(i4), intent(in)           :: ncId
     integer(i4), intent(in)           :: iRec
-    logical,     intent(in), optional :: Info
 
     integer(i4)                       :: i
     ! NOTES: 1) netcdf file must be on *** data mode ***
@@ -2708,9 +2660,6 @@ contains
     do i = 1, nVars
        if (.not. V(i)%unlimited) cycle
        if (.not. V(i)%wFlag) cycle
-       if (present(Info)) then
-          if ((iRec ==1) .and. Info) write(*,*) "Var. ",i , trim(V(i)%name) ," is  dynamic" !, iRec
-       end if
        V(i)%start (V(i)%nDims) = iRec
        select case (V(i)%xtype)
        case(NF90_BYTE)
@@ -2780,14 +2729,11 @@ contains
   !     where no dimension has the unlimited attribute.
 
   ! CALLING SEQUENCE
-  !     call write_static_netcdf(nc, Info=Info)
+  !     call write_static_netcdf(ncid)
 
   ! INTENT(IN)
-  !     integer(i4) :: nc - stream id of an open netcdf file where data should be written
-  !                         can be obtained by an create_netcdf call
-
-  ! INTENT(IN), OPTIONAL
-  !     logical :: Info - if given and true, progress information will be written
+  !     integer(i4) :: ncid - stream id of an open netcdf file where data should be written
+  !                           can be obtained by an create_netcdf call
 
   ! RESTRICTIONS
   !     Writes only data, where the data pointers of the structure V are assigned.
@@ -2803,14 +2749,14 @@ contains
   !     Written  Luis Samaniego  Feb 2011
   !     Modified Stephan Thober  Dec 2011 - added comments and generalized
   !              Matthias Cuntz  Jan 2012 - Info
+  !              Matthias Cuntz  Mar 2013 - removed Info
 
-  subroutine write_static_netcdf(ncId, Info)
+  subroutine write_static_netcdf(ncId)
 
     implicit none
 
     ! netcdf related variables
     integer(i4), intent(in)           :: ncId
-    logical,     intent(in), optional :: Info
 
     integer(i4)                       :: i
 
@@ -2818,9 +2764,6 @@ contains
     do i = 1, nVars
        if (V(i)%unlimited) cycle
        if (.not. V(i)%wFlag) cycle
-       if (present(Info)) then
-          if (Info) write(*,*) "Var. ", trim(V(i)%name) ," is  static"
-       end if
        select case (V(i)%xtype)
        case(NF90_BYTE)
           select case (V(i)%nDims)
@@ -2889,7 +2832,7 @@ contains
     integer(i4), intent(in) :: status
 
     if (status /= nf90_noerr) then
-       write(*,*) trim(nf90_strerror(status))
+       write(*,*) 'mo_ncwrite.check error: ', trim(nf90_strerror(status))
        stop
     end if
 
