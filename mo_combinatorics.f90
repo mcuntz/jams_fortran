@@ -1479,7 +1479,6 @@ CONTAINS
     ! Generate a random ordering of the integers 1 ... n.
     !
     use mo_xor4096,      only: n_save_state
-    use mo_xor4096_apps, only: xor4096_array
 
     implicit none
 
@@ -1503,7 +1502,6 @@ CONTAINS
     ! Generate a random ordering of the integers 1 ... n.
     !
     use mo_xor4096,      only: n_save_state
-    use mo_xor4096_apps, only: xor4096_array
 
     implicit none
 
