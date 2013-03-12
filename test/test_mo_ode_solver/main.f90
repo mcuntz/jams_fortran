@@ -1,22 +1,23 @@
 ! ============================================================================
 ! Name        : main.f90
 ! Author      : Giovanni Dalmasso
-! Version     : 1.0
+! Date        : Mar 12, 2013
+! Version     : 1.1
 ! Copyright   : Department of Computational Hydrosystems CHS - UZF Leipzig
 ! Description : main test mo_ode_solver
 ! ============================================================================
 
 program main_test_mo_ode_solver
 
-    use mo_kind,        only : i4, sp, lgt
-    use mo_eq_lv,       only : LV_eqn_sp
-    use mo_ode_solver,   only : EULERdumb, RKdumb, RKas
+    use mo_kind,        only    : i4, sp, lgt
+    use mo_eq_lv,       only    : LV_eqn_sp
+    use mo_ode_solver,  only    : EULER, RK4, RK4as
 
     implicit none
 
     integer(i4)                             :: nEq
-    real(sp)                                :: x1, x2, h, Tout, eps, hmin, test
-    real(sp), dimension(:),     allocatable :: xi, xout
+    real(sp)                                :: x1, x2, h, eps, hmin, test
+    real(sp), dimension(:),     allocatable :: yi, xout
     real(sp), dimension(:,:),   allocatable :: yout
 
     logical(lgt)                            :: isgood
@@ -29,19 +30,22 @@ program main_test_mo_ode_solver
     x2 = 10._sp                     ! final time
     h = 0.1_sp                      ! incremental time step
     hmin = h*0.00000000001_sp       ! minimum allowed stepsize
-    eps = 10._sp**(-6._sp)          ! accuracy
+    eps = 10._sp**(-6_i4)           ! accuracy
 
-    allocate( xi(nEq) )
-    xi = (/ 1._sp, 1._sp /)         ! initial conditions
+    allocate( yi(nEq) )
+    yi = (/ 1._sp, 1._sp /)         ! initial conditions
 
-    call EULERdumb( xi, x1, x2, h, LV_eqn_sp, Tout, xout, yout )           ! EULER method
-    if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(:,2)*test) .ne. (/ 10000_i4, 13000_i4 /)) ) isgood = .false.    ! test
+    ! Euler method
+    call Euler( yi, x1, x2, h, LV_eqn_sp, xout, yout )
+    if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 10000_i4, 13000_i4 /)) ) isgood = .false.    ! test
 
-    call RKdumb( xi, x1, x2, h, LV_eqn_sp, Tout, xout, yout )                 ! RUNGE-KUTTA method
-    if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(:,2)*test) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.     ! test
+    ! 4th order RUNGE-KUTTA method
+    call RK4( yi, x1, x2, h, LV_eqn_sp, xout, yout )
+    if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.     ! test
 
-    call RKas( xi, x1, x2, h, LV_eqn_sp, Tout, xout, yout, hminIN=hmin, epsIN=eps )  ! RUNGE-KUTTA with adaptive stepsize control
-    if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(:,2)*test) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.     ! test
+    ! 4th order RUNGE-KUTTA Adaptive Step-size
+    call RK4as( yi, x1, x2, h, LV_eqn_sp, xout, yout, hmin=hmin, eps=eps )
+    if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.     ! test
 
     ! Is the program running properly?
     write(*,*) ''
