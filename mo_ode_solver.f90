@@ -69,11 +69,6 @@ module mo_ode_solver
     public :: RK4       ! Fourth-order Runge-Kutta method with equal time-steps increments
     public :: RK4as     ! Fourth-order Runge-Kutta method with adaptive stepsize control
 
-    ! Interfaces for single and double precision routines
-    interface Euler
-        module procedure Euler_sp, Euler_dp
-    end interface Euler
-
     ! ------------------------------------------------------------------
 
     !     NAME
@@ -141,6 +136,10 @@ module mo_ode_solver
     !         Modified, Giovanni Dalmasso, Mar 2013
 
     ! Interfaces for single and double precision routines
+    interface Euler
+        module procedure Euler_sp, Euler_dp
+    end interface Euler
+
     interface RK4
         module procedure RK4_sp, RK4_dp
     end interface RK4
@@ -234,7 +233,6 @@ contains
     subroutine Euler_sp( ystart, x1, x2, h, derivs, xout, yout )    ! all obligatory
 
         use mo_kind,    only : i4, sp
-        use mo_nrutil,  only : nrerror
 
         implicit none
 
@@ -278,7 +276,7 @@ contains
         do j=1, nstep                   ! take nstep steps
             call derivs( x, y, dy )
             y = y + h*dy                ! step EULER
-            if (x+h .eq. x) call nrerror( 'stepsize not significant in Euler_sp' )
+            if ( h .eq. epsilon(1._sp) )    stop 'Euler_sp --> stepsize not significant!'
             x = x+h
             xout(j+1_i4) = x            ! store intermediate steps
             yout(j+1_i4,:) = y(:)
@@ -291,7 +289,6 @@ contains
     subroutine Euler_dp( ystart, x1, x2, h, derivs, xout, yout )    ! all obligatory
 
         use mo_kind,    only : i4, dp
-        use mo_nrutil,  only : nrerror
 
         implicit none
 
@@ -335,7 +332,7 @@ contains
         do j=1, nstep                   ! take nstep steps
             call derivs( x, y, dy )
             y = y + h*dy                ! step EULER
-            if (x+h .eq. x) call nrerror( 'stepsize not significant in Euler_dp' )
+            if ( h .eq. epsilon(1._dp) )    stop 'Euler_dp --> stepsize not significant!'
             x = x+h
             xout(j+1_i4) = x            ! store intermediate steps
             yout(j+1_i4,:) = y(:)
@@ -348,7 +345,6 @@ contains
     subroutine RK4_sp( ystart, x1, x2, h, derivs, xout, yout )    ! all obligatory
 
         use mo_kind,    only : i4, sp
-        use mo_nrutil,  only : nrerror
 
         implicit none
 
@@ -404,7 +400,7 @@ contains
             dym = dyt + dym
             call derivs( x+h, yt, dyt )        ! fourth step
             y = y + h6*( dy+dyt+2.0_sp*dym )   ! accumulate increments with proper weights
-            if (x+h .eq. x) call nrerror( 'stepsize not significant in RK4_sp' )
+            if ( h .eq. epsilon(1._sp) )    stop 'RK4_sp --> stepsize not significant!'
             x = x+h
             xout(j+1_i4) = x            ! store intermediate steps
             yout(j+1_i4,:) = y(:)
@@ -417,7 +413,6 @@ contains
     subroutine RK4_dp( ystart, x1, x2, h, derivs, xout, yout )    ! all obligatory
 
         use mo_kind,    only : i4, dp
-        use mo_nrutil,  only : nrerror
 
         implicit none
 
@@ -473,7 +468,7 @@ contains
             dym = dyt + dym
             call derivs( x+h, yt, dyt )        ! fourth step
             y = y + h6*( dy+dyt+2.0_dp*dym )   ! accumulate increments with proper weights
-            if (x+h .eq. x) call nrerror( 'stepsize not significant in RK4_dp' )
+            if ( h .eq. epsilon(1._dp) )    stop 'RK4_sp --> stepsize not significant!'
             x = x+h
             xout(j+1_i4) = x            ! store intermediate steps
             yout(j+1_i4,:) = y(:)
@@ -490,7 +485,7 @@ contains
         hmin, eps )                                                 ! optional
 
         use mo_kind,    only    : i4, sp
-        use mo_nrutil,  only    : nrerror, reallocate
+        use mo_nrutil,  only    : reallocate
 
         implicit none
 
@@ -569,11 +564,11 @@ contains
             do
                 call CashKarpRK( y, dydx, x, hIN, ytemp, yerr, derivs ) ! take a step
                 errmax = maxval( abs(yerr(:)/yscal(:)) )/epsIN          ! evaluate accuracy
-                if ( errmax .le. 1.0_sp )   exit                        ! step succeeded
+                if ( errmax .lt. 1.0_sp )   exit                        ! step succeeded
                 htemp = safety*hIN*(errmax**pshrnk)                     ! truncation error too large, reduce stepsize
                 hIN = sign( max( abs(htemp), 0.1_sp*abs(hIN) ), hIN )   ! no more than a factor of 10
                 xnew = x+hIN
-                if ( xnew .eq. x )  call nrerror( 'hey!!! stepsize underflow in RK4as_sp' )
+                if ( abs(xnew-x) .eq. epsilon(1.0_sp) )  stop 'RK4as_sp --> hey!!! stepsize underflow!'
             end do
 
             if ( errmax .gt. errcon )   then                            ! compute size of next step
@@ -586,28 +581,28 @@ contains
             x = x+hIN
             y(:) = ytemp(:)
 
-            if ( hdid .eq. hIN ) then
+            if ( abs(hdid-hIN) .eq. epsilon(1.0_sp) )    then
                 nok = nok+1_i4
             else
                 nbad = nbad+1_i4
             end if
 
-            if ( (x-x2)*(x2-x1) .ge. 0.0_sp )   then        ! are we done?!?!
-                call save_a_step                            ! save final step
-                allocate( xout(kount) )                     ! allocate storage for outputs
+            if ( (x-x2)*(x2-x1) .ge. 0.0_sp )   then            ! are we done?!?!
+                call save_a_step                                ! save final step
+                allocate( xout(kount) )                         ! allocate storage for outputs
                 xout(:) = xp(1:kount)
-                allocate( yout(kount, size(yp,2)) )         ! allocate storage for outputs
+                allocate( yout(kount, size(yp,2)) )             ! allocate storage for outputs
                 yout(:,:) = yp(1:kount, :)
-                deallocate( xp, yp )                        ! clear out old stored variables
-                return                                      ! normal exit
+                deallocate( xp, yp )                            ! clear out old stored variables
+                return                                          ! normal exit
             end if
 
-            if ( abs(hnext) .lt. hminIN ) call nrerror( 'WTF! ...stepsize smaller than minimum in RKas_sp!!!' )
+            if ( abs(hnext) .lt. hminIN )   stop 'RK4as_sp --> WTF! ...stepsize smaller than minimum!!!'
             hIN = hnext
 
         end do
 
-        call nrerror( 'dude, too many steps in RK4as_sp!!!' )
+        stop 'RK4as_sp --> dude, too many steps!!!'
 
     contains
 
@@ -630,7 +625,7 @@ contains
         hmin, eps )                                                 ! optional
 
         use mo_kind,    only    : i4, dp
-        use mo_nrutil,  only    : nrerror, reallocate
+        use mo_nrutil,  only    : reallocate
 
         implicit none
 
@@ -709,11 +704,11 @@ contains
             do
                 call CashKarpRK( y, dydx, x, hIN, ytemp, yerr, derivs ) ! take a step
                 errmax = maxval( abs(yerr(:)/yscal(:)) )/epsIN          ! evaluate accuracy
-                if ( errmax .le. 1.0_dp )   exit                        ! step succeeded
+                if ( errmax .lt. 1.0_dp )   exit                        ! step succeeded
                 htemp = safety*hIN*(errmax**pshrnk)                     ! truncation error too large, reduce stepsize
                 hIN = sign( max( abs(htemp), 0.1_dp*abs(hIN) ), hIN )   ! no more than a factor of 10
                 xnew = x+hIN
-                if ( xnew .eq. x )  call nrerror( 'hey!!! stepsize underflow in RK4as_dp' )
+                if ( abs(xnew-x) .eq. epsilon(1._dp) )  stop 'RK4as_dp --> hey!!! stepsize underflow!'
             end do
 
             if ( errmax .gt. errcon )   then                            ! compute size of next step
@@ -726,7 +721,7 @@ contains
             x = x+hIN
             y(:) = ytemp(:)
 
-            if ( hdid .eq. hIN ) then
+            if ( abs(hdid-hIN) .eq. epsilon(1._dp) ) then
                 nok = nok+1_i4
             else
                 nbad = nbad+1_i4
@@ -742,12 +737,12 @@ contains
                 return                                      ! normal exit
             end if
 
-            if ( abs(hnext) .lt. hminIN ) call nrerror( 'WTF! ...stepsize smaller than minimum in RKas_dp!!!' )
+            if ( abs(hnext) .lt. hminIN )   stop 'RK4as_dp --> WTF! ...stepsize smaller than minimum!!!'
             hIN = hnext
 
         end do
 
-        call nrerror( 'dude, too many steps in RK4as_dp!!!' )
+        stop 'RK4as_dp --> dude, too many steps!!!'
 
     contains
 
