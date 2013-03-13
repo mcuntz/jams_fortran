@@ -30,7 +30,7 @@ program main_test_mo_ode_solver
     x2 = 10._sp                     ! final time
     h = 0.1_sp                      ! incremental time step
     hmin = h*0.00000000001_sp       ! minimum allowed stepsize
-    eps = 10._sp**(-6_i4)           ! accuracy
+    eps = 10._sp**(-8_i4)           ! accuracy
 
     allocate( yi(nEq) )
     yi = (/ 1._sp, 1._sp /)         ! initial conditions
@@ -45,7 +45,7 @@ program main_test_mo_ode_solver
 
     ! 4th order RUNGE-KUTTA Adaptive Step-size
     call RK4as( yi, x1, x2, h, LV_eqn_sp, xout, yout, hmin=hmin, eps=eps )
-    if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.     ! test
+    if ( nint(xout(2)*test) .ne. 580_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9950_i4, 11687_i4 /)) ) isgood = .false.     ! test
 
     ! Is the program running properly?
     write(*,*) ''

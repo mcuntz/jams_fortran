@@ -521,7 +521,7 @@ contains
         real(sp),   dimension(:,:), pointer :: yp
 
         ! parameters
-        integer(i4),    parameter   :: MAXstp = 1000000_i4  ! max nuber of steps
+        integer(i4),    parameter   :: MAXstp = 1000000_i4  ! max number of steps
         real(sp),       parameter   :: safety = 0.9_sp, pgrow = -0.2_sp, pshrnk = -0.25_sp, &
             errcon = exp( (1._sp/pgrow)*log(5._sp/safety) )
 
