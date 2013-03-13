@@ -3,7 +3,7 @@
 !> \brief   Module for kernel regression and kernel density estimation.
 
 !> \details This module provides routines for kernel regression of data as well as kernel density
-!>          estimation of both probability density functions (PDF) and cummulative density functions (CDF).\n
+!>          estimation of both probability density functions (PDF) and cumulative density functions (CDF).\n
 !>          So far only a Gaussian kernel is implemented (Nadaraya-Watson)
 !>          which can be used for one- and multidimensional data.\n
 !>          Furthermore, the estimation of the bandwith needed for kernel methods is provided
@@ -93,9 +93,9 @@ MODULE mo_kernel
   !         kernel_cumdensity
 
   !     PURPOSE
-  !         Approximates the cummulative density function (CDF) to a given 1D data set using a Gaussian kernel.
+  !         Approximates the cumulative density function (CDF) to a given 1D data set using a Gaussian kernel.
   !
-  !>        \brief   Approximates the cummulative density function (CDF).
+  !>        \brief   Approximates the cumulative density function (CDF).
   !
   !>        \details Approximates the cummulative density function (CDF)
   !>                 to a given 1D data set using a Gaussian kernel.\n
@@ -156,7 +156,7 @@ MODULE mo_kernel
   !         h = kernel_density_h(x,silverman=.true.)
   !
   !         cdf = kernel_cumdensity(x, h=h, silverman=.false., xout=xout)
-  !         ! gives cummulative density at either xout values, if specified, or at x values, if xout is not present
+  !         ! gives cumulative density at either xout values, if specified, or at x values, if xout is not present
   !         ! if bandwith h is given                 : silverman (true/false) is ignored
   !         ! if silverman=.true.  and h not present : bandwith will be estimated using Silerman''s rule of thumb
   !         ! if silverman=.false. and h not present : bandwith will be estimated using Cross-Validation approach
