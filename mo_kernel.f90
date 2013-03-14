@@ -1420,6 +1420,7 @@ CONTAINS
 
     ! local variables
     real(dp), dimension(size(z,1))            :: w
+    real(dp)                                  :: large_z
     real(dp)                                  :: sum_w
     logical,  dimension(size(z,1))            :: mask1d
 
@@ -1429,7 +1430,12 @@ CONTAINS
        mask1d = .true.
     end if
 
-    where (mask1d) w = (1.0_dp/sqrt(2.0_dp*Pi_dp)) * exp(-0.5_dp*z*z)
+    large_z = sqrt(-2.0_dp*Log(tiny(1._dp)*sqrt(2._dp*pi_dp)))
+    where (mask1d .and. (abs(z) .lt. large_z) )
+       w = (1.0_dp/sqrt(2.0_dp*Pi_dp)) * exp(-0.5_dp*z*z)
+    elsewhere (mask1d)
+       w = 0.0_dp
+    end where
     sum_w = sum(w, mask=mask1d)
 
     if (present(y)) then
@@ -1460,6 +1466,7 @@ CONTAINS
     ! local variables
     real(sp), dimension(size(z,1))            :: w
     real(sp)                                  :: sum_w
+    real(sp)                                  :: large_z
     logical,  dimension(size(z,1))            :: mask1d
 
     if (present(mask)) then
@@ -1468,7 +1475,12 @@ CONTAINS
        mask1d = .true.
     end if
 
-    where (mask1d) w = (1.0_sp/sqrt(2.0_sp*Pi_sp)) * exp(-0.5_sp*z*z)
+    large_z = sqrt(-2.0_sp*Log(tiny(1._sp)*sqrt(2._sp*pi_sp)))
+    where (mask1d .and. (abs(z) .lt. large_z) ) 
+       w = (1.0_sp/sqrt(2.0_sp*Pi_sp)) * exp(-0.5_sp*z*z)
+    elsewhere (mask1d) 
+       w = 0.0_sp
+    end where
     sum_w = sum(w, mask=mask1d)
 
     if (present(y)) then
@@ -1501,6 +1513,7 @@ CONTAINS
     real(dp), dimension(size(z,1), size(z,2)) :: kerf
     real(dp), dimension(size(z,1))            :: w
     real(dp)                                  :: sum_w
+    real(dp)                                  :: large_z
     logical,  dimension(size(z,1))            :: mask1d
     logical,  dimension(size(z,1), size(z,2)) :: mask2d
 
@@ -1512,7 +1525,12 @@ CONTAINS
        mask2d = .true.
     end if
 
-    where (mask2d) kerf = (1.0_dp/sqrt(2.0_dp*Pi_dp)) * exp(-0.5_dp*z*z)
+    large_z = sqrt(-2.0_dp*Log(tiny(1._dp)*sqrt(2._dp*pi_dp)))
+    where (mask2d .and. (abs(z) .lt. large_z) )
+       kerf = (1.0_dp/sqrt(2.0_dp*Pi_dp)) * exp(-0.5_dp*z*z)
+    elsewhere (mask2d)
+       kerf = 0.0_dp
+    end where
     w    = product(kerf,dim=2,mask=mask2d)
     sum_w = sum(w, mask=mask1d)
 
@@ -1546,6 +1564,7 @@ CONTAINS
     real(sp), dimension(size(z,1), size(z,2)) :: kerf
     real(sp), dimension(size(z,1))            :: w
     real(sp)                                  :: sum_w
+    real(sp)                                  :: large_z
     logical,  dimension(size(z,1))            :: mask1d
     logical,  dimension(size(z,1), size(z,2)) :: mask2d
 
@@ -1557,7 +1576,12 @@ CONTAINS
        mask2d = .true.
     end if
 
-    where (mask2d) kerf = (1.0_sp/sqrt(2.0_sp*Pi_sp)) * exp(-0.5_sp*z*z)
+    large_z = sqrt(-2.0_sp*Log(tiny(1._sp)*sqrt(2._sp*pi_sp)))
+    where (mask2d .and. (abs(z) .lt. large_z) )
+       kerf = (1.0_sp/sqrt(2.0_sp*Pi_sp)) * exp(-0.5_sp*z*z)
+    elsewhere (mask2d)
+       kerf = 0.0_sp
+    end where
     w    = product(kerf,dim=2,mask=mask2d)
     sum_w = sum(w, mask=mask1d)
 
