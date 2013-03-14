@@ -225,6 +225,9 @@ MODULE mo_kernel
   !>                                                     to estimate the bandwidth.
   !>       \param[in] "real(sp/dp), optional :: xout(:)" If present, the PDF will be approximated at this arguments,
   !>                                                     otherwise the PDF is approximated at x.
+  !>       \param[in] "logical,     optional :: mask(:)" If present, only consider these data points for kernel density
+  !>       \param[in] "real(sp/dp), optional :: nodata"  If mask is present and xout not, then output is unpacked
+  !>                                                     using this value at non masked positions
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -268,7 +271,7 @@ MODULE mo_kernel
   !     HISTORY
   !>        \author Juliane Mai
   !>        \date Mar 2013
-  !         Modified,
+  !         Modified, Stephan Thober Mar 2013 - added mask and nodata value
 
   INTERFACE kernel_density
      MODULE PROCEDURE kernel_density_1d_dp,  kernel_density_1d_sp
@@ -766,23 +769,41 @@ CONTAINS
 
   ! ------------------------------------------------------------------------------------------------
 
-  function kernel_density_1d_dp(x,h,silverman,xout)
+  function kernel_density_1d_dp(ix,h,silverman,xout,mask,nodata)
 
     implicit none
 
-    real(dp), dimension(:),                       intent(in) :: x
+    real(dp), dimension(:),                       intent(in) :: ix
     real(dp),                           optional, intent(in) :: h
     logical,                            optional, intent(in) :: silverman
     real(dp), dimension(:),             optional, intent(in) :: xout
+    logical,  dimension(:),             optional, intent(in) :: mask
+    real(dp),                           optional, intent(in) :: nodata
     real(dp), dimension(:), allocatable                      :: kernel_density_1d_dp
 
     ! local variables
+    logical,  dimension(size(ix,1))            :: mm
     integer(i4)                                :: nn, nout
     integer(i4)                                :: ii
     real(dp)                                   :: hh
     real(dp), dimension(:),        allocatable :: xxout
-    real(dp), dimension(size(x,1))             :: z
+    real(dp), dimension(:),        allocatable :: z
+    real(dp), dimension(:),        allocatable :: x
     real(dp)                                   :: multiplier
+
+    ! consitency check
+    if ( .not. present(xout) .and. present(mask) .and. .not. present(nodata) ) then
+       print *, ' ERROR *** missing nodata value or xout. function kernel_density'
+       stop ' ERROR*** see StdOut for details'
+    end if
+
+    ! initialize x
+    mm = .true.
+    if ( present( mask ) ) mm = mask
+
+    allocate( z( count(mm) ) )
+    allocate( x( count(mm) ) )
+    x = pack( ix, mm)
 
     nn   = size(x,1)
 
@@ -821,26 +842,54 @@ CONTAINS
           kernel_density_1d_dp(ii) = multiplier * nadaraya_watson_1d_dp(z)
        end if
     end do
+    
+    ! check whether output has to be unpacked
+    if ( .not. present(xout) .and. present(mask) ) then
+       deallocate( x )
+       allocate( x( size(ix,1)))
+       x = unpack( kernel_density_1d_dp, mm, nodata )
+       deallocate( kernel_density_1d_dp )
+       allocate( kernel_density_1d_dp( size(ix,1) ) )
+       kernel_density_1d_dp = x
+    end if
 
   end function kernel_density_1d_dp
 
-  function kernel_density_1d_sp(x,h,silverman,xout)
+  function kernel_density_1d_sp(ix,h,silverman,xout,mask,nodata)
 
     implicit none
 
-    real(sp), dimension(:),                       intent(in) :: x
+    real(sp), dimension(:),                       intent(in) :: ix
     real(sp),                           optional, intent(in) :: h
     logical,                            optional, intent(in) :: silverman
     real(sp), dimension(:),             optional, intent(in) :: xout
+    logical,  dimension(:),             optional, intent(in) :: mask
+    real(sp),                           optional, intent(in) :: nodata
     real(sp), dimension(:), allocatable                      :: kernel_density_1d_sp
 
     ! local variables
+    logical,  dimension(size(ix,1))            :: mm
     integer(i4)                                :: nn, nout
     integer(i4)                                :: ii
     real(sp)                                   :: hh
     real(sp), dimension(:),        allocatable :: xxout
-    real(sp), dimension(size(x,1))             :: z
+    real(sp), dimension(:),        allocatable :: z
+    real(sp), dimension(:),        allocatable :: x
     real(sp)                                   :: multiplier
+
+    ! consitency check
+    if ( .not. present(xout) .and. present(mask) .and. .not. present(nodata) ) then
+       print *, ' ERROR *** missing nodata value or xout. function kernel_density'
+       stop ' ERROR*** see StdOut for details'
+    end if
+       
+    ! initialize x
+    mm = .true.
+    if ( present( mask ) ) mm = mask
+
+    allocate( z( count(mm) ) )
+    allocate( x( count(mm) ) )
+    x = pack( ix, mm)
 
     nn   = size(x,1)
 
@@ -879,6 +928,16 @@ CONTAINS
           kernel_density_1d_sp(ii) = multiplier * nadaraya_watson_1d_sp(z)
        end if
     end do
+
+    ! check whether output has to be unpacked
+    if ( .not. present(xout) .and. present(mask) ) then
+       deallocate( x )
+       allocate( x( size(ix,1)))
+       x = unpack( kernel_density_1d_sp, mm, nodata )
+       deallocate( kernel_density_1d_sp )
+       allocate( kernel_density_1d_sp( size(ix,1) ) )
+       kernel_density_1d_sp = x
+    end if
 
   end function kernel_density_1d_sp
 
