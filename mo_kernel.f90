@@ -10,10 +10,10 @@
 !>          by either Silverman''s rule of thumb or a Cross-Vaildation approach.\n
 !>          The Cross-Validation method is actually an optimization of the bandwith and
 !>          might be the most costly part of the kernel smoother.
-!>          Therefore, the bandwith estimation is not necessarily a part of the kernel smoothing
+!>          Therefore, the bandwith estimation is not necessarily part of the kernel smoothing
 !>          but can be determined first and given as an optional argument to the smoother.
 
-!> \authors Juliane Mai
+!> \author Juliane Mai
 !> \date Mar 2013
 
 MODULE mo_kernel
@@ -21,8 +21,9 @@ MODULE mo_kernel
   ! This module provides functions for kernel regression and kernel density estimation and
   ! is part of the UFZ CHS Fortran library.
 
-  ! Written  Juliane Mai, Mar 2013
-  ! Modified
+  ! Written  Juliane Mai,    Mar 2013
+  ! Modified Stephan Thober, Mar 2013
+  !          Matthias Cuntz, Mar 2013
 
   ! License
   ! -------
@@ -41,51 +42,22 @@ MODULE mo_kernel
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2013 Juliane Mai
-
-  ! Note on Numerical Recipes License
-  ! ---------------------------------
-  ! Be aware that some code is under the Numerical Recipes License 3rd
-  ! edition <http://www.nr.com/aboutNR3license.html>
-
-  ! The Numerical Recipes Personal Single-User License lets you personally
-  ! use Numerical Recipes code ("the code") on any number of computers,
-  ! but only one computer at a time. You are not permitted to allow anyone
-  ! else to access or use the code. You may, under this license, transfer
-  ! precompiled, executable applications incorporating the code to other,
-  ! unlicensed, persons, providing that (i) the application is
-  ! noncommercial (i.e., does not involve the selling or licensing of the
-  ! application for a fee), and (ii) the application was first developed,
-  ! compiled, and successfully run by you, and (iii) the code is bound
-  ! into the application in such a manner that it cannot be accessed as
-  ! individual routines and cannot practicably be unbound and used in
-  ! other programs. That is, under this license, your application user
-  ! must not be able to use Numerical Recipes code as part of a program
-  ! library or "mix and match" workbench.
-
-  ! Businesses and organizations that purchase the disk or code download,
-  ! and that thus acquire one or more Numerical Recipes Personal
-  ! Single-User Licenses, may permanently assign those licenses, in the
-  ! number acquired, to individual employees. Such an assignment must be
-  ! made before the code is first used and, once made, it is irrevocable
-  ! and can not be transferred.
-
-  ! If you do not hold a Numerical Recipes License, this code is only for
-  ! informational and educational purposes but cannot be used.
+  ! Copyright 2013 Juliane Mai, Stephan Thober, Matthias Cuntz
 
   USE mo_kind,      ONLY: i4, sp, dp
-  USE mo_constants, ONLY: pi_sp, pi_dp
+  USE mo_constants, ONLY: pi_sp, pi_dp, twopi_sp, twopi_dp
   USE mo_moment,    ONLY: stddev
   USE mo_nelmin,    ONLY: nelminrange
   USE mo_sort,      ONLY: sort_index
+  USE mo_integrate, ONLY: int_regular
 
   IMPLICIT NONE
 
-  PUBLIC :: kernel_cumdensity        ! Kernel smoothing of a CDF                (only 1D)
-  PUBLIC :: kernel_density           ! Kernel smoothing of a PDF                (only 1D)
-  PUBLIC :: kernel_density_h         ! Bandwith estimation for PDF and CDF      (only 1D)
-  PUBLIC :: kernel_regression        ! Kernel regression                        (1D and ND)
-  PUBLIC :: kernel_regression_h      ! Bandwith estimatio for kernel regression (1D and ND)
+  PUBLIC :: kernel_cumdensity        ! Kernel smoothing of a CDF                 (only 1D)
+  PUBLIC :: kernel_density           ! Kernel smoothing of a PDF                 (only 1D)
+  PUBLIC :: kernel_density_h         ! Bandwith estimation for PDF and CDF       (only 1D)
+  PUBLIC :: kernel_regression        ! Kernel regression                         (1D and ND)
+  PUBLIC :: kernel_regression_h      ! Bandwith estimation for kernel regression (1D and ND)
 
   ! ------------------------------------------------------------------
 
@@ -97,7 +69,7 @@ MODULE mo_kernel
   !
   !>        \brief   Approximates the cumulative density function (CDF).
   !
-  !>        \details Approximates the cummulative density function (CDF)
+  !>        \details Approximates the cumulative density function (CDF)
   !>                 to a given 1D data set using a Gaussian kernel.\n
   !
   !>        The bandwith of the kernel can be pre-determined using the function kernel_density_h and
@@ -108,7 +80,8 @@ MODULE mo_kernel
   !>        If the optional argument silverman is set to false, the cross-validation method described
   !>        by Scott et al. (2005) is applied.
   !>        Therefore, the likelihood of a given h is maximized using the Nelder-Mead algorithm nelminrange.
-  !>        For large data sets this might be time consuming and should be performed aforehand using the function kernel_density_h.\n
+  !>        For large data sets this might be time consuming and should be performed aforehand using the
+  !>        function kernel_density_h.\n
   !>        The dataset x can be single or double precision. The result will have the same numerical precision.\n
   !>        If the CDF for other datapoints than x is needed the optional argument xout has to be specified.
   !>        The result will than be of the same size and precision as xout.
@@ -126,12 +99,19 @@ MODULE mo_kernel
   !>       \param[in] "real(sp/dp), optional :: h"       Bandwith of kernel.\n
   !>                                                     If present, argument silverman is ignored.
   !>                                                     If not present, the bandwith will be approximated first.
-  !>       \param[in] "logical, optional :: silverman"   By default Silverman''s Rule-of-thumb will be used to approximate the
-  !>                                                     bandwith of the kernel (silverman=true).
+  !>       \param[in] "logical, optional :: silverman"   By default Silverman''s Rule-of-thumb will be used to approximate
+  !>                                                     the bandwith of the kernel (silverman=true).
   !>                                                     If silverman=false the Cross-Validation approach is used
   !>                                                     to estimate the bandwidth.
   !>       \param[in] "real(sp/dp), optional :: xout(:)" If present, the CDF will be approximated at this arguments,
   !>                                                     otherwise the CDF is approximated at x.
+  !>       \param[in] "integer(i4), optional :: nintegrate" If present, number of sampling points between for
+  !>                                                        integration between output points.
+  !>                                                        Should 1 plus a multiple of 4. Default: 101.
+  !>       \param[in] "logical, optional :: mask(:)"     mask x values at calculation.\n
+  !>                                                     if not xout given, then kernel estimates will have nodata value.
+  !>       \param[in] "real(sp/dp), optional :: nodata"  if mask and not xout given, then masked data will
+  !>                                                     have nodata kernel estimate.
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -149,14 +129,15 @@ MODULE mo_kernel
   !         ! given data, e.g. temperature
   !         x = (/ 26.1_dp, 24.5_dp, 24.8_dp, 24.5_dp, 24.1_dp /)
   !
-  !         ! pre-estimate bandwidth via cross-validation (time-consuming)
+  !         ! estimate bandwidth via cross-validation (time-consuming)
   !         h = kernel_density_h(x,silverman=.false.)
   !
-  !         ! pre-estimate bandwidth with Silverman''s rule of thumb (default)
+  !         ! estimate bandwidth with Silverman''s rule of thumb (default)
   !         h = kernel_density_h(x,silverman=.true.)
   !
-  !         cdf = kernel_cumdensity(x, h=h, silverman=.false., xout=xout)
-  !         ! gives cumulative density at either xout values, if specified, or at x values, if xout is not present
+  !         ! calc cumulative density with the estimated bandwidth h at given output points xout
+  !         cdf = kernel_cumdensity(x, h=h, xout=xout)
+  !         ! gives cumulative density at xout values, if specified, or at x values, if xout is not present
   !         ! if bandwith h is given                 : silverman (true/false) is ignored
   !         ! if silverman=.true.  and h not present : bandwith will be estimated using Silerman''s rule of thumb
   !         ! if silverman=.false. and h not present : bandwith will be estimated using Cross-Validation approach
@@ -164,7 +145,7 @@ MODULE mo_kernel
 
   !     LITERATURE
   !         Scott, D. W., & Sain, S. R. (2005).
-  !             Multi-dimensional Density Estimation. Handbook of Statistics, 24, 229–261.
+  !             Multi-dimensional Density Estimation. Handbook of Statistics, 24, 229-261.
   !             doi:10.1016/S0169-7161(04)24009-3
   !         Haerdle, W., & Mueller, M. (2000). Multivariate and semiparametric kernel regression.
   !             In M. G. Schimek (Ed.), Smoothing and regression: Approaches, computation, and
@@ -174,7 +155,7 @@ MODULE mo_kernel
   !     HISTORY
   !>        \author Juliane Mai
   !>        \date Mar 2013
-  !         Modified,
+  !         Modified, Matthias Cuntz, Mar 2013
 
   INTERFACE kernel_cumdensity
      MODULE PROCEDURE kernel_cumdensity_1d_dp, kernel_cumdensity_1d_sp
@@ -201,7 +182,8 @@ MODULE mo_kernel
   !>        If the optional argument silverman is set to false, the cross-validation method described
   !>        by Scott et al. (2005) is applied.
   !>        Therefore, the likelihood of a given h is maximized using the Nelder-Mead algorithm nelminrange.
-  !>        For large data sets this might be time consuming and should be performed aforehand using the function kernel_density_h.\n
+  !>        For large data sets this might be time consuming and should be performed aforehand using the function
+  !>        kernel_density_h.\n
   !>        The dataset x can be single or double precision. The result will have the same numerical precision.\n
   !>        If the PDF for other datapoints than x is needed the optional argument xout has to be specified.
   !>        The result will than be of the same size and precision as xout.
@@ -219,15 +201,16 @@ MODULE mo_kernel
   !>       \param[in] "real(sp/dp), optional :: h"       Bandwith of kernel.\n
   !>                                                     If present, argument silverman is ignored.
   !>                                                     If not present, the bandwith will be approximated first.
-  !>       \param[in] "logical, optional :: silverman"   By default Silverman''s Rule-of-thumb will be used to approximate the
-  !>                                                     bandwith of the kernel (silverman=true).
+  !>       \param[in] "logical, optional :: silverman"   By default Silverman''s Rule-of-thumb will be used to approximate
+  !>                                                     the bandwith of the kernel (silverman=true).
   !>                                                     If silverman=false the Cross-Validation approach is used
   !>                                                     to estimate the bandwidth.
   !>       \param[in] "real(sp/dp), optional :: xout(:)" If present, the PDF will be approximated at this arguments,
   !>                                                     otherwise the PDF is approximated at x.
-  !>       \param[in] "logical,     optional :: mask(:)" If present, only consider these data points for kernel density
-  !>       \param[in] "real(sp/dp), optional :: nodata"  If mask is present and xout not, then output is unpacked
-  !>                                                     using this value at non masked positions
+  !>       \param[in] "logical, optional :: mask(:)"     mask x values at calculation.\n
+  !>                                                     if not xout given, then kernel estimates will have nodata value.
+  !>       \param[in] "real(sp/dp), optional :: nodata"  if mask and not xout given, then masked data will
+  !>                                                     have nodata kernel estimate.
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -245,13 +228,14 @@ MODULE mo_kernel
   !         ! given data, e.g. temperature
   !         x = (/ 26.1_dp, 24.5_dp, 24.8_dp, 24.5_dp, 24.1_dp /)
   !
-  !         ! pre-estimate bandwidth via cross-validation (time-consuming)
+  !         ! estimate bandwidth via cross-validation (time-consuming)
   !         h = kernel_density_h(x,silverman=.false.)
   !
-  !         ! pre-estimate bandwidth with Silverman''s rule of thumb (default)
+  !         ! estimate bandwidth with Silverman''s rule of thumb (default)
   !         h = kernel_density_h(x,silverman=.true.)
   !
-  !         pdf = kernel_density(x, h=h, silverman=.false., xout=xout)
+  !         ! calc cumulative density with the estimated bandwidth h at given output points xout
+  !         pdf = kernel_density(x, h=h, xout=xout)
   !         ! gives (probability) density at either xout values, if specified, or at x values, if xout is not present
   !         ! if bandwith h is given                 : silverman (true/false) is ignored
   !         ! if silverman=.true.  and h not present : bandwith will be estimated using Silerman''s rule of thumb
@@ -261,7 +245,7 @@ MODULE mo_kernel
 
   !     LITERATURE
   !         Scott, D. W., & Sain, S. R. (2005).
-  !             Multi-dimensional Density Estimation. Handbook of Statistics, 24, 229–261.
+  !             Multi-dimensional Density Estimation. Handbook of Statistics, 24, 229-261.
   !             doi:10.1016/S0169-7161(04)24009-3
   !         Haerdle, W., & Mueller, M. (2000). Multivariate and semiparametric kernel regression.
   !             In M. G. Schimek (Ed.), Smoothing and regression: Approaches, computation, and
@@ -271,7 +255,8 @@ MODULE mo_kernel
   !     HISTORY
   !>        \author Juliane Mai
   !>        \date Mar 2013
-  !         Modified, Stephan Thober Mar 2013 - added mask and nodata value
+  !         Modified, Stephan Thober, Mar 2013 - mask and nodata
+  !                   Matthias Cuntz, Mar 2013
 
   INTERFACE kernel_density
      MODULE PROCEDURE kernel_density_1d_dp,  kernel_density_1d_sp
@@ -296,7 +281,8 @@ MODULE mo_kernel
   !>        If the optional argument silverman is set to false, the cross-validation method described
   !>        by Scott et al. (2005) is applied.
   !>        Therefore, the likelihood of a given h is maximized using the Nelder-Mead algorithm nelminrange.
-  !>        For large data sets this might be time consuming and should be performed aforehand using the function kernel_density_h.\n
+  !>        For large data sets this might be time consuming and should be performed aforehand using the
+  !>        function kernel_density_h.\n
   !>        The dataset x can be single or double precision. The result will have the same numerical precision.\n
   !>        The result of this function can be used as the optional input for kernel_density and kernel_cumdensity.
   !
@@ -310,8 +296,8 @@ MODULE mo_kernel
   !         None
   !
   !     INTENT(IN), OPTIONAL
-  !>       \param[in] "logical, optional :: silverman"   By default Silverman''s Rule-of-thumb will be used to approximate the
-  !>                                                     bandwith of the kernel (silverman=true).
+  !>       \param[in] "logical, optional :: silverman"   By default Silverman''s Rule-of-thumb will be used to approximate
+  !>                                                     the bandwith of the kernel (silverman=true).
   !>                                                     If silverman=false the Cross-Validation approach is used
   !>                                                     to estimate the bandwidth.
   !
@@ -331,17 +317,17 @@ MODULE mo_kernel
   !         ! given data, e.g. temperature
   !         x = (/ 26.1_dp, 24.5_dp, 24.8_dp, 24.5_dp, 24.1_dp /)
   !
-  !         ! pre-estimate bandwidth via cross-validation (time-consuming)
+  !         ! estimate bandwidth via cross-validation (time-consuming)
   !         h = kernel_density_h(x,silverman=.false.)
   !
-  !         ! pre-estimate bandwidth with Silverman''s rule of thumb (default)
+  !         ! estimate bandwidth with Silverman''s rule of thumb (default)
   !         h = kernel_density_h(x,silverman=.true.)
   !
   !         -> see also example in test directory
 
   !     LITERATURE
   !         Scott, D. W., & Sain, S. R. (2005).
-  !             Multi-dimensional Density Estimation. Handbook of Statistics, 24, 229–261.
+  !             Multi-dimensional Density Estimation. Handbook of Statistics, 24, 229-261.
   !             doi:10.1016/S0169-7161(04)24009-3
   !         Haerdle, W., & Mueller, M. (2000). Multivariate and semiparametric kernel regression.
   !             In M. G. Schimek (Ed.), Smoothing and regression: Approaches, computation, and
@@ -351,7 +337,7 @@ MODULE mo_kernel
   !     HISTORY
   !>        \author Juliane Mai
   !>        \date Mar 2013
-  !         Modified,
+  !         Modified, Matthias Cuntz, Mar 2013
 
   INTERFACE kernel_density_h
      MODULE PROCEDURE kernel_density_h_1d_dp, kernel_density_h_1d_sp
@@ -408,6 +394,10 @@ MODULE mo_kernel
   !>                                                     If present, the fitted values will be returned for
   !>                                                     this independent variables,
   !>                                                     otherwise the fitted values at x are returned.
+  !>       \param[in] "logical, optional :: mask(:)"     mask y values at calculation.\n
+  !>                                                     if not xout given, then kernel estimates will have nodata value.
+  !>       \param[in] "real(sp/dp), optional :: nodata"  if mask and not xout given, then masked data will
+  !>                                                     have nodata kernel estimate.
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -427,10 +417,10 @@ MODULE mo_kernel
   !         x(:,2) = (/  2.1_dp,  4.5_dp,  6.8_dp,  4.8_dp,  0.1_dp /)
   !         y      = (/ 28.2_dp, 29.0_dp, 31.6_dp, 19.3_dp,  2.2_dp /)
   !
-  !         ! pre-estimate bandwidth via cross-validation (time-consuming)
+  !         ! estimate bandwidth via cross-validation (time-consuming)
   !         h = kernel_regression(x,y,silverman=.false.)
   !
-  !         ! pre-estimate bandwidth with Silverman''s rule of thumb (default)
+  !         ! estimate bandwidth with Silverman''s rule of thumb (default)
   !         h = kernel_regression(x,y,silverman=.true.)
   !
   !         fit_y = kernel_regression(x, y, h=h, silverman=.false., xout=xout)
@@ -443,7 +433,7 @@ MODULE mo_kernel
 
   !     LITERATURE
   !         Scott, D. W., & Sain, S. R. (2005).
-  !             Multi-dimensional Density Estimation. Handbook of Statistics, 24, 229–261.
+  !             Multi-dimensional Density Estimation. Handbook of Statistics, 24, 229-261.
   !             doi:10.1016/S0169-7161(04)24009-3
   !         Haerdle, W., & Mueller, M. (2000). Multivariate and semiparametric kernel regression.
   !             In M. G. Schimek (Ed.), Smoothing and regression: Approaches, computation, and
@@ -451,12 +441,11 @@ MODULE mo_kernel
   !             Cambridge University Press, UK, 1996
 
   !     HISTORY
-  !>        \author Matthias Cuntz, Juliane Mai
+  !>        \authors Matthias Cuntz, Juliane Mai
   !>        \date Mar 2013
-  !         Modified,
-
   INTERFACE kernel_regression
-     MODULE PROCEDURE kernel_regression_2d_dp, kernel_regression_2d_sp, kernel_regression_1d_dp, kernel_regression_1d_sp
+     MODULE PROCEDURE kernel_regression_2d_dp, kernel_regression_2d_sp, &
+          kernel_regression_1d_dp, kernel_regression_1d_sp
   END INTERFACE kernel_regression
 
   ! ------------------------------------------------------------------
@@ -521,17 +510,17 @@ MODULE mo_kernel
   !         x(:,2) = (/  2.1_dp,  4.5_dp,  6.8_dp,  4.8_dp,  0.1_dp /)
   !         y      = (/ 28.2_dp, 29.0_dp, 31.6_dp, 19.3_dp,  2.2_dp /)
   !
-  !         ! pre-estimate bandwidth via cross-validation (time-consuming)
+  !         ! estimate bandwidth via cross-validation (time-consuming)
   !         h = kernel_regression_h(x,y,silverman=.false.)
   !
-  !         ! pre-estimate bandwidth with Silverman''s rule of thumb (default)
+  !         ! estimate bandwidth with Silverman''s rule of thumb (default)
   !         h = kernel_regression_h(x,y,silverman=.true.)
   !
   !         -> see also example in test directory
 
   !     LITERATURE
   !         Scott, D. W., & Sain, S. R. (2005).
-  !             Multi-dimensional Density Estimation. Handbook of Statistics, 24, 229–261.
+  !             Multi-dimensional Density Estimation. Handbook of Statistics, 24, 229-261.
   !             doi:10.1016/S0169-7161(04)24009-3
   !         Haerdle, W., & Mueller, M. (2000). Multivariate and semiparametric kernel regression.
   !             In M. G. Schimek (Ed.), Smoothing and regression: Approaches, computation, and
@@ -539,15 +528,36 @@ MODULE mo_kernel
   !             Cambridge University Press, UK, 1996
 
   !     HISTORY
-  !>        \author Matthias Cuntz, Juliane Mai
+  !>        \authors Matthias Cuntz, Juliane Mai
   !>        \date Mar 2013
-  !         Modified,
-
   INTERFACE kernel_regression_h
-     MODULE PROCEDURE kernel_regression_h_2d_dp, kernel_regression_h_2d_sp, kernel_regression_h_1d_dp, kernel_regression_h_1d_sp
+     MODULE PROCEDURE kernel_regression_h_2d_dp, kernel_regression_h_2d_sp, &
+          kernel_regression_h_1d_dp, kernel_regression_h_1d_sp
   END INTERFACE kernel_regression_h
 
   ! ------------------------------------------------------------------
+
+  INTERFACE nadaraya_watson
+     MODULE PROCEDURE nadaraya_watson_2d_dp, nadaraya_watson_2d_sp, &
+          nadaraya_watson_1d_dp, nadaraya_watson_1d_sp
+  END INTERFACE nadaraya_watson
+
+  INTERFACE allocate_globals
+     MODULE PROCEDURE allocate_globals_2d_dp, allocate_globals_2d_sp, &
+          allocate_globals_1d_dp, allocate_globals_1d_sp
+  END INTERFACE allocate_globals
+
+  INTERFACE cross_valid_density
+     MODULE PROCEDURE cross_valid_density_dp, cross_valid_density_sp
+  END INTERFACE cross_valid_density
+
+  INTERFACE cross_valid_regression
+     MODULE PROCEDURE cross_valid_regression_dp, cross_valid_regression_sp
+  END INTERFACE cross_valid_regression
+
+  INTERFACE mesh
+     MODULE PROCEDURE mesh_dp, mesh_sp
+  END INTERFACE mesh
 
   PRIVATE
 
@@ -555,6 +565,7 @@ MODULE mo_kernel
   real(sp), dimension(:,:), allocatable :: global_x_sp
   real(sp), dimension(:,:), allocatable :: global_xout_sp
   real(sp), dimension(:),   allocatable :: global_y_sp
+
   real(dp), dimension(:,:), allocatable :: global_x_dp
   real(dp), dimension(:,:), allocatable :: global_xout_dp
   real(dp), dimension(:),   allocatable :: global_y_dp
@@ -563,213 +574,285 @@ MODULE mo_kernel
 
 CONTAINS
 
-  function kernel_cumdensity_1d_dp(x,h,silverman,xout)
+  function kernel_cumdensity_1d_dp(ix, h, silverman, xout, nintegrate, mask, nodata)
 
     implicit none
 
-    real(dp), dimension(:),                       intent(in) :: x
+    real(dp), dimension(:),                       intent(in) :: ix
     real(dp),                           optional, intent(in) :: h
     logical,                            optional, intent(in) :: silverman
     real(dp), dimension(:),             optional, intent(in) :: xout
+    integer(i4),                        optional, intent(in) :: nintegrate
+    logical,  dimension(:),             optional, intent(in) :: mask
+    real(dp),                           optional, intent(in) :: nodata
     real(dp), dimension(:), allocatable                      :: kernel_cumdensity_1d_dp
 
     ! local variables
-    integer(i4)                                   :: nn, nout, nmesh
-    integer(i4)                                   :: ii, jj
-    real(dp)                                      :: hh
-    real(dp)                                      :: lower_x
-    real(dp),    dimension(:),        allocatable :: xxout
-    integer(i4), dimension(:),        allocatable :: xindx
-    real(dp),    dimension(:),        allocatable :: kernel_density_1d_dp
-    real(dp),    dimension(:),        allocatable :: xmesh
-    real(dp),    dimension(size(x,1))             :: z
-    real(dp)                                      :: multiplier
-    real(dp)                                      :: delta
+    integer(i4)                            :: nin, nout, nmesh
+    integer(i4)                            :: ii, jj
+    real(dp)                               :: hh
+    ! real(dp)                               :: lower_x
+    real(dp),    dimension(:), allocatable :: xxout
+    integer(i4), dimension(:), allocatable :: xindx
+    real(dp),    dimension(:), allocatable :: kernel_pdf
+    real(dp),    dimension(:), allocatable :: xmesh
+    real(dp)                               :: multiplier
+    real(dp)                               :: thresh
+    real(dp)                               :: delta
+    real(dp)                               :: tmp
+    real(dp),    dimension(:), allocatable :: z
+    real(dp),    dimension(:), allocatable :: x
 
-    nn   = size(x,1)
-    nmesh = 100_i4
+    ! consistency check - mask needs either nodata or xout
+    if (present(mask) .and. (.not. present(xout)) .and. (.not. present(nodata)) ) then
+       stop 'kernel_cumdensity_1d_dp: missing nodata value or xout with present(mask)'
+    end if
+
+    ! Pack if mask present
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin))
+       x = pack(ix, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = ix
+    endif
+    allocate(z(nin))
 
     ! allocate
     if (present(xout)) then
-       allocate(xxout(size(xout,1)))
-       allocate(xindx(size(xout,1)))
+       nout = size(xout,1)
+       allocate(xxout(nout))
+       allocate(xindx(nout))
        xxout = xout
     else
-       allocate(xxout(size(x,1)))
-       allocate(xindx(size(x,1)))
+       nout = nin
+       allocate(xxout(nout))
+       allocate(xindx(nout))
        xxout = x
     end if
-    nout   = size(xxout,1)
-
     ! sort the x
     xindx = sort_index(xxout)
     xxout = xxout(xindx)
+
+    ! should be (n*4 + 1) for int_regular
+    if (present(nintegrate)) then
+       nmesh = nintegrate
+    else
+       nmesh = 101_i4
+    endif
 
     ! determine h
     if (present(h)) then
        hh = h
     else
        if (present(silverman)) then
-          hh = kernel_density_h_1d_dp(x,silverman=silverman)
+          hh = kernel_density_h(x, silverman=silverman)
        else
-          hh = kernel_density_h_1d_dp(x,silverman=.true.)
+          hh = kernel_density_h(x, silverman=.true.)
        end if
     end if
 
-    ! allocate PDF array
-    allocate(kernel_density_1d_dp(nmesh))
-    ! allocate mesh array
+    ! allocate PDF, mesh and CDF
+    allocate(kernel_pdf(nmesh))
     allocate(xmesh(nmesh))
-    ! allocate CDF array
     allocate(kernel_cumdensity_1d_dp(nout))
 
-    ! calculate standard devaition of x to determine left side starting point for integration of PDF
-    lower_x = minval(x) - 3.0_dp * stddev(x)
+    ! ! calculate standard deviation of x to determine left side starting point for integration of PDF
+    ! lower_x = minval(x) - 3.0_dp * stddev(x)
 
-    multiplier = 1.0_dp/(real(nn,dp)*hh)
     ! loop through all regression points
+    multiplier = 1.0_dp/(real(nin,dp)*hh)
+    if (multiplier <= 1.0_dp) then
+       thresh = tiny(1.0_dp)/multiplier
+    else
+       thresh = 0.0_dp
+    endif
     do ii = 1, nout
-
-       ! generate mesh
-       if (ii .gt. 1_i4) then
-          xmesh = mesh_dp(xxout(ii-1),xxout(ii),nmesh,delta)
+       ! generate nmesh points between last x and this x
+       ! integrate pdf and add to last point
+       if (ii .eq. 1_i4) then
+          ! xmesh                       = mesh(lower_x, xxout(1), nmesh, delta)
+          xmesh                       = mesh(0.0_dp, xxout(1), nmesh, delta)
+          kernel_pdf(:)               = kernel_density(x, hh, xout=xmesh)
+          kernel_cumdensity_1d_dp(1)  = int_regular(kernel_pdf, delta)
        else
-          xmesh = mesh_dp(lower_x,xxout(1),nmesh,delta)
+          xmesh                       = mesh(xxout(ii-1), xxout(ii), nmesh, delta)
+          kernel_pdf(:)               = kernel_density(x, hh, xout=xmesh)
+          kernel_cumdensity_1d_dp(ii) = kernel_cumdensity_1d_dp(ii-1) + int_regular(kernel_pdf, delta)
        end if
-
-       do jj = 1, nmesh
-          ! scaled difference from regression point
-          z(:) = (x(:) - xmesh(jj)) / hh
-          ! nadaraya-watson estimator of gaussian multivariate kernel
-          kernel_density_1d_dp(jj) = nadaraya_watson_1d_dp(z)
-          if (kernel_density_1d_dp(jj) .gt. real(nn,dp)*hh*epsilon(1.0_dp)) then
-             kernel_density_1d_dp(jj) = multiplier * nadaraya_watson_1d_dp(z)
-          end if
-       end do
-       kernel_cumdensity_1d_dp(ii) = sum(kernel_density_1d_dp) * delta
-
-       ! generate mesh
-       if (ii .gt. 1_i4) then
-          kernel_cumdensity_1d_dp(ii) = kernel_cumdensity_1d_dp(ii-1) + kernel_cumdensity_1d_dp(ii)
-       end if
-
-       ! print*, xxout(ii),'   ',xindx(ii),'   kernel_cumdensity_1d_dp(',ii,') = ',kernel_cumdensity_1d_dp(ii)
-
     end do
 
-    ! scale to range [0,1]
-    forall(ii=1:nout) kernel_cumdensity_1d_dp(ii) = ( kernel_cumdensity_1d_dp(ii) - kernel_cumdensity_1d_dp(1) ) /  &
-         ( kernel_cumdensity_1d_dp(nout) - kernel_cumdensity_1d_dp(1) )
+    ! ! scale to range [0,1]
+    ! tmp = 1.0_dp / (kernel_cumdensity_1d_dp(nout) - kernel_cumdensity_1d_dp(1))
+    ! kernel_cumdensity_1d_dp(:) = ( kernel_cumdensity_1d_dp(:) - kernel_cumdensity_1d_dp(1) ) * tmp
 
     ! resorting
-    forall(ii=1:nout) kernel_cumdensity_1d_dp(xindx(ii)) = kernel_cumdensity_1d_dp(ii)
+    kernel_cumdensity_1d_dp(xindx(:)) = kernel_cumdensity_1d_dp(:)
+
+    ! check whether output has to be unpacked
+    if (present(mask) .and. (.not. present(xout))) then
+       deallocate(x)
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = unpack(kernel_cumdensity_1d_dp, mask, nodata)
+       deallocate(kernel_cumdensity_1d_dp)
+       allocate(kernel_cumdensity_1d_dp(nin))
+       kernel_cumdensity_1d_dp = x
+    end if
+
+    ! clean up
+    deallocate(xxout)
+    deallocate(xindx)
+    deallocate(kernel_pdf)
+    deallocate(xmesh)
+    deallocate(z)
+    deallocate(x)
 
   end function kernel_cumdensity_1d_dp
 
-  function kernel_cumdensity_1d_sp(x,h,silverman,xout)
+  function kernel_cumdensity_1d_sp(ix, h, silverman, xout, nintegrate, mask, nodata)
 
     implicit none
 
-    real(sp), dimension(:),                       intent(in) :: x
+    real(sp), dimension(:),                       intent(in) :: ix
     real(sp),                           optional, intent(in) :: h
     logical,                            optional, intent(in) :: silverman
     real(sp), dimension(:),             optional, intent(in) :: xout
+    integer(i4),                        optional, intent(in) :: nintegrate
+    logical,  dimension(:),             optional, intent(in) :: mask
+    real(sp),                           optional, intent(in) :: nodata
     real(sp), dimension(:), allocatable                      :: kernel_cumdensity_1d_sp
 
     ! local variables
-    integer(i4)                                   :: nn, nout, nmesh
-    integer(i4)                                   :: ii, jj
-    real(sp)                                      :: hh
-    real(sp)                                      :: lower_x
-    real(sp),    dimension(:),        allocatable :: xxout
-    integer(i4), dimension(:),        allocatable :: xindx
-    real(sp),    dimension(:),        allocatable :: kernel_density_1d_sp
-    real(sp),    dimension(:),        allocatable :: xmesh
-    real(sp),    dimension(size(x,1))             :: z
-    real(sp)                                      :: multiplier
-    real(sp)                                      :: delta
+    integer(i4)                            :: nin, nout, nmesh
+    integer(i4)                            :: ii, jj
+    real(sp)                               :: hh
+    ! real(sp)                               :: lower_x
+    real(sp),    dimension(:), allocatable :: xxout
+    integer(i4), dimension(:), allocatable :: xindx
+    real(sp),    dimension(:), allocatable :: kernel_pdf
+    real(sp),    dimension(:), allocatable :: xmesh
+    real(sp)                               :: multiplier
+    real(sp)                               :: thresh
+    real(sp)                               :: delta
+    real(sp)                               :: tmp
+    real(sp),    dimension(:), allocatable :: z
+    real(sp),    dimension(:), allocatable :: x
 
-    nn   = size(x,1)
-    nmesh = 100_i4
+    ! consistency check - mask needs either nodata or xout
+    if (present(mask) .and. (.not. present(xout)) .and. (.not. present(nodata)) ) then
+       stop 'kernel_cumdensity_1d_sp: missing nodata value or xout with present(mask)'
+    end if
+
+    ! Pack if mask present
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin))
+       x = pack(ix, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = ix
+    endif
+    allocate(z(nin))
 
     ! allocate
     if (present(xout)) then
-       allocate(xxout(size(xout,1)))
-       allocate(xindx(size(xout,1)))
+       nout = size(xout,1)
+       allocate(xxout(nout))
+       allocate(xindx(nout))
        xxout = xout
     else
-       allocate(xxout(size(x,1)))
-       allocate(xindx(size(x,1)))
+       nout = nin
+       allocate(xxout(nout))
+       allocate(xindx(nout))
        xxout = x
     end if
-    nout   = size(xxout,1)
-
     ! sort the x
     xindx = sort_index(xxout)
     xxout = xxout(xindx)
+
+    ! should be (n*4 + 1) for int_regular
+    if (present(nintegrate)) then
+       nmesh = nintegrate
+    else
+       nmesh = 101_i4
+    endif
 
     ! determine h
     if (present(h)) then
        hh = h
     else
        if (present(silverman)) then
-          hh = kernel_density_h_1d_sp(x,silverman=silverman)
+          hh = kernel_density_h(x, silverman=silverman)
        else
-          hh = kernel_density_h_1d_sp(x,silverman=.true.)
+          hh = kernel_density_h(x, silverman=.true.)
        end if
     end if
 
-    ! allocate PDF array
-    allocate(kernel_density_1d_sp(nmesh))
-    ! allocate mesh array
+    ! allocate PDF, mesh and CDF
+    allocate(kernel_pdf(nmesh))
     allocate(xmesh(nmesh))
-    ! allocate CDF array
     allocate(kernel_cumdensity_1d_sp(nout))
 
-    ! calculate standard devaition of x to determine left side starting point for integration of PDF
-    lower_x = minval(x) - 3.0_sp * stddev(x)
+    ! ! calculate standard deviation of x to determine left side starting point for integration of PDF
+    ! lower_x = minval(x) - 3.0_sp * stddev(x)
 
-    multiplier = 1.0_sp/(real(nn,sp)*hh)
     ! loop through all regression points
+    multiplier = 1.0_sp/(real(nin,sp)*hh)
+    if (multiplier <= 1.0_sp) then
+       thresh = tiny(1.0_sp)/multiplier
+    else
+       thresh = 0.0_sp
+    endif
     do ii = 1, nout
-
-       ! generate mesh
-       if (ii .gt. 1_i4) then
-          xmesh = mesh_sp(xxout(ii-1),xxout(ii),nmesh,delta)
+       ! generate nmesh points between last x and this x
+       ! integrate pdf and add to last point
+       if (ii .eq. 1_i4) then
+          ! xmesh                       = mesh(lower_x, xxout(1), nmesh, delta)
+          xmesh                       = mesh(0.0_sp, xxout(1), nmesh, delta)
+          kernel_pdf(:)               = kernel_density(x, hh, xout=xmesh)
+          kernel_cumdensity_1d_sp(1)  = int_regular(kernel_pdf, delta)
        else
-          xmesh = mesh_sp(lower_x,xxout(1),nmesh,delta)
+          xmesh                       = mesh(xxout(ii-1), xxout(ii), nmesh, delta)
+          kernel_pdf(:)               = kernel_density(x, hh, xout=xmesh)
+          kernel_cumdensity_1d_sp(ii) = kernel_cumdensity_1d_sp(ii-1) + int_regular(kernel_pdf, delta)
        end if
-
-       do jj = 1, nmesh
-          ! scaled difference from regression point
-          z(:) = (x(:) - xmesh(jj)) / hh
-          ! nadaraya-watson estimator of gaussian multivariate kernel
-          kernel_density_1d_sp(jj) = nadaraya_watson_1d_sp(z)
-          if (kernel_density_1d_sp(jj) .gt. real(nn,sp)*hh*epsilon(1.0_sp)) then
-             kernel_density_1d_sp(jj) = multiplier * nadaraya_watson_1d_sp(z)
-          end if
-       end do
-       kernel_cumdensity_1d_sp(ii) = sum(kernel_density_1d_sp) * delta
-
-       ! generate mesh
-       if (ii .gt. 1_i4) then
-          kernel_cumdensity_1d_sp(ii) = kernel_cumdensity_1d_sp(ii-1) + kernel_cumdensity_1d_sp(ii)
-       end if
-
     end do
 
-    ! scale to range [0,1]
-    forall(ii=1:nout) kernel_cumdensity_1d_sp(ii) = ( kernel_cumdensity_1d_sp(ii) - kernel_cumdensity_1d_sp(1) ) /  &
-         ( kernel_cumdensity_1d_sp(nout) - kernel_cumdensity_1d_sp(1) )
+    ! ! scale to range [0,1]
+    ! tmp = 1.0_sp / (kernel_cumdensity_1d_sp(nout) - kernel_cumdensity_1d_sp(1))
+    ! kernel_cumdensity_1d_sp(:) = ( kernel_cumdensity_1d_sp(:) - kernel_cumdensity_1d_sp(1) ) * tmp
 
     ! resorting
-    forall(ii=1:nout) kernel_cumdensity_1d_sp(xindx(ii)) = kernel_cumdensity_1d_sp(ii)
+    kernel_cumdensity_1d_sp(xindx(:)) = kernel_cumdensity_1d_sp(:)
+
+    ! check whether output has to be unpacked
+    if (present(mask) .and. (.not. present(xout))) then
+       deallocate(x)
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = unpack(kernel_cumdensity_1d_sp, mask, nodata)
+       deallocate(kernel_cumdensity_1d_sp)
+       allocate(kernel_cumdensity_1d_sp(nin))
+       kernel_cumdensity_1d_sp = x
+    end if
+
+    ! clean up
+    deallocate(xxout)
+    deallocate(xindx)
+    deallocate(kernel_pdf)
+    deallocate(xmesh)
+    deallocate(z)
+    deallocate(x)
 
   end function kernel_cumdensity_1d_sp
 
   ! ------------------------------------------------------------------------------------------------
 
-  function kernel_density_1d_dp(ix,h,silverman,xout,mask,nodata)
+  function kernel_density_1d_dp(ix, h, silverman, xout, mask, nodata)
 
     implicit none
 
@@ -782,80 +865,90 @@ CONTAINS
     real(dp), dimension(:), allocatable                      :: kernel_density_1d_dp
 
     ! local variables
-    logical,  dimension(size(ix,1))            :: mm
-    integer(i4)                                :: nn, nout
-    integer(i4)                                :: ii
-    real(dp)                                   :: hh
-    real(dp), dimension(:),        allocatable :: xxout
-    real(dp), dimension(:),        allocatable :: z
+    integer(i4)                         :: nin, nout
+    integer(i4)                         :: ii
+    real(dp)                            :: hh
+    real(dp), dimension(:), allocatable :: xxout
+    real(dp), dimension(:), allocatable :: z
+    real(dp)                            :: multiplier
+    real(dp)                            :: thresh
     real(dp), dimension(:),        allocatable :: x
-    real(dp)                                   :: multiplier
 
-    ! consitency check
-    if ( .not. present(xout) .and. present(mask) .and. .not. present(nodata) ) then
-       print *, ' ERROR *** missing nodata value or xout. function kernel_density'
-       stop ' ERROR*** see StdOut for details'
+    ! consistency check - mask needs either nodata or xout
+    if (present(mask) .and. (.not. present(xout)) .and. (.not. present(nodata)) ) then
+       stop 'kernel_density_1d_dp: missing nodata value or xout with present(mask)'
     end if
 
-    ! initialize x
-    mm = .true.
-    if ( present( mask ) ) mm = mask
+    ! Pack if mask present
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin))
+       x = pack(ix, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = ix
+    endif
+    allocate(z(nin))
 
-    allocate( z( count(mm) ) )
-    allocate( x( count(mm) ) )
-    x = pack( ix, mm)
-
-    nn   = size(x,1)
-
-    ! calc regression
+    ! output size
     if (present(xout)) then
-       allocate(xxout(size(xout,1)))
+       nout = size(xout,1)
+       allocate(xxout(nout))
        xxout = xout
     else
-       allocate(xxout(size(x,1)))
+       nout = nin
+       allocate(xxout(nout))
        xxout = x
     end if
-    nout   = size(xxout,1)
+    ! allocate output
+    allocate(kernel_density_1d_dp(nout))
 
     ! determine h
     if (present(h)) then
        hh = h
     else
        if (present(silverman)) then
-          hh = kernel_density_h_1d_dp(x,silverman=silverman)
+          hh = kernel_density_h(x, silverman=silverman)
        else
-          hh = kernel_density_h_1d_dp(x,silverman=.true.)
+          hh = kernel_density_h(x, silverman=.true.)
        end if
     end if
 
-    ! allocate output
-    allocate(kernel_density_1d_dp(nout))
-
-    multiplier = 1.0_dp/(real(nn,dp)*hh)
+    multiplier = 1.0_dp/(real(nin,dp)*hh)
+    if (multiplier <= 1.0_dp) then
+       thresh = tiny(1.0_dp)/multiplier
+    else
+       thresh = 0.0_dp
+    endif
     ! loop through all regression points
-    do ii = 1, nout
+    do ii=1, nout
        ! scaled difference from regression point
        z(:) = (x(:) - xxout(ii)) / hh
        ! nadaraya-watson estimator of gaussian multivariate kernel
-       kernel_density_1d_dp(ii) = nadaraya_watson_1d_dp(z)
-       if (kernel_density_1d_dp(ii) .gt. real(nn,dp)*hh*epsilon(1.0_dp)) then
-          kernel_density_1d_dp(ii) = multiplier * nadaraya_watson_1d_dp(z)
-       end if
+       kernel_density_1d_dp(ii) = nadaraya_watson(z)
+       if (kernel_density_1d_dp(ii) .gt. thresh) kernel_density_1d_dp(ii) = multiplier * kernel_density_1d_dp(ii)
     end do
-    
+
     ! check whether output has to be unpacked
-    if ( .not. present(xout) .and. present(mask) ) then
-       deallocate( x )
-       allocate( x( size(ix,1)))
-       x = unpack( kernel_density_1d_dp, mm, nodata )
-       deallocate( kernel_density_1d_dp )
-       allocate( kernel_density_1d_dp( size(ix,1) ) )
+    if (present(mask) .and. (.not. present(xout))) then
+       deallocate(x)
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = unpack(kernel_density_1d_dp, mask, nodata)
+       deallocate(kernel_density_1d_dp)
+       allocate(kernel_density_1d_dp(nin))
        kernel_density_1d_dp = x
     end if
 
+    ! clean up
+    deallocate(xxout)
+    deallocate(x)
+    deallocate(z)
+
   end function kernel_density_1d_dp
 
-  function kernel_density_1d_sp(ix,h,silverman,xout,mask,nodata)
+  function kernel_density_1d_sp(ix, h, silverman, xout, mask, nodata)
 
     implicit none
 
@@ -868,107 +961,119 @@ CONTAINS
     real(sp), dimension(:), allocatable                      :: kernel_density_1d_sp
 
     ! local variables
-    logical,  dimension(size(ix,1))            :: mm
-    integer(i4)                                :: nn, nout
-    integer(i4)                                :: ii
-    real(sp)                                   :: hh
-    real(sp), dimension(:),        allocatable :: xxout
-    real(sp), dimension(:),        allocatable :: z
+    integer(i4)                         :: nin, nout
+    integer(i4)                         :: ii
+    real(sp)                            :: hh
+    real(sp), dimension(:), allocatable :: xxout
+    real(sp), dimension(:), allocatable :: z
+    real(sp)                            :: multiplier
+    real(sp)                            :: thresh
     real(sp), dimension(:),        allocatable :: x
-    real(sp)                                   :: multiplier
 
-    ! consitency check
-    if ( .not. present(xout) .and. present(mask) .and. .not. present(nodata) ) then
-       print *, ' ERROR *** missing nodata value or xout. function kernel_density'
-       stop ' ERROR*** see StdOut for details'
+    ! consistency check - mask needs either nodata or xout
+    if (present(mask) .and. (.not. present(xout)) .and. (.not. present(nodata)) ) then
+       stop 'kernel_density_1d_sp: missing nodata value or xout with present(mask)'
     end if
-       
-    ! initialize x
-    mm = .true.
-    if ( present( mask ) ) mm = mask
 
-    allocate( z( count(mm) ) )
-    allocate( x( count(mm) ) )
-    x = pack( ix, mm)
+    ! Pack if mask present
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin))
+       x = pack(ix, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = ix
+    endif
+    allocate(z(nin))
 
-    nn   = size(x,1)
-
-    ! calc regression
+    ! output size
     if (present(xout)) then
-       allocate(xxout(size(xout,1)))
+       nout = size(xout,1)
+       allocate(xxout(nout))
        xxout = xout
     else
-       allocate(xxout(size(x,1)))
+       nout = nin
+       allocate(xxout(nout))
        xxout = x
     end if
-    nout   = size(xxout,1)
+    ! allocate output
+    allocate(kernel_density_1d_sp(nout))
 
     ! determine h
     if (present(h)) then
        hh = h
     else
        if (present(silverman)) then
-          hh = kernel_density_h_1d_sp(x,silverman=silverman)
+          hh = kernel_density_h(x, silverman=silverman)
        else
-          hh = kernel_density_h_1d_sp(x,silverman=.true.)
+          hh = kernel_density_h(x, silverman=.true.)
        end if
     end if
 
-    ! allocate output
-    allocate(kernel_density_1d_sp(nout))
-
-    multiplier = 1.0_sp/(real(nn,sp)*hh)
+    multiplier = 1.0_sp/(real(nin,sp)*hh)
+    if (multiplier <= 1.0_sp) then
+       thresh = tiny(1.0_sp)/multiplier
+    else
+       thresh = 0.0_sp
+    endif
     ! loop through all regression points
-    do ii = 1, nout
+    do ii=1, nout
        ! scaled difference from regression point
        z(:) = (x(:) - xxout(ii)) / hh
        ! nadaraya-watson estimator of gaussian multivariate kernel
-       kernel_density_1d_sp(ii) = nadaraya_watson_1d_sp(z)
-       if (kernel_density_1d_sp(ii) .gt. real(nn,sp)*hh*epsilon(1.0_sp)) then
-          kernel_density_1d_sp(ii) = multiplier * nadaraya_watson_1d_sp(z)
-       end if
+       kernel_density_1d_sp(ii) = nadaraya_watson(z)
+       if (kernel_density_1d_sp(ii) .gt. thresh) kernel_density_1d_sp(ii) = multiplier * kernel_density_1d_sp(ii)
     end do
 
     ! check whether output has to be unpacked
-    if ( .not. present(xout) .and. present(mask) ) then
-       deallocate( x )
-       allocate( x( size(ix,1)))
-       x = unpack( kernel_density_1d_sp, mm, nodata )
-       deallocate( kernel_density_1d_sp )
-       allocate( kernel_density_1d_sp( size(ix,1) ) )
+    if (present(mask) .and. (.not. present(xout))) then
+       deallocate(x)
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = unpack(kernel_density_1d_sp, mask, nodata)
+       deallocate(kernel_density_1d_sp)
+       allocate(kernel_density_1d_sp(nin))
        kernel_density_1d_sp = x
     end if
+
+    ! clean up
+    deallocate(xxout)
+    deallocate(x)
+    deallocate(z)
 
   end function kernel_density_1d_sp
 
   ! ------------------------------------------------------------------------------------------------
 
-  function kernel_density_h_1d_dp(x,silverman)
+  function kernel_density_h_1d_dp(x, silverman)
+
+    implicit none
 
     real(dp), dimension(:),           intent(in) :: x
     logical,                optional, intent(in) :: silverman
     real(dp)                                     :: kernel_density_h_1d_dp
 
     ! local variables
-    integer(i4)              :: nn
+    real(dp)                 :: nn
     real(dp), dimension(1)   :: h
-    real(dp)                 :: stddev_x
     real(dp), dimension(1,2) :: bounds
+    real(dp), parameter      :: pre_h = 1.05922384104881_dp
 
-    nn   = size(x,1)
+    nn   = real(size(x,1),dp)
 
-    ! Silverman's rule of thumb by
+    ! Default: Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
-    stddev_x = stddev(x(:))
-
-    h(1) = (4._dp/3._dp/real(nn,dp))**(0.2_dp) * stddev_x
+    !h(1) = (4._dp/3._dp/real(nn,dp))**(0.2_dp) * stddev_x
+    h(1) = pre_h/(nn**0.2_dp) * stddev(x(:))
 
     if (present(silverman)) then
        if (.not. silverman) then
-          bounds(1,1) = max(0.2_dp * h(1),(maxval(x)-minval(x))/real(nn,dp))
+          bounds(1,1) = max(0.2_dp * h(1), (maxval(x)-minval(x))/nn)
           bounds(1,2) = 5.0_dp * h(1)
-          call set_globals_for_opti_1d_dp(x) !,xout=xout)
-          h = nelminrange(cross_valid_density_h_2d_dp, h, bounds,varmin=0.1_dp)
+          call allocate_globals(x)
+          h = nelminrange(cross_valid_density_dp, h, bounds, varmin=0.1_dp)
+          call deallocate_globals()
        end if
     end if
 
@@ -976,32 +1081,34 @@ CONTAINS
 
   end function kernel_density_h_1d_dp
 
-  function kernel_density_h_1d_sp(x,silverman)
+  function kernel_density_h_1d_sp(x, silverman)
+
+    implicit none
 
     real(sp), dimension(:),           intent(in) :: x
     logical,                optional, intent(in) :: silverman
     real(sp)                                     :: kernel_density_h_1d_sp
 
     ! local variables
-    integer(i4)              :: nn
+    real(sp)                 :: nn
     real(sp), dimension(1)   :: h
-    real(sp)                 :: stddev_x
     real(sp), dimension(1,2) :: bounds
+    real(sp), parameter      :: pre_h = 1.05922384104881_sp
 
-    nn   = size(x,1)
+    nn   = real(size(x,1),sp)
 
-    ! Silverman's rule of thumb by
+    ! Default: Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
-    stddev_x = stddev(x(:))
-
-    h(1) = (4._sp/3._sp/real(nn,sp))**(0.2_sp) * stddev_x
+    !h(1) = (4._sp/3._sp/real(nn,sp))**(0.2_sp) * stddev_x
+    h(1) = pre_h/(nn**0.2_sp) * stddev(x(:))
 
     if (present(silverman)) then
        if (.not. silverman) then
-          bounds(1,1) = max(0.2_sp * h(1),(maxval(x)-minval(x))/real(nn,sp))
+          bounds(1,1) = max(0.2_sp * h(1), (maxval(x)-minval(x))/nn)
           bounds(1,2) = 5.0_sp * h(1)
-          call set_globals_for_opti_1d_sp(x) !,xout=xout)
-          h = nelminrange(cross_valid_density_h_2d_sp, h, bounds,varmin=0.1_sp)
+          call allocate_globals(x)
+          h = nelminrange(cross_valid_density_sp, h, bounds, varmin=0.1_sp)
+          call deallocate_globals()
        end if
     end if
 
@@ -1011,50 +1118,74 @@ CONTAINS
 
   ! ------------------------------------------------------------------------------------------------
 
-  function kernel_regression_1d_dp(x,y,h,silverman,xout)
+  function kernel_regression_1d_dp(ix, iy, h, silverman, xout, mask, nodata)
 
     implicit none
 
-    real(dp), dimension(:),                       intent(in) :: x
-    real(dp), dimension(:),                       intent(in) :: y
+    real(dp), dimension(:),                       intent(in) :: ix
+    real(dp), dimension(:),                       intent(in) :: iy
     real(dp),                           optional, intent(in) :: h
     logical,                            optional, intent(in) :: silverman
     real(dp), dimension(:),             optional, intent(in) :: xout
+    logical,  dimension(:),             optional, intent(in) :: mask
+    real(dp),                           optional, intent(in) :: nodata
     real(dp), dimension(:), allocatable                      :: kernel_regression_1d_dp
 
     ! local variables
-    integer(i4)                                :: nn, nout
-    integer(i4)                                :: ii
-    real(dp)                                   :: hh
-    real(dp), dimension(:),        allocatable :: xxout
-    real(dp), dimension(size(x,1))             :: z
+    integer(i4)                         :: nin, nout
+    integer(i4)                         :: ii
+    real(dp)                            :: hh
+    real(dp), dimension(:), allocatable :: xxout
+    real(dp), dimension(:), allocatable :: z
+    real(dp), dimension(:), allocatable :: x
+    real(dp), dimension(:), allocatable :: y
 
-    nn   = size(x,1)
+    ! consistency check - mask needs either nodata or xout
+    if (present(mask) .and. (.not. present(xout)) .and. (.not. present(nodata)) ) then
+       stop 'kernel_regression_1d_dp: missing nodata value or xout with present(mask)'
+    end if
 
+    nin   = size(ix,1)
     ! consistency checks of inputs
-    if (size(y) .ne. nn)   stop 'kernel_regression_1d_dp : size of 2nd argument not matching'
+    if (size(iy,1) .ne. nin) stop 'kernel_regression_1d_dp: size(x) /= size(y)'
+
+    ! Pack if mask present
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin))
+       allocate(y(nin))
+       x = pack(ix, mask)
+       y = pack(iy, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin))
+       allocate(y(nin))
+       x = ix
+       y = iy
+    endif
+    allocate(z(nin))
 
     ! determine h
     if (present(h)) then
        hh = h
     else
        if (present(silverman)) then
-          hh = kernel_regression_h_1d_dp(x,y,silverman=silverman)
+          hh = kernel_regression_h(x, y, silverman=silverman)
        else
-          hh = kernel_regression_h_1d_dp(x,y,silverman=.true.)
+          hh = kernel_regression_h(x, y, silverman=.true.)
        end if
     end if
 
     ! calc regression
     if (present(xout)) then
-       allocate(xxout(size(xout,1)))
+       nout = size(xout,1)
+       allocate(xxout(nout))
        xxout = xout
     else
-       allocate(xxout(size(x,1)))
+       nout = nin
+       allocate(xxout(nout))
        xxout = x
     end if
-    nout   = size(xxout,1)
-
     ! allocate output
     allocate(kernel_regression_1d_dp(nout))
 
@@ -1063,122 +1194,96 @@ CONTAINS
        ! scaled difference from regression point
        z(:) = (x(:) - xxout(ii)) / hh
        ! nadaraya-watson estimator of gaussian multivariate kernel
-       kernel_regression_1d_dp(ii) = nadaraya_watson_1d_dp(z,y=y)
+       kernel_regression_1d_dp(ii) = nadaraya_watson(z, y)
     end do
+
+    ! check whether output has to be unpacked
+    if (present(mask) .and. (.not. present(xout))) then
+       deallocate(x)
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = unpack(kernel_regression_1d_dp, mask, nodata)
+       deallocate(kernel_regression_1d_dp)
+       allocate(kernel_regression_1d_dp(nin))
+       kernel_regression_1d_dp = x
+    end if
+
+    ! clean up
+    deallocate(xxout)
+    deallocate(x)
+    deallocate(y)
+    deallocate(z)
 
   end function kernel_regression_1d_dp
 
-  function kernel_regression_2d_dp(x,y,h,silverman,xout)
+  function kernel_regression_1d_sp(ix, iy, h, silverman, xout, mask, nodata)
 
     implicit none
 
-    real(dp), dimension(:,:),                       intent(in) :: x
-    real(dp), dimension(:),                         intent(in) :: y
-    real(dp), dimension(:),               optional, intent(in) :: h
-    logical,                              optional, intent(in) :: silverman
-    real(dp), dimension(:,:),             optional, intent(in) :: xout
-    real(dp), dimension(:),   allocatable                      :: kernel_regression_2d_dp
-
-    ! local variables
-    integer(i4)                                :: dims, dimout
-    integer(i4)                                :: nn, nout
-    integer(i4)                                :: ii, jj
-    real(dp), dimension(size(x,2))             :: hh
-    real(dp), dimension(:,:),      allocatable :: xxout
-    real(dp), dimension(size(x,1), size(x,2))  :: z
-
-
-    dims = size(x,2)
-    nn   = size(x,1)
-
-    ! consistency checks of inputs
-    if (size(y) .ne. nn)   stop 'kernel_regression_2d_dp : size of 2nd argument not matching'
-    if (present(h)) then
-       if (size(h) .ne. dims) stop 'kernel_regression_2d_dp : size of 3rd argument not matching'
-    end if
-    if (present(xout)) then
-       if (size(xout,2) .ne. dims) stop 'kernel_regression_2d_dp : size of optional argument not matching'
-    end if
-
-    ! determine h
-    if (present(h)) then
-       hh = h
-    else
-       if (present(silverman)) then
-          hh = kernel_regression_h_2d_dp(x,y,silverman=silverman)
-       else
-          hh = kernel_regression_h_2d_dp(x,y,silverman=.true.)
-       end if
-    end if
-
-    ! calc regression
-    if (present(xout)) then
-       allocate(xxout(size(xout,1),size(xout,2)))
-       xxout = xout
-    else
-       allocate(xxout(size(x,1),size(x,2)))
-       xxout = x
-    end if
-    nout   = size(xxout,1)
-    dimout = size(xxout,2)
-
-    ! allocate output
-    allocate(kernel_regression_2d_dp(nout))
-
-    ! loop through all regression points
-    do ii = 1, nout
-       ! scaled difference from regression point
-       forall(jj=1:dimout) z(:,jj) = (x(:,jj) - xxout(ii,jj)) / hh(jj)
-       ! nadaraya-watson estimator of gaussian multivariate kernel
-       kernel_regression_2d_dp(ii) = nadaraya_watson_2d_dp(z,y=y)
-    end do
-
-  end function kernel_regression_2d_dp
-
-  function kernel_regression_1d_sp(x,y,h,silverman,xout)
-
-    implicit none
-
-    real(sp), dimension(:),                       intent(in) :: x
-    real(sp), dimension(:),                       intent(in) :: y
+    real(sp), dimension(:),                       intent(in) :: ix
+    real(sp), dimension(:),                       intent(in) :: iy
     real(sp),                           optional, intent(in) :: h
     logical,                            optional, intent(in) :: silverman
     real(sp), dimension(:),             optional, intent(in) :: xout
+    logical,  dimension(:),             optional, intent(in) :: mask
+    real(sp),                           optional, intent(in) :: nodata
     real(sp), dimension(:), allocatable                      :: kernel_regression_1d_sp
 
     ! local variables
-    integer(i4)                                :: nn, nout
-    integer(i4)                                :: ii
-    real(sp)                                   :: hh
-    real(sp), dimension(:),        allocatable :: xxout
-    real(sp), dimension(size(x,1))             :: z
+    integer(i4)                         :: nin, nout
+    integer(i4)                         :: ii
+    real(sp)                            :: hh
+    real(sp), dimension(:), allocatable :: xxout
+    real(sp), dimension(:), allocatable :: z
+    real(sp), dimension(:), allocatable :: x
+    real(sp), dimension(:), allocatable :: y
 
-    nn   = size(x,1)
+    ! consistency check - mask needs either nodata or xout
+    if (present(mask) .and. (.not. present(xout)) .and. (.not. present(nodata)) ) then
+       stop 'kernel_regression_1d_sp: missing nodata value or xout with present(mask)'
+    end if
 
+    nin   = size(ix,1)
     ! consistency checks of inputs
-    if (size(y) .ne. nn)   stop 'kernel_regression_1d_sp : size of 2nd argument not matching'
+    if (size(iy,1) .ne. nin) stop 'kernel_regression_1d_sp: size(x) /= size(y)'
+
+    ! Pack if mask present
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin))
+       allocate(y(nin))
+       x = pack(ix, mask)
+       y = pack(iy, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin))
+       allocate(y(nin))
+       x = ix
+       y = iy
+    endif
+    allocate(z(nin))
 
     ! determine h
     if (present(h)) then
        hh = h
     else
        if (present(silverman)) then
-          hh = kernel_regression_h_1d_sp(x,y,silverman=silverman)
+          hh = kernel_regression_h(x, y, silverman=silverman)
        else
-          hh = kernel_regression_h_1d_sp(x,y,silverman=.true.)
+          hh = kernel_regression_h(x, y, silverman=.true.)
        end if
     end if
 
     ! calc regression
     if (present(xout)) then
-       allocate(xxout(size(xout,1)))
+       nout = size(xout,1)
+       allocate(xxout(nout))
        xxout = xout
     else
-       allocate(xxout(size(x,1)))
+       nout = nin
+       allocate(xxout(nout))
        xxout = x
     end if
-    nout   = size(xxout,1)
-
     ! allocate output
     allocate(kernel_regression_1d_sp(nout))
 
@@ -1187,81 +1292,243 @@ CONTAINS
        ! scaled difference from regression point
        z(:) = (x(:) - xxout(ii)) / hh
        ! nadaraya-watson estimator of gaussian multivariate kernel
-       kernel_regression_1d_sp(ii) = nadaraya_watson_1d_sp(z,y=y)
+       kernel_regression_1d_sp(ii) = nadaraya_watson(z, y)
     end do
+
+    ! check whether output has to be unpacked
+    if (present(mask) .and. (.not. present(xout))) then
+       deallocate(x)
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = unpack(kernel_regression_1d_sp, mask, nodata)
+       deallocate(kernel_regression_1d_sp)
+       allocate(kernel_regression_1d_sp(nin))
+       kernel_regression_1d_sp = x
+    end if
+
+    ! clean up
+    deallocate(xxout)
+    deallocate(x)
+    deallocate(y)
+    deallocate(z)
 
   end function kernel_regression_1d_sp
 
-  function kernel_regression_2d_sp(x,y,h,silverman,xout)
+  function kernel_regression_2d_dp(ix, iy, h, silverman, xout, mask, nodata)
 
     implicit none
 
-    real(sp), dimension(:,:),                       intent(in) :: x
-    real(sp), dimension(:),                         intent(in) :: y
-    real(sp), dimension(:),               optional, intent(in) :: h
+    real(dp), dimension(:,:),                       intent(in) :: ix
+    real(dp), dimension(:),                         intent(in) :: iy
+    real(dp), dimension(:),               optional, intent(in) :: h
     logical,                              optional, intent(in) :: silverman
-    real(sp), dimension(:,:),             optional, intent(in) :: xout
-    real(sp), dimension(:),   allocatable                      :: kernel_regression_2d_sp
+    real(dp), dimension(:,:),             optional, intent(in) :: xout
+    logical,  dimension(:),               optional, intent(in) :: mask
+    real(dp),                             optional, intent(in) :: nodata
+    real(dp), dimension(:),   allocatable                      :: kernel_regression_2d_dp
 
     ! local variables
-    integer(i4)                                :: dims, dimout
-    integer(i4)                                :: nn, nout
-    integer(i4)                                :: ii, jj
-    real(sp), dimension(size(x,2))             :: hh
-    real(sp), dimension(:,:),      allocatable :: xxout
-    real(sp), dimension(size(x,1), size(x,2))  :: z
+    integer(i4)                           :: dims, dimout
+    integer(i4)                           :: nin, nout
+    integer(i4)                           :: ii, jj
+    real(dp), dimension(size(ix,2))       :: hh
+    real(dp), dimension(:,:), allocatable :: xxout
+    real(dp), dimension(:,:), allocatable :: z
+    real(dp), dimension(:,:), allocatable :: x
+    real(dp), dimension(:),   allocatable :: y
 
+    ! consistency check - mask needs either nodata or xout
+    if (present(mask) .and. (.not. present(xout)) .and. (.not. present(nodata)) ) then
+       stop 'kernel_regression_1d_dp: missing nodata value or xout with present(mask)'
+    end if
 
-    dims = size(x,2)
-    nn   = size(x,1)
-
+    nin  = size(ix,1)
+    dims = size(ix,2)
     ! consistency checks of inputs
-    if (size(y) .ne. nn)   stop 'kernel_regression_2d_sp : size of 2nd argument not matching'
+    if (size(iy) .ne. nin) stop 'kernel_regression_2d_dp: size(y) /= size(x,1)'
     if (present(h)) then
-       if (size(h) .ne. dims) stop 'kernel_regression_2d_sp : size of 3rd argument not matching'
+       if (size(h) .ne. dims) stop 'kernel_regression_2d_dp: size(h) /= size(x,2)'
     end if
     if (present(xout)) then
-       if (size(xout,2) .ne. dims) stop 'kernel_regression_2d_sp : size of optional argument not matching'
+       if (size(xout,2) .ne. dims) stop 'kernel_regression_2d_dp: size(xout) /= size(x,2)'
     end if
+
+    ! Pack if mask present
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin,dims))
+       allocate(y(nin))
+       forall(ii=1:dims) x(:,ii) = pack(ix(:,ii), mask)
+       y = pack(iy, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin,dims))
+       allocate(y(nin))
+       x = ix
+       y = iy
+    endif
+    allocate(z(nin,dims))
 
     ! determine h
     if (present(h)) then
        hh = h
     else
        if (present(silverman)) then
-          hh = kernel_regression_h_2d_sp(x,y,silverman=silverman)
+          hh = kernel_regression_h(x, y, silverman=silverman)
        else
-          hh = kernel_regression_h_2d_sp(x,y,silverman=.true.)
+          hh = kernel_regression_h(x, y, silverman=.true.)
        end if
     end if
 
     ! calc regression
     if (present(xout)) then
-       allocate(xxout(size(xout,1),size(xout,2)))
+       nout = size(xout,1)
+       allocate(xxout(nout,dims))
        xxout = xout
     else
-       allocate(xxout(size(x,1),size(x,2)))
+       nout = nin
+       allocate(xxout(nout,dims))
        xxout = x
     end if
-    nout   = size(xxout,1)
-    dimout = size(xxout,2)
+    ! allocate output
+    allocate(kernel_regression_2d_dp(nout))
 
+    ! loop through all regression points
+    do ii = 1, nout
+       forall(jj=1:dims) z(:,jj) = (x(:,jj) - xxout(ii,jj)) / hh(jj)
+       ! nadaraya-watson estimator of gaussian multivariate kernel
+       kernel_regression_2d_dp(ii) = nadaraya_watson(z, y)
+    end do
+
+    ! check whether output has to be unpacked
+    if (present(mask) .and. (.not. present(xout))) then
+       deallocate(y)
+       nin = size(iy,1)
+       allocate(y(nin))
+       y = unpack(kernel_regression_2d_dp, mask, nodata)
+       deallocate(kernel_regression_2d_dp)
+       allocate(kernel_regression_2d_dp(nin))
+       kernel_regression_2d_dp = y
+    end if
+
+    ! clean up
+    deallocate(xxout)
+    deallocate(x)
+    deallocate(y)
+    deallocate(z)
+
+  end function kernel_regression_2d_dp
+
+  function kernel_regression_2d_sp(ix, iy, h, silverman, xout, mask, nodata)
+
+    implicit none
+
+    real(sp), dimension(:,:),                       intent(in) :: ix
+    real(sp), dimension(:),                         intent(in) :: iy
+    real(sp), dimension(:),               optional, intent(in) :: h
+    logical,                              optional, intent(in) :: silverman
+    real(sp), dimension(:,:),             optional, intent(in) :: xout
+    logical,  dimension(:),               optional, intent(in) :: mask
+    real(sp),                             optional, intent(in) :: nodata
+    real(sp), dimension(:),   allocatable                      :: kernel_regression_2d_sp
+
+    ! local variables
+    integer(i4)                           :: dims, dimout
+    integer(i4)                           :: nin, nout
+    integer(i4)                           :: ii, jj
+    real(sp), dimension(size(ix,2))       :: hh
+    real(sp), dimension(:,:), allocatable :: xxout
+    real(sp), dimension(:,:), allocatable :: z
+    real(sp), dimension(:,:), allocatable :: x
+    real(sp), dimension(:),   allocatable :: y
+
+    ! consistency check - mask needs either nodata or xout
+    if (present(mask) .and. (.not. present(xout)) .and. (.not. present(nodata)) ) then
+       stop 'kernel_regression_1d_sp: missing nodata value or xout with present(mask)'
+    end if
+
+    nin  = size(ix,1)
+    dims = size(ix,2)
+    ! consistency checks of inputs
+    if (size(iy) .ne. nin) stop 'kernel_regression_2d_sp: size(y) /= size(x,1)'
+    if (present(h)) then
+       if (size(h) .ne. dims) stop 'kernel_regression_2d_sp: size(h) /= size(x,2)'
+    end if
+    if (present(xout)) then
+       if (size(xout,2) .ne. dims) stop 'kernel_regression_2d_sp: size(xout) /= size(x,2)'
+    end if
+
+    ! Pack if mask present
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin,dims))
+       allocate(y(nin))
+       forall(ii=1:dims) x(:,ii) = pack(ix(:,ii), mask)
+       y = pack(iy, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin,dims))
+       allocate(y(nin))
+       x = ix
+       y = iy
+    endif
+    allocate(z(nin,dims))
+
+    ! determine h
+    if (present(h)) then
+       hh = h
+    else
+       if (present(silverman)) then
+          hh = kernel_regression_h(x, y, silverman=silverman)
+       else
+          hh = kernel_regression_h(x, y, silverman=.true.)
+       end if
+    end if
+
+    ! calc regression
+    if (present(xout)) then
+       nout = size(xout,1)
+       allocate(xxout(nout,dims))
+       xxout = xout
+    else
+       nout = nin
+       allocate(xxout(nout,dims))
+       xxout = x
+    end if
     ! allocate output
     allocate(kernel_regression_2d_sp(nout))
 
     ! loop through all regression points
     do ii = 1, nout
-       ! scaled difference from regression point
-       forall(jj=1:dimout) z(:,jj) = (x(:,jj) - xxout(ii,jj)) / hh(jj)
+       forall(jj=1:dims) z(:,jj) = (x(:,jj) - xxout(ii,jj)) / hh(jj)
        ! nadaraya-watson estimator of gaussian multivariate kernel
-       kernel_regression_2d_sp(ii) = nadaraya_watson_2d_sp(z,y=y)
+       kernel_regression_2d_sp(ii) = nadaraya_watson(z, y)
     end do
+
+    ! check whether output has to be unpacked
+    if (present(mask) .and. (.not. present(xout))) then
+       deallocate(y)
+       nin = size(iy,1)
+       allocate(y(nin))
+       y = unpack(kernel_regression_2d_sp, mask, nodata)
+       deallocate(kernel_regression_2d_sp)
+       allocate(kernel_regression_2d_sp(nin))
+       kernel_regression_2d_sp = y
+    end if
+
+    ! clean up
+    deallocate(xxout)
+    deallocate(x)
+    deallocate(y)
+    deallocate(z)
 
   end function kernel_regression_2d_sp
 
   ! ------------------------------------------------------------------------------------------------
 
-  function kernel_regression_h_1d_dp(x,y,silverman)
+  function kernel_regression_h_1d_dp(x, y, silverman)
+
+    implicit none
 
     real(dp), dimension(:),           intent(in) :: x
     real(dp), dimension(:),           intent(in) :: y
@@ -1271,23 +1538,22 @@ CONTAINS
     ! local variables
     integer(i4)              :: nn
     real(dp), dimension(1)   :: h
-    real(dp)                 :: stddev_x
     real(dp), dimension(1,2) :: bounds
+    real(dp), parameter      :: pre_h = 1.05922384104881_dp
 
     nn   = size(x,1)
-
     ! Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
-    stddev_x = stddev(x(:))
-
-    h(1) = (4._dp/3._dp/real(nn,dp))**(0.2_dp) * stddev_x
+    !h(1) = (4._dp/3._dp/real(nn,dp))**(0.2_dp) * stddev_x
+    h(1) = pre_h/(nn**0.2_sp) * stddev(x(:))
 
     if (present(silverman)) then
        if (.not. silverman) then
           bounds(1,1) = 0.2_dp * h(1)
           bounds(1,2) = 5.0_dp * h(1)
-          call set_globals_for_opti_1d_dp(x,y)
-          h = nelminrange(cross_valid_regression_h_2d_dp, h, bounds)
+          call allocate_globals(x,y)
+          h = nelminrange(cross_valid_regression_dp, h, bounds)
+          call deallocate_globals()
        end if
     end if
 
@@ -1295,7 +1561,44 @@ CONTAINS
 
   end function kernel_regression_h_1d_dp
 
-  function kernel_regression_h_2d_dp(x,y,silverman)
+  function kernel_regression_h_1d_sp(x, y, silverman)
+
+    implicit none
+
+    real(sp), dimension(:),           intent(in) :: x
+    real(sp), dimension(:),           intent(in) :: y
+    logical,                optional, intent(in) :: silverman
+    real(sp)                                     :: kernel_regression_h_1d_sp
+
+    ! local variables
+    integer(i4)              :: nn
+    real(sp), dimension(1)   :: h
+    real(sp), dimension(1,2) :: bounds
+    real(sp), parameter      :: pre_h = 1.05922384104881_sp
+
+    nn   = size(x,1)
+    ! Silverman's rule of thumb by
+    ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
+    !h(1) = (4._sp/3._sp/real(nn,sp))**(0.2_sp) * stddev_x
+    h(1) = pre_h/(nn**0.2_sp) * stddev(x(:))
+
+    if (present(silverman)) then
+       if (.not. silverman) then
+          bounds(1,1) = 0.2_sp * h(1)
+          bounds(1,2) = 5.0_sp * h(1)
+          call allocate_globals(x,y)
+          h = nelminrange(cross_valid_regression_sp, h, bounds)
+          call deallocate_globals()
+       end if
+    end if
+
+    kernel_regression_h_1d_sp = h(1)
+
+  end function kernel_regression_h_1d_sp
+
+  function kernel_regression_h_2d_dp(x, y, silverman)
+
+    implicit none
 
     real(dp), dimension(:,:),                       intent(in) :: x
     real(dp), dimension(:),                         intent(in) :: y
@@ -1308,22 +1611,22 @@ CONTAINS
     real(dp), dimension(size(x,2))   :: stddev_x
     real(dp), dimension(size(x,2),2) :: bounds
 
-    dims = size(x,2)
     nn   = size(x,1)
-
+    dims = size(x,2)
     ! Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     do ii=1,dims
        stddev_x(ii) = stddev(x(:,ii))
     end do
-    h(:) = (4._dp/real(dims+2,dp)/real(nn,dp))**(1._dp/real(dims+4,dp)) * stddev_x(:)
+    h(:) = (4.0_dp/real(dims+2,dp)/real(nn,dp))**(1.0_dp/real(dims+4,dp)) * stddev_x(:)
 
     if (present(silverman)) then
        if (.not. silverman) then
           bounds(:,1) = 0.2_dp * h(:)
           bounds(:,2) = 5.0_dp * h(:)
-          call set_globals_for_opti_2d_dp(x,y)
-          h = nelminrange(cross_valid_regression_h_2d_dp, h, bounds)
+          call allocate_globals(x,y)
+          h = nelminrange(cross_valid_regression_dp, h, bounds)
+          call deallocate_globals()
        end if
     end if
 
@@ -1331,41 +1634,9 @@ CONTAINS
 
   end function kernel_regression_h_2d_dp
 
-  function kernel_regression_h_1d_sp(x,y,silverman)
+  function kernel_regression_h_2d_sp(x, y, silverman)
 
-    real(sp), dimension(:),           intent(in) :: x
-    real(sp), dimension(:),           intent(in) :: y
-    logical,                optional, intent(in) :: silverman
-    real(sp)                                     :: kernel_regression_h_1d_sp
-
-    ! local variables
-    integer(i4)              :: nn
-    real(sp), dimension(1)   :: h
-    real(sp)                 :: stddev_x
-    real(sp), dimension(1,2) :: bounds
-
-    nn   = size(x,1)
-
-    ! Silverman's rule of thumb by
-    ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
-    stddev_x = stddev(x(:))
-
-    h(1) = (4._sp/3._sp/real(nn,sp))**(0.2_sp) * stddev_x
-
-    if (present(silverman)) then
-       if (.not. silverman) then
-          bounds(1,1) = 0.2_sp * h(1)
-          bounds(1,2) = 5.0_sp * h(1)
-          call set_globals_for_opti_1d_sp(x,y)
-          h = nelminrange(cross_valid_regression_h_2d_sp, h, bounds)
-       end if
-    end if
-
-    kernel_regression_h_1d_sp = h(1)
-
-  end function kernel_regression_h_1d_sp
-
-  function kernel_regression_h_2d_sp(x,y,silverman)
+    implicit none
 
     real(sp), dimension(:,:),                       intent(in) :: x
     real(sp), dimension(:),                         intent(in) :: y
@@ -1378,23 +1649,22 @@ CONTAINS
     real(sp), dimension(size(x,2))   :: stddev_x
     real(sp), dimension(size(x,2),2) :: bounds
 
-    dims = size(x,2)
     nn   = size(x,1)
-
+    dims = size(x,2)
     ! Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     do ii=1,dims
        stddev_x(ii) = stddev(x(:,ii))
     end do
-    h(:) = (4._sp/real(dims+2,sp)/real(nn,sp))**(1._sp/real(dims+4,sp)) * stddev_x(:)
-    ! print*, h
+    h(:) = (4.0_sp/real(dims+2,sp)/real(nn,sp))**(1.0_sp/real(dims+4,sp)) * stddev_x(:)
 
     if (present(silverman)) then
        if (.not. silverman) then
           bounds(:,1) = 0.2_sp * h(:)
           bounds(:,2) = 5.0_sp * h(:)
-          call set_globals_for_opti_2d_sp(x,y)
-          h = nelminrange(cross_valid_regression_h_2d_sp, h, bounds)
+          call allocate_globals(x,y)
+          h = nelminrange(cross_valid_regression_sp, h, bounds)
+          call deallocate_globals()
        end if
     end if
 
@@ -1403,14 +1673,14 @@ CONTAINS
   end function kernel_regression_h_2d_sp
 
   ! ------------------------------------------------------------------------------------------------
-  ! ------------------------------------------------------------------------------------------------
-
+  !
   !                PRIVATE ROUTINES
-
+  !
   ! ------------------------------------------------------------------------------------------------
-  ! ------------------------------------------------------------------------------------------------
 
-  function nadaraya_watson_1d_dp(z,y,mask,valid)
+  function nadaraya_watson_1d_dp(z, y, mask, valid)
+
+    implicit none
 
     real(dp), dimension(:),             intent(in)  :: z
     real(dp), dimension(:),   optional, intent(in)  :: y
@@ -1419,10 +1689,10 @@ CONTAINS
     real(dp)                                        :: nadaraya_watson_1d_dp
 
     ! local variables
-    real(dp), dimension(size(z,1))            :: w
-    real(dp)                                  :: large_z
-    real(dp)                                  :: sum_w
-    logical,  dimension(size(z,1))            :: mask1d
+    real(dp), dimension(size(z,1)) :: w
+    real(dp)                       :: sum_w
+    logical,  dimension(size(z,1)) :: mask1d
+    real(dp)                       :: large_z
 
     if (present(mask)) then
        mask1d = mask
@@ -1430,32 +1700,31 @@ CONTAINS
        mask1d = .true.
     end if
 
-    large_z = sqrt(-2.0_dp*Log(tiny(1._dp)*sqrt(2._dp*pi_dp)))
-    where (mask1d .and. (abs(z) .lt. large_z) )
-       w = (1.0_dp/sqrt(2.0_dp*Pi_dp)) * exp(-0.5_dp*z*z)
+    large_z = sqrt(-2.0_dp*log(tiny(1.0_dp)*sqrt(twopi_dp)))
+    where (mask1d .and. (abs(z) .lt. large_z))
+       w = (1.0_dp/sqrt(twopi_dp)) * exp(-0.5_dp*z*z)
     elsewhere (mask1d)
        w = 0.0_dp
     end where
     sum_w = sum(w, mask=mask1d)
 
-    if (present(y)) then
-       ! kernel regression
-       if (sum_w .lt. epsilon(1.0_dp)) then
+    if (present(valid)) valid = .true.
+    if (present(y)) then       ! kernel regression
+       if (sum_w .lt. tiny(1.0_dp)) then
           nadaraya_watson_1d_dp = huge(1.0_dp)
           if (present(valid)) valid = .false.
        else
           nadaraya_watson_1d_dp = sum(w*y,mask=mask1d) / sum_w
-          if (present(valid)) valid = .true.
        end if
-    else
-       ! kernel density
+    else                        ! kernel density
        nadaraya_watson_1d_dp = sum_w
-       if (present(valid)) valid = .true.
     end if
 
   end function nadaraya_watson_1d_dp
 
-  function nadaraya_watson_1d_sp(z,y,mask,valid)
+  function nadaraya_watson_1d_sp(z, y, mask, valid)
+
+    implicit none
 
     real(sp), dimension(:),             intent(in)  :: z
     real(sp), dimension(:),   optional, intent(in)  :: y
@@ -1464,10 +1733,10 @@ CONTAINS
     real(sp)                                        :: nadaraya_watson_1d_sp
 
     ! local variables
-    real(sp), dimension(size(z,1))            :: w
-    real(sp)                                  :: sum_w
-    real(sp)                                  :: large_z
-    logical,  dimension(size(z,1))            :: mask1d
+    real(sp), dimension(size(z,1)) :: w
+    real(sp)                       :: sum_w
+    logical,  dimension(size(z,1)) :: mask1d
+    real(sp)                       :: large_z
 
     if (present(mask)) then
        mask1d = mask
@@ -1475,32 +1744,31 @@ CONTAINS
        mask1d = .true.
     end if
 
-    large_z = sqrt(-2.0_sp*Log(tiny(1._sp)*sqrt(2._sp*pi_sp)))
-    where (mask1d .and. (abs(z) .lt. large_z) ) 
-       w = (1.0_sp/sqrt(2.0_sp*Pi_sp)) * exp(-0.5_sp*z*z)
-    elsewhere (mask1d) 
+    large_z = sqrt(-2.0_sp*log(tiny(1.0_sp)*sqrt(twopi_sp)))
+    where (mask1d .and. (abs(z) .lt. large_z))
+       w = (1.0_sp/sqrt(twopi_sp)) * exp(-0.5_sp*z*z)
+    elsewhere (mask1d)
        w = 0.0_sp
     end where
     sum_w = sum(w, mask=mask1d)
 
-    if (present(y)) then
-       ! kernel regression
-       if (sum_w .lt. epsilon(1.0_sp)) then
+    if (present(valid)) valid = .true.
+    if (present(y)) then       ! kernel regression
+       if (sum_w .lt. tiny(1.0_sp)) then
           nadaraya_watson_1d_sp = huge(1.0_sp)
           if (present(valid)) valid = .false.
        else
           nadaraya_watson_1d_sp = sum(w*y,mask=mask1d) / sum_w
-          if (present(valid)) valid = .true.
        end if
-    else
-       ! kernel density
+    else                        ! kernel density
        nadaraya_watson_1d_sp = sum_w
-       if (present(valid)) valid = .true.
     end if
 
   end function nadaraya_watson_1d_sp
 
-  function nadaraya_watson_2d_dp(z,y,mask,valid)
+  function nadaraya_watson_2d_dp(z, y, mask, valid)
+
+    implicit none
 
     real(dp), dimension(:,:),           intent(in)  :: z
     real(dp), dimension(:),   optional, intent(in)  :: y
@@ -1509,49 +1777,47 @@ CONTAINS
     real(dp)                                        :: nadaraya_watson_2d_dp
 
     ! local variables
-    integer(i4)                               :: ii
     real(dp), dimension(size(z,1), size(z,2)) :: kerf
     real(dp), dimension(size(z,1))            :: w
     real(dp)                                  :: sum_w
-    real(dp)                                  :: large_z
     logical,  dimension(size(z,1))            :: mask1d
     logical,  dimension(size(z,1), size(z,2)) :: mask2d
+    real(dp)                                  :: large_z
 
     if (present(mask)) then
-       forall(ii=1:size(z,1)) mask2d(ii,:) = mask(ii)
        mask1d = mask
+       mask2d = spread(mask1d, dim=2, ncopies=size(z,2))
     else
        mask1d = .true.
        mask2d = .true.
     end if
 
-    large_z = sqrt(-2.0_dp*Log(tiny(1._dp)*sqrt(2._dp*pi_dp)))
-    where (mask2d .and. (abs(z) .lt. large_z) )
-       kerf = (1.0_dp/sqrt(2.0_dp*Pi_dp)) * exp(-0.5_dp*z*z)
+    large_z = sqrt(-2.0_dp*log(tiny(1.0_dp)*sqrt(twopi_dp)))
+    where (mask2d .and. (abs(z) .lt. large_z))
+       kerf = (1.0_dp/sqrt(twopi_dp)) * exp(-0.5_dp*z*z)
     elsewhere (mask2d)
        kerf = 0.0_dp
     end where
-    w    = product(kerf,dim=2,mask=mask2d)
+    w    = product(kerf, dim=2, mask=mask2d)
     sum_w = sum(w, mask=mask1d)
 
-    if (present(y)) then
-       ! kernel regression
-       if (sum_w .lt. epsilon(1.0_dp)) then
+    if (present(valid)) valid = .true.
+    if (present(y)) then       ! kernel regression
+       if (sum_w .lt. tiny(1.0_dp)) then
           nadaraya_watson_2d_dp = huge(1.0_dp)
           if (present(valid)) valid = .false.
        else
           nadaraya_watson_2d_dp = sum(w*y,mask=mask1d) / sum_w
-          if (present(valid)) valid = .true.
        end if
-    else
-       ! kernel density
+    else                       ! kernel density
        nadaraya_watson_2d_dp = sum_w
-       if (present(valid)) valid = .true.
     end if
 
   end function nadaraya_watson_2d_dp
 
-  function nadaraya_watson_2d_sp(z,y,mask,valid)
+  function nadaraya_watson_2d_sp(z, y, mask, valid)
+
+    implicit none
 
     real(sp), dimension(:,:),           intent(in)  :: z
     real(sp), dimension(:),   optional, intent(in)  :: y
@@ -1560,134 +1826,142 @@ CONTAINS
     real(sp)                                        :: nadaraya_watson_2d_sp
 
     ! local variables
-    integer(i4)                               :: ii
     real(sp), dimension(size(z,1), size(z,2)) :: kerf
     real(sp), dimension(size(z,1))            :: w
     real(sp)                                  :: sum_w
-    real(sp)                                  :: large_z
     logical,  dimension(size(z,1))            :: mask1d
     logical,  dimension(size(z,1), size(z,2)) :: mask2d
+    real(sp)                                  :: large_z
 
     if (present(mask)) then
-       forall(ii=1:size(z,1)) mask2d(ii,:) = mask(ii)
        mask1d = mask
+       mask2d = spread(mask1d, dim=2, ncopies=size(z,2))
     else
        mask1d = .true.
        mask2d = .true.
     end if
 
-    large_z = sqrt(-2.0_sp*Log(tiny(1._sp)*sqrt(2._sp*pi_sp)))
-    where (mask2d .and. (abs(z) .lt. large_z) )
-       kerf = (1.0_sp/sqrt(2.0_sp*Pi_sp)) * exp(-0.5_sp*z*z)
+    large_z = sqrt(-2.0_sp*log(tiny(1.0_sp)*sqrt(twopi_sp)))
+    where (mask2d .and. (abs(z) .lt. large_z))
+       kerf = (1.0_sp/sqrt(twopi_sp)) * exp(-0.5_sp*z*z)
     elsewhere (mask2d)
        kerf = 0.0_sp
     end where
-    w    = product(kerf,dim=2,mask=mask2d)
+    w    = product(kerf, dim=2, mask=mask2d)
     sum_w = sum(w, mask=mask1d)
 
-    if (present(y)) then
-       ! kernel regression
-       if (sum_w .lt. epsilon(1.0_sp)) then
+    if (present(valid)) valid = .true.
+    if (present(y)) then       ! kernel regression
+       if (sum_w .lt. tiny(1.0_sp)) then
           nadaraya_watson_2d_sp = huge(1.0_sp)
           if (present(valid)) valid = .false.
        else
           nadaraya_watson_2d_sp = sum(w*y,mask=mask1d) / sum_w
-          if (present(valid)) valid = .true.
        end if
-    else
-       ! kernel density
+    else                       ! kernel density
        nadaraya_watson_2d_sp = sum_w
-       if (present(valid)) valid = .true.
     end if
 
   end function nadaraya_watson_2d_sp
 
   ! ------------------------------------------------------------------------------------------------
 
-  function cross_valid_regression_h_2d_dp(h)
+  function cross_valid_regression_dp(h)
+
+    implicit none
 
     ! Helper function that calculates cross-validation function for the
     ! Nadaraya-Watson estimator, which is basically the mean square error
-    ! where model estimate is replaced by the jackknife estimate (Haerdle et al. 2000).
+    ! between the observations and the model estimates without the specific point,
+    ! i.e. the jackknife estimate (Haerdle et al. 2000).
+
+    ! Function is always 2D because allocate_globals makes always 2D arrays.
 
     real(dp), dimension(:), intent(in) :: h
-    real(dp)                           :: cross_valid_regression_h_2d_dp
+    real(dp)                           :: cross_valid_regression_dp
 
     ! local variables
-    integer(i4)                                                    :: ii, jj, kk, nn, dims
+    integer(i4)                                                    :: ii, kk, nn
     logical,  dimension(size(global_x_dp,1))                       :: mask
     real(dp), dimension(size(global_x_dp,1))                       :: out
     real(dp), dimension(size(global_x_dp,1),size(global_x_dp,2))   :: zz
     logical                                                        :: valid, valid_tmp
 
-    nn   = size(global_x_dp,1)
-    dims = size(global_x_dp,2)
-
-    ! Loop through each regression point
+    nn = size(global_x_dp,1)
+    ! Loop through each regression point and calc kernel estimate without that point (Jackknife)
     valid = .true.
+    mask  = .true.
     do ii=1, nn
-       mask = .true.
        mask(ii) = .false.
-       forall(jj=1:dims, kk=1:nn, mask(kk)) zz(kk,jj) = (global_x_dp(kk,jj) - global_x_dp(ii,jj)) / h(jj)
-       out(ii) = nadaraya_watson_2d_dp(zz, y=global_y_dp, mask=mask, valid=valid_tmp)
+       forall(kk=1:nn, mask(kk)) zz(kk,:) = (global_x_dp(kk,:) - global_x_dp(ii,:)) / h(:)
+       out(ii) = nadaraya_watson(zz, y=global_y_dp, mask=mask, valid=valid_tmp)
        valid = valid .and. valid_tmp
+       mask(ii) = .true.
     end do
 
-    if ( valid ) then
-       cross_valid_regression_h_2d_dp = sum((global_y_dp-out)**2) / real(nn,dp)
+    ! Mean square deviation
+    if (valid) then
+       cross_valid_regression_dp = sum((global_y_dp-out)**2) / real(nn,dp)
     else
-       cross_valid_regression_h_2d_dp = huge(1.0_dp)
+       cross_valid_regression_dp = huge(1.0_dp)
     end if
 
-  end function cross_valid_regression_h_2d_dp
+  end function cross_valid_regression_dp
 
-  function cross_valid_regression_h_2d_sp(h)
+  function cross_valid_regression_sp(h)
+
+    implicit none
 
     ! Helper function that calculates cross-validation function for the
     ! Nadaraya-Watson estimator, which is basically the mean square error
-    ! where model estimate is replaced by the jackknife estimate (Haerdle et al. 2000).
+    ! between the observations and the model estimates without the specific point,
+    ! i.e. the jackknife estimate (Haerdle et al. 2000).
+
+    ! Function is always 2D because set_global_for_opti makes always 2D arrays.
 
     real(sp), dimension(:), intent(in) :: h
-    real(sp)                           :: cross_valid_regression_h_2d_sp
+    real(sp)                           :: cross_valid_regression_sp
 
     ! local variables
-    integer(i4)                                                    :: ii, jj, kk, nn, dims
+    integer(i4)                                                    :: ii, kk, nn
     logical,  dimension(size(global_x_sp,1))                       :: mask
     real(sp), dimension(size(global_x_sp,1))                       :: out
     real(sp), dimension(size(global_x_sp,1),size(global_x_sp,2))   :: zz
     logical                                                        :: valid, valid_tmp
 
-    nn   = size(global_x_sp,1)
-    dims = size(global_x_sp,2)
-
-    ! Loop through each regression point
+    nn = size(global_x_sp,1)
+    ! Loop through each regression point and calc kernel estimate without that point (Jackknife)
     valid = .true.
+    mask  = .true.
     do ii=1, nn
-       mask = .true.
        mask(ii) = .false.
-       forall(jj=1:dims, kk=1:nn, mask(kk)) zz(kk,jj) = (global_x_sp(kk,jj) - global_x_sp(ii,jj)) / h(jj)
-       out(ii) = nadaraya_watson_2d_sp(zz, y=global_y_sp, mask=mask, valid=valid_tmp)
+       forall(kk=1:nn, mask(kk)) zz(kk,:) = (global_x_sp(kk,:) - global_x_sp(ii,:)) / h(:)
+       out(ii) = nadaraya_watson(zz, y=global_y_sp, mask=mask, valid=valid_tmp)
        valid = valid .and. valid_tmp
+       mask(ii) = .true.
     end do
 
-    if ( valid ) then
-       cross_valid_regression_h_2d_sp = sum((global_y_sp-out)**2) / real(nn,sp)
+    ! Mean square deviation
+    if (valid) then
+       cross_valid_regression_sp = sum((global_y_sp-out)**2) / real(nn,sp)
     else
-       cross_valid_regression_h_2d_sp = huge(1.0_sp)
+       cross_valid_regression_sp = huge(1.0_sp)
     end if
 
-  end function cross_valid_regression_h_2d_sp
+  end function cross_valid_regression_sp
 
   ! ------------------------------------------------------------------------------------------------
 
-  function cross_valid_density_h_2d_dp(h)
+  function cross_valid_density_dp(h)
+
+    implicit none
 
     ! Helper function that calculates cross-validation function for the
     ! Nadaraya-Watson estimator, which is basically the mean square error
     ! where model estimate is replaced by the jackknife estimate (Haerdle et al. 2000).
 
     real(dp), dimension(:), intent(in) :: h
-    real(dp)                           :: cross_valid_density_h_2d_dp
+    real(dp)                           :: cross_valid_density_dp
 
     ! local variables
     integer(i4)                                                     :: ii, jj, kk, nn, dims
@@ -1732,7 +2006,7 @@ CONTAINS
     !$OMP do
     do ii=1,nn*mesh_n
        forall(jj=1:dims) zzIntegral(:,jj) = (global_x_dp(:,jj) - xMeshed(ii,jj)) / h(jj)
-       outIntegral(ii) = nadaraya_watson_2d_dp(zzIntegral) * multiplier
+       outIntegral(ii) = nadaraya_watson(zzIntegral) * multiplier
     end do
     !$OMP end do
     !$OMP end parallel
@@ -1752,24 +2026,30 @@ CONTAINS
        mask = .true.
        mask(ii) = .false.
        forall(jj=1:dims, kk=1:nn, mask(kk)) zz(kk,jj) = (global_x_dp(kk,jj) - global_x_dp(ii,jj)) / h(jj)
-       out(ii) = nadaraya_watson_2d_dp(zz, mask=mask) * multiplier
+       out(ii) = nadaraya_watson(zz, mask=mask) * multiplier
     end do
     !$OMP end do
     !$OMP end parallel
 
-    cross_valid_density_h_2d_dp = summ - 2.0_dp / (real(nn,dp)) * sum(out)
-    ! print*, 'cross_valid_density_h_2d_dp ',h, cross_valid_density_h_2d_dp
+    cross_valid_density_dp = summ - 2.0_dp / (real(nn,dp)) * sum(out)
+    ! print*, 'cross_valid_density_dp ',h, cross_valid_density_dp
 
-  end function cross_valid_density_h_2d_dp
+    ! clean up
+    deallocate(xMeshed)
+    deallocate(outIntegral)
 
-  function cross_valid_density_h_2d_sp(h)
+  end function cross_valid_density_dp
+
+  function cross_valid_density_sp(h)
+
+    implicit none
 
     ! Helper function that calculates cross-validation function for the
     ! Nadaraya-Watson estimator, which is basically the mean square error
     ! where model estimate is replaced by the jackknife estimate (Haerdle et al. 2000).
 
     real(sp), dimension(:), intent(in) :: h
-    real(sp)                           :: cross_valid_density_h_2d_sp
+    real(sp)                           :: cross_valid_density_sp
 
     ! local variables
     integer(i4)                                                     :: ii, jj, kk, nn, dims
@@ -1814,7 +2094,7 @@ CONTAINS
     !$OMP do
     do ii=1,nn*mesh_n
        forall(jj=1:dims) zzIntegral(:,jj) = (global_x_sp(:,jj) - xMeshed(ii,jj)) / h(jj)
-       outIntegral(ii) = nadaraya_watson_2d_sp(zzIntegral) * multiplier
+       outIntegral(ii) = nadaraya_watson(zzIntegral) * multiplier
     end do
     !$OMP end do
     !$OMP end parallel
@@ -1834,113 +2114,128 @@ CONTAINS
        mask = .true.
        mask(ii) = .false.
        forall(jj=1:dims, kk=1:nn, mask(kk)) zz(kk,jj) = (global_x_sp(kk,jj) - global_x_sp(ii,jj)) / h(jj)
-       out(ii) = nadaraya_watson_2d_sp(zz, mask=mask) * multiplier
+       out(ii) = nadaraya_watson(zz, mask=mask) * multiplier
     end do
     !$OMP end do
     !$OMP end parallel
 
-    cross_valid_density_h_2d_sp = summ - 2.0_sp / (real(nn,sp)) * sum(out)
-    ! print*, 'cross_valid_density_h_2d_sp ',h, cross_valid_density_h_2d_sp
+    cross_valid_density_sp = summ - 2.0_sp / (real(nn,sp)) * sum(out)
+    ! print*, 'cross_valid_density_sp ',h, cross_valid_density_sp
 
-  end function cross_valid_density_h_2d_sp
+    ! clean up
+    deallocate(xMeshed)
+    deallocate(outIntegral)
+
+  end function cross_valid_density_sp
 
   ! ------------------------------------------------------------------------------------------------
 
-  subroutine set_globals_for_opti_1d_dp(x,y,xout)
+  subroutine allocate_globals_1d_dp(x,y,xout)
+
+    implicit none
 
     real(dp), dimension(:),           intent(in) :: x
     real(dp), dimension(:), optional, intent(in) :: y
     real(dp), dimension(:), optional, intent(in) :: xout
 
-    if (allocated(global_x_dp)) deallocate(global_x_dp)
     allocate( global_x_dp(size(x,1),1) )
     global_x_dp(:,1) = x
 
     if (present(y)) then
-       if (allocated(global_y_dp)) deallocate(global_y_dp)
        allocate( global_y_dp(size(y,1)) )
        global_y_dp = y
     end if
 
     if (present(xout)) then
-       if (allocated(global_xout_dp)) deallocate(global_xout_dp)
        allocate( global_xout_dp(size(xout,1),1) )
        global_xout_dp(:,1) = xout
     end if
 
-  end subroutine set_globals_for_opti_1d_dp
+  end subroutine allocate_globals_1d_dp
 
-  subroutine set_globals_for_opti_1d_sp(x,y,xout)
+  subroutine allocate_globals_1d_sp(x,y,xout)
+
+    implicit none
 
     real(sp), dimension(:),           intent(in) :: x
     real(sp), dimension(:), optional, intent(in) :: y
     real(sp), dimension(:), optional, intent(in) :: xout
 
-    if (allocated(global_x_sp)) deallocate(global_x_sp)
     allocate( global_x_sp(size(x,1),1) )
     global_x_sp(:,1) = x
 
     if (present(y)) then
-       if (allocated(global_y_sp)) deallocate(global_y_sp)
        allocate( global_y_sp(size(y,1)) )
        global_y_sp = y
     end if
 
     if (present(xout)) then
-       if (allocated(global_xout_sp)) deallocate(global_xout_sp)
        allocate( global_xout_sp(size(xout,1),1) )
        global_xout_sp(:,1) = xout
     end if
 
-  end subroutine set_globals_for_opti_1d_sp
+  end subroutine allocate_globals_1d_sp
 
-  subroutine set_globals_for_opti_2d_dp(x,y,xout)
+  subroutine allocate_globals_2d_dp(x,y,xout)
+
+    implicit none
 
     real(dp), dimension(:,:),           intent(in) :: x
     real(dp), dimension(:),   optional, intent(in) :: y
     real(dp), dimension(:,:), optional, intent(in) :: xout
 
-    if (allocated(global_x_dp)) deallocate(global_x_dp)
     allocate( global_x_dp(size(x,1),size(x,2)) )
     global_x_dp = x
 
     if (present(y)) then
-       if (allocated(global_y_dp)) deallocate(global_y_dp)
        allocate( global_y_dp(size(y,1)) )
        global_y_dp = y
     end if
 
     if (present(xout)) then
-       if (allocated(global_xout_dp)) deallocate(global_xout_dp)
        allocate( global_xout_dp(size(xout,1),size(xout,2)) )
        global_xout_dp = xout
     end if
 
-  end subroutine set_globals_for_opti_2d_dp
+  end subroutine allocate_globals_2d_dp
 
-  subroutine set_globals_for_opti_2d_sp(x,y,xout)
+  subroutine allocate_globals_2d_sp(x,y,xout)
+
+    implicit none
 
     real(sp), dimension(:,:),           intent(in) :: x
     real(sp), dimension(:),   optional, intent(in) :: y
     real(sp), dimension(:,:), optional, intent(in) :: xout
 
-    if (allocated(global_x_sp)) deallocate(global_x_sp)
     allocate( global_x_sp(size(x,1),size(x,2)) )
     global_x_sp = x
 
     if (present(y)) then
-       if (allocated(global_y_sp)) deallocate(global_y_sp)
        allocate( global_y_sp(size(y,1)) )
        global_y_sp = y
     end if
 
     if (present(xout)) then
-       if (allocated(global_xout_sp)) deallocate(global_xout_sp)
        allocate( global_xout_sp(size(xout,1),size(xout,2)) )
        global_xout_sp = xout
     end if
 
-  end subroutine set_globals_for_opti_2d_sp
+  end subroutine allocate_globals_2d_sp
+
+  ! ------------------------------------------------------------------------------------------------
+
+  subroutine deallocate_globals()
+
+    implicit none
+
+    if (allocated(global_x_dp))    deallocate(global_x_dp)
+    if (allocated(global_y_dp))    deallocate(global_y_dp)
+    if (allocated(global_xout_dp)) deallocate(global_xout_dp)
+    if (allocated(global_x_sp))    deallocate(global_x_sp)
+    if (allocated(global_y_sp))    deallocate(global_y_sp)
+    if (allocated(global_xout_sp)) deallocate(global_xout_sp)
+
+  end subroutine deallocate_globals
 
   ! ------------------------------------------------------------------------------------------------
 

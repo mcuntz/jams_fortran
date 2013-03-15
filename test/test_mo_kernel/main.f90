@@ -117,7 +117,8 @@ program test_kernel
      write(*,'(A4,F7.4,A4,F7.5)') '    ', xin_1d(ii), '    ',yin_1d(ii)
   end do
 
-  test1 = (/ 8847_i4, 4542_i4, 6059_i4, 4542_i4, 2362_i4, 3436_i4, 9332_i4, 6487_i4, 0607_i4, 0_i4 /)
+  ! With normalisation: test1 = (/ 8847_i4, 4544_i4, 6062_i4, 4544_i4, 2363_i4, 3437_i4, 9332_i4, 6490_i4, 0607_i4, 0_i4 /)
+  test1 = (/ 8461_i4, 4744_i4, 6055_i4, 4744_i4, 2861_i4, 3789_i4, 8880_i4, 6425_i4, 1344_i4, 819_i4 /)
   do ii=1,10
      if (int(yin_1d(ii)*10000.0_dp,i4) .ne. test1(ii)) isgood = .false.
   end do
