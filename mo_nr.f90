@@ -1736,14 +1736,20 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:), INTENT(IN) :: data1,data2
      END SUBROUTINE kstwo
   END INTERFACE
-  INTERFACE
-     SUBROUTINE laguer(a,x,its)
+  INTERFACE laguer
+     SUBROUTINE laguer_sp(a,x,its)
        USE mo_kind
        INTEGER(I4), INTENT(OUT) :: its
        COMPLEX(SPC), INTENT(INOUT) :: x
        COMPLEX(SPC), DIMENSION(:), INTENT(IN) :: a
-     END SUBROUTINE laguer
-  END INTERFACE
+     END SUBROUTINE laguer_sp
+     SUBROUTINE laguer_dp(a,x,its)
+       USE mo_kind
+       INTEGER(I4), INTENT(OUT) :: its
+       COMPLEX(DPC), INTENT(INOUT) :: x
+       COMPLEX(DPC), DIMENSION(:), INTENT(IN) :: a
+     END SUBROUTINE laguer_dp
+  END INTERFACE laguer
   INTERFACE
      SUBROUTINE lfit(x,y,sig,a,maska,covar,chisq,funcs)
        USE mo_kind
@@ -3589,12 +3595,18 @@ MODULE mo_nr
        END INTERFACE
      END FUNCTION zriddr
   END INTERFACE
-  INTERFACE
-     SUBROUTINE zroots(a,roots,polish)
+  INTERFACE zroots
+     SUBROUTINE zroots_sp(a,roots,polish)
        USE mo_kind
        COMPLEX(SPC), DIMENSION(:), INTENT(IN) :: a
        COMPLEX(SPC), DIMENSION(:), INTENT(OUT) :: roots
-       LOGICAL(LGT), INTENT(IN) :: polish
-     END SUBROUTINE zroots
-  END INTERFACE
+       LOGICAL, INTENT(IN) :: polish
+     END SUBROUTINE zroots_sp
+     SUBROUTINE zroots_dp(a,roots,polish)
+       USE mo_kind
+       COMPLEX(DPC), DIMENSION(:), INTENT(IN) :: a
+       COMPLEX(DPC), DIMENSION(:), INTENT(OUT) :: roots
+       LOGICAL, INTENT(IN) :: polish
+     END SUBROUTINE zroots_dp
+  END INTERFACE zroots
 END MODULE mo_nr

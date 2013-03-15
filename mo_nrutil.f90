@@ -112,10 +112,10 @@ MODULE mo_nrutil
   END INTERFACE cumsum
   INTERFACE poly
      MODULE PROCEDURE poly_rr,poly_rrv,poly_dd,poly_ddv,&
-          poly_rc,poly_cc,poly_msk_rrv,poly_msk_ddv
+          poly_rc,poly_ddc,poly_cc,poly_dcdc,poly_msk_rrv,poly_msk_ddv
   END INTERFACE poly
   INTERFACE poly_term
-     MODULE PROCEDURE poly_term_rr,poly_term_cc
+     MODULE PROCEDURE poly_term_rr, poly_term_dd, poly_term_cc, poly_term_dcdc
   END INTERFACE poly_term
   INTERFACE outerprod
      MODULE PROCEDURE outerprod_r,outerprod_d
@@ -1078,6 +1078,38 @@ CONTAINS
        deallocate(vec)
     end if
   END FUNCTION poly_rc
+  !
+  FUNCTION poly_ddc(x,coeffs)
+    COMPLEX(DPC), INTENT(IN) :: x
+    REAL(DP), DIMENSION(:), INTENT(IN) :: coeffs
+    COMPLEX(DPC) :: poly_ddc
+    COMPLEX(DPC) :: pow
+    COMPLEX(DPC), DIMENSION(:), ALLOCATABLE :: vec
+    INTEGER(I4) :: i,n,nn
+    n=size(coeffs)
+    if (n <= 0) then
+       poly_ddc=0.0_dp
+    else if (n < NPAR_POLY) then
+       poly_ddc=coeffs(n)
+       do i=n-1,1,-1
+          poly_ddc=x*poly_ddc+coeffs(i)
+       end do
+    else
+       allocate(vec(n+1))
+       pow=x
+       vec(1:n)=coeffs
+       do
+          vec(n+1)=0.0_dp
+          nn=ishft(n+1,-1)
+          vec(1:nn)=vec(1:n:2)+pow*vec(2:n+1:2)
+          if (nn == 1) exit
+          pow=pow*pow
+          n=nn
+       end do
+       poly_ddc=vec(1)
+       deallocate(vec)
+    end if
+  END FUNCTION poly_ddc
   !BL
   FUNCTION poly_cc(x,coeffs)
     COMPLEX(SPC), INTENT(IN) :: x
@@ -1110,6 +1142,38 @@ CONTAINS
        deallocate(vec)
     end if
   END FUNCTION poly_cc
+  !
+  FUNCTION poly_dcdc(x,coeffs)
+    COMPLEX(DPC), INTENT(IN) :: x
+    COMPLEX(DPC), DIMENSION(:), INTENT(IN) :: coeffs
+    COMPLEX(DPC) :: poly_dcdc
+    COMPLEX(DPC) :: pow
+    COMPLEX(DPC), DIMENSION(:), ALLOCATABLE :: vec
+    INTEGER(I4) :: i,n,nn
+    n=size(coeffs)
+    if (n <= 0) then
+       poly_dcdc=0.0_dp
+    else if (n < NPAR_POLY) then
+       poly_dcdc=coeffs(n)
+       do i=n-1,1,-1
+          poly_dcdc=x*poly_dcdc+coeffs(i)
+       end do
+    else
+       allocate(vec(n+1))
+       pow=x
+       vec(1:n)=coeffs
+       do
+          vec(n+1)=0.0_dp
+          nn=ishft(n+1,-1)
+          vec(1:nn)=vec(1:n:2)+pow*vec(2:n+1:2)
+          if (nn == 1) exit
+          pow=pow*pow
+          n=nn
+       end do
+       poly_dcdc=vec(1)
+       deallocate(vec)
+    end if
+  END FUNCTION poly_dcdc
   !BL
   FUNCTION poly_rrv(x,coeffs)
     REAL(SP), DIMENSION(:), INTENT(IN) :: coeffs,x
@@ -1183,6 +1247,24 @@ CONTAINS
        u(3:n:2)=a(3:n:2)+b*u(2:n-1:2)
     end if
   END FUNCTION poly_term_rr
+  !
+  RECURSIVE FUNCTION poly_term_dd(a,b) RESULT(u)
+    REAL(DP), DIMENSION(:), INTENT(IN) :: a
+    REAL(DP), INTENT(IN) :: b
+    REAL(DP), DIMENSION(size(a)) :: u
+    INTEGER(I4) :: n,j
+    n=size(a)
+    if (n <= 0) RETURN
+    u(1)=a(1)
+    if (n < NPAR_POLYTERM) then
+       do j=2,n
+          u(j)=a(j)+b*u(j-1)
+       end do
+    else
+       u(2:n:2)=poly_term_dd(a(2:n:2)+a(1:n-1:2)*b,b*b)
+       u(3:n:2)=a(3:n:2)+b*u(2:n-1:2)
+    end if
+  END FUNCTION poly_term_dd
   !BL
   RECURSIVE FUNCTION poly_term_cc(a,b) RESULT(u)
     COMPLEX(SPC), DIMENSION(:), INTENT(IN) :: a
@@ -1201,6 +1283,24 @@ CONTAINS
        u(3:n:2)=a(3:n:2)+b*u(2:n-1:2)
     end if
   END FUNCTION poly_term_cc
+  !
+  RECURSIVE FUNCTION poly_term_dcdc(a,b) RESULT(u)
+    COMPLEX(DPC), DIMENSION(:), INTENT(IN) :: a
+    COMPLEX(DPC), INTENT(IN) :: b
+    COMPLEX(DPC), DIMENSION(size(a)) :: u
+    INTEGER(I4) :: n,j
+    n=size(a)
+    if (n <= 0) RETURN
+    u(1)=a(1)
+    if (n < NPAR_POLYTERM) then
+       do j=2,n
+          u(j)=a(j)+b*u(j-1)
+       end do
+    else
+       u(2:n:2)=poly_term_dcdc(a(2:n:2)+a(1:n-1:2)*b,b*b)
+       u(3:n:2)=a(3:n:2)+b*u(2:n-1:2)
+    end if
+  END FUNCTION poly_term_dcdc
   !BL
   !BL
   FUNCTION zroots_unity(n,nn)
