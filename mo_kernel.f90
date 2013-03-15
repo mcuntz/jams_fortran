@@ -45,7 +45,7 @@ MODULE mo_kernel
   ! Copyright 2013 Juliane Mai, Stephan Thober, Matthias Cuntz
 
   USE mo_kind,      ONLY: i4, sp, dp
-  USE mo_constants, ONLY: pi_sp, pi_dp, twopi_sp, twopi_dp
+  USE mo_constants, ONLY: twopi_sp, twopi_dp
   USE mo_moment,    ONLY: stddev
   USE mo_nelmin,    ONLY: nelminrange
   USE mo_sort,      ONLY: sort_index
@@ -300,6 +300,7 @@ MODULE mo_kernel
   !>                                                     the bandwith of the kernel (silverman=true).
   !>                                                     If silverman=false the Cross-Validation approach is used
   !>                                                     to estimate the bandwidth.
+  !>       \param[in] "logical, optional :: mask(:)"     mask x values at calculation.
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -489,6 +490,7 @@ MODULE mo_kernel
   !>                                                     bandwith of the kernel (silverman=true).
   !>                                                     If silverman=false the Cross-Validation approach is used
   !>                                                     to estimate the bandwidth.
+  !>       \param[in] "logical, optional :: mask(:)"     mask x values at calculation.
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -548,7 +550,7 @@ MODULE mo_kernel
   END INTERFACE allocate_globals
 
   INTERFACE cross_valid_density
-     MODULE PROCEDURE cross_valid_density_dp, cross_valid_density_sp
+     MODULE PROCEDURE cross_valid_density_1d_dp, cross_valid_density_1d_sp
   END INTERFACE cross_valid_density
 
   INTERFACE cross_valid_regression
@@ -589,17 +591,15 @@ CONTAINS
 
     ! local variables
     integer(i4)                            :: nin, nout, nmesh
-    integer(i4)                            :: ii, jj
+    integer(i4)                            :: ii
     real(dp)                               :: hh
-    ! real(dp)                               :: lower_x
+    real(dp)                               :: lower_x
     real(dp),    dimension(:), allocatable :: xxout
     integer(i4), dimension(:), allocatable :: xindx
     real(dp),    dimension(:), allocatable :: kernel_pdf
     real(dp),    dimension(:), allocatable :: xmesh
-    real(dp)                               :: multiplier
-    real(dp)                               :: thresh
     real(dp)                               :: delta
-    real(dp)                               :: tmp
+    ! real(dp)                               :: tmp
     real(dp),    dimension(:), allocatable :: z
     real(dp),    dimension(:), allocatable :: x
 
@@ -659,22 +659,15 @@ CONTAINS
     allocate(xmesh(nmesh))
     allocate(kernel_cumdensity_1d_dp(nout))
 
-    ! ! calculate standard deviation of x to determine left side starting point for integration of PDF
-    ! lower_x = minval(x) - 3.0_dp * stddev(x)
+    ! calculate standard deviation of x to determine left side starting point for integration of PDF
+    lower_x = minval(x) - 3.0_dp * stddev(x)
 
     ! loop through all regression points
-    multiplier = 1.0_dp/(real(nin,dp)*hh)
-    if (multiplier <= 1.0_dp) then
-       thresh = tiny(1.0_dp)/multiplier
-    else
-       thresh = 0.0_dp
-    endif
     do ii = 1, nout
        ! generate nmesh points between last x and this x
        ! integrate pdf and add to last point
        if (ii .eq. 1_i4) then
-          ! xmesh                       = mesh(lower_x, xxout(1), nmesh, delta)
-          xmesh                       = mesh(0.0_dp, xxout(1), nmesh, delta)
+          xmesh                       = mesh(lower_x, xxout(1), nmesh, delta)
           kernel_pdf(:)               = kernel_density(x, hh, xout=xmesh)
           kernel_cumdensity_1d_dp(1)  = int_regular(kernel_pdf, delta)
        else
@@ -687,9 +680,10 @@ CONTAINS
     ! ! scale to range [0,1]
     ! tmp = 1.0_dp / (kernel_cumdensity_1d_dp(nout) - kernel_cumdensity_1d_dp(1))
     ! kernel_cumdensity_1d_dp(:) = ( kernel_cumdensity_1d_dp(:) - kernel_cumdensity_1d_dp(1) ) * tmp
+    kernel_cumdensity_1d_dp = min(kernel_cumdensity_1d_dp, 1.0_dp)
 
     ! resorting
-    kernel_cumdensity_1d_dp(xindx(:)) = kernel_cumdensity_1d_dp(:)
+    kernel_cumdensity_1d_dp(xindx) = kernel_cumdensity_1d_dp(:)
 
     ! check whether output has to be unpacked
     if (present(mask) .and. (.not. present(xout))) then
@@ -727,17 +721,15 @@ CONTAINS
 
     ! local variables
     integer(i4)                            :: nin, nout, nmesh
-    integer(i4)                            :: ii, jj
+    integer(i4)                            :: ii
     real(sp)                               :: hh
-    ! real(sp)                               :: lower_x
+    real(sp)                               :: lower_x
     real(sp),    dimension(:), allocatable :: xxout
     integer(i4), dimension(:), allocatable :: xindx
     real(sp),    dimension(:), allocatable :: kernel_pdf
     real(sp),    dimension(:), allocatable :: xmesh
-    real(sp)                               :: multiplier
-    real(sp)                               :: thresh
     real(sp)                               :: delta
-    real(sp)                               :: tmp
+    ! real(sp)                               :: tmp
     real(sp),    dimension(:), allocatable :: z
     real(sp),    dimension(:), allocatable :: x
 
@@ -797,22 +789,15 @@ CONTAINS
     allocate(xmesh(nmesh))
     allocate(kernel_cumdensity_1d_sp(nout))
 
-    ! ! calculate standard deviation of x to determine left side starting point for integration of PDF
-    ! lower_x = minval(x) - 3.0_sp * stddev(x)
+    ! calculate standard deviation of x to determine left side starting point for integration of PDF
+    lower_x = minval(x) - 3.0_sp * stddev(x)
 
     ! loop through all regression points
-    multiplier = 1.0_sp/(real(nin,sp)*hh)
-    if (multiplier <= 1.0_sp) then
-       thresh = tiny(1.0_sp)/multiplier
-    else
-       thresh = 0.0_sp
-    endif
     do ii = 1, nout
        ! generate nmesh points between last x and this x
        ! integrate pdf and add to last point
        if (ii .eq. 1_i4) then
-          ! xmesh                       = mesh(lower_x, xxout(1), nmesh, delta)
-          xmesh                       = mesh(0.0_sp, xxout(1), nmesh, delta)
+          xmesh                       = mesh(lower_x, xxout(1), nmesh, delta)
           kernel_pdf(:)               = kernel_density(x, hh, xout=xmesh)
           kernel_cumdensity_1d_sp(1)  = int_regular(kernel_pdf, delta)
        else
@@ -825,9 +810,10 @@ CONTAINS
     ! ! scale to range [0,1]
     ! tmp = 1.0_sp / (kernel_cumdensity_1d_sp(nout) - kernel_cumdensity_1d_sp(1))
     ! kernel_cumdensity_1d_sp(:) = ( kernel_cumdensity_1d_sp(:) - kernel_cumdensity_1d_sp(1) ) * tmp
+    kernel_cumdensity_1d_sp = min(kernel_cumdensity_1d_sp, 1.0_sp)
 
     ! resorting
-    kernel_cumdensity_1d_sp(xindx(:)) = kernel_cumdensity_1d_sp(:)
+    kernel_cumdensity_1d_sp(xindx) = kernel_cumdensity_1d_sp(:)
 
     ! check whether output has to be unpacked
     if (present(mask) .and. (.not. present(xout))) then
@@ -1046,21 +1032,33 @@ CONTAINS
 
   ! ------------------------------------------------------------------------------------------------
 
-  function kernel_density_h_1d_dp(x, silverman)
+  function kernel_density_h_1d_dp(ix, silverman, mask)
 
     implicit none
 
-    real(dp), dimension(:),           intent(in) :: x
+    real(dp), dimension(:),           intent(in) :: ix
     logical,                optional, intent(in) :: silverman
+    logical,  dimension(:), optional, intent(in) :: mask
     real(dp)                                     :: kernel_density_h_1d_dp
 
     ! local variables
+    integer(i4)              :: nin
     real(dp)                 :: nn
     real(dp), dimension(1)   :: h
     real(dp), dimension(1,2) :: bounds
     real(dp), parameter      :: pre_h = 1.05922384104881_dp
+    real(dp), dimension(:), allocatable :: x
 
-    nn   = real(size(x,1),dp)
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin))
+       x = pack(ix, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = ix
+    endif
+    nn = real(nin,dp)
 
     ! Default: Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
@@ -1072,30 +1070,44 @@ CONTAINS
           bounds(1,1) = max(0.2_dp * h(1), (maxval(x)-minval(x))/nn)
           bounds(1,2) = 5.0_dp * h(1)
           call allocate_globals(x)
-          h = nelminrange(cross_valid_density_dp, h, bounds, varmin=0.1_dp)
+          h = nelminrange(cross_valid_density_1d_dp, h, bounds, varmin=0.1_dp)
           call deallocate_globals()
        end if
     end if
 
     kernel_density_h_1d_dp = h(1)
 
+    deallocate(x)
+
   end function kernel_density_h_1d_dp
 
-  function kernel_density_h_1d_sp(x, silverman)
+  function kernel_density_h_1d_sp(ix, silverman, mask)
 
     implicit none
 
-    real(sp), dimension(:),           intent(in) :: x
+    real(sp), dimension(:),           intent(in) :: ix
     logical,                optional, intent(in) :: silverman
+    logical,  dimension(:), optional, intent(in) :: mask
     real(sp)                                     :: kernel_density_h_1d_sp
 
     ! local variables
+    integer(i4)              :: nin
     real(sp)                 :: nn
     real(sp), dimension(1)   :: h
     real(sp), dimension(1,2) :: bounds
     real(sp), parameter      :: pre_h = 1.05922384104881_sp
+    real(sp), dimension(:), allocatable :: x
 
-    nn   = real(size(x,1),sp)
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin))
+       x = pack(ix, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin))
+       x = ix
+    endif
+    nn = real(nin,sp)
 
     ! Default: Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
@@ -1107,12 +1119,14 @@ CONTAINS
           bounds(1,1) = max(0.2_sp * h(1), (maxval(x)-minval(x))/nn)
           bounds(1,2) = 5.0_sp * h(1)
           call allocate_globals(x)
-          h = nelminrange(cross_valid_density_sp, h, bounds, varmin=0.1_sp)
+          h = nelminrange(cross_valid_density_1d_sp, h, bounds, varmin=0.1_sp)
           call deallocate_globals()
        end if
     end if
 
     kernel_density_h_1d_sp = h(1)
+
+    deallocate(x)
 
   end function kernel_density_h_1d_sp
 
@@ -1328,7 +1342,7 @@ CONTAINS
     real(dp), dimension(:),   allocatable                      :: kernel_regression_2d_dp
 
     ! local variables
-    integer(i4)                           :: dims, dimout
+    integer(i4)                           :: dims
     integer(i4)                           :: nin, nout
     integer(i4)                           :: ii, jj
     real(dp), dimension(size(ix,2))       :: hh
@@ -1433,7 +1447,7 @@ CONTAINS
     real(sp), dimension(:),   allocatable                      :: kernel_regression_2d_sp
 
     ! local variables
-    integer(i4)                           :: dims, dimout
+    integer(i4)                           :: dims
     integer(i4)                           :: nin, nout
     integer(i4)                           :: ii, jj
     real(sp), dimension(size(ix,2))       :: hh
@@ -1526,30 +1540,47 @@ CONTAINS
 
   ! ------------------------------------------------------------------------------------------------
 
-  function kernel_regression_h_1d_dp(x, y, silverman)
+  function kernel_regression_h_1d_dp(ix, iy, silverman, mask)
 
     implicit none
 
-    real(dp), dimension(:),           intent(in) :: x
-    real(dp), dimension(:),           intent(in) :: y
+    real(dp), dimension(:),           intent(in) :: ix
+    real(dp), dimension(:),           intent(in) :: iy
     logical,                optional, intent(in) :: silverman
+    logical,  dimension(:), optional, intent(in) :: mask
     real(dp)                                     :: kernel_regression_h_1d_dp
 
     ! local variables
-    integer(i4)              :: nn
+    integer(i4)              :: nin
+    real(dp)                 :: nn
     real(dp), dimension(1)   :: h
     real(dp), dimension(1,2) :: bounds
     real(dp), parameter      :: pre_h = 1.05922384104881_dp
+    real(dp), dimension(:), allocatable :: x, y
 
-    nn   = size(x,1)
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin))
+       allocate(y(nin))
+       x = pack(ix, mask)
+       y = pack(iy, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin))
+       allocate(y(nin))
+       x = ix
+       y = iy
+    endif
+    nn = real(nin,dp)
+
     ! Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     !h(1) = (4._dp/3._dp/real(nn,dp))**(0.2_dp) * stddev_x
-    h(1) = pre_h/(nn**0.2_sp) * stddev(x(:))
+    h(1) = pre_h/(nn**0.2_dp) * stddev(x(:))
 
     if (present(silverman)) then
        if (.not. silverman) then
-          bounds(1,1) = 0.2_dp * h(1)
+          bounds(1,1) = max(0.2_dp * h(1), (maxval(x)-minval(x))/nn)
           bounds(1,2) = 5.0_dp * h(1)
           call allocate_globals(x,y)
           h = nelminrange(cross_valid_regression_dp, h, bounds)
@@ -1559,24 +1590,44 @@ CONTAINS
 
     kernel_regression_h_1d_dp = h(1)
 
+    deallocate(x)
+    deallocate(y)
+
   end function kernel_regression_h_1d_dp
 
-  function kernel_regression_h_1d_sp(x, y, silverman)
+  function kernel_regression_h_1d_sp(ix, iy, silverman, mask)
 
     implicit none
 
-    real(sp), dimension(:),           intent(in) :: x
-    real(sp), dimension(:),           intent(in) :: y
+    real(sp), dimension(:),           intent(in) :: ix
+    real(sp), dimension(:),           intent(in) :: iy
     logical,                optional, intent(in) :: silverman
+    logical,  dimension(:), optional, intent(in) :: mask
     real(sp)                                     :: kernel_regression_h_1d_sp
 
     ! local variables
-    integer(i4)              :: nn
+    integer(i4)              :: nin
+    real(sp)                 :: nn
     real(sp), dimension(1)   :: h
     real(sp), dimension(1,2) :: bounds
     real(sp), parameter      :: pre_h = 1.05922384104881_sp
+    real(sp), dimension(:), allocatable :: x, y
 
-    nn   = size(x,1)
+    if (present(mask)) then
+       nin = count(mask)
+       allocate(x(nin))
+       allocate(y(nin))
+       x = pack(ix, mask)
+       y = pack(iy, mask)
+    else
+       nin = size(ix,1)
+       allocate(x(nin))
+       allocate(y(nin))
+       x = ix
+       y = iy
+    endif
+    nn = real(nin,sp)
+
     ! Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     !h(1) = (4._sp/3._sp/real(nn,sp))**(0.2_sp) * stddev_x
@@ -1584,7 +1635,7 @@ CONTAINS
 
     if (present(silverman)) then
        if (.not. silverman) then
-          bounds(1,1) = 0.2_sp * h(1)
+          bounds(1,1) = max(0.2_sp * h(1), (maxval(x)-minval(x))/nn)
           bounds(1,2) = 5.0_sp * h(1)
           call allocate_globals(x,y)
           h = nelminrange(cross_valid_regression_sp, h, bounds)
@@ -1594,25 +1645,43 @@ CONTAINS
 
     kernel_regression_h_1d_sp = h(1)
 
+    deallocate(x)
+    deallocate(y)
+
   end function kernel_regression_h_1d_sp
 
-  function kernel_regression_h_2d_dp(x, y, silverman)
+  function kernel_regression_h_2d_dp(ix, iy, silverman, mask)
 
     implicit none
 
-    real(dp), dimension(:,:),                       intent(in) :: x
-    real(dp), dimension(:),                         intent(in) :: y
-    logical,                              optional, intent(in) :: silverman
-    real(dp), dimension(size(x,2))                             :: kernel_regression_h_2d_dp
+    real(dp), dimension(:,:),                 intent(in) :: ix
+    real(dp), dimension(:),                   intent(in) :: iy
+    logical,                        optional, intent(in) :: silverman
+    logical, dimension(:),          optional, intent(in) :: mask
+    real(dp), dimension(size(ix,2))                       :: kernel_regression_h_2d_dp
 
     ! local variables
     integer(i4)                      :: dims, nn, ii
-    real(dp), dimension(size(x,2))   :: h
-    real(dp), dimension(size(x,2))   :: stddev_x
-    real(dp), dimension(size(x,2),2) :: bounds
+    real(dp), dimension(size(ix,2))   :: h
+    real(dp), dimension(size(ix,2))   :: stddev_x
+    real(dp), dimension(size(ix,2),2) :: bounds
+    real(dp), dimension(:,:), allocatable :: x
+    real(dp), dimension(:),   allocatable :: y
 
-    nn   = size(x,1)
-    dims = size(x,2)
+    dims = size(ix,2)
+    if (present(mask)) then
+       nn = count(mask)
+       allocate(x(nn,dims))
+       allocate(y(nn))
+       forall(ii=1:dims) x(:,ii) = pack(ix(:,ii), mask)
+       y = pack(iy, mask)
+    else
+       nn = size(ix,1)
+       allocate(x(nn,dims))
+       allocate(y(nn))
+       x = ix
+       y = iy
+    endif
     ! Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     do ii=1,dims
@@ -1622,7 +1691,7 @@ CONTAINS
 
     if (present(silverman)) then
        if (.not. silverman) then
-          bounds(:,1) = 0.2_dp * h(:)
+          bounds(:,1) = max(0.2_dp * h(:), (maxval(x,dim=1)-minval(x,dim=1))/real(nn,dp))
           bounds(:,2) = 5.0_dp * h(:)
           call allocate_globals(x,y)
           h = nelminrange(cross_valid_regression_dp, h, bounds)
@@ -1632,25 +1701,43 @@ CONTAINS
 
     kernel_regression_h_2d_dp = h
 
+    deallocate(x)
+    deallocate(y)
+
   end function kernel_regression_h_2d_dp
 
-  function kernel_regression_h_2d_sp(x, y, silverman)
+  function kernel_regression_h_2d_sp(ix, iy, silverman, mask)
 
     implicit none
 
-    real(sp), dimension(:,:),                       intent(in) :: x
-    real(sp), dimension(:),                         intent(in) :: y
-    logical,                              optional, intent(in) :: silverman
-    real(sp), dimension(size(x,2))                             :: kernel_regression_h_2d_sp
+    real(sp), dimension(:,:),                 intent(in) :: ix
+    real(sp), dimension(:),                   intent(in) :: iy
+    logical,                        optional, intent(in) :: silverman
+    logical, dimension(:),          optional, intent(in) :: mask
+    real(sp), dimension(size(ix,2))                       :: kernel_regression_h_2d_sp
 
     ! local variables
     integer(i4)                      :: dims, nn, ii
-    real(sp), dimension(size(x,2))   :: h
-    real(sp), dimension(size(x,2))   :: stddev_x
-    real(sp), dimension(size(x,2),2) :: bounds
+    real(sp), dimension(size(ix,2))   :: h
+    real(sp), dimension(size(ix,2))   :: stddev_x
+    real(sp), dimension(size(ix,2),2) :: bounds
+    real(sp), dimension(:,:), allocatable :: x
+    real(sp), dimension(:),   allocatable :: y
 
-    nn   = size(x,1)
-    dims = size(x,2)
+    dims = size(ix,2)
+    if (present(mask)) then
+       nn = count(mask)
+       allocate(x(nn,dims))
+       allocate(y(nn))
+       forall(ii=1:dims) x(:,ii) = pack(ix(:,ii), mask)
+       y = pack(iy, mask)
+    else
+       nn = size(ix,1)
+       allocate(x(nn,dims))
+       allocate(y(nn))
+       x = ix
+       y = iy
+    endif
     ! Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     do ii=1,dims
@@ -1660,7 +1747,7 @@ CONTAINS
 
     if (present(silverman)) then
        if (.not. silverman) then
-          bounds(:,1) = 0.2_sp * h(:)
+          bounds(:,1) = max(0.2_sp * h(:), (maxval(x,dim=1)-minval(x,dim=1))/real(nn,sp))
           bounds(:,2) = 5.0_sp * h(:)
           call allocate_globals(x,y)
           h = nelminrange(cross_valid_regression_sp, h, bounds)
@@ -1669,6 +1756,9 @@ CONTAINS
     end if
 
     kernel_regression_h_2d_sp = h
+
+    deallocate(x)
+    deallocate(y)
 
   end function kernel_regression_h_2d_sp
 
@@ -1952,7 +2042,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------------------------------------
 
-  function cross_valid_density_dp(h)
+  function cross_valid_density_1d_dp(h)
 
     implicit none
 
@@ -1961,86 +2051,78 @@ CONTAINS
     ! where model estimate is replaced by the jackknife estimate (Haerdle et al. 2000).
 
     real(dp), dimension(:), intent(in) :: h
-    real(dp)                           :: cross_valid_density_dp
+    real(dp)                           :: cross_valid_density_1d_dp
 
     ! local variables
-    integer(i4)                                                     :: ii, jj, kk, nn, dims
-    logical,  dimension(size(global_x_dp,1))                        :: mask
-    real(dp), dimension(size(global_x_dp,1))                        :: out
-    real(dp), dimension(size(global_x_dp,1),size(global_x_dp,2))    :: zz
-    real(dp), dimension(size(global_x_dp,2),2)                      :: xMinMax
-    real(dp), dimension(size(global_x_dp,2))                        :: delta
-    integer(i4)                                                     :: mesh_n
-    real(dp), dimension(:,:), allocatable                           :: xMeshed
-    real(dp), dimension(:),   allocatable                           :: outIntegral
-    real(dp), dimension(size(global_x_dp,1),size(global_x_dp,2))    :: zzIntegral
-    real(dp), dimension(size(global_x_dp,2))                        :: stddev_x
-    real(dp)                                                        :: summ, multiplier
+    integer(i4)                              :: ii, nn
+    logical,  dimension(size(global_x_dp,1)) :: mask
+    real(dp), dimension(size(global_x_dp,1)) :: out
+    real(dp), dimension(size(global_x_dp,1)) :: zz
+    real(dp)                                 :: delta
+    integer(i4)                              :: mesh_n
+    real(dp), dimension(:), allocatable      :: xMeshed
+    real(dp), dimension(:), allocatable      :: outIntegral
+    real(dp), dimension(size(global_x_dp,1)) :: zzIntegral
+    real(dp)                                 :: stddev_x
+    real(dp)                                 :: summ, multiplier, thresh
+
+    if (size(h,1) /= 1) stop 'cross_valid_density_1d_dp: size(h) /= 1'
 
     nn   = size(global_x_dp,1)
-    dims = size(global_x_dp,2)
-
-    if (nn .le. 100_i4) then
-       ! if few number of data points given, mesh consists of 100*n points
-       mesh_n = 100_i4
-    else
-       ! mesh_n such that mesh consists of not more than 10000 points
-       mesh_n = Max(2_i4, 10000_i4/nn)
+    if (nn .le. 100_i4) then       ! if few number of data points given, mesh consists of 100*n points
+       mesh_n = 100_i4*nn
+    else                           ! mesh_n such that mesh consists of not more than 10000 points
+       mesh_n = Max(2_i4, 10000_i4/nn) * nn
     end if
-    allocate(xMeshed(mesh_n*size(global_x_dp,1),size(global_x_dp,2)))
-    allocate(outIntegral(mesh_n*size(global_x_dp,1)))
+    allocate(xMeshed(mesh_n))
+    allocate(outIntegral(mesh_n))
 
-    ! integral of squared density function
-    do ii=1,dims
-       stddev_x(ii) = stddev(global_x_dp(:,ii))
-    end do
-    forall(jj=1:dims)                 xMinMax(jj,1)  = minval(global_x_dp(:,jj)) - 3.0_dp*stddev_x(jj)
-    forall(jj=1:dims)                 xMinMax(jj,2)  = maxval(global_x_dp(:,jj)) + 3.0_dp*stddev_x(jj)
-    forall(jj=1:dims)                 delta(jj)      = (xMinMax(jj,2)-xMinMax(jj,1)) / real(nn*(mesh_n-1),dp)
-    forall(jj=1:dims, ii=1:nn*mesh_n) xMeshed(ii,jj) = xMinMax(jj,1) + delta(jj) * real(ii-1,dp)
+    ! integral of squared density function, i.e. L2-norm of kernel^2
+    stddev_x = stddev(global_x_dp(:,1))
+    xMeshed  = mesh(minval(global_x_dp) - 3.0_dp*stddev_x, maxval(global_x_dp) + 3.0_dp*stddev_x, mesh_n, delta)
 
-    multiplier = 1.0_dp/(real(nn,dp)*product(h))
-
+    multiplier = 1.0_dp/(real(nn,dp)*h(1))
+    if (multiplier <= 1.0_dp) then
+       thresh = tiny(1.0_dp)/multiplier
+    else
+       thresh = 0.0_dp
+    endif
     !$OMP parallel default(shared) &
-    !$OMP private(zzIntegral, jj)
+    !$OMP private(zzIntegral)
     !$OMP do
-    do ii=1,nn*mesh_n
-       forall(jj=1:dims) zzIntegral(:,jj) = (global_x_dp(:,jj) - xMeshed(ii,jj)) / h(jj)
-       outIntegral(ii) = nadaraya_watson(zzIntegral) * multiplier
+    do ii=1, mesh_n
+       zzIntegral = (global_x_dp(:,1) - xMeshed(ii)) / h(1)
+       outIntegral(ii) = nadaraya_watson(zzIntegral)
+       if (outIntegral(ii) .gt. thresh) outIntegral(ii) = multiplier * outIntegral(ii)
     end do
     !$OMP end do
     !$OMP end parallel
+    summ = int_regular(outIntegral*outIntegral, delta)
 
-    summ = sum( outIntegral * product(delta) )
-    ! print*, 'Integral1: ',summ
-    ! scaling to one
-    outIntegral = outIntegral / summ
-    summ = sum( outIntegral**2 * product(delta) )
-    ! print*, 'Integral2: ',summ
-
-    ! Loop through each density point
+    ! leave-one-out estimate
+    mask = .true.
     !$OMP parallel default(shared) &
-    !$OMP private(zzIntegral, jj, kk, mask, zz)
+    !$OMP private(mask, zz)
     !$OMP do
     do ii=1, nn
-       mask = .true.
        mask(ii) = .false.
-       forall(jj=1:dims, kk=1:nn, mask(kk)) zz(kk,jj) = (global_x_dp(kk,jj) - global_x_dp(ii,jj)) / h(jj)
-       out(ii) = nadaraya_watson(zz, mask=mask) * multiplier
+       zz       = (global_x_dp(:,1) - global_x_dp(ii,1)) / h(1)
+       out(ii)  = nadaraya_watson(zz, mask=mask)
+       if (out(ii) .gt. thresh) out(ii) = multiplier * out(ii)
+       mask(ii) = .true.
     end do
     !$OMP end do
     !$OMP end parallel
 
-    cross_valid_density_dp = summ - 2.0_dp / (real(nn,dp)) * sum(out)
-    ! print*, 'cross_valid_density_dp ',h, cross_valid_density_dp
+    cross_valid_density_1d_dp = summ - 2.0_dp / (real(nn,dp)) * sum(out)
 
     ! clean up
     deallocate(xMeshed)
     deallocate(outIntegral)
 
-  end function cross_valid_density_dp
+  end function cross_valid_density_1d_dp
 
-  function cross_valid_density_sp(h)
+  function cross_valid_density_1d_sp(h)
 
     implicit none
 
@@ -2049,84 +2131,76 @@ CONTAINS
     ! where model estimate is replaced by the jackknife estimate (Haerdle et al. 2000).
 
     real(sp), dimension(:), intent(in) :: h
-    real(sp)                           :: cross_valid_density_sp
+    real(sp)                           :: cross_valid_density_1d_sp
 
     ! local variables
-    integer(i4)                                                     :: ii, jj, kk, nn, dims
-    logical,  dimension(size(global_x_sp,1))                        :: mask
-    real(sp), dimension(size(global_x_sp,1))                        :: out
-    real(sp), dimension(size(global_x_sp,1),size(global_x_sp,2))    :: zz
-    real(sp), dimension(size(global_x_sp,2),2)                      :: xMinMax
-    real(sp), dimension(size(global_x_sp,2))                        :: delta
-    integer(i4)                                                     :: mesh_n
-    real(sp), dimension(:,:), allocatable                           :: xMeshed
-    real(sp), dimension(:),   allocatable                           :: outIntegral
-    real(sp), dimension(size(global_x_sp,1),size(global_x_sp,2))    :: zzIntegral
-    real(sp), dimension(size(global_x_sp,2))                        :: stddev_x
-    real(sp)                                                        :: summ, multiplier
+    integer(i4)                              :: ii, nn
+    logical,  dimension(size(global_x_sp,1)) :: mask
+    real(sp), dimension(size(global_x_sp,1)) :: out
+    real(sp), dimension(size(global_x_sp,1)) :: zz
+    real(sp)                                 :: delta
+    integer(i4)                              :: mesh_n
+    real(sp), dimension(:), allocatable      :: xMeshed
+    real(sp), dimension(:), allocatable      :: outIntegral
+    real(sp), dimension(size(global_x_sp,1)) :: zzIntegral
+    real(sp)                                 :: stddev_x
+    real(sp)                                 :: summ, multiplier, thresh
+
+    if (size(h,1) /= 1) stop 'cross_valid_density_1d_sp: size(h) /= 1'
 
     nn   = size(global_x_sp,1)
-    dims = size(global_x_sp,2)
-
-    if (nn .le. 100_i4) then
-       ! if few number of data points given, mesh consists of 100*n points
-       mesh_n = 100_i4
-    else
-       ! mesh_n such that mesh consists of not more than 10000 points
-       mesh_n = Max(2_i4, 10000_i4/nn)
+    if (nn .le. 100_i4) then       ! if few number of data points given, mesh consists of 100*n points
+       mesh_n = 100_i4*nn
+    else                           ! mesh_n such that mesh consists of not more than 10000 points
+       mesh_n = Max(2_i4, 10000_i4/nn) * nn
     end if
-    allocate(xMeshed(mesh_n*size(global_x_sp,1),size(global_x_sp,2)))
-    allocate(outIntegral(mesh_n*size(global_x_sp,1)))
+    allocate(xMeshed(mesh_n))
+    allocate(outIntegral(mesh_n))
 
-    ! integral of squared density function
-    do ii=1,dims
-       stddev_x(ii) = stddev(global_x_sp(:,ii))
-    end do
-    forall(jj=1:dims)                 xMinMax(jj,1)  = minval(global_x_sp(:,jj)) - 3.0_sp*stddev_x(jj)
-    forall(jj=1:dims)                 xMinMax(jj,2)  = maxval(global_x_sp(:,jj)) + 3.0_sp*stddev_x(jj)
-    forall(jj=1:dims)                 delta(jj)      = (xMinMax(jj,2)-xMinMax(jj,1)) / real(nn*(mesh_n-1),sp)
-    forall(jj=1:dims, ii=1:nn*mesh_n) xMeshed(ii,jj) = xMinMax(jj,1) + delta(jj) * real(ii-1,sp)
+    ! integral of squared density function, i.e. L2-norm of kernel^2
+    stddev_x = stddev(global_x_sp(:,1))
+    xMeshed  = mesh(minval(global_x_sp) - 3.0_sp*stddev_x, maxval(global_x_sp) + 3.0_sp*stddev_x, mesh_n, delta)
 
-    multiplier = 1.0_sp/(real(nn,sp)*product(h))
-
+    multiplier = 1.0_sp/(real(nn,sp)*h(1))
+    if (multiplier <= 1.0_sp) then
+       thresh = tiny(1.0_sp)/multiplier
+    else
+       thresh = 0.0_sp
+    endif
     !$OMP parallel default(shared) &
-    !$OMP private(zzIntegral, jj)
+    !$OMP private(zzIntegral)
     !$OMP do
-    do ii=1,nn*mesh_n
-       forall(jj=1:dims) zzIntegral(:,jj) = (global_x_sp(:,jj) - xMeshed(ii,jj)) / h(jj)
-       outIntegral(ii) = nadaraya_watson(zzIntegral) * multiplier
+    do ii=1, mesh_n
+       zzIntegral = (global_x_sp(:,1) - xMeshed(ii)) / h(1)
+       outIntegral(ii) = nadaraya_watson(zzIntegral)
+       if (outIntegral(ii) .gt. thresh) outIntegral(ii) = multiplier * outIntegral(ii)
     end do
     !$OMP end do
     !$OMP end parallel
+    summ = int_regular(outIntegral*outIntegral, delta)
 
-    summ = sum( outIntegral * product(delta) )
-    ! print*, 'Integral1: ',summ
-    ! scaling to one
-    outIntegral = outIntegral / summ
-    summ = sum( outIntegral**2 * product(delta) )
-    ! print*, 'Integral2: ',summ
-
-    ! Loop through each density point
+    ! leave-one-out estimate
+    mask = .true.
     !$OMP parallel default(shared) &
-    !$OMP private(zzIntegral, jj, kk, mask, zz)
+    !$OMP private(mask, zz)
     !$OMP do
     do ii=1, nn
-       mask = .true.
        mask(ii) = .false.
-       forall(jj=1:dims, kk=1:nn, mask(kk)) zz(kk,jj) = (global_x_sp(kk,jj) - global_x_sp(ii,jj)) / h(jj)
-       out(ii) = nadaraya_watson(zz, mask=mask) * multiplier
+       zz       = (global_x_sp(:,1) - global_x_sp(ii,1)) / h(1)
+       out(ii)  = nadaraya_watson(zz, mask=mask)
+       if (out(ii) .gt. thresh) out(ii) = multiplier * out(ii)
+       mask(ii) = .true.
     end do
     !$OMP end do
     !$OMP end parallel
 
-    cross_valid_density_sp = summ - 2.0_sp / (real(nn,sp)) * sum(out)
-    ! print*, 'cross_valid_density_sp ',h, cross_valid_density_sp
+    cross_valid_density_1d_sp = summ - 2.0_sp / (real(nn,sp)) * sum(out)
 
     ! clean up
     deallocate(xMeshed)
     deallocate(outIntegral)
 
-  end function cross_valid_density_sp
+  end function cross_valid_density_1d_sp
 
   ! ------------------------------------------------------------------------------------------------
 
