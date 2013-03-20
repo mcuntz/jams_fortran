@@ -276,7 +276,7 @@ contains
         do j=1, nstep                   ! take nstep steps
             call derivs( x, y, dy )
             y = y + h*dy                ! step EULER
-            if ( h .eq. epsilon(1._sp) )    stop 'Euler_sp --> stepsize not significant!'
+            if ( h .lt. tiny(1._sp) )    stop 'Euler_sp --> stepsize not significant!'
             x = x+h
             xout(j+1_i4) = x            ! store intermediate steps
             yout(j+1_i4,:) = y(:)
@@ -332,7 +332,7 @@ contains
         do j=1, nstep                   ! take nstep steps
             call derivs( x, y, dy )
             y = y + h*dy                ! step EULER
-            if ( h .eq. epsilon(1._dp) )    stop 'Euler_dp --> stepsize not significant!'
+            if ( h .lt. tiny(1._dp) )    stop 'Euler_dp --> stepsize not significant!'
             x = x+h
             xout(j+1_i4) = x            ! store intermediate steps
             yout(j+1_i4,:) = y(:)
@@ -400,7 +400,7 @@ contains
             dym = dyt + dym
             call derivs( x+h, yt, dyt )        ! fourth step
             y = y + h6*( dy+dyt+2.0_sp*dym )   ! accumulate increments with proper weights
-            if ( h .eq. epsilon(1._sp) )    stop 'RK4_sp --> stepsize not significant!'
+            if ( h .lt. tiny(1._sp) )    stop 'RK4_sp --> stepsize not significant!'
             x = x+h
             xout(j+1_i4) = x            ! store intermediate steps
             yout(j+1_i4,:) = y(:)
@@ -468,7 +468,7 @@ contains
             dym = dyt + dym
             call derivs( x+h, yt, dyt )        ! fourth step
             y = y + h6*( dy+dyt+2.0_dp*dym )   ! accumulate increments with proper weights
-            if ( h .eq. epsilon(1._dp) )    stop 'RK4_sp --> stepsize not significant!'
+            if ( h .lt. tiny(1._dp) )    stop 'RK4_sp --> stepsize not significant!'
             x = x+h
             xout(j+1_i4) = x            ! store intermediate steps
             yout(j+1_i4,:) = y(:)
@@ -568,7 +568,7 @@ contains
                 htemp = safety*hIN*(errmax**pshrnk)                     ! truncation error too large, reduce stepsize
                 hIN = sign( max( abs(htemp), 0.1_sp*abs(hIN) ), hIN )   ! no more than a factor of 10
                 xnew = x+hIN
-                if ( abs(xnew-x) .eq. epsilon(1.0_sp) )  stop 'RK4as_sp --> hey!!! stepsize underflow!'
+                if ( abs(xnew-x) .lt. epsilon(1.0_sp) )  stop 'RK4as_sp --> hey!!! stepsize underflow!'
             end do
 
             if ( errmax .gt. errcon )   then                            ! compute size of next step
@@ -581,10 +581,10 @@ contains
             x = x+hIN
             y(:) = ytemp(:)
 
-            if ( abs(hdid-hIN) .eq. epsilon(1.0_sp) )    then
-                nok = nok+1_i4
-            else
+            if ( abs(hdid-hIN) .gt. epsilon(1.0_sp) )    then
                 nbad = nbad+1_i4
+            else
+                nok = nok+1_i4
             end if
 
             if ( (x-x2)*(x2-x1) .ge. 0.0_sp )   then            ! are we done?!?!
@@ -708,7 +708,7 @@ contains
                 htemp = safety*hIN*(errmax**pshrnk)                     ! truncation error too large, reduce stepsize
                 hIN = sign( max( abs(htemp), 0.1_dp*abs(hIN) ), hIN )   ! no more than a factor of 10
                 xnew = x+hIN
-                if ( abs(xnew-x) .eq. epsilon(1._dp) )  stop 'RK4as_dp --> hey!!! stepsize underflow!'
+                if ( abs(xnew-x) .lt. epsilon(1._dp) )  stop 'RK4as_dp --> hey!!! stepsize underflow!'
             end do
 
             if ( errmax .gt. errcon )   then                            ! compute size of next step
@@ -721,10 +721,10 @@ contains
             x = x+hIN
             y(:) = ytemp(:)
 
-            if ( abs(hdid-hIN) .eq. epsilon(1._dp) ) then
-                nok = nok+1_i4
-            else
+            if ( abs(hdid-hIN) .gt. epsilon(1._dp) ) then
                 nbad = nbad+1_i4
+            else
+                nok = nok+1_i4
             end if
 
             if ( (x-x2)*(x2-x1) .ge. 0.0_dp )   then        ! are we done?!?!
