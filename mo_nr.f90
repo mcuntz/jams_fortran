@@ -1502,12 +1502,12 @@ MODULE mo_nr
        REAL(DP), DIMENSION(size(a)) :: dgcf_v
      END FUNCTION dgcf_v
   END INTERFACE
-  INTERFACE
-     FUNCTION golden(ax,bx,cx,func,tol,xmin)
+  INTERFACE golden
+     FUNCTION golden_sp(ax,bx,cx,func,tol,xmin)
        USE mo_kind
        REAL(SP), INTENT(IN) :: ax,bx,cx,tol
        REAL(SP), INTENT(OUT) :: xmin
-       REAL(SP) :: golden
+       REAL(SP) :: golden_sp
        INTERFACE
           FUNCTION func(x)
             USE mo_kind
@@ -1515,8 +1515,21 @@ MODULE mo_nr
             REAL(SP) :: func
           END FUNCTION func
        END INTERFACE
-     END FUNCTION golden
-  END INTERFACE
+     END FUNCTION golden_sp
+     FUNCTION golden_dp(ax,bx,cx,func,tol,xmin)
+       USE mo_kind
+       REAL(DP), INTENT(IN) :: ax,bx,cx,tol
+       REAL(DP), INTENT(OUT) :: xmin
+       REAL(DP) :: golden_dp
+       INTERFACE
+          FUNCTION func(x)
+            USE mo_kind
+            REAL(DP), INTENT(IN) :: x
+            REAL(DP) :: func
+          END FUNCTION func
+       END INTERFACE
+     END FUNCTION golden_dp
+  END INTERFACE golden
   INTERFACE gser
      FUNCTION gser_s(a,x,gln)
        USE mo_kind
@@ -1996,8 +2009,8 @@ MODULE mo_nr
        END INTERFACE
      END SUBROUTINE mmid
   END INTERFACE
-  INTERFACE
-     SUBROUTINE mnbrak(ax,bx,cx,fa,fb,fc,func)
+  INTERFACE mnbrak
+     SUBROUTINE mnbrak_sp(ax,bx,cx,fa,fb,fc,func)
        USE mo_kind
        REAL(SP), INTENT(INOUT) :: ax,bx
        REAL(SP), INTENT(OUT) :: cx,fa,fb,fc
@@ -2008,8 +2021,20 @@ MODULE mo_nr
             REAL(SP) :: func
           END FUNCTION func
        END INTERFACE
-     END SUBROUTINE mnbrak
-  END INTERFACE
+     END SUBROUTINE mnbrak_sp
+     SUBROUTINE mnbrak_dp(ax,bx,cx,fa,fb,fc,func)
+       USE mo_kind
+       REAL(DP), INTENT(INOUT) :: ax,bx
+       REAL(DP), INTENT(OUT) :: cx,fa,fb,fc
+       INTERFACE
+          FUNCTION func(x)
+            USE mo_kind
+            REAL(DP), INTENT(IN) :: x
+            REAL(DP) :: func
+          END FUNCTION func
+       END INTERFACE
+     END SUBROUTINE mnbrak_dp
+  END INTERFACE mnbrak
   INTERFACE
      SUBROUTINE mnewt(ntrial,x,tolx,tolf,usrfun)
        USE mo_kind
