@@ -47,7 +47,8 @@ MODULE mo_kernel
   USE mo_kind,      ONLY: i4, sp, dp
   USE mo_constants, ONLY: twopi_sp, twopi_dp
   USE mo_moment,    ONLY: stddev
-  USE mo_nelmin,    ONLY: nelminrange
+  USE mo_nelmin,    ONLY: nelminrange      ! ND optimization
+  USE mo_nr,        ONLY: golden           ! 1D optimization
   USE mo_sort,      ONLY: sort_index
   USE mo_integrate, ONLY: int_regular
 
@@ -1044,8 +1045,8 @@ CONTAINS
     ! local variables
     integer(i4)              :: nin
     real(dp)                 :: nn
-    real(dp), dimension(1)   :: h
-    real(dp), dimension(1,2) :: bounds
+    real(dp)                 :: h, hmin, fmin
+    real(dp), dimension(2)   :: bounds
     real(dp), parameter      :: pre_h = 1.05922384104881_dp
     real(dp), dimension(:), allocatable :: x
 
@@ -1063,19 +1064,20 @@ CONTAINS
     ! Default: Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     !h(1) = (4._dp/3._dp/real(nn,dp))**(0.2_dp) * stddev_x
-    h(1) = pre_h/(nn**0.2_dp) * stddev(x(:))
+    h = pre_h/(nn**0.2_dp) * stddev(x(:))
 
     if (present(silverman)) then
        if (.not. silverman) then
-          bounds(1,1) = max(0.2_dp * h(1), (maxval(x)-minval(x))/nn)
-          bounds(1,2) = 5.0_dp * h(1)
+          bounds(1) = max(0.2_dp * h, (maxval(x)-minval(x))/nn)
+          bounds(2) = 5.0_dp * h
           call allocate_globals(x)
-          h = nelminrange(cross_valid_density_1d_dp, h, bounds, varmin=0.1_dp)
+          fmin = golden(bounds(1),h,bounds(2),cross_valid_density_1d_dp, 0.0001_dp,hmin)
+          h = hmin
           call deallocate_globals()
        end if
     end if
 
-    kernel_density_h_1d_dp = h(1)
+    kernel_density_h_1d_dp = h
 
     deallocate(x)
 
@@ -1093,8 +1095,8 @@ CONTAINS
     ! local variables
     integer(i4)              :: nin
     real(sp)                 :: nn
-    real(sp), dimension(1)   :: h
-    real(sp), dimension(1,2) :: bounds
+    real(sp)                 :: h, hmin, fmin
+    real(sp), dimension(2)   :: bounds
     real(sp), parameter      :: pre_h = 1.05922384104881_sp
     real(sp), dimension(:), allocatable :: x
 
@@ -1112,19 +1114,20 @@ CONTAINS
     ! Default: Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     !h(1) = (4._sp/3._sp/real(nn,sp))**(0.2_sp) * stddev_x
-    h(1) = pre_h/(nn**0.2_sp) * stddev(x(:))
+    h = pre_h/(nn**0.2_sp) * stddev(x(:))
 
     if (present(silverman)) then
        if (.not. silverman) then
-          bounds(1,1) = max(0.2_sp * h(1), (maxval(x)-minval(x))/nn)
-          bounds(1,2) = 5.0_sp * h(1)
+          bounds(1) = max(0.2_sp * h, (maxval(x)-minval(x))/nn)
+          bounds(2) = 5.0_sp * h
           call allocate_globals(x)
-          h = nelminrange(cross_valid_density_1d_sp, h, bounds, varmin=0.1_sp)
+          fmin = golden(bounds(1),h,bounds(2),cross_valid_density_1d_sp, 0.0001_sp,hmin)
+          h = hmin
           call deallocate_globals()
        end if
     end if
 
-    kernel_density_h_1d_sp = h(1)
+    kernel_density_h_1d_sp = h
 
     deallocate(x)
 
@@ -2050,7 +2053,7 @@ CONTAINS
     ! Nadaraya-Watson estimator, which is basically the mean square error
     ! where model estimate is replaced by the jackknife estimate (Haerdle et al. 2000).
 
-    real(dp), dimension(:), intent(in) :: h
+    real(dp), intent(in)               :: h
     real(dp)                           :: cross_valid_density_1d_dp
 
     ! local variables
@@ -2066,8 +2069,6 @@ CONTAINS
     real(dp)                                 :: stddev_x
     real(dp)                                 :: summ, multiplier, thresh
 
-    if (size(h,1) /= 1) stop 'cross_valid_density_1d_dp: size(h) /= 1'
-
     nn   = size(global_x_dp,1)
     if (nn .le. 100_i4) then       ! if few number of data points given, mesh consists of 100*n points
        mesh_n = 100_i4*nn
@@ -2081,7 +2082,7 @@ CONTAINS
     stddev_x = stddev(global_x_dp(:,1))
     xMeshed  = mesh(minval(global_x_dp) - 3.0_dp*stddev_x, maxval(global_x_dp) + 3.0_dp*stddev_x, mesh_n, delta)
 
-    multiplier = 1.0_dp/(real(nn,dp)*h(1))
+    multiplier = 1.0_dp/(real(nn,dp)*h)
     if (multiplier <= 1.0_dp) then
        thresh = tiny(1.0_dp)/multiplier
     else
@@ -2091,7 +2092,7 @@ CONTAINS
     !$OMP private(zzIntegral)
     !$OMP do
     do ii=1, mesh_n
-       zzIntegral = (global_x_dp(:,1) - xMeshed(ii)) / h(1)
+       zzIntegral = (global_x_dp(:,1) - xMeshed(ii)) / h 
        outIntegral(ii) = nadaraya_watson(zzIntegral)
        if (outIntegral(ii) .gt. thresh) outIntegral(ii) = multiplier * outIntegral(ii)
     end do
@@ -2109,7 +2110,7 @@ CONTAINS
     !$OMP do
     do ii=1, nn
        mask(ii) = .false.
-       zz       = (global_x_dp(:,1) - global_x_dp(ii,1)) / h(1)
+       zz       = (global_x_dp(:,1) - global_x_dp(ii,1)) / h 
        out(ii)  = nadaraya_watson(zz, mask=mask)
        if (out(ii) .gt. thresh) out(ii) = multiplier * out(ii)
        mask(ii) = .true.
@@ -2118,7 +2119,7 @@ CONTAINS
     !$OMP end parallel
 
     cross_valid_density_1d_dp = summ - 2.0_dp / (real(nn,dp)) * sum(out)
-    ! write(*,*) 'h = ',h(1), '   cross_valid = ',cross_valid_density_1d_dp
+    ! write(*,*) 'h = ',h, '   cross_valid = ',cross_valid_density_1d_dp
 
     ! clean up
     deallocate(xMeshed)
@@ -2134,7 +2135,7 @@ CONTAINS
     ! Nadaraya-Watson estimator, which is basically the mean square error
     ! where model estimate is replaced by the jackknife estimate (Haerdle et al. 2000).
 
-    real(sp), dimension(:), intent(in) :: h
+    real(sp),               intent(in) :: h
     real(sp)                           :: cross_valid_density_1d_sp
 
     ! local variables
@@ -2150,8 +2151,6 @@ CONTAINS
     real(sp)                                 :: stddev_x
     real(sp)                                 :: summ, multiplier, thresh
 
-    if (size(h,1) /= 1) stop 'cross_valid_density_1d_sp: size(h) /= 1'
-
     nn   = size(global_x_sp,1)
     if (nn .le. 100_i4) then       ! if few number of data points given, mesh consists of 100*n points
        mesh_n = 100_i4*nn
@@ -2165,7 +2164,7 @@ CONTAINS
     stddev_x = stddev(global_x_sp(:,1))
     xMeshed  = mesh(minval(global_x_sp) - 3.0_sp*stddev_x, maxval(global_x_sp) + 3.0_sp*stddev_x, mesh_n, delta)
 
-    multiplier = 1.0_sp/(real(nn,sp)*h(1))
+    multiplier = 1.0_sp/(real(nn,sp)*h)
     if (multiplier <= 1.0_sp) then
        thresh = tiny(1.0_sp)/multiplier
     else
@@ -2175,7 +2174,7 @@ CONTAINS
     !$OMP private(zzIntegral)
     !$OMP do
     do ii=1, mesh_n
-       zzIntegral = (global_x_sp(:,1) - xMeshed(ii)) / h(1)
+       zzIntegral = (global_x_sp(:,1) - xMeshed(ii)) / h
        outIntegral(ii) = nadaraya_watson(zzIntegral)
        if (outIntegral(ii) .gt. thresh) outIntegral(ii) = multiplier * outIntegral(ii)
     end do
@@ -2193,7 +2192,7 @@ CONTAINS
     !$OMP do
     do ii=1, nn
        mask(ii) = .false.
-       zz       = (global_x_sp(:,1) - global_x_sp(ii,1)) / h(1)
+       zz       = (global_x_sp(:,1) - global_x_sp(ii,1)) / h
        out(ii)  = nadaraya_watson(zz, mask=mask)
        if (out(ii) .gt. thresh) out(ii) = multiplier * out(ii)
        mask(ii) = .true.
