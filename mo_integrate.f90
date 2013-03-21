@@ -119,12 +119,31 @@ CONTAINS
        ddx = 2.0_dp/45.0_dp
     endif
 
+    !print*, 'dat ',dat
+    !print*, 'ddx ',ddx
+    !pause
+
     n0 = 5
     n  = size(dat,1)
-    int_regular_dp = sum( ddx * &
-         (7.0_dp*(dat(n0-4:n-4:4) + dat(n0:n:4)) + &
-         32.0_dp*(dat(n0-3:n-3:4) + dat(n0-1:n-1:4)) + &
-         12.0_dp*dat(n0-2:n-2:4)) )
+
+    if (ddx .gt. 0.0_dp) then
+       int_regular_dp = sum( &
+            (7.0_dp*(dat(n0-4:n-4:4) + dat(n0:n:4)) + &
+            32.0_dp*(dat(n0-3:n-3:4) + dat(n0-1:n-1:4)) + &
+            12.0_dp*dat(n0-2:n-2:4)) )
+       ! to avoid underflow issues
+       if ( ddx .lt. 1.0_dp ) then
+          if ( int_regular_dp .gt. tiny(1.0_dp)/ddx ) then
+             int_regular_dp = ddx * int_regular_dp
+          else 
+             int_regular_dp = tiny(1.0_dp)
+          end if
+       else
+          int_regular_dp = ddx * int_regular_dp
+       end if
+    else
+       int_regular_dp = 0.0_dp
+    end if
 
   END FUNCTION int_regular_dp
 
@@ -149,10 +168,24 @@ CONTAINS
 
     n0 = 5
     n  = size(dat,1)
-    int_regular_sp = sum( ddx * &
-         (7.0_sp*(dat(n0-4:n-4:4) + dat(n0:n:4)) + &
-         32.0_sp*(dat(n0-3:n-3:4) + dat(n0-1:n-1:4)) + &
-         12.0_sp*dat(n0-2:n-2:4)) )
+    if (ddx .gt. 0.0_sp) then
+       int_regular_sp = sum( &
+            (7.0_sp*(dat(n0-4:n-4:4) + dat(n0:n:4)) + &
+            32.0_sp*(dat(n0-3:n-3:4) + dat(n0-1:n-1:4)) + &
+            12.0_sp*dat(n0-2:n-2:4)) )
+       ! to avoid underflow issues
+       if ( ddx .lt. 1.0_sp ) then
+          if ( int_regular_sp .gt. tiny(1.0_sp)/ddx ) then
+             int_regular_sp = ddx * int_regular_sp
+          else 
+             int_regular_sp = tiny(1.0_sp)
+          end if
+       else
+          int_regular_sp = ddx * int_regular_sp
+       end if
+    else
+       int_regular_sp = 0.0_sp
+    end if
 
   END FUNCTION int_regular_sp
 

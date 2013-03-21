@@ -2097,6 +2097,9 @@ CONTAINS
     end do
     !$OMP end do
     !$OMP end parallel
+    where (outIntegral .lt. sqrt(tiny(1.0_dp)) )
+       outIntegral = 0.0_dp
+    end where
     summ = int_regular(outIntegral*outIntegral, delta)
 
     ! leave-one-out estimate
@@ -2115,6 +2118,7 @@ CONTAINS
     !$OMP end parallel
 
     cross_valid_density_1d_dp = summ - 2.0_dp / (real(nn,dp)) * sum(out)
+    ! write(*,*) 'h = ',h(1), '   cross_valid = ',cross_valid_density_1d_dp
 
     ! clean up
     deallocate(xMeshed)
@@ -2177,6 +2181,9 @@ CONTAINS
     end do
     !$OMP end do
     !$OMP end parallel
+    where (outIntegral .lt. sqrt(tiny(1.0_sp)) )
+       outIntegral = 0.0_sp
+    end where
     summ = int_regular(outIntegral*outIntegral, delta)
 
     ! leave-one-out estimate
