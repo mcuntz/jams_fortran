@@ -420,10 +420,10 @@ MODULE mo_kernel
   !         y      = (/ 28.2_dp, 29.0_dp, 31.6_dp, 19.3_dp,  2.2_dp /)
   !
   !         ! estimate bandwidth via cross-validation (time-consuming)
-  !         h = kernel_regression(x,y,silverman=.false.)
+  !         h = kernel_regression_h(x,y,silverman=.false.)
   !
   !         ! estimate bandwidth with Silverman''s rule of thumb (default)
-  !         h = kernel_regression(x,y,silverman=.true.)
+  !         h = kernel_regression_h(x,y,silverman=.true.)
   !
   !         fit_y = kernel_regression(x, y, h=h, silverman=.false., xout=xout)
   !         ! gives fitted values at either xout values, if specified, or at x values, if xout is not present
@@ -1999,6 +1999,8 @@ CONTAINS
        cross_valid_regression_dp = huge(1.0_dp)
     end if
 
+    print*, 'cross_valid_regression_dp = ', cross_valid_regression_dp, '  ( h = ', h, ' )'
+
   end function cross_valid_regression_dp
 
   function cross_valid_regression_sp(h)
@@ -2119,7 +2121,7 @@ CONTAINS
     !$OMP end parallel
 
     cross_valid_density_1d_dp = summ - 2.0_dp / (real(nn,dp)) * sum(out)
-    ! write(*,*) 'h = ',h, '   cross_valid = ',cross_valid_density_1d_dp
+    write(*,*) 'h = ',h, '   cross_valid = ',cross_valid_density_1d_dp
 
     ! clean up
     deallocate(xMeshed)

@@ -46,7 +46,7 @@ MODULE mo_integrate
   !>        \brief Integrate regularily spaced data.
 
   !>        \details Integrates regularily spaced data with a 5-point Newton-Cotes formula:
-  !>        \f[ \Int y = \frac{2}{45} dx \sum_{i=5,n-4,4} 7 y_{i-4} + 32 y_{i-3} + 12 y_{i-2} + 32 y_{i-1} + 7 y_{i} \f]
+  !>        \f[ \int y = \frac{2}{45} dx \sum_{i=5,n-4,4} 7 y_{i-4} + 32 y_{i-3} + 12 y_{i-2} + 32 y_{i-1} + 7 y_{i} \f]
 
   !>        dx=1 if not given.
 
@@ -69,7 +69,7 @@ MODULE mo_integrate
   !         None
 
   !     RETURN
-  !>       \return     real(sp/dp) :: integral &mdash; \f$ \Int y \f$ integral of y values
+  !>       \return     real(sp/dp) :: integral &mdash; \f$ \int y \f$ integral of y values
 
   !     RESTRICTIONS
   !         None

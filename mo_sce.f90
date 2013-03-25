@@ -76,23 +76,23 @@ MODULE mo_sce
   !     PURPOSE
   !>        \brief Shuffled Complex Evolution (SCE) algorithm for global optimization.
   !
-  !>        \details  Shuffled Complex Evolution method for global optimization/n
-  !>                  -- version 2.1/n
-  !>                  /n
-  !>                  by Qingyun Duan/n
-  !>                  Department of Hydrology & Water Resources/n
-  !>                  University of Arizona, Tucson, AZ 85721/n
-  !>                  (602) 621-9360, email: duan@hwr.arizona.edu/n
-  !>                  /n
-  !>                  Written by Qingyun Duan,   Oct 1990./n
-  !>                  Revised by Qingyun Duan,   Aug 1991./n
-  !>                  Revised by Qingyun Duan,   Apr 1992./n
-  !>                  /n
-  !>                  Re-written by Juliane Mai, Feb 2013./n
-  !>                  /n
-  !>                  Statement by Qingyun Duan:/n
-  !>                  ----------------------------------/n
-  !>                  /n
+  !>        \details  Shuffled Complex Evolution method for global optimization\n
+  !>                  -- version 2.1\n
+  !>                  \n
+  !>                  by Qingyun Duan\n
+  !>                  Department of Hydrology & Water Resources\n
+  !>                  University of Arizona, Tucson, AZ 85721\n
+  !>                  (602) 621-9360, email: duan@hwr.arizona.edu\n
+  !>                  \n
+  !>                  Written by Qingyun Duan,   Oct 1990.\n
+  !>                  Revised by Qingyun Duan,   Aug 1991.\n
+  !>                  Revised by Qingyun Duan,   Apr 1992.\n
+  !>                  \n
+  !>                  Re-written by Juliane Mai, Feb 2013.\n
+  !>                  \n
+  !>                  Statement by Qingyun Duan:\n
+  !>                  ----------------------------------\n
+  !>                  \n
   !>                     This general purpose global optimization program is developed at
   !>                     the Department of Hydrology & Water Resources of the University
   !>                     of Arizona.  Further information regarding the SCE-UA method can
@@ -101,8 +101,8 @@ MODULE mo_sce
   !>                     users of this program make proper reference to the paper entitled
   !>                     'Effective and Efficient Global Optimization for Conceptual
   !>                     Rainfall-runoff Models' by Duan, Q., S. Sorooshian, and V.K. Gupta,
-  !>                     Water Resources Research, Vol 28(4), pp.1015-1031, 1992./n
-  !>                  /n
+  !>                     Water Resources Research, Vol 28(4), pp.1015-1031, 1992.\n
+  !>                  \n
   !>                 The function to be minimized is the first argument of DDS and must be defined as \n
   !>                 \code
   !>                     function functn(p)
@@ -125,41 +125,41 @@ MODULE mo_sce
   !         None
   !
   !     INTENT(IN), OPTIONAL
-  !>        \param[out] "integer(i8), optional :: mymaxn"    max no. of trials allowed before optimization is terminated/n
+  !>        \param[out] "integer(i8), optional :: mymaxn"    max no. of trials allowed before optimization is terminated\n
   !>                                                             DEFAULT: 1000_i8
-  !>        \param[out] "logical,     optional :: mymaxit"   maximization (.true.) or minimization (.false.) of function/n
+  !>        \param[out] "logical,     optional :: mymaxit"   maximization (.true.) or minimization (.false.) of function\n
   !>                                                             DEFAULT: false
   !>        \param[out] "integer(i4), optional :: mykstop"   number of shuffling loops in which the criterion value must
-  !>                                                             change by given percentage before optimiz. is terminated/n
+  !>                                                             change by given percentage before optimiz. is terminated\n
   !>                                                             DEFAULT: 10_i4
   !>        \param[out] "real(dp),    optional :: mypcento"  percentage by which the criterion value must change in
-  !>                                                             given number of shuffling loops/n
+  !>                                                             given number of shuffling loops\n
   !>                                                             DEFAULT: 0.0001_dp
-  !>        \param[out] "integer(i8), optional :: myseed"    initial random seed/n
+  !>        \param[out] "integer(i8), optional :: myseed"    initial random seed\n
   !>                                                             DEFAULT: get_timeseed
-  !>        \param[out] "integer(i4), optional :: myngs"     number of complexes in the initial population/n
+  !>        \param[out] "integer(i4), optional :: myngs"     number of complexes in the initial population\n
   !>                                                             DEFAULT: 2_i4
-  !>        \param[out] "integer(i4), optional :: mynpg"     number of points in each complex/n
+  !>        \param[out] "integer(i4), optional :: mynpg"     number of points in each complex\n
   !>                                                             DEFAULT: 2*n+1
-  !>        \param[out] "integer(i4), optional :: mynps"     number of points in a sub-complex/n
+  !>        \param[out] "integer(i4), optional :: mynps"     number of points in a sub-complex\n
   !>                                                             DEFAULT: n+1
   !>        \param[out] "integer(i4), optional :: mynspl"    number of evolution steps allowed for each complex before
-  !>                                                             complex shuffling/n
+  !>                                                             complex shuffling\n
   !>                                                             DEFAULT: 2*n+1
   !>        \param[out] "integer(i4), optional :: mymings"   minimum number of complexes required, if the number of 
   !>                                                             complexes is allowed to reduce as the 
-  !>                                                             optimization proceeds/n
+  !>                                                             optimization proceeds\n
   !>                                                             DEFAULT: ngs = number of complexes in initial population
-  !>        \param[out] "integer(i4), optional :: myiniflg"  flag on whether to include the initial point in population/n
-  !>                                                             0, not included/n
+  !>        \param[out] "integer(i4), optional :: myiniflg"  flag on whether to include the initial point in population\n
+  !>                                                             0, not included\n
   !>                                                             1, included (DEFAULT)
-  !>        \param[out] "integer(i4), optional :: myprint"   flag for controlling print-out after each shuffling loop/n
-  !>                                                             0, print information on the best point of the population/n
-  !>                                                             1, print information on every point of the population/n
+  !>        \param[out] "integer(i4), optional :: myprint"   flag for controlling print-out after each shuffling loop\n
+  !>                                                             0, print information on the best point of the population\n
+  !>                                                             1, print information on every point of the population\n
   !>                                                             2, no printing (DEFAULT)
-  !>        \param[out] "real(dp),    optional :: myalpha"   parameter for reflection  of points in complex/n
+  !>        \param[out] "real(dp),    optional :: myalpha"   parameter for reflection  of points in complex\n
   !>                                                             DEFAULT: 0.8_dp
-  !>        \param[out] "real(dp),    optional :: mybeta"    parameter for contraction of points in complex/n
+  !>        \param[out] "real(dp),    optional :: mybeta"    parameter for contraction of points in complex\n
   !>                                                             DEFAULT: 0.45_dp
   !
   !     INTENT(INOUT), OPTIONAL

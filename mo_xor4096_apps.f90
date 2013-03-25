@@ -85,10 +85,10 @@ MODULE mo_xor4096_apps
   !     PURPOSE
   !>        \brief Generation of (subsequent) UNIFORM  random numbers of stream(s).
   !
-  !>        \details Generation of (subsequent) UNIFORM  random numbers of stream(s)./n
-  !>                 It is calling the xor4096 several times and returns a vector of random numbers./n
+  !>        \details Generation of (subsequent) UNIFORM  random numbers of stream(s).\n
+  !>                 It is calling the xor4096 several times and returns a vector of random numbers.\n
   !>                 It can be called with an optional argument to save the state of the current stream 
-  !>                 to allow for a later return to exactly this stream./n
+  !>                 to allow for a later return to exactly this stream.\n
   !>                 The save_state variable has to be (I4) when random numbers are (I4) or (SP) and
   !>                 save_state variable has to be (I8) when random numbers are (I8) or (DP). 
   !>                 The first dimension of save_state can be allocated using n_save_state of the xor4096 module. 
@@ -106,11 +106,11 @@ MODULE mo_xor4096_apps
   !     INTENT(OUT)
   !>        \param[out] "integer(i4/i8)/real(sp/dp)   :: RN(:)/RN(:,:)"
   !>                                            uniform distributed random numbers with
-  !>                                            interval:/n
-  !>                                                i4: (-2^31,2^31-1)/n
-  !>                                                i8: (-2^63,2^63-1)/n
-  !>                                                sp: (0.0_sp, 1.0_sp)/n
-  !>                                                dp: (0.0_dp, 1.0_dp)/n
+  !>                                            interval:\n
+  !>                                                i4: (-2^31,2^31-1)\n
+  !>                                                i8: (-2^63,2^63-1)\n
+  !>                                                sp: (0.0_sp, 1.0_sp)\n
+  !>                                                dp: (0.0_dp, 1.0_dp)\n
   !>                                            rn(i,j) is the i^{th} number in the j^{th} stream
   !
   !     INTENT(IN), OPTIONAL
@@ -118,7 +118,7 @@ MODULE mo_xor4096_apps
   !
   !     INTENT(INOUT), OPTIONAL
   !>        \param[in, out] "integer(i4/i8) :: save_state(n_save_state,size(rn,2))"
-  !>                                            array carrying state of random number stream/n
+  !>                                            array carrying state of random number stream\n
   !>                                            this should be used if several streams are used, i.e.
   !>                                            each stream has its own save_state
   !
@@ -168,10 +168,10 @@ MODULE mo_xor4096_apps
   !     PURPOSE
   !>        \brief Generation of (subsequent) GAUSSIAN random numbers of stream(s).
   !
-  !>        \details Generation of (subsequent) GAUSSIAN random numbers of stream(s)./n
-  !>                 It is calling the xor4096g several times and returns a vector of random numbers./n
+  !>        \details Generation of (subsequent) GAUSSIAN random numbers of stream(s).\n
+  !>                 It is calling the xor4096g several times and returns a vector of random numbers.\n
   !>                 It can be called with an optional argument to save the state of the current stream 
-  !>                 to allow for a later return to exactly this stream./n
+  !>                 to allow for a later return to exactly this stream.\n
   !>                 The save_state variable has to be (I4) when random numbers are (SP) and
   !>                 save_state variable has to be (I8) when random numbers are (DP). 
   !>                 The first dimension of save_state can be allocated using n_save_state of the xor4096 module. 
@@ -197,7 +197,7 @@ MODULE mo_xor4096_apps
   !
   !     INTENT(INOUT), OPTIONAL
   !>        \param[in, out] "integer(i4/i8) :: save_state(n_save_state, size(rn,2))"
-  !>                                            array carrying state of random number stream/n
+  !>                                            array carrying state of random number stream\n
   !>                                            this should be used if several streams are used, i.e.
   !>                                            each stream has its own save_state
   !
@@ -247,11 +247,11 @@ MODULE mo_xor4096_apps
   !>        \brief Generation of multivariate NORMAL distributed random numbers.
   !
   !>        \details Generation of multivariate NORMAL distributed random numbers using a
-  !>                 specified covariance matrix (cov)./n
+  !>                 specified covariance matrix (cov).\n
   !>                 This function is a wrapper around the random number generator
-  !>                 xor4096g!/n
+  !>                 xor4096g!\n
   !>                 It can be called with an optional argument to save the state of the current stream 
-  !>                 to allow for a later return to exactly this stream./n
+  !>                 to allow for a later return to exactly this stream.\n
   !>                 The save_state variable has to be (I4) when random numbers are (SP) and
   !>                 save_state variable has to be (I8) when random numbers are (DP). 
   !>                 The first dimension of save_state can be allocated using n_save_state of the xor4096 module.
@@ -275,7 +275,7 @@ MODULE mo_xor4096_apps
 
   !     INTENT(INOUT), OPTIONAL
   !>        \param[in, out] "integer(i4/i8) :: save_state(n_save_state, size(lcho,1))"
-  !>                                                      array carrying state of random number stream/n
+  !>                                                      array carrying state of random number stream\n
   !>                                                      this should be used if several streams are used, i.e.
   !>                                                      each stream has its own save_state
 
@@ -334,10 +334,10 @@ MODULE mo_xor4096_apps
   !     PURPOSE
   !>        \brief Generation of UNIFORM random numbers within a given range [a,b].
   !
-  !>        \details Generation of UNIFORM random numbers within a given range [a,b]./n
-  !>                 It is calling the xor4096 and scales the random numbers to the given range./n
+  !>        \details Generation of UNIFORM random numbers within a given range [a,b].\n
+  !>                 It is calling the xor4096 and scales the random numbers to the given range.\n
   !>                 It can be called with an optional argument to save the state of the current stream 
-  !>                 to allow for a later return to exactly this stream./n
+  !>                 to allow for a later return to exactly this stream.\n
   !>                 The save_state variable has to be (I4) when random numbers are (I4) or (SP) and
   !>                 save_state variable has to be (I8) when random numbers are (I8) or (DP). 
   !>                 The first dimension of save_state can be allocated using n_save_state of the xor4096 module. 
@@ -355,11 +355,11 @@ MODULE mo_xor4096_apps
   !     INTENT(OUT)
   !>        \param[out] "integer(i4/i8)/real(sp/dp)   :: RN/RN(:)/RN(:,:)"
   !>                                            uniform distributed random numbers with
-  !>                                            interval:/n
-  !>                                                i4: [a,b]/n
-  !>                                                i8: [a,b]/n
-  !>                                                sp: [a,b]/n
-  !>                                                dp: [a,b]/n
+  !>                                            interval:\n
+  !>                                                i4: [a,b]\n
+  !>                                                i8: [a,b]\n
+  !>                                                sp: [a,b]\n
+  !>                                                dp: [a,b]\n
   !>                                            rn(i,j) is the i^{th} number in the j^{th} stream
   !
   !     INTENT(IN), OPTIONAL
@@ -367,7 +367,7 @@ MODULE mo_xor4096_apps
   !
   !     INTENT(INOUT), OPTIONAL
   !>        \param[in, out] "integer(i4/i8) :: save_state(n_save_state,size(rn,2))"
-  !>                                            array carrying state of random number stream/n
+  !>                                            array carrying state of random number stream\n
   !>                                            this should be used if several streams are used, i.e.
   !>                                            each stream has its own save_state
   !

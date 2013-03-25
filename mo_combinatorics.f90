@@ -141,7 +141,7 @@ MODULE mo_combinatorics
   !>        \brief The factorial.
   !
   !>        \details Calculates the factorial F:
-  !>                     \f[ F(n) = n! = 1 \dot 2 \dot ... \dot n} \f], 
+  !>                     \f[ F(n) = n! = 1 \dot 2 \dot ... \dot n \f], 
   !>                 i.e. the number of possible permutations of n integers 1..n
   !
   !     INTENT(IN)
@@ -249,9 +249,9 @@ MODULE mo_combinatorics
   !
   !>        \brief The next selection of k numbers from n to a given one.
   !
-  !>        \details Determines the next selection of k numbers from k to a given one./n
+  !>        \details Determines the next selection of k numbers from k to a given one.\n
   !>                 If one has n=5 numbers and want to pick k=3, the first possible selection is (1,2,3).
-  !>                 The next selection will be (1,2,4). The subsequent selection to (1,3,4) will be (1,3,5)./n
+  !>                 The next selection will be (1,2,4). The subsequent selection to (1,3,4) will be (1,3,5).\n
   !>                 The given subset (previous) has to be sorted.
   !
   !     INTENT(IN)
@@ -308,8 +308,8 @@ MODULE mo_combinatorics
   !
   !>        \brief A random selection of a k-subset of n numbers (1..n).
   !
-  !>        \details Returns a random k-subset of n numbers (1..n)/n
-  !>                 The returned subset will be sorted./n
+  !>        \details Returns a random k-subset of n numbers (1..n).\n
+  !>                 The returned subset will be sorted.\n
   !>                 The code is adapted from Nijenhuis (1978) - routine RANKSB.
   !
   !     INTENT(IN)
@@ -366,7 +366,7 @@ MODULE mo_combinatorics
   !
   !>        \brief All possible permutations of n integers 1..n.
   !
-  !>        \details Determines all possible permutations of n integers 1..n. /n
+  !>        \details Determines all possible permutations of n integers 1..n. \n
   !>                 The number of possibilities is the factorial of n (n!).
   !>                 The code is adapted from Nijenhuis (1978) - routine NEXPER.
   !
@@ -389,8 +389,8 @@ MODULE mo_combinatorics
   !         None
   !
   !     RETURN
-  !>        \return     integer(i4/i8), allocatable :: permut(:,:) &mdash; All permutations of n integers /n
-  !>                                                         size(permut,1) = n! /n
+  !>        \return     integer(i4/i8), allocatable :: permut(:,:) &mdash; All permutations of n integers \n
+  !>                                                         size(permut,1) = n! \n
   !>                                                         size(permut,2) = n
   !
   !     RESTRICTIONS
@@ -424,9 +424,9 @@ MODULE mo_combinatorics
   !
   !>        \brief The next permutation of n integers 1..n to a given one.
   !
-  !>        \details Determines the next permutation of n integers 1..n to a given one./n
+  !>        \details Determines the next permutation of n integers 1..n to a given one.\n
   !>                 If one has n=5 numbers, the first possible permutation is (1,2,3,4,5).
-  !>                 The next selection will be (2,1,3,4,5). /n
+  !>                 The next selection will be (2,1,3,4,5). \n
   !>                 The code is adapted from Nijenhuis (1978) - routine NEXPER.
   !
   !     INTENT(IN)
