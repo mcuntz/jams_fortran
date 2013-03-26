@@ -597,7 +597,7 @@ contains
                 return                                          ! normal exit
             end if
 
-            if ( abs(hnext) .lt. hminIN )   stop 'RK4as_sp --> WTF! ...stepsize smaller than minimum!!!'
+            if ( abs(hnext-hminIN) .lt. epsilon(1.0_sp) )   stop 'RK4as_sp --> WTF! ...stepsize smaller than minimum!!!'
             hIN = hnext
 
         end do
@@ -737,7 +737,7 @@ contains
                 return                                      ! normal exit
             end if
 
-            if ( abs(hnext) .lt. hminIN )   stop 'RK4as_dp --> WTF! ...stepsize smaller than minimum!!!'
+            if ( abs(hnext-hminIN) .lt. epsilon(1.0_dp) )   stop 'RK4as_dp --> WTF! ...stepsize smaller than minimum!!!'
             hIN = hnext
 
         end do
