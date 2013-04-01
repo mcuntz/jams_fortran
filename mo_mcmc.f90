@@ -826,7 +826,7 @@ CONTAINS
              write(str,*) chain
              write(outputfile,*) trim(adjustl(str)), '_' , trim(adjustl(tmp_file))
              if (present(iter_mcmc_in)) then
-                allocate(tmp(iter_mcmc_in,n,1))
+                allocate(tmp(iter_mcmc_in,size(para,1),1))
                 tmp(:,:,1) = mcmc_paras_3d(iter_mcmc-iter_mcmc_in+1_i4:iter_mcmc,:,chain)
                 if (iter_mcmc .ne. iter_mcmc_in) then
                    ! append
@@ -837,7 +837,7 @@ CONTAINS
                 end if
                 deallocate(tmp)
              else
-                allocate(tmp(1000_i4*n,n,1))
+                allocate(tmp(1000_i4*n,size(para,1),1))
                 tmp(:,:,1) = mcmc_paras_3d(iter_mcmc-(1000_i4*n)+1_i4:iter_mcmc,:,chain)
                 if (iter_mcmc .ne. 1000_i4*n) then
                    ! append
