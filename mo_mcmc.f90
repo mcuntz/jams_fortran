@@ -237,7 +237,8 @@ CONTAINS
   SUBROUTINE mcmc_dp(likelihood, stddev_function, para, rangePar,     &   ! obligatory IN
        mcmc_paras, burnin_paras,                                      &   ! obligatory OUT
        seeds_in, printflag_in, maskpara_in,                           &   ! optional IN
-       tmp_file,                                                      &   ! optional IN : filename for temporal output of MCMC parasets
+       tmp_file,                                                      &   ! optional IN : filename for temporal output of 
+       !                                                                  !               MCMC parasets
        loglike_in,                                                    &   ! optional IN : true if loglikelihood is given
        ParaSelectMode_in,                                             &   ! optional IN : (=1) half, (=2) one, (=3) all
        iter_burnin_in,                                                &   ! optional IN : markov length of (1) burn-in
