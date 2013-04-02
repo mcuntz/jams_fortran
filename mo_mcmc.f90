@@ -320,11 +320,15 @@ CONTAINS
     !                                                              !     dim1=chains, dim2=n_save_state
 
     ! Dummies
-    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE        :: tmp
-    integer(I4)                                    :: idummy
-    logical                                        :: oddsSwitch1, oddsSwitch2
-    character(100)                                 :: str
-    character(200)                                 :: outputfile
+    REAL(DP), DIMENSION(:,:,:), ALLOCATABLE :: tmp
+    integer(I4)                             :: idummy
+    logical                                 :: oddsSwitch1, oddsSwitch2
+    character(100)                          :: str
+    character(200)                          :: outputfile
+    integer(i4)                             :: slash_pos
+    integer(i4)                             :: len_filename
+    character(200)                          :: filename
+    character(200)                          :: path 
 
     ! FOR BURN-IN AND MCMC
     REAL(DP), DIMENSION(:,:,:), ALLOCATABLE        :: mcmc_paras_3d     ! array to save para values of MCMC runs,
@@ -822,9 +826,15 @@ CONTAINS
 
        ! write parameter sets to temporal file
        if (present(tmp_file)) then
+          ! splitting into path and filename
+          slash_pos    = index(tmp_file, '/', .true.)
+          len_filename = len_trim(tmp_file)
+          path         = tmp_file(1:slash_pos)
+          filename     = tmp_file(slash_pos+1:len_filename)
+          !
           do chain=1,chains
              write(str,*) chain
-             write(outputfile,*) trim(adjustl(str)), '_' , trim(adjustl(tmp_file))
+             write(outputfile,*) trim(adjustl(path)), trim(adjustl(str)), '_' , trim(adjustl(filename))
              if (present(iter_mcmc_in)) then
                 allocate(tmp(iter_mcmc_in,size(para,1),1))
                 tmp(:,:,1) = mcmc_paras_3d(iter_mcmc-iter_mcmc_in+1_i4:iter_mcmc,:,chain)
