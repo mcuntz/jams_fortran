@@ -1,8 +1,11 @@
 PROGRAM main
 
+  ! \ls mo_*.f90 | sed -e 's/mo_/  USE mo_/' -e 's/.f90//' | \
+  !    sed -e 's/USE mo_minpack/!USE mo_minpack/' -e 's/USE mo_template/!USE mo_template/'
   USE mo_anneal
   USE mo_append
   USE mo_boxcox
+  USE mo_combinatorics
   USE mo_constants
   USE mo_corr
   USE mo_dds
@@ -12,13 +15,15 @@ PROGRAM main
   USE mo_finish
   USE mo_fit
   USE mo_histo
+  USE mo_integrate
   USE mo_interpol
   USE mo_julian
+  USE mo_kernel
   USE mo_kind
   USE mo_mad
   USE mo_mcmc
   USE mo_message
-  !  USE mo_minpack
+  !USE mo_minpack
   USE mo_moment
   USE mo_mvn
   USE mo_ncread
@@ -32,11 +37,13 @@ PROGRAM main
   USE mo_percentile
   USE mo_poly
   USE mo_remap
+  USE mo_sce
   USE mo_sort
   USE mo_string_utils
-  !  USE mo_template
+  !USE mo_template
   USE mo_timer
   USE mo_xor4096
+  USE mo_xor4096_apps
 
   IMPLICIT NONE
 

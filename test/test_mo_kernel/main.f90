@@ -127,9 +127,9 @@ program test_kernel
 
   ! ---------------------------------------------------------------------------------
   if (isgood) then
-     write(*,*) 'mo_kernel: kernel_regression o.k. '
+     write(*,*) 'mo_kernel o.k.'
   else
-     write(*,*) 'mo_kernel: kernel_regression failed '
+     write(*,*) 'mo_kernel failed !'
   end if
 
 end program test_kernel
