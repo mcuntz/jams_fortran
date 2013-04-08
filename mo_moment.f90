@@ -688,7 +688,7 @@ MODULE mo_moment
 
   !     EXAMPLE
   !         vec = (/ 1., 2, 3., -999., 5., 6. /)
-  !         call moment absdev(vec, mask=(vec >= 0.), mean=m, stddev=s)
+  !         call moment(vec, mask=(vec >= 0.), mean=m, stddev=s)
   !         -> see also example in test directory
 
   !     LITERATURE
