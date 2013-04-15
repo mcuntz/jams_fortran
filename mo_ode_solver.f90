@@ -1,15 +1,25 @@
+!> \file mo_ode_solver.f90
+
+!> \brief This module provides a set of iterative methods for the approximation of solutions
+!> of Ordinary Differential Equations (ODE).
+
+!> \details
+!> It icludes the possibilities to integrate a system of Ordinary Differential Equations using Euler,
+!> a fourth-order Runge-Kutta with fixed time-steps increments or a fourth-order Runge-Kutta with adaptive stepsize control.
+
+!> \authors Giovanni Dalmasso
+!> \date Jul 2012
 module mo_ode_solver
 
     ! This module provides a set of iterative methods for the approximation of solutions
     ! of Ordinary Differential Equations (ODE).
     !
-    ! WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
-    !    Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
-    !    Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
-    !
-    ! Written Numerical Recipes, 1996
-    ! Modified Giovanni Dalmasso, Jul 2012 - adapted to FORTRAN_chs_lib structure
+    ! Written  Giovanni Dalmasso, Jul 2012
+    ! Modified Giovanni Dalmasso, Mar 2013 - adapted to FORTRAN_chs_lib structure
     !                                      - collected together different methodos
+    !                                      - speeded up
+    !                             Apr 2013 - added documentation
+    !
     !
     ! License
     ! -------
@@ -28,7 +38,7 @@ module mo_ode_solver
     ! You should have received a copy of the GNU Lesser General Public License
     ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
     !
-    ! Copyright 2012 Giovanni Dalmasso
+    ! Copyright 2012-2013 Giovanni Dalmasso
     !
     !
     ! Note on Numerical Recipes License
@@ -63,8 +73,6 @@ module mo_ode_solver
 
     implicit none
 
-    private
-
     public :: Euler     ! Euler method with equal time-steps increments
     public :: RK4       ! Fourth-order Runge-Kutta method with equal time-steps increments
     public :: RK4as     ! Fourth-order Runge-Kutta method with adaptive stepsize control
@@ -72,56 +80,57 @@ module mo_ode_solver
     ! ------------------------------------------------------------------
 
     !     NAME
-    !         Euler, RK4
+    !         Euler
 
     !     PURPOSE
-    !         Integration of Ordinary Differential Equations using Euler or fourth-order Runge-Kutta methods
-    !         with fixed time-steps increments.
-    !         Starting from N initial values vstart known at x1, use Euler or Runge-Kutta to advance nstep equal increments to x2.
+    !         Integration of Ordinary Differential Equations using Euler method.
+    !         Starting from N initial values vstart known at x1, use Euler to advance nstep equal increments to x2.
     !         Results are stored in the variables xout and yout.
-
-    !     CALLING SEQUENCE
-    !         call Euler( vstart, x1, x2, h, derivs, xout, yout )
-    !         call RK4( vstart, x1, x2, h, xout, yout )
     !
-    !         --> see also example in test directory --> test/test_mo_ode_solver
-
+    !>        \brief Euler.
+    !
+    !>        \details Starting from $N$ initial values $v_{start}$ known at $x_1$,
+    !>                 use Euler to advance $n$-steps equal increments to $x_2$.
+    !>                 Results are stored in the variables $x_{out}$ and $y_{out}$.
+    !
     !     INTENT(IN)
-    !         real(sp/dp),  dimension(:),   ::  vstart          ... initial conditions
-    !                                                               N inital values known at the time x1 (given N ODEs)
+    !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"                 initial conditions.
+    !>                                                                              $N$ inital values known at the time $x_1$
+    !>                                                                              (given $N$ ODEs)
     !
-    !         real(sp/dp)                   ::  x1              ... initial time
+    !>        \param[in] "real(sp/dp)                   ::  x1"                     initial time.
     !
-    !         real(sp/dp)                   ::  x2              ... final time
+    !>        \param[in] "real(sp/dp)                   ::  x2"                     final time.
     !
-    !         real(sp/dp)                   ::  h               ... size of the incremental time step (fixed)
+    !>        \param[in] "real(sp/dp)                   ::  h"                      size of the incremental time step (fixed).
     !
-    !         interface                     ::  derivs_sp/dp    ... returns derivatives dydx of y at x
-
+    !>        \param[in] "interface                     ::  derivs_sp/dp"           returns derivatives $dydx$ of $y$ at $x$.
+    !
     !     INTENT(INOUT)
-    !         none
+    !         None
 
     !     INTENT(OUT)
-    !         real(sp/dp),  dimension(:),   allocatable    ::  xout     ... storage for outputs (time)
+    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  xout"     storage for outputs (time).
     !
-    !         real(sp/dp),  dimension(:,:), allocatable    ::  yout     ... storage for outputs (incremented variables)
-    !                                                                       dim 1 = function evaluation at any time point
-    !                                                                       dim 2 = number of equations
-
+    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  yout"     storage for outputs (incremented variables).
+    !>                                                                              dim 1 = function evaluation at any time point.
+    !>                                                                              dim 2 = number of equations.
+    !
     !     INTENT(IN), OPTIONAL
-    !         none
+    !         None
     !
     !     INTENT(INOUT), OPTIONAL
-    !         none
-
+    !         None
+    !
     !     INTENT(OUT), OPTIONAL
-    !         none
-
+    !         None
+    !
     !     RESTRICTIONS
-    !         The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives dydx at x.
-
+    !>       \note The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives $dydx$ at $x$.
+    !
     !     EXAMPLE
-    !         --> see example in test directory --> test/test_mo_ode_solver
+    !           call Euler( vstart, x1, x2, h, derivs, xout, yout )
+    !           --> see example in test directory --> test/test_mo_ode_solver
 
     !     LITERATURE
     !        1) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 77 -
@@ -132,7 +141,8 @@ module mo_ode_solver
     !             Cambridge University Press, UK, 1996
 
     !     HISTORY
-    !         Written,  Giovanni Dalmasso, Jul 2012
+    !>        \author Giovanni Dalmasso
+    !>        \date Jul 2012
     !         Modified, Giovanni Dalmasso, Mar 2013
 
     ! Interfaces for single and double precision routines
@@ -140,6 +150,77 @@ module mo_ode_solver
         module procedure Euler_sp, Euler_dp
     end interface Euler
 
+    ! ------------------------------------------------------------------
+
+    !     NAME
+    !         RK4
+
+    !     PURPOSE
+    !         Integration of Ordinary Differential Equations using a fourth-order Runge-Kutta method
+    !         with fixed time-steps increments.
+    !         Starting from N initial values vstart known at x1, use Euler to advance nstep equal increments to x2.
+    !         Results are stored in the variables xout and yout.
+    !
+    !>        \brief fourth-order Runge-Kutta.
+    !
+    !>        \details Starting from $N$ initial values $v_{start}$ known at $x_1$,
+    !>                 use a fourth-order Runge-Kutta with fixed time-steps increments
+    !>                 to advance $n$-steps equal increments to $x_2$.
+    !>                 Results are stored in the variables $x_{out}$ and $y_{out}$.
+    !
+    !     INTENT(IN)
+    !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"                 initial conditions.
+    !>                                                                              $N$ inital values known at the time $x_1$
+    !>                                                                              (given $N$ ODEs)
+    !
+    !>        \param[in] "real(sp/dp)                   ::  x1"                     initial time.
+    !
+    !>        \param[in] "real(sp/dp)                   ::  x2"                     final time.
+    !
+    !>        \param[in] "real(sp/dp)                   ::  h"                      size of the incremental time step (fixed).
+    !
+    !>        \param[in] "interface                     ::  derivs_sp/dp"           returns derivatives $dydx$ of $y$ at $x$.
+    !
+    !     INTENT(INOUT)
+    !         None
+
+    !     INTENT(OUT)
+    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  xout"     storage for outputs (time).
+    !
+    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  yout"     storage for outputs (incremented variables).
+    !>                                                                              dim 1 = function evaluation at any time point.
+    !>                                                                              dim 2 = number of equations.
+    !
+    !     INTENT(IN), OPTIONAL
+    !         None
+    !
+    !     INTENT(INOUT), OPTIONAL
+    !         None
+    !
+    !     INTENT(OUT), OPTIONAL
+    !         None
+    !
+    !     RESTRICTIONS
+    !>       \note The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives $dydx$ at $x$.
+    !
+    !     EXAMPLE
+    !           call RK4( vstart, x1, x2, h, derivs, xout, yout )
+    !           --> see example in test directory --> test/test_mo_ode_solver
+
+    !     LITERATURE
+    !        1) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 77 -
+    !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 1 of Fortran Numerical Recipes,
+    !             Cambridge University Press, UK, 1992
+    !        2) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+    !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+    !             Cambridge University Press, UK, 1996
+
+    !     HISTORY
+    !>        \author Giovanni Dalmasso
+    !>        \date Jul 2012
+    !         Modified, Giovanni Dalmasso, Mar 2013
+
+    ! Interfaces for single and double precision routines
     interface RK4
         module procedure RK4_sp, RK4_dp
     end interface RK4
@@ -150,57 +231,62 @@ module mo_ode_solver
     !         RK4as
 
     !     PURPOSE
-    !         Integration of Ordinary Differential Equations using Runge-Kutta with adaptive stepsize control.
+    !         Integration of Ordinary Differential Equations using a fourth-order Runge-Kutta method
+    !         with adaptive stepsize control.
     !         Integrate the array of starting values ystart from x1 to x2 with accuracy eps, storing intermediate results
     !         in the module variables. h1 should be set as a guessed first stepsize,
     !         hmin as the minimum allowed stepsize (can be zero).
     !         On output ystart is replaced by values at the end of the integration interval.
-
-    !     CALLING SEQUENCE
-    !         call RK4as( ystart, x1, x2, h, derivs, xout, yout, hmin, eps )
     !
-    !         --> see also example in test directory --> test/test_mo_ode_solver
-
+    !>        \brief fourth-order Runge-Kutta with adaptive stepsize control.
+    !
+    !>        \details Integrate the array of starting values $y_{start} from $x_1$ to $x_2$ with accuracy $\varepsilon$,
+    !>                 storing intermediate results in the module variables.
+    !>                 $h_1$ should be set as a guessed first stepsize, $h_{min} as the minimum allowed stepsize (can be zero).
+    !>                 On output $y_{start}$ is replaced by values at the end of the integration interval.
+    !
     !     INTENT(IN)
-    !         real(sp/dp),  dimension(:),   ::  ystart          ... initial conditions
-    !                                                               N inital values known at the time x1 (given N ODEs)
+    !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"                 initial conditions.
+    !>                                                                              $N$ inital values known at the time $x_1$
+    !>                                                                              (given $N$ ODEs)
     !
-    !         real(sp/dp)                   ::  x1              ... initial time
+    !>        \param[in] "real(sp/dp)                   ::  x1"                     initial time.
     !
-    !         real(sp/dp)                   ::  x2              ... final time
+    !>        \param[in] "real(sp/dp)                   ::  x2"                     final time.
     !
-    !         real(sp/dp)                   ::  h               ... guessed first stepsize
+    !>        \param[in] "real(sp/dp)                   ::  h"                      guessed first stepsize.
     !
-    !         interface                     ::  derivs_sp/dp    ... returns derivatives dydx of y at x
-
+    !>        \param[in] "interface                     ::  derivs_sp/dp"           returns derivatives $dydx$ of $y$ at $x$.
+    !
     !     INTENT(INOUT)
-    !         none
+    !         None
 
     !     INTENT(OUT)
-    !         real(sp/dp),  dimension(:),   allocatable    ::  xout     ... storage for outputs (time)
+    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  xout"     storage for outputs (time).
     !
-    !         real(sp/dp),  dimension(:,:), allocatable    ::  yout     ... storage for outputs (incremented variables)
-    !                                                                       dim 1 = function evaluation at any time point
-    !                                                                       dim 2 = number of equations
-
+    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  yout"     storage for outputs (incremented variables).
+    !>                                                                              dim 1 = function evaluation at any time point.
+    !>                                                                              dim 2 = number of equations.
+    !
     !     INTENT(IN), OPTIONAL
-    !         real(sp/dp)   ::  hmin        ... minimum allowed stepsize (can be zero)
-    !                                           DEFAULT: 0.0
+    !>        \param[in] "real(sp/dp),  optional         ::  hmin"                  minimum allowed stepsize (can be zero)
+    !>                                                                              DEFAULT: 0.0
     !
-    !         real(sp/dp)   ::  eps         ... accuracy (overall tolerance level)
-    !                                           DEFAULT: 10.0**(-6.0)
+    !>        \param[in] "real(sp/dp),  optional         ::  eps"                   accuracy (overall tolerance level)
+    !>                                                                              DEFAULT: $10.0^{-6.0}$
     !
     !     INTENT(INOUT), OPTIONAL
-    !         none
-
+    !         None
+    !
     !     INTENT(OUT), OPTIONAL
-    !         none
-
+    !         None
+    !
     !     RESTRICTIONS
-    !         The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives dydx at x.
-
+    !>       \note The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives $dydx$ at $x$.
+    !
     !     EXAMPLE
-    !         --> see example in test directory --> test/test_mo_ode_solver
+    !           call RK4as( ystart, x1, x2, h, derivs, xout, yout, hmin, eps )
+    !           --> see example in test directory --> test/test_mo_ode_solver
 
     !     LITERATURE
     !        1) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 77 -
@@ -211,7 +297,8 @@ module mo_ode_solver
     !             Cambridge University Press, UK, 1996
 
     !     HISTORY
-    !         Written,  Giovanni Dalmasso, Jul 2012
+    !>        \author Giovanni Dalmasso
+    !>        \date Jul 2012
     !         Modified, Giovanni Dalmasso, Mar 2013
 
     ! Interfaces for single and double precision routines
@@ -219,6 +306,9 @@ module mo_ode_solver
         module procedure RK4as_sp, RK4as_dp
     end interface RK4as
 
+    private
+
+    ! Private method
     interface CashKarpRK
         module procedure CashKarpRK_sp, CashKarpRK_dp
     end interface CashKarpRK
