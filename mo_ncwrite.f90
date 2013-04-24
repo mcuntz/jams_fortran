@@ -268,6 +268,7 @@ contains
     integer(i4)                               :: i, j, k
     integer(i4), dimension(nAttDim)           :: att_INT
     real(sp),    dimension(nAttDim)           :: att_FLOAT
+    real(dp),    dimension(nAttDim)           :: att_DOUBLE
     character(len=maxLen), dimension(nAttDim) :: att_CHAR
     logical                                   :: LargeFile
     logical                                   :: inetcdf4
@@ -342,6 +343,9 @@ contains
           case (NF90_FLOAT)
              read(V(i)%att(k)%values, *) (att_FLOAT(j), j =1, V(i)%att(k)%nValues)
              call check(nf90_put_att (ncId, V(i)%varId, V(i)%att(k)%name, att_FLOAT(1:V(i)%att(k)%nValues)))
+          case (NF90_DOUBLE)
+             read(V(i)%att(k)%values, *) (att_DOUBLE(j), j =1, V(i)%att(k)%nValues)
+             call check(nf90_put_att (ncId, V(i)%varId, V(i)%att(k)%name, att_DOUBLE(1:V(i)%att(k)%nValues)))
           end select
        end do
     end do
