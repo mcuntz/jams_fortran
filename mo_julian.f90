@@ -395,7 +395,7 @@ CONTAINS
     if (year <= 0) year = year - 1
 
     ! Fractional part
-    eps = epsilon(1.0_dp)
+    eps = 1e-12_dp ! ~ 5000*epsilon(1.0_dp)
     eps = max(eps * abs(real(ijulian,dp)), eps)
     fraction = julian + 0.5_dp - ijulian
     hour     = min(max(floor(fraction * 24.0_dp + eps), 0), 23)

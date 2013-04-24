@@ -75,4 +75,19 @@ PROGRAM main
      write(*,*) 'mo_julian failed!'
   endif
 
+  ! ! Check 59 minutes, 60 seconds problem if eps too small in dec2date
+  ! dec1(1) = 2443879.5_dp
+  ! write(*,*) '#00: ', dec1(1), 1._dp/24._dp, date2dec(1,1,1990,1,0,0) - date2dec(1,1,1990,0,0,0)
+  ! call dec2date(dec1(1), dd, mm, yy, hh, ii, ss)
+  ! write(*,*) '#01: ', dec1(1), dd, mm, yy, hh, ii, ss
+  ! dec1(1) = dec1(1) + 1._dp/24._dp
+  ! call dec2date(dec1(1), dd, mm, yy, hh, ii, ss)
+  ! write(*,*) '#02: ', dec1(1), dd, mm, yy, hh, ii, ss
+  ! dec1(1) = dec1(1) - 1._dp/24._dp
+  ! call dec2date(dec1(1), dd, mm, yy, hh, ii, ss)
+  ! write(*,*) '#03: ', dec1(1), dd, mm, yy, hh, ii, ss
+  ! dec1(1) = dec1(1) + date2dec(1,1,1990,1,0,0) - date2dec(1,1,1990,0,0,0)
+  ! call dec2date(dec1(1), dd, mm, yy, hh, ii, ss)
+  ! write(*,*) '#04: ', dec1(1), dd, mm, yy, hh, ii, ss
+
 END PROGRAM main
