@@ -17,11 +17,11 @@ program xor4096_apps
 
   integer(i8), dimension(3)              :: seed2
   real(dp),    dimension(20,3)           :: rn2
-  integer(i8), dimension(n_save_state,3) :: save_state2
+  integer(i8), dimension(3,n_save_state) :: save_state2
 
   integer(i8), dimension(2)              :: seed3
   real(dp),    dimension(20,2)           :: rn_mvn
-  integer(i8), dimension(n_save_state,2) :: save_state3
+  integer(i8), dimension(2,n_save_state) :: save_state3
   real(dp), dimension(2,2)               :: cov  ! covariance matrix
   real(dp), dimension(2,2)               :: lcho ! lower cholesky factor
 

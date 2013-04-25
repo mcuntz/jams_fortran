@@ -117,7 +117,7 @@ MODULE mo_xor4096_apps
   !          None
   !
   !     INTENT(INOUT), OPTIONAL
-  !>        \param[in, out] "integer(i4/i8) :: save_state(n_save_state,size(rn,2))"
+  !>        \param[in, out] "integer(i4/i8) :: save_state(size(rn,2),n_save_state)"
   !>                                            array carrying state of random number stream\n
   !>                                            this should be used if several streams are used, i.e.
   !>                                            each stream has its own save_state
@@ -196,7 +196,7 @@ MODULE mo_xor4096_apps
   !          None
   !
   !     INTENT(INOUT), OPTIONAL
-  !>        \param[in, out] "integer(i4/i8) :: save_state(n_save_state, size(rn,2))"
+  !>        \param[in, out] "integer(i4/i8) :: save_state(size(rn,2),n_save_state)"
   !>                                            array carrying state of random number stream\n
   !>                                            this should be used if several streams are used, i.e.
   !>                                            each stream has its own save_state
@@ -274,7 +274,7 @@ MODULE mo_xor4096_apps
   !         None
 
   !     INTENT(INOUT), OPTIONAL
-  !>        \param[in, out] "integer(i4/i8) :: save_state(n_save_state, size(lcho,1))"
+  !>        \param[in, out] "integer(i4/i8) :: save_state( size(lcho,1),n_save_state)"
   !>                                                      array carrying state of random number stream\n
   !>                                                      this should be used if several streams are used, i.e.
   !>                                                      each stream has its own save_state
@@ -366,7 +366,7 @@ MODULE mo_xor4096_apps
   !          None
   !
   !     INTENT(INOUT), OPTIONAL
-  !>        \param[in, out] "integer(i4/i8) :: save_state(n_save_state,size(rn,2))"
+  !>        \param[in, out] "integer(i4/i8) :: save_state(size(rn,2),n_save_state)"
   !>                                            array carrying state of random number stream\n
   !>                                            this should be used if several streams are used, i.e.
   !>                                            each stream has its own save_state
@@ -450,8 +450,8 @@ CONTAINS
 
     IMPLICIT NONE
 
-    INTEGER(I4), DIMENSION(:,:),                               INTENT(OUT)   :: rn             ! dim2=number of streams
-    INTEGER(I4), DIMENSION(n_save_state,size(rn,2)), OPTIONAL, INTENT(INOUT) :: save_state
+    INTEGER(I4), DIMENSION(:,:),           INTENT(OUT)   :: rn             ! dim2=number of streams
+    INTEGER(I4), DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: save_state
 
     ! local variables
     INTEGER(I4)                        :: i
@@ -460,6 +460,9 @@ CONTAINS
     seed_tmp = 0_i4
 
     if (present(save_state)) then
+       if (size(save_state,1) .ne. size(rn,2) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'xor4096_array_i4_2d: dimensions of save_state matrix are not correct'
+       end if
        do i=1, size(rn,1)
           call xor4096(seed_tmp, rn(i,:), save_state=save_state)
        end do
@@ -497,8 +500,8 @@ CONTAINS
 
     IMPLICIT NONE
 
-    INTEGER(I8), DIMENSION(:,:),                               INTENT(OUT)   :: rn             ! dim2=number of streams
-    INTEGER(I8), DIMENSION(n_save_state,size(rn,2)), OPTIONAL, INTENT(INOUT) :: save_state
+    INTEGER(I8), DIMENSION(:,:),           INTENT(OUT)   :: rn             ! dim2=number of streams
+    INTEGER(I8), DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: save_state
 
     ! local variables
     INTEGER(I4)                        :: i
@@ -507,6 +510,9 @@ CONTAINS
     seed_tmp = 0_i8
 
     if (present(save_state)) then
+       if (size(save_state,1) .ne. size(rn,2) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'xor4096_array_i8_2d: dimensions of save_state matrix are not correct'
+       end if
        do i=1, size(rn,1)
           call xor4096(seed_tmp, rn(i,:), save_state=save_state)
        end do
@@ -544,8 +550,8 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(SP),    DIMENSION(:,:),                               INTENT(OUT)   :: rn             ! dim2=number of streams
-    INTEGER(I4), DIMENSION(n_save_state,size(rn,2)), OPTIONAL, INTENT(INOUT) :: save_state
+    REAL(SP),    DIMENSION(:,:),           INTENT(OUT)   :: rn             ! dim2=number of streams
+    INTEGER(I4), DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: save_state
 
     ! local variables
     INTEGER(I4)                        :: i
@@ -554,6 +560,9 @@ CONTAINS
     seed_tmp = 0_i4
 
     if (present(save_state)) then
+       if (size(save_state,1) .ne. size(rn,2) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'xor4096_array_sp_2d: dimensions of save_state matrix are not correct'
+       end if
        do i=1, size(rn,1)
           call xor4096(seed_tmp, rn(i,:), save_state=save_state)
        end do
@@ -591,8 +600,8 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(DP),    DIMENSION(:,:),                               INTENT(OUT)   :: rn             ! dim2=number of streams
-    INTEGER(I8), DIMENSION(n_save_state,size(rn,2)), OPTIONAL, INTENT(INOUT) :: save_state
+    REAL(DP),    DIMENSION(:,:),           INTENT(OUT)   :: rn             ! dim2=number of streams
+    INTEGER(I8), DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: save_state
 
     ! local variables
     INTEGER(I4)                        :: i
@@ -601,6 +610,9 @@ CONTAINS
     seed_tmp = 0_i8
 
     if (present(save_state)) then
+       if (size(save_state,1) .ne. size(rn,2) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'xor4096_array_dp_2d: dimensions of save_state matrix are not correct'
+       end if
        do i=1, size(rn,1)
           call xor4096(seed_tmp, rn(i,:), save_state=save_state)
        end do
@@ -642,8 +654,8 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(SP),    DIMENSION(:,:),                               INTENT(OUT)   :: rn             ! dim2=number of streams
-    INTEGER(I4), DIMENSION(n_save_state,size(rn,2)), OPTIONAL, INTENT(INOUT) :: save_state
+    REAL(SP),    DIMENSION(:,:),           INTENT(OUT)   :: rn             ! dim2=number of streams
+    INTEGER(I4), DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: save_state
 
     ! local variables
     INTEGER(I4)                        :: i
@@ -652,6 +664,9 @@ CONTAINS
     seed_tmp = 0_i4
 
     if (present(save_state)) then
+       if (size(save_state,1) .ne. size(rn,2) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'xor4096g_array_sp_2d: dimensions of save_state matrix are not correct'
+       end if
        do i=1, size(rn,1)
           call xor4096g(seed_tmp, rn(i,:), save_state=save_state)
        end do
@@ -689,8 +704,8 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(DP),    DIMENSION(:,:),                               INTENT(OUT)   :: rn             ! dim2=number of streams
-    INTEGER(I8), DIMENSION(n_save_state,size(rn,2)), OPTIONAL, INTENT(INOUT) :: save_state
+    REAL(DP),    DIMENSION(:,:),           INTENT(OUT)   :: rn             ! dim2=number of streams
+    INTEGER(I8), DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: save_state
 
     ! local variables
     INTEGER(I4)                        :: i
@@ -699,6 +714,9 @@ CONTAINS
     seed_tmp = 0_i8
 
     if (present(save_state)) then
+       if (size(save_state,1) .ne. size(rn,2) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'xor4096g_array_dp_2d: dimensions of save_state matrix are not correct'
+       end if
        do i=1, size(rn,1)
           call xor4096g(seed_tmp, rn(i,:), save_state=save_state)
        end do
@@ -718,9 +736,9 @@ CONTAINS
     
     implicit none
                  
-    real(sp),    dimension(:,:),                                 intent(in)    :: lcho
-    real(sp),    dimension(size(lcho,1)),                        intent(out)   :: mvn
-    integer(i4), dimension(n_save_state,size(lcho,1)), optional, intent(inout) :: save_state
+    real(sp),    dimension(:,:),           intent(in)    :: lcho
+    real(sp),    dimension(size(lcho,1)),  intent(out)   :: mvn
+    integer(i4), dimension(:,:), optional, intent(inout) :: save_state
 
     ! local variables
     integer(i4), dimension(size(lcho,1))  :: seed_tmp
@@ -729,7 +747,7 @@ CONTAINS
     
     ! consistency check
     if ( size(lcho,1) /= size(lcho,2) ) then
-       stop 'ERROR *** xor4096g_mvn: size mismatch in variable lcho.'
+       stop 'mvn_sp_1d: size mismatch in variable lcho.'
     end if
     
     ! ! initialize if non-zero
@@ -744,6 +762,9 @@ CONTAINS
     
     ! generate random
     if ( present(save_state) ) then
+       if (size(save_state,1) .ne. size(lcho,1) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'mvn_sp_1d: dimensions of save_state matrix are not correct'
+       end if
        call xor4096g(seed_tmp, mvn, save_state=save_state)
     else
        call xor4096g(seed_tmp, mvn)
@@ -757,9 +778,9 @@ CONTAINS
     
     implicit none
                
-    real(dp),    dimension(:,:),                                 intent(in)    :: lcho
-    real(dp),    dimension(size(lcho,1)),                        intent(out)   :: mvn
-    integer(i8), dimension(n_save_state,size(lcho,1)), optional, intent(inout) :: save_state
+    real(dp),    dimension(:,:),           intent(in)    :: lcho
+    real(dp),    dimension(size(lcho,1)),  intent(out)   :: mvn
+    integer(i8), dimension(:,:), optional, intent(inout) :: save_state
 
     ! local variables
     integer(i8), dimension(size(lcho,1))  :: seed_tmp
@@ -768,7 +789,7 @@ CONTAINS
 
     ! consistency check
     if ( size(lcho,1) /= size(lcho,2) ) then
-       stop 'ERROR *** xor4096g_mvn: size mismatch in variable lcho.'
+       stop 'mvn_dp_1d: size mismatch in variable lcho.'
     end if
     
     ! ! initialize if non-zero
@@ -783,6 +804,9 @@ CONTAINS
     
     ! generate random
     if ( present(save_state) ) then
+       if (size(save_state,1) .ne. size(lcho,1) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'mvn_dp_1d: dimensions of save_state matrix are not correct'
+       end if
        call xor4096g(seed_tmp, mvn, save_state=save_state)
     else
        call xor4096g(seed_tmp, mvn)
@@ -796,10 +820,10 @@ CONTAINS
     
     implicit none
               
-    real(sp),    dimension(:,:),                                 intent(in)    :: lcho
-    real(sp),    dimension(:,:),                                 intent(out)   :: mvn         ! dim1=number of sets, 
+    real(sp),    dimension(:,:),           intent(in)    :: lcho
+    real(sp),    dimension(:,:),           intent(out)   :: mvn         ! dim1=number of sets, 
     !                                                                                         ! dim2=size(lcho,1)
-    integer(i4), dimension(n_save_state,size(lcho,1)), optional, intent(inout) :: save_state
+    integer(i4), dimension(:,:), optional, intent(inout) :: save_state
 
     ! local variables
     integer(i4)                           :: i
@@ -809,7 +833,7 @@ CONTAINS
     
     ! consistency check
     if ( size(lcho,1) /= size(lcho,2) ) then
-       stop 'ERROR *** xor4096g_mvn: size mismatch in variable lcho.'
+       stop 'mvn_sp_2d: size mismatch in variable lcho.'
     end if
     
     ! ! initialize if non-zero
@@ -824,6 +848,9 @@ CONTAINS
     
     ! generate random
     if ( present(save_state) ) then
+       if (size(save_state,1) .ne. size(lcho,1) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'mvn_sp_2d: dimensions of save_state matrix are not correct'
+       end if
        do i=1, size(mvn,1)
           call xor4096g(seed_tmp, mvn(i,:), save_state=save_state)
           mvn(i,:) = matmul(lcho,mvn(i,:))
@@ -841,10 +868,10 @@ CONTAINS
     !
     implicit none
     !            
-    real(dp),    dimension(:,:),                                 intent(in)    :: lcho
-    real(dp),    dimension(:,:),                                 intent(out)   :: mvn         ! dim1=number of sets, 
+    real(dp),    dimension(:,:),           intent(in)    :: lcho
+    real(dp),    dimension(:,:),           intent(out)   :: mvn         ! dim1=number of sets, 
     !                                                                                         ! dim2=size(lcho,1)
-    integer(i8), dimension(n_save_state,size(lcho,1)), optional, intent(inout) :: save_state
+    integer(i8), dimension(:,:), optional, intent(inout) :: save_state
 
     ! local variables
     integer(i4)                           :: i
@@ -854,7 +881,7 @@ CONTAINS
     
     ! consistency check
     if ( size(lcho,1) /= size(lcho,2) ) then
-       stop 'ERROR *** xor4096g_mvn: size mismatch in variable lcho.'
+       stop 'mvn_dp_2d: size mismatch in variable lcho.'
     end if
     
     ! ! initialize if non-zero
@@ -869,6 +896,9 @@ CONTAINS
     
     ! generate random
     if ( present(save_state) ) then
+       if (size(save_state,1) .ne. size(lcho,1) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'mvn_dp_2d: dimensions of save_state matrix are not correct'
+       end if
        do i=1, size(mvn,1)
           call xor4096g(seed_tmp, mvn(i,:), save_state=save_state)
           mvn(i,:) = matmul(lcho,mvn(i,:))
@@ -898,7 +928,7 @@ CONTAINS
     REAL(SP) :: rn_tmp
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_i4_0d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
@@ -928,7 +958,7 @@ CONTAINS
     REAL(SP),   DIMENSION(size(rn,1)) :: rn_tmp
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_i4_1d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
@@ -953,9 +983,9 @@ CONTAINS
 
     IMPLICIT NONE
 
-    INTEGER(I4), DIMENSION(2),                                 INTENT(IN)    :: rn_range       ! lower and upper bound
-    INTEGER(I4), DIMENSION(:,:),                               INTENT(OUT)   :: rn             ! dim2=number of streams
-    INTEGER(I4), DIMENSION(n_save_state,size(rn,2)), OPTIONAL, INTENT(INOUT) :: save_state
+    INTEGER(I4), DIMENSION(2),             INTENT(IN)    :: rn_range       ! lower and upper bound
+    INTEGER(I4), DIMENSION(:,:),           INTENT(OUT)   :: rn             ! dim2=number of streams
+    INTEGER(I4), DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: save_state
 
     ! local variables
     INTEGER(I4)                                    :: i
@@ -965,10 +995,13 @@ CONTAINS
     seed_tmp = 0_i4
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_i4_2d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
+       if (size(save_state,1) .ne. size(rn,2) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'xor4096_range_i4_2d: dimensions of save_state matrix are not correct'
+       end if
        do i=1, size(rn,1)
           call xor4096(seed_tmp, rn(i,:), save_state=save_state)
        end do
@@ -998,7 +1031,7 @@ CONTAINS
     REAL(DP) :: rn_tmp
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_i8_0d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
@@ -1028,7 +1061,7 @@ CONTAINS
     REAL(DP),   DIMENSION(size(rn,1)) :: rn_tmp
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_i8_1d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
@@ -1053,9 +1086,9 @@ CONTAINS
 
     IMPLICIT NONE
 
-    INTEGER(I8), DIMENSION(2),                                 INTENT(IN)    :: rn_range       ! lower and upper bound
-    INTEGER(I8), DIMENSION(:,:),                               INTENT(OUT)   :: rn             ! dim2=number of streams
-    INTEGER(I8), DIMENSION(n_save_state,size(rn,2)), OPTIONAL, INTENT(INOUT) :: save_state
+    INTEGER(I8), DIMENSION(2),             INTENT(IN)    :: rn_range       ! lower and upper bound
+    INTEGER(I8), DIMENSION(:,:),           INTENT(OUT)   :: rn             ! dim2=number of streams
+    INTEGER(I8), DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: save_state
 
     ! local variables
     INTEGER(I4)                                   :: i
@@ -1065,10 +1098,13 @@ CONTAINS
     seed_tmp = 0_i8
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_i8_2d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
+       if (size(save_state,1) .ne. size(rn,2) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'xor4096_range_i8_2d: dimensions of save_state matrix are not correct'
+       end if
        do i=1, size(rn,1)
           call xor4096(seed_tmp, rn(i,:), save_state=save_state)
        end do
@@ -1095,7 +1131,7 @@ CONTAINS
     INTEGER(I4), DIMENSION(n_save_state), OPTIONAL, INTENT(INOUT) :: save_state
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_sp_0d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
@@ -1119,7 +1155,7 @@ CONTAINS
     INTEGER(I4)  :: i
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_sp_1d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
@@ -1139,9 +1175,9 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(SP),    DIMENSION(2),                                 INTENT(IN)    :: rn_range       ! lower and upper bound
-    REAL(SP),    DIMENSION(:,:),                               INTENT(OUT)   :: rn             ! dim2=number of streams
-    INTEGER(I4), DIMENSION(n_save_state,size(rn,2)), OPTIONAL, INTENT(INOUT) :: save_state
+    REAL(SP),    DIMENSION(2),             INTENT(IN)    :: rn_range       ! lower and upper bound
+    REAL(SP),    DIMENSION(:,:),           INTENT(OUT)   :: rn             ! dim2=number of streams
+    INTEGER(I4), DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: save_state
 
     ! local variables
     INTEGER(I4)  :: i
@@ -1150,10 +1186,13 @@ CONTAINS
     seed_tmp = 0_i4
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_sp_2d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
+       if (size(save_state,1) .ne. size(rn,2) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'xor4096_range_sp_2d: dimensions of save_state matrix are not correct'
+       end if
        do i=1, size(rn,1)
           call xor4096(seed_tmp, rn(i,:), save_state=save_state)
        end do
@@ -1175,7 +1214,7 @@ CONTAINS
     INTEGER(I8), DIMENSION(n_save_state), OPTIONAL, INTENT(INOUT) :: save_state
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_dp_0d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
@@ -1199,7 +1238,7 @@ CONTAINS
     INTEGER(I4)  :: i
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_dp_1d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
@@ -1219,9 +1258,9 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(DP),    DIMENSION(2),                                 INTENT(IN)    :: rn_range       ! lower and upper bound
-    REAL(DP),    DIMENSION(:,:),                               INTENT(OUT)   :: rn             ! dim2=number of streams
-    INTEGER(I8), DIMENSION(n_save_state,size(rn,2)), OPTIONAL, INTENT(INOUT) :: save_state
+    REAL(DP),    DIMENSION(2),             INTENT(IN)    :: rn_range       ! lower and upper bound
+    REAL(DP),    DIMENSION(:,:),           INTENT(OUT)   :: rn             ! dim2=number of streams
+    INTEGER(I8), DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: save_state
 
     ! local variables
     INTEGER(I4)  :: i
@@ -1230,10 +1269,13 @@ CONTAINS
     seed_tmp = 0_i8
 
     if ( rn_range(1) .gt. rn_range(2) ) then
-       stop 'Error xor4096_range: lower bound larger than upper bound'
+       stop 'xor4096_range_dp_2d: lower bound larger than upper bound'
     end if
 
     if (present(save_state)) then
+       if (size(save_state,1) .ne. size(rn,2) .or. size(save_state,2) .ne. n_save_state) then
+          stop 'xor4096_range_dp_2d: dimensions of save_state matrix are not correct' 
+       end if
        do i=1, size(rn,1)
           call xor4096(seed_tmp, rn(i,:), save_state=save_state)
        end do
