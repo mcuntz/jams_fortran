@@ -9,18 +9,24 @@
 
 program main_test_mo_ode_solver
 
-    use mo_kind,        only    : i4, sp, lgt
+    use mo_kind,        only    : i4, sp
     use mo_eq_lv,       only    : LV_eqn_sp
     use mo_ode_solver,  only    : EULER, RK4, RK4as
 
     implicit none
 
-    integer(i4)                             :: nEq
-    real(sp)                                :: x1, x2, h, eps, hmin, test
-    real(sp), dimension(:),     allocatable :: yi, xout
-    real(sp), dimension(:,:),   allocatable :: yout
+    integer(i4)                             :: nEq      ! number of equation
+    real(sp)                                :: x1       ! initial time point
+    real(sp)                                :: x2       ! final time point
+    real(sp)                                :: h        ! time step
+    real(sp)                                :: hmin     ! minimum allowed stepsize
+    real(sp)                                :: eps      ! accurancy
+    real(sp)                                :: test     ! test variable
+    real(sp), dimension(:),     allocatable :: yi       ! initial conditions
+    real(sp), dimension(:),     allocatable :: xout     ! output time
+    real(sp), dimension(:,:),   allocatable :: yout     ! output solutions
 
-    logical(lgt)                            :: isgood
+    logical                                 :: isgood
 
     isgood = .true.                 ! test variable
     test = 10._sp**4._sp            ! test variable
