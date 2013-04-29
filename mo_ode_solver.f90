@@ -4,8 +4,9 @@
 !> of Ordinary Differential Equations (ODE).
 
 !> \details
-!> It icludes the possibilities to integrate a system of Ordinary Differential Equations using Euler,
-!> a fourth-order Runge-Kutta with fixed time-steps increments or a fourth-order Runge-Kutta with adaptive stepsize control.
+!> It includes the possibilities to integrate a system of Ordinary Differential Equations using Euler,
+!> a fourth-order Runge-Kutta with fixed time-steps increments or a fourth-order Runge-Kutta with
+!> adaptive stepsize control.
 
 !> \authors Giovanni Dalmasso
 !> \date Jul 2012
@@ -13,14 +14,14 @@ module mo_ode_solver
 
     ! This module provides a set of iterative methods for the approximation of solutions
     ! of Ordinary Differential Equations (ODE).
-    !
+
     ! Written  Giovanni Dalmasso, Jul 2012
     ! Modified Giovanni Dalmasso, Mar 2013 - adapted to FORTRAN_chs_lib structure
-    !                                      - collected together different methodos
+    !                                      - collected together different methods
     !                                      - speeded up
     !                             Apr 2013 - added documentation
-    !
-    !
+
+
     ! License
     ! -------
     ! This file is part of the UFZ Fortran library.
@@ -39,8 +40,8 @@ module mo_ode_solver
     ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
     !
     ! Copyright 2012-2013 Giovanni Dalmasso
-    !
-    !
+
+
     ! Note on Numerical Recipes License
     ! ---------------------------------
     ! Be aware that some code is under the Numerical Recipes License 3rd
@@ -86,48 +87,46 @@ module mo_ode_solver
     !         Integration of Ordinary Differential Equations using Euler method.
     !         Starting from N initial values vstart known at x1, use Euler to advance nstep equal increments to x2.
     !         Results are stored in the variables xout and yout.
-    !
+
     !>        \brief Euler.
-    !
+
     !>        \details Starting from $N$ initial values $v_{start}$ known at $x_1$,
     !>                 use Euler to advance $n$-steps equal increments to $x_2$.
     !>                 Results are stored in the variables $x_{out}$ and $y_{out}$.
-    !
+
     !     INTENT(IN)
-    !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"                 initial conditions.
-    !>                                                                              $N$ inital values known at the time $x_1$
-    !>                                                                              (given $N$ ODEs)
-    !
-    !>        \param[in] "real(sp/dp)                   ::  x1"                     initial time.
-    !
-    !>        \param[in] "real(sp/dp)                   ::  x2"                     final time.
-    !
-    !>        \param[in] "real(sp/dp)                   ::  h"                      size of the incremental time step (fixed).
-    !
-    !>        \param[in] "interface                     ::  derivs_sp/dp"           returns derivatives $dydx$ of $y$ at $x$.
-    !
+    !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"          initial conditions.
+    !>                                                                       $N$ inital values known at the time $x_1$
+    !>                                                                       (given $N$ ODEs)
+
+    !>        \param[in] "real(sp/dp)                   ::  x1"              initial time.
+    !>        \param[in] "real(sp/dp)                   ::  x2"              final time.
+    !>        \param[in] "real(sp/dp)                   ::  h"               size of the incremental time step (fixed).
+    !>        \param[in] "interface                     ::  derivs_sp/dp"    returns derivatives $dydx$ of $y$ at $x$.
+
     !     INTENT(INOUT)
     !         None
 
     !     INTENT(OUT)
-    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  xout"     storage for outputs (time).
-    !
-    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  yout"     storage for outputs (incremented variables).
-    !>                                                                              dim 1 = function evaluation at any time point.
-    !>                                                                              dim 2 = number of equations.
-    !
+    !>        \param[out] "real(sp/dp),  dimension(:), allocatable :: xout"  storage for outputs (time).
+    !>        \param[out] "real(sp/dp),  dimension(:), allocatable :: yout"  storage for outputs
+    !>                                                                       (incremented variables).
+    !>                                                                       dim 1 = function evaluation
+    !>                                                                               at any time point.
+    !>                                                                       dim 2 = number of equations.
+
     !     INTENT(IN), OPTIONAL
     !         None
-    !
+
     !     INTENT(INOUT), OPTIONAL
     !         None
-    !
+
     !     INTENT(OUT), OPTIONAL
     !         None
-    !
+
     !     RESTRICTIONS
     !>       \note The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives $dydx$ at $x$.
-    !
+
     !     EXAMPLE
     !           call Euler( vstart, x1, x2, h, derivs, xout, yout )
     !           --> see example in test directory --> test/test_mo_ode_solver
@@ -160,49 +159,47 @@ module mo_ode_solver
     !         with fixed time-steps increments.
     !         Starting from N initial values vstart known at x1, use Euler to advance nstep equal increments to x2.
     !         Results are stored in the variables xout and yout.
-    !
+
     !>        \brief fourth-order Runge-Kutta.
-    !
+
     !>        \details Starting from $N$ initial values $v_{start}$ known at $x_1$,
     !>                 use a fourth-order Runge-Kutta with fixed time-steps increments
     !>                 to advance $n$-steps equal increments to $x_2$.
     !>                 Results are stored in the variables $x_{out}$ and $y_{out}$.
-    !
+
     !     INTENT(IN)
-    !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"                 initial conditions.
-    !>                                                                              $N$ inital values known at the time $x_1$
-    !>                                                                              (given $N$ ODEs)
-    !
-    !>        \param[in] "real(sp/dp)                   ::  x1"                     initial time.
-    !
-    !>        \param[in] "real(sp/dp)                   ::  x2"                     final time.
-    !
-    !>        \param[in] "real(sp/dp)                   ::  h"                      size of the incremental time step (fixed).
-    !
-    !>        \param[in] "interface                     ::  derivs_sp/dp"           returns derivatives $dydx$ of $y$ at $x$.
-    !
+    !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"          initial conditions.
+    !>                                                                       $N$ inital values known at the time $x_1$
+    !>                                                                       (given $N$ ODEs)
+
+    !>        \param[in] "real(sp/dp)                   ::  x1"              initial time.
+    !>        \param[in] "real(sp/dp)                   ::  x2"              final time.
+    !>        \param[in] "real(sp/dp)                   ::  h"               size of the incremental time step (fixed).
+    !>        \param[in] "interface                     ::  derivs_sp/dp"    returns derivatives $dydx$ of $y$ at $x$.
+
     !     INTENT(INOUT)
     !         None
 
     !     INTENT(OUT)
-    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  xout"     storage for outputs (time).
-    !
-    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  yout"     storage for outputs (incremented variables).
-    !>                                                                              dim 1 = function evaluation at any time point.
-    !>                                                                              dim 2 = number of equations.
-    !
+    !>        \param[out] "real(sp/dp),  dimension(:), allocatable :: xout"  storage for outputs (time).
+    !>        \param[out] "real(sp/dp),  dimension(:), allocatable :: yout"  storage for outputs
+    !>                                                                       (incremented variables).
+    !>                                                                       dim 1 = function evaluation
+    !>                                                                               at any time point.
+    !>                                                                       dim 2 = number of equations.
+
     !     INTENT(IN), OPTIONAL
     !         None
-    !
+
     !     INTENT(INOUT), OPTIONAL
     !         None
-    !
+
     !     INTENT(OUT), OPTIONAL
     !         None
-    !
+
     !     RESTRICTIONS
     !>       \note The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives $dydx$ at $x$.
-    !
+
     !     EXAMPLE
     !           call RK4( vstart, x1, x2, h, derivs, xout, yout )
     !           --> see example in test directory --> test/test_mo_ode_solver
@@ -237,53 +234,49 @@ module mo_ode_solver
     !         in the module variables. h1 should be set as a guessed first stepsize,
     !         hmin as the minimum allowed stepsize (can be zero).
     !         On output ystart is replaced by values at the end of the integration interval.
-    !
+
     !>        \brief fourth-order Runge-Kutta with adaptive stepsize control.
-    !
+
     !>        \details Integrate the array of starting values $y_{start} from $x_1$ to $x_2$ with accuracy $\varepsilon$,
     !>                 storing intermediate results in the module variables.
     !>                 $h_1$ should be set as a guessed first stepsize, $h_{min} as the minimum allowed stepsize (can be zero).
     !>                 On output $y_{start}$ is replaced by values at the end of the integration interval.
-    !
+
     !     INTENT(IN)
-    !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"                 initial conditions.
-    !>                                                                              $N$ inital values known at the time $x_1$
-    !>                                                                              (given $N$ ODEs)
-    !
-    !>        \param[in] "real(sp/dp)                   ::  x1"                     initial time.
-    !
-    !>        \param[in] "real(sp/dp)                   ::  x2"                     final time.
-    !
-    !>        \param[in] "real(sp/dp)                   ::  h"                      guessed first stepsize.
-    !
-    !>        \param[in] "interface                     ::  derivs_sp/dp"           returns derivatives $dydx$ of $y$ at $x$.
-    !
+    !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"          initial conditions.
+    !>                                                                       $N$ inital values known at the time $x_1$
+    !>                                                                       (given $N$ ODEs)
+    !>        \param[in] "real(sp/dp)                   ::  x1"              initial time.
+    !>        \param[in] "real(sp/dp)                   ::  x2"              final time.
+    !>        \param[in] "real(sp/dp)                   ::  h"               guessed first stepsize.
+    !>        \param[in] "interface                     ::  derivs_sp/dp"     derivatives $dydx$ of $y$ at $x$.
+
     !     INTENT(INOUT)
     !         None
 
     !     INTENT(OUT)
-    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  xout"     storage for outputs (time).
-    !
-    !>        \param[out] "real(sp/dp),  dimension(:),  allocatable   ::  yout"     storage for outputs (incremented variables).
-    !>                                                                              dim 1 = function evaluation at any time point.
-    !>                                                                              dim 2 = number of equations.
-    !
+    !>        \param[out] "real(sp/dp),  dimension(:), allocatable :: xout"  storage for outputs (time).
+    !>        \param[out] "real(sp/dp),  dimension(:), allocatable :: yout"  storage for outputs
+    !>                                                                       (incremented variables).
+    !>                                                                       dim 1 = function evaluations
+    !>                                                                               at any time point.
+    !>                                                                       dim 2 = number of equations.
+
     !     INTENT(IN), OPTIONAL
-    !>        \param[in] "real(sp/dp),  optional         ::  hmin"                  minimum allowed stepsize (can be zero)
+    !>        \param[in] "real(sp/dp),  optional         ::  hmin"                  minimum allowed stepsize (can be 0.)
     !>                                                                              DEFAULT: 0.0
-    !
     !>        \param[in] "real(sp/dp),  optional         ::  eps"                   accuracy (overall tolerance level)
-    !>                                                                              DEFAULT: $10.0^{-6.0}$
-    !
+    !>                                                                              DEFAULT: 1E-6
+
     !     INTENT(INOUT), OPTIONAL
     !         None
-    !
+
     !     INTENT(OUT), OPTIONAL
     !         None
-    !
+
     !     RESTRICTIONS
     !>       \note The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives $dydx$ at $x$.
-    !
+
     !     EXAMPLE
     !           call RK4as( ystart, x1, x2, h, derivs, xout, yout, hmin, eps )
     !           --> see example in test directory --> test/test_mo_ode_solver
@@ -322,41 +315,41 @@ contains
     ! SINGLE PRECISION Euler
     subroutine Euler_sp( ystart, x1, x2, h, derivs, xout, yout )    ! all obligatory
 
-        use mo_kind,    only : i4, sp
+        use mo_kind, only: i4, sp
 
         implicit none
 
         ! Intent IN
-        real(sp),   dimension(:),                  intent(in)  :: ystart   ! initial conditions
-        real(sp),                                  intent(in)  :: x1, x2   ! initial and final time
-        real(sp),                                  intent(in)  :: h        ! step size
+        real(sp),   dimension(:),                intent(in)  :: ystart   ! initial conditions
+        real(sp),                                intent(in)  :: x1, x2   ! initial and final time
+        real(sp),                                intent(in)  :: h        ! step size
 
         ! Intent OUT
-        real(sp),   dimension(:),   allocatable,   intent(out) :: xout
-        real(sp),   dimension(:,:), allocatable,   intent(out) :: yout
+        real(sp),   dimension(:),   allocatable, intent(out) :: xout
+        real(sp),   dimension(:,:), allocatable, intent(out) :: yout
 
         interface
             subroutine derivs( x, y, dydx )
-                use mo_kind,    only    : sp
+                use mo_kind, only: sp
                 implicit none
-                real(sp),                   intent(in)  :: x        ! time
-                real(sp),   dimension(:),   intent(in)  :: y        ! unknowns of the equations
-                real(sp),   dimension(:),   intent(out) :: dydx     ! derivatives of y
+                real(sp),                 intent(in)  :: x        ! time
+                real(sp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(sp),   dimension(:), intent(out) :: dydx     ! derivatives of y
             end subroutine derivs
         end interface
 
         ! Internal variables
-        integer(i4)                             :: j        ! counter
-        integer(i4)                             :: nstep    ! nuber of steps
-        real(sp)                                :: x
-        real(sp),   dimension( size(ystart) )   :: dy, y
+        integer(i4)                           :: j        ! counter
+        integer(i4)                           :: nstep    ! number of steps
+        real(sp)                              :: x
+        real(sp),   dimension( size(ystart) ) :: dy, y
 
         y(:) = ystart(:)                        ! load starting values
         nstep = nint( (x2-x1)/h, i4 )           ! find number of steps
 
-        if ( allocated(xout) ) deallocate(xout)       ! clear out old stored variables if necessary
+        if ( allocated(xout) ) deallocate(xout) ! clear out old stored variables if necessary
         if ( allocated(yout) ) deallocate(yout)
-        allocate( xout(nstep+1_i4) )                  ! allocate storage for saved values
+        allocate( xout(nstep+1_i4) )            ! allocate storage for saved values
         allocate( yout(nstep+1_i4, size(ystart)) )
 
         yout(1,:) = y(:)
@@ -378,41 +371,41 @@ contains
     ! DOUBLE PRECISION Euler
     subroutine Euler_dp( ystart, x1, x2, h, derivs, xout, yout )    ! all obligatory
 
-        use mo_kind,    only : i4, dp
+        use mo_kind, only: i4, dp
 
         implicit none
 
         ! Intent IN
-        real(dp),   dimension(:),                  intent(in)  :: ystart   ! initial conditions
-        real(dp),                                  intent(in)  :: x1, x2   ! initial and final time
-        real(dp),                                  intent(in)  :: h        ! step size
+        real(dp),   dimension(:),                intent(in)  :: ystart   ! initial conditions
+        real(dp),                                intent(in)  :: x1, x2   ! initial and final time
+        real(dp),                                intent(in)  :: h        ! step size
 
         ! Intent OUT
-        real(dp),   dimension(:),   allocatable,   intent(out) :: xout
-        real(dp),   dimension(:,:), allocatable,   intent(out) :: yout
+        real(dp),   dimension(:),   allocatable, intent(out) :: xout
+        real(dp),   dimension(:,:), allocatable, intent(out) :: yout
 
         interface
             subroutine derivs( x, y, dydx )
-                use mo_kind,    only    : dp
+                use mo_kind, only: dp
                 implicit none
-                real(dp),                   intent(in)  :: x        ! time
-                real(dp),   dimension(:),   intent(in)  :: y        ! unknowns of the equations
-                real(dp),   dimension(:),   intent(out) :: dydx     ! derivatives of y
+                real(dp),                 intent(in)  :: x        ! time
+                real(dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
             end subroutine derivs
         end interface
 
         ! Internal variables
-        integer(i4)                             :: j        ! counter
-        integer(i4)                             :: nstep    ! nuber of steps
-        real(dp)                                :: x
-        real(dp),   dimension( size(ystart) )   :: dy, y
+        integer(i4)                           :: j        ! counter
+        integer(i4)                           :: nstep    ! nuber of steps
+        real(dp)                              :: x
+        real(dp),   dimension( size(ystart) ) :: dy, y
 
         y(:) = ystart(:)                        ! load starting values
         nstep = nint( (x2-x1)/h, i4 )           ! find number of steps
 
-        if ( allocated(xout) ) deallocate(xout)       ! clear out old stored variables if necessary
+        if ( allocated(xout) ) deallocate(xout) ! clear out old stored variables if necessary
         if ( allocated(yout) ) deallocate(yout)
-        allocate( xout(nstep+1_i4) )                  ! allocate storage for saved values
+        allocate( xout(nstep+1_i4) )            ! allocate storage for saved values
         allocate( yout(nstep+1_i4, size(ystart)) )
 
         yout(1,:) = y(:)
@@ -434,42 +427,42 @@ contains
       ! SINGLE PRECISION 4th order RUNGE-KUTTA
     subroutine RK4_sp( ystart, x1, x2, h, derivs, xout, yout )    ! all obligatory
 
-        use mo_kind,    only : i4, sp
+        use mo_kind, only: i4, sp
 
         implicit none
 
         ! Intent IN
-        real(sp),   dimension(:),                  intent(in)  :: ystart   ! initial conditions
-        real(sp),                                  intent(in)  :: x1, x2   ! initial and final time
-        real(sp),                                  intent(in)  :: h        ! step size
+        real(sp),   dimension(:),                intent(in)  :: ystart   ! initial conditions
+        real(sp),                                intent(in)  :: x1, x2   ! initial and final time
+        real(sp),                                intent(in)  :: h        ! step size
 
         ! Intent OUT
-        real(sp),   dimension(:),   allocatable,   intent(out) :: xout
-        real(sp),   dimension(:,:), allocatable,   intent(out) :: yout
+        real(sp),   dimension(:),   allocatable, intent(out) :: xout
+        real(sp),   dimension(:,:), allocatable, intent(out) :: yout
 
         interface
             subroutine derivs( x, y, dydx )
-                use mo_kind,    only    : sp
+                use mo_kind, only: sp
                 implicit none
-                real(sp),                   intent(in)  :: x        ! time
-                real(sp),   dimension(:),   intent(in)  :: y        ! unknowns of the equations
-                real(sp),   dimension(:),   intent(out) :: dydx     ! derivatives of y
+                real(sp),                 intent(in)  :: x        ! time
+                real(sp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(sp),   dimension(:), intent(out) :: dydx     ! derivatives of y
             end subroutine derivs
         end interface
 
         ! Internal variables
-        integer(i4)                             :: j            ! counter
-        integer(i4)                             :: nstep        ! nuber of steps
-        real(sp)                                :: x
-        real(sp)                                :: hh, h6, xh
-        real(sp),   dimension( size(ystart) )   :: dy, dyt, dym, y, yt
+        integer(i4)                           :: j            ! counter
+        integer(i4)                           :: nstep        ! nuber of steps
+        real(sp)                              :: x
+        real(sp)                              :: hh, h6, xh
+        real(sp),   dimension( size(ystart) ) :: dy, dyt, dym, y, yt
 
         y(:) = ystart(:)                        ! load starting values
         nstep = nint( (x2-x1)/h, i4 )           ! find number of steps
 
-        if ( allocated(xout) ) deallocate(xout)       ! clear out old stored variables if necessary
+        if ( allocated(xout) ) deallocate(xout) ! clear out old stored variables if necessary
         if ( allocated(yout) ) deallocate(yout)
-        allocate( xout(nstep+1_i4) )                  ! allocate storage for saved values
+        allocate( xout(nstep+1_i4) )            ! allocate storage for saved values
         allocate( yout(nstep+1_i4, size(ystart)) )
 
         yout(1,:) = y(:)
@@ -502,42 +495,42 @@ contains
     ! DOUBLE PRECISION 4th order RUNGE-KUTTA
     subroutine RK4_dp( ystart, x1, x2, h, derivs, xout, yout )    ! all obligatory
 
-        use mo_kind,    only : i4, dp
+        use mo_kind, only: i4, dp
 
         implicit none
 
         ! Intent IN
-        real(dp),   dimension(:),                  intent(in)  :: ystart   ! initial conditions
-        real(dp),                                  intent(in)  :: x1, x2   ! initial and final time
-        real(dp),                                  intent(in)  :: h        ! step size
+        real(dp),   dimension(:),                intent(in)  :: ystart   ! initial conditions
+        real(dp),                                intent(in)  :: x1, x2   ! initial and final time
+        real(dp),                                intent(in)  :: h        ! step size
 
         ! Intent OUT
-        real(dp),   dimension(:),   allocatable,   intent(out) :: xout
-        real(dp),   dimension(:,:), allocatable,   intent(out) :: yout
+        real(dp),   dimension(:),   allocatable, intent(out) :: xout
+        real(dp),   dimension(:,:), allocatable, intent(out) :: yout
 
         interface
             subroutine derivs( x, y, dydx )
-                use mo_kind,    only    : dp
+                use mo_kind, only: dp
                 implicit none
-                real(dp),                   intent(in)  :: x        ! time
-                real(dp),   dimension(:),   intent(in)  :: y        ! unknowns of the equations
-                real(dp),   dimension(:),   intent(out) :: dydx     ! derivatives of y
+                real(dp),                 intent(in)  :: x        ! time
+                real(dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
             end subroutine derivs
         end interface
 
         ! Internal variables
-        integer(i4)                             :: j            ! counter
-        integer(i4)                             :: nstep        ! nuber of steps
-        real(dp)                                :: x
-        real(dp)                                :: hh, h6, xh
-        real(dp),   dimension( size(ystart) )   :: dy, dyt, dym, y, yt
+        integer(i4)                           :: j            ! counter
+        integer(i4)                           :: nstep        ! nuber of steps
+        real(dp)                              :: x
+        real(dp)                              :: hh, h6, xh
+        real(dp),   dimension( size(ystart) ) :: dy, dyt, dym, y, yt
 
         y(:) = ystart(:)                        ! load starting values
         nstep = nint( (x2-x1)/h, i4 )           ! find number of steps
 
-        if ( allocated(xout) ) deallocate(xout)       ! clear out old stored variables if necessary
+        if ( allocated(xout) ) deallocate(xout) ! clear out old stored variables if necessary
         if ( allocated(yout) ) deallocate(yout)
-        allocate( xout(nstep+1_i4) )                  ! allocate storage for saved values
+        allocate( xout(nstep+1_i4) )            ! allocate storage for saved values
         allocate( yout(nstep+1_i4, size(ystart)) )
 
         yout(1,:) = y(:)
@@ -574,29 +567,29 @@ contains
     subroutine RK4as_sp( ystart, x1, x2, h, derivs, xout, yout, &   ! obligatory
         hmin, eps )                                                 ! optional
 
-        use mo_kind,    only    : i4, sp
-        use mo_nrutil,  only    : reallocate
+        use mo_kind,   only: i4, sp
+        use mo_nrutil, only: reallocate
 
         implicit none
 
         ! Intent IN
-        real(sp),                                   intent(in) :: x1, x2    ! initial and final time
-        real(sp),                                   intent(in) :: h         ! guessed step size
-        real(sp),   dimension(:),                   intent(in) :: ystart    ! initial conditions
-        real(sp),                   optional,       intent(in) :: hmin
-        real(sp),                   optional,       intent(in) :: eps
+        real(sp),                                intent(in) :: x1, x2    ! initial and final time
+        real(sp),                                intent(in) :: h         ! guessed step size
+        real(sp),   dimension(:),                intent(in) :: ystart    ! initial conditions
+        real(sp),                   optional,    intent(in) :: hmin
+        real(sp),                   optional,    intent(in) :: eps
 
         ! Intent OUT
-        real(sp),   dimension(:),   allocatable,    intent(out) :: xout
-        real(sp),   dimension(:,:), allocatable,    intent(out) :: yout
+        real(sp),   dimension(:),   allocatable, intent(out) :: xout
+        real(sp),   dimension(:,:), allocatable, intent(out) :: yout
 
         interface
             subroutine derivs( x, y, dydx )
-                use mo_kind,    only    : sp
+                use mo_kind, only: sp
                 implicit none
-                real(sp),                   intent(in)  :: x        ! time
-                real(sp),   dimension(:),   intent(in)  :: y        ! unknowns of the equations
-                real(sp),   dimension(:),   intent(out) :: dydx     ! derivatives of y
+                real(sp),                 intent(in)  :: x        ! time
+                real(sp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(sp),   dimension(:), intent(out) :: dydx     ! derivatives of y
             end subroutine derivs
         end interface
 
@@ -624,7 +617,7 @@ contains
         if( present(eps) ) then
             epsIN = eps
         else
-            epsIN = 10._sp**(-6_i4)
+            epsIN = 1e-6_sp
         end if
 
         x = x1
@@ -635,35 +628,35 @@ contains
         y(:) = ystart(:)
         dxsav = tiny(1._sp)
 
-        xsav = x-2.0_sp*dxsav                    ! assures storage of first step
+        xsav = x-2.0_sp*dxsav                                                   ! assures storage of first step
         nullify( xp, yp )
         allocate( xp(256) )
         allocate( yp(size(xp), size(ystart)) )
 
-        call save_a_step                        ! save initial step
+        call save_a_step                                                        ! save initial step
 
-        do nstep=1, MAXstp      ! take at most MAXstp steps
+        do nstep=1, MAXstp                                                      ! take at most MAXstp steps
 
             call derivs( x, y, dydx )
-            yscal(:) = abs( y(:) ) + abs( hIN*dydx(:) ) + tiny(1._sp)   ! scaling used to monitor accuracy --> CAN BE MODIFIED...
+            yscal(:) = abs( y(:) ) + abs( hIN*dydx(:) ) + tiny(1._sp)           ! scaling used to monitor accuracy --> CAN BE MODIFIED...
 
-            if ( abs(x-xsav) .gt. abs(dxsav) ) call save_a_step         ! store intermediate results
+            if ( abs(x-xsav) .gt. abs(dxsav) ) call save_a_step                 ! store intermediate results
 
-            if ( (x+hIN-x2)*(x+hIN-x1) .gt. 0.0_sp ) hIN = x2-x         ! if stepsize can overshoot, decrease
+            if ( (x+hIN-x2)*(x+hIN-x1) .gt. 0.0_sp ) hIN = x2-x                 ! if stepsize can overshoot, decrease
 
             do
-                call CashKarpRK( y, dydx, x, hIN, ytemp, yerr, derivs ) ! take a step
-                errmax = maxval( abs(yerr(:)/yscal(:)) )/epsIN          ! evaluate accuracy
-                if ( errmax .lt. 1.0_sp )   exit                        ! step succeeded
-                htemp = safety*hIN*(errmax**pshrnk)                     ! truncation error too large, reduce stepsize
-                hIN = sign( max( abs(htemp), 0.1_sp*abs(hIN) ), hIN )   ! no more than a factor of 10
+                call CashKarpRK( y, dydx, x, hIN, ytemp, yerr, derivs )         ! take a step
+                errmax = maxval( abs(yerr(:)/yscal(:)) )/epsIN                  ! evaluate accuracy
+                if ( errmax .lt. 1.0_sp )   exit                                ! step succeeded
+                htemp = safety*hIN*(errmax**pshrnk)                             ! truncation error too large, reduce stepsize
+                hIN = sign( max( abs(htemp), 0.1_sp*abs(hIN) ), hIN )           ! no more than a factor of 10
                 xnew = x+hIN
-                if ( abs(xnew-x) .lt. epsilon(1.0_sp) )  stop 'RK4as_sp --> hey!!! stepsize underflow!'
+                if ( abs(xnew-x) .lt. epsilon(1.0_sp) )  stop 'RK4as_sp --> hey !!! stepsize underflow!'
             end do
 
-            if ( errmax .gt. errcon )   then                            ! compute size of next step
+            if ( errmax .gt. errcon )   then                                    ! compute size of next step
                 hnext = safety*hIN*(errmax**pgrow)
-            else                                                        ! no more than a factor of 5 increase
+            else                                                                ! no more than a factor of 5 increase
                 hnext = 5.0_sp*hIN
             end if
 
@@ -714,29 +707,29 @@ contains
     subroutine RK4as_dp( ystart, x1, x2, h, derivs, xout, yout, &   ! obligatory
         hmin, eps )                                                 ! optional
 
-        use mo_kind,    only    : i4, dp
-        use mo_nrutil,  only    : reallocate
+        use mo_kind,   only: i4, dp
+        use mo_nrutil, only: reallocate
 
         implicit none
 
         ! Intent IN
-        real(dp),                                   intent(in) :: x1, x2    ! initial and final time
-        real(dp),                                   intent(in) :: h         ! guessed step size
-        real(dp),   dimension(:),                   intent(in) :: ystart    ! initial conditions
-        real(dp),                   optional,       intent(in) :: hmin
-        real(dp),                   optional,       intent(in) :: eps
+        real(dp),                                intent(in) :: x1, x2    ! initial and final time
+        real(dp),                                intent(in) :: h         ! guessed step size
+        real(dp),   dimension(:),                intent(in) :: ystart    ! initial conditions
+        real(dp),                   optional,    intent(in) :: hmin
+        real(dp),                   optional,    intent(in) :: eps
 
         ! Intent OUT
-        real(dp),   dimension(:),   allocatable,    intent(out) :: xout
-        real(dp),   dimension(:,:), allocatable,    intent(out) :: yout
+        real(dp),   dimension(:),   allocatable, intent(out) :: xout
+        real(dp),   dimension(:,:), allocatable, intent(out) :: yout
 
         interface
             subroutine derivs( x, y, dydx )
-                use mo_kind,    only    : dp
+                use mo_kind, only: dp
                 implicit none
-                real(dp),                   intent(in)  :: x        ! time
-                real(dp),   dimension(:),   intent(in)  :: y        ! unknowns of the equations
-                real(dp),   dimension(:),   intent(out) :: dydx     ! derivatives of y
+                real(dp),                 intent(in)  :: x        ! time
+                real(dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
             end subroutine derivs
         end interface
 
@@ -764,7 +757,7 @@ contains
         if( present(eps) ) then
             epsIN = eps
         else
-            epsIN = 10._dp**(-6_i4)
+            epsIN = 1e-6_dp
         end if
 
         x = x1
@@ -861,25 +854,25 @@ contains
         ! the incremented variables as yout. Also return an estimate of the local truncation error
         ! in yout using the embedded fourth order method.
 
-        use mo_kind,    only    : i4, sp
-        use mo_nrutil,  only    : assert_eq
+        use mo_kind,   only : i4, sp
+        use mo_nrutil, only : assert_eq
 
         implicit none
 
         ! Intent IN
-        real(sp),   dimension(:),   intent(in)  :: y, dydx
-        real(sp),                   intent(in)  :: x, h
+        real(sp),   dimension(:), intent(in)  :: y, dydx
+        real(sp),                 intent(in)  :: x, h
 
         ! Intent OUT
-        real(sp),   dimension(:),   intent(out) :: yout, yerr
+        real(sp),   dimension(:), intent(out) :: yout, yerr
 
         interface
             subroutine derivs( x, y, dydx )
-                use mo_kind,    only    : sp
+                use mo_kind, only: sp
                 implicit none
-                real(sp),                   intent(in)  :: x
-                real(sp),   dimension(:),   intent(in)  :: y
-                real(sp),   dimension(:),   intent(out) :: dydx
+                real(sp),                 intent(in)  :: x
+                real(sp),   dimension(:), intent(in)  :: y
+                real(sp),   dimension(:), intent(out) :: dydx
             end subroutine derivs
         end interface
 
@@ -888,8 +881,8 @@ contains
         real(sp),   dimension(:),   allocatable :: ak2, ak3, ak4, ak5, ak6, ytemp
 
         ! parameters
-        real(sp),   parameter   :: A2=.2_sp, A3=.3_sp, A4=.6_sp, A5=1._sp, A6=.875_sp, B21=.2_sp, B31=3._sp/40._sp, &
-            B32=9._sp/40._sp, B41=.3_sp, B42=-.9_sp, B43=1.2_sp, B51=-11._sp/54._sp, B52=2.5_sp, &
+        real(sp),   parameter   :: A2=0.2_sp, A3=0.3_sp, A4=0.6_sp, A5=1._sp, A6=0.875_sp, B21=0.2_sp, B31=3._sp/40._sp, &
+            B32=9._sp/40._sp, B41=0.3_sp, B42=-0.9_sp, B43=1.2_sp, B51=-11._sp/54._sp, B52=2.5_sp, &
             B53=-70._sp/27._sp, B54=35._sp/27._sp, B61=1631._sp/55296._sp, B62=175._sp/512._sp, &
             B63=575._sp/13824._sp, B64=44275._sp/110592._sp, B65=253._sp/4096._sp, &
             C1=37._sp/378._sp, C3=250._sp/621._sp, C4=125._sp/594._sp, C6=512._sp/1771._sp, &
@@ -923,25 +916,25 @@ contains
         ! the incremented variables as yout. Also return an estimate of the local truncation error
         ! in yout using the embedded fourth order method.
 
-        use mo_kind,    only    : i4, dp
-        use mo_nrutil,  only    : assert_eq
+        use mo_kind,   only: i4, dp
+        use mo_nrutil, only: assert_eq
 
         implicit none
 
         ! Intent IN
-        real(dp),   dimension(:),   intent(in)  :: y, dydx
-        real(dp),                   intent(in)  :: x, h
+        real(dp),   dimension(:), intent(in)  :: y, dydx
+        real(dp),                 intent(in)  :: x, h
 
         ! Intent OUT
-        real(dp),   dimension(:),   intent(out) :: yout, yerr
+        real(dp),   dimension(:), intent(out) :: yout, yerr
 
         interface
             subroutine derivs( x, y, dydx )
-                use mo_kind,    only    : dp
+                use mo_kind, only: dp
                 implicit none
-                real(dp),                   intent(in)  :: x
-                real(dp),   dimension(:),   intent(in)  :: y
-                real(dp),   dimension(:),   intent(out) :: dydx
+                real(dp),                 intent(in)  :: x
+                real(dp),   dimension(:), intent(in)  :: y
+                real(dp),   dimension(:), intent(out) :: dydx
             end subroutine derivs
         end interface
 
@@ -950,8 +943,8 @@ contains
         real(dp),   dimension(:),   allocatable :: ak2, ak3, ak4, ak5, ak6, ytemp
 
         ! parameters
-        real(dp),   parameter   :: A2=.2_dp, A3=.3_dp, A4=.6_dp, A5=1._dp, A6=.875_dp, B21=.2_dp, B31=3._dp/40._dp, &
-            B32=9._dp/40._dp, B41=.3_dp, B42=-.9_dp, B43=1.2_dp, B51=-11._dp/54._dp, B52=2.5_dp, &
+        real(dp),   parameter   :: A2=0.2_dp, A3=0.3_dp, A4=0.6_dp, A5=1._dp, A6=0.875_dp, B21=0.2_dp, B31=3._dp/40._dp, &
+            B32=9._dp/40._dp, B41=0.3_dp, B42=-0.9_dp, B43=1.2_dp, B51=-11._dp/54._dp, B52=2.5_dp, &
             B53=-70._dp/27._dp, B54=35._dp/27._dp, B61=1631._dp/55296._dp, B62=175._dp/512._dp, &
             B63=575._dp/13824._dp, B64=44275._dp/110592._dp, B65=253._dp/4096._dp, &
             C1=37._dp/378._dp, C3=250._dp/621._dp, C4=125._dp/594._dp, C6=512._dp/1771._dp, &

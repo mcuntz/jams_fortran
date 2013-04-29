@@ -28,15 +28,15 @@ program main_test_mo_ode_solver
 
     logical                                 :: isgood
 
-    isgood = .true.                 ! test variable
-    test = 10._sp**4._sp            ! test variable
+    isgood = .true.     ! test variable
+    test   = 1e4_sp     ! test variable
 
-    nEq = 2_i4                      ! number of equations
-    x1 = 0._sp                      ! intial time
-    x2 = 10._sp                     ! final time
-    h = 0.1_sp                      ! incremental time step
-    hmin = h*0.00000000001_sp       ! minimum allowed stepsize
-    eps = 10._sp**(-8_i4)           ! accuracy
+    nEq    = 2_i4       ! number of equations
+    x1     = 0._sp      ! intial time
+    x2     = 10._sp     ! final time
+    h      = 0.1_sp     ! incremental time step
+    hmin   = h*1e-11_sp ! minimum allowed stepsize
+    eps    = 1e-8_sp    ! accuracy
 
     allocate( yi(nEq) )
     yi = (/ 1._sp, 1._sp /)         ! initial conditions
