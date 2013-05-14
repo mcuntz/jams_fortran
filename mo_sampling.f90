@@ -355,6 +355,8 @@ contains
         integer(i4)                         ::  j, jj   ! counters
         logical,        dimension(Npar)     ::  local_dist
 
+        if ( Npar .eq. 0_i4 )   stop 'random_sp --> number of parameters could not be zero!!!'
+
         if( present(dist) ) then
             local_dist = dist
         else
@@ -396,6 +398,8 @@ contains
         ! Internal variables
         integer(i4)                         ::  j, jj   ! counters
         logical,        dimension(Npar)     ::  local_dist
+
+        if ( Npar .eq. 0_i4 )   stop 'random_dp --> number of parameters could not be zero!!!'
 
         if( present(dist) ) then
             local_dist = dist
@@ -446,6 +450,8 @@ contains
         real(sp),       dimension(Nsample)          ::  p
         logical,        dimension(Npar)             ::  local_dist
 
+        if ( Npar .eq. 0_i4 )   stop 'lhs_sp --> number of parameters could not be zero!!!'
+
         if( present(dist) ) then
             local_dist = dist
         else
@@ -456,10 +462,10 @@ contains
         call xor4096_array( ranSam, save_state=save_the_setup )
 
         ! seed for setup xor4096 i4 stream
-        if ( save_the_setup(1,1) .gt. huge(1_i4)/save_the_setup(2,1) )  then
+        if ( save_the_setup(1,1) .gt. huge(1_i4)/save_the_setup(1,2) )  then
             seed = save_the_setup(3,1)
         else
-            seed = save_the_setup(1,1)*save_the_setup(2,1) + save_the_setup(3,1)
+            seed = save_the_setup(1,1)*save_the_setup(1,2) + save_the_setup(1,3)
         end if
         ! setup xor4096 i4 stream
         call setupxor( save_the_setup_i4, seed=seed )
@@ -508,7 +514,9 @@ contains
         real(dp),       dimension(Nsample)          ::  p
         logical,        dimension(Npar)             ::  local_dist
 
-        if( present(dist) ) then
+        if ( Npar .eq. 0_i4 )   stop 'lhs_dp --> number of parameters could not be zero!!!'
+
+        if ( present(dist) ) then
             local_dist = dist
         else
             local_dist = .true.
@@ -518,10 +526,10 @@ contains
         call xor4096_array( ranSam, save_state=save_the_setup )
 
         ! seed for setup xor4096 i4 stream
-        if ( save_the_setup(1,1) .gt. huge(1_i4)/save_the_setup(2,1) )  then
-            seed = int( save_the_setup(3,1),i4 )
+        if ( save_the_setup(1,1) .gt. huge(1_i4)/save_the_setup(1,2) )  then
+            seed = int( save_the_setup(1,3),i4 )
         else
-            seed = int( save_the_setup(1,1)*save_the_setup(2,1) + save_the_setup(3,1), i4 )
+            seed = int( save_the_setup(1,1)*save_the_setup(1,2) + save_the_setup(1,3), i4 )
         end if
         ! setup xor4096 i4 stream
         call setupxor( save_the_setup_i4, seed=seed )
