@@ -638,7 +638,8 @@ contains
         do nstep=1, MAXstp                                                      ! take at most MAXstp steps
 
             call derivs( x, y, dydx )
-            yscal(:) = abs( y(:) ) + abs( hIN*dydx(:) ) + tiny(1._sp)           ! scaling used to monitor accuracy --> CAN BE MODIFIED...
+            yscal(:) = abs( y(:) ) + abs( hIN*dydx(:) ) + tiny(1._sp)           ! scaling used to monitor accuracy
+                                                                                ! --> CAN BE MODIFIED...
 
             if ( abs(x-xsav) .gt. abs(dxsav) ) call save_a_step                 ! store intermediate results
 
