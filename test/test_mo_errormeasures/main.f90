@@ -2,7 +2,7 @@ program test
 
   ! use mo_moment   
   USE mo_kind         , ONLY: i4, sp, dp
-  USE mo_errorMeasures, ONLY: BIAS, NSE, SAE, MAE, SSE, MSE, RMSE
+  USE mo_errorMeasures, ONLY: BIAS, NSE, LNNSE, SAE, MAE, SSE, MSE, RMSE
   !
   IMPLICIT NONE
   !
@@ -100,6 +100,17 @@ program test
   isgood = isgood .and. (anint(10000._dp*RMSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. 23858._dp)
   isgood = isgood .and. (anint(10000._sp*RMSE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 10142._sp) 
   isgood = isgood .and. (anint(10000._dp*RMSE(arr1, arr2, mask=mask)) .EQ. 10142._dp)
+  !
+  ! LNNSE
+  ! Attention masks might have changed since inout
+  !
+  isgood = isgood .and. (anint(10000._sp*LNNSE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. -8375._sp)
+  isgood = isgood .and. (anint(10000._dp*LNNSE(vec1, vec2, mask=maskvec)) .EQ. -8375._dp)
+  isgood = isgood .and. (anint(10000._sp*LNNSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. &
+           -20625._sp)
+  isgood = isgood .and. (anint(10000._dp*LNNSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. -20625._dp)
+  isgood = isgood .and. (anint(10000._sp*LNNSE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 8962._sp) 
+  isgood = isgood .and. (anint(10000._dp*LNNSE(arr1, arr2, mask=mask)) .EQ. 8962._dp)
   !
   if (isgood) then
      write(*,*) 'mo_errormeasures o.k.'

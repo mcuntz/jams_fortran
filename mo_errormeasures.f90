@@ -32,6 +32,7 @@ MODULE mo_errormeasures
   IMPLICIT NONE
 
   PUBLIC :: BIAS                         ! bias
+  PUBLIC :: LNNSE                        ! Logarithmic Nash Sutcliffe efficiency
   PUBLIC :: MAE                          ! Mean of absolute errors
   PUBLIC :: MSE                          ! Mean of squared errors
   PUBLIC :: NSE                          ! Nash Sutcliffe efficiency
@@ -103,6 +104,70 @@ MODULE mo_errormeasures
   ! ------------------------------------------------------------------
 
   !     NAME
+  !         LNNSE
+
+  !     PURPOSE
+  !         Calculates the Logarithmic Nash Sutcliffe Efficiency
+  !             LNNSE = sum((ln(y) - ln(x))**2) / sum( (ln(x) - ln(mean(x)))**2 )
+  !         where x is the observation and y is the modelled data.
+  !
+  !         If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
+  !         Note that the mask is intent inout, since values which are less or equal zero will be masked additionally.
+  !         x and y can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = LNNSE(dat, mask=mask)
+
+  !     INTENT(IN)
+  !         real(sp/dp), dimension(:)     :: x, y    1D-array with input numbers
+  !             OR
+  !         real(sp/dp), dimension(:,:)   :: x, y    2D-array with input numbers
+  !             OR
+  !         real(sp/dp), dimension(:,:,:) :: x, y    3D-array with input numbers
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         real(sp/dp) :: LNNSE         Logarithmic Nash Sutcliffe Efficiency
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         logical     :: mask(:)     1D-array of logical values with size(x/y).
+  !             OR
+  !         logical     :: mask(:,:)   2D-array of logical values with size(x/y).
+  !             OR
+  !         logical     :: mask(:,:,:) 3D-array of logical values with size(x/y).
+  !
+  !         If present, only those locations in vec corresponding to the true values in mask are used.
+  !         The mask will be updated if non-masked values are less equal zero.
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
+  !         vec2 = (/ 1., 2, 3., -999., 5., 6. /)
+  !         m   = LNNSE(vec1, vec2, mask=(vec >= 0.))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written,  Juliane Mai, May 2013
+  INTERFACE LNNSE
+     MODULE PROCEDURE LNNSE_sp_1d, LNNSE_dp_1d, LNNSE_dp_2d, LNNSE_sp_2d, LNNSE_sp_3d, LNNSE_dp_3d
+  END INTERFACE LNNSE
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
   !         MAE
 
   !     PURPOSE
@@ -149,7 +214,7 @@ MODULE mo_errormeasures
   !     EXAMPLE
   !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
   !         vec2 = (/ 1., 2, 3., -999., 5., 6. /)
-  !         m   = NSE(vec1, vec2, mask=(vec >= 0.))
+  !         m   = MAE(vec1, vec2, mask=(vec >= 0.))
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -210,7 +275,7 @@ MODULE mo_errormeasures
   !     EXAMPLE
   !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
   !         vec2 = (/ 1., 2, 3., -999., 5., 6. /)
-  !         m   = NSE(vec1, vec2, mask=(vec >= 0.))
+  !         m   = MSE(vec1, vec2, mask=(vec >= 0.))
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -229,7 +294,8 @@ MODULE mo_errormeasures
 
   !     PURPOSE
   !         Calculates the Nash Sutcliffe Efficiency
-  !             NSE = sum((y - x)**2) / sum(x - mean(x)**2)
+  !             NSE = sum((y - x)**2) / sum( (x - mean(x))**2)
+  !         where x is the observation and y is the modelled data.
   !
   !         If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
   !         x and y can be single or double precision. The result will have the same numerical precision.
@@ -455,7 +521,7 @@ MODULE mo_errormeasures
   !     EXAMPLE
   !         vec1 = (/ 1., 2, 3., -999., 5., 6. /)
   !         vec2 = (/ 1., 2, 3., -999., 5., 6. /)
-  !         m   = NSE(vec1, vec2, mask=(vec >= 0.))
+  !         m   = RMSE(vec1, vec2, mask=(vec >= 0.))
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -714,6 +780,298 @@ CONTAINS
          mask=reshape(maske,(/size(x,dim=1) * size(x,dim=2) * size(x,dim=3)/)))
     !
   END FUNCTION BIAS_dp_3d
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION LNNSE_sp_1d(x, y, mask)
+
+    USE mo_moment, ONLY: average
+
+    IMPLICIT NONE
+
+    REAL(sp), DIMENSION(:),           INTENT(IN)      :: x, y
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(INOUT)   :: mask
+    REAL(sp)                                          :: LNNSE_sp_1d
+
+    INTEGER(i4)                            :: n
+    INTEGER(i4), DIMENSION(size(shape(x))) :: shapemask
+    REAL(sp)                               :: xmean
+    REAL(sp), DIMENSION(size(x))           :: v1, v2
+    LOGICAL,  DIMENSION(size(x))           :: maske
+
+    if (present(mask)) then
+       shapemask = shape(mask)
+    else
+       shapemask =  shape(x)
+    end if
+    if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
+         stop 'LNNSE_sp_1d: shapes of inputs(x,y) or mask are not matching'
+    !
+    if (present(mask)) then
+       maske = mask
+    else
+       maske = .true.
+    endif
+
+    ! mask all negative and zero entries
+    where (x .lt. epsilon(1.0_sp) .or. y .lt. epsilon(1.0_sp))
+       maske = .false.
+    end where
+    n = count(maske)
+    if (n .LE. 1_i4) stop 'LNNSE_sp_1d: number of arguments must be at least 2'
+
+    ! mean of x
+    xmean = average(x, mask=maske)
+    !
+    v1 = merge(log(y) - log(x)    , 0.0_sp, maske)
+    v2 = merge(log(x) - log(xmean), 0.0_sp, maske)
+    !
+    LNNSE_sp_1d = 1.0_sp - dot_product(v1,v1) / dot_product(v2,v2)
+
+  END FUNCTION LNNSE_sp_1d
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION LNNSE_dp_1d(x, y, mask)
+
+    USE mo_moment, ONLY: average
+
+    IMPLICIT NONE
+
+    REAL(dp), DIMENSION(:),           INTENT(IN)      :: x, y
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(INOUT)   :: mask
+    REAL(dp)                                          :: LNNSE_dp_1d
+
+    INTEGER(i4)                            :: n
+    INTEGER(i4), DIMENSION(size(shape(x))) :: shapemask
+    REAL(dp)                               :: xmean
+    REAL(dp), DIMENSION(size(x))           :: v1, v2
+    LOGICAL,  DIMENSION(size(x))           :: maske
+
+    if (present(mask)) then
+       shapemask = shape(mask)
+    else
+       shapemask =  shape(x)
+    end if
+    if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
+         stop 'LNNSE_dp_1d: shapes of inputs(x,y) or mask are not matching'
+    !
+    if (present(mask)) then
+       maske = mask
+    else
+       maske = .true.
+    endif
+
+    ! mask all negative and zero entries
+    where (x .lt. epsilon(1.0_dp) .or. y .lt. epsilon(1.0_dp))
+       maske = .false.
+    end where
+    n = count(maske)
+    if (n .LE. 1_i4) stop 'LNNSE_dp_1d: number of arguments must be at least 2'
+
+    ! mean of x
+    xmean = average(x, mask=maske)
+    !
+    v1 = merge(log(y) - log(x)    , 0.0_dp, maske)
+    v2 = merge(log(x) - log(xmean), 0.0_dp, maske)
+    !
+    LNNSE_dp_1d = 1.0_dp - dot_product(v1,v1) / dot_product(v2,v2)
+
+  END FUNCTION LNNSE_dp_1d
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION LNNSE_sp_2d(x, y, mask)
+
+    USE mo_moment, ONLY: average
+
+    IMPLICIT NONE
+
+    REAL(sp), DIMENSION(:,:),           INTENT(IN)    :: x, y
+    LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: mask
+    REAL(sp)                                          :: LNNSE_sp_2d
+
+    INTEGER(i4)                                       :: n
+    INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
+    REAL(sp)                                          :: xmean
+    LOGICAL, DIMENSION(size(x, dim=1), size(x, dim=2)):: maske
+
+    if (present(mask)) then
+       shapemask = shape(mask)
+    else
+       shapemask =  shape(x)
+    end if
+    if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
+         stop 'LNNSE_sp_2d: shapes of inputs(x,y) or mask are not matching'
+    !
+    if (present(mask)) then
+       maske = mask
+    else
+       maske = .true.
+    endif
+    !
+    ! mask all negative and zero entries
+    where (x .lt. epsilon(1.0_sp) .or. y .lt. epsilon(1.0_sp))
+       maske = .false.
+    end where
+    n = count(maske)
+    if (n .LE. 1_i4) stop 'LNNSE_sp_2d: number of arguments must be at least 2'
+    !
+    ! mean of x
+    xmean = average(reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
+         mask=reshape(maske(:,:), (/size(x, dim=1)*size(x, dim=2)/)))
+    !
+    LNNSE_sp_2d = 1.0_sp - &
+         sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
+         sum((log(x)-log(xmean))*(log(x)-log(xmean)), mask=maske)
+    !
+  END FUNCTION LNNSE_sp_2d
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION LNNSE_dp_2d(x, y, mask)
+
+    USE mo_moment, ONLY: average
+
+    IMPLICIT NONE
+
+    REAL(dp), DIMENSION(:,:),           INTENT(IN)    :: x, y
+    LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: mask
+    REAL(dp)                                          :: LNNSE_dp_2d
+
+    INTEGER(i4)                                       :: n
+    INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
+    REAL(dp)                                          :: xmean
+    LOGICAL, DIMENSION(size(x, dim=1), size(x, dim=2)):: maske
+
+    if (present(mask)) then
+       shapemask = shape(mask)
+    else
+       shapemask =  shape(x)
+    end if
+    if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
+         stop 'LNNSE_dp_2d: shapes of inputs(x,y) or mask are not matching'
+    !
+    if (present(mask)) then
+       maske = mask
+    else
+       maske = .true.
+    endif
+    !
+    ! mask all negative and zero entries
+    where (x .lt. epsilon(1.0_dp) .or. y .lt. epsilon(1.0_dp))
+       maske = .false.
+    end where
+    n = count(maske)
+    if (n .LE. 1_i4) stop 'LNNSE_dp_2d: number of arguments must be at least 2'
+    !
+    ! mean of x
+    xmean = average(reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
+         mask=reshape(maske(:,:), (/size(x, dim=1)*size(x, dim=2)/)))
+    !
+    LNNSE_dp_2d = 1.0_dp - &
+         sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
+         sum((log(x)-log(xmean))*(log(x)-log(xmean)), mask=maske)
+    !
+  END FUNCTION LNNSE_dp_2d
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION LNNSE_sp_3d(x, y, mask)
+
+    USE mo_moment, ONLY: average
+
+    IMPLICIT NONE
+
+    REAL(sp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
+    LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(sp)                                          :: LNNSE_sp_3d
+
+    INTEGER(i4)                                       :: n
+    INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
+    REAL(sp)                                          :: xmean
+    LOGICAL,  DIMENSION(size(x, dim=1), &
+         size(x, dim=2), size(x, dim=3))    :: maske
+
+    if (present(mask)) then
+       shapemask = shape(mask)
+    else
+       shapemask =  shape(x)
+    end if
+    if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
+         stop 'LNNSE_sp_3d: shapes of inputs(x,y) or mask are not matching'
+    !
+    if (present(mask)) then
+       maske = mask
+    else
+       maske = .true.
+    endif
+    !
+    ! mask all negative and zero entries
+    where (x .lt. epsilon(1.0_sp) .or. y .lt. epsilon(1.0_sp))
+       maske = .false.
+    end where
+    n = count(maske)
+    if (n .LE. 1_i4) stop 'LNNSE_dp_2d: number of arguments must be at least 2'
+    !
+    ! mean of x
+    xmean = average(reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
+         mask=reshape(maske(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
+    !
+    LNNSE_sp_3d = 1.0_sp - &
+         sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
+         sum((log(x)-log(xmean))*(log(x)-log(xmean)), mask=maske)
+    !
+  END FUNCTION LNNSE_sp_3d
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION LNNSE_dp_3d(x, y, mask)
+
+    USE mo_moment, ONLY: average
+
+    IMPLICIT NONE
+
+    REAL(dp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
+    LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(dp)                                          :: LNNSE_dp_3d
+
+    INTEGER(i4)                                       :: n
+    INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
+    REAL(dp)                                          :: xmean
+    LOGICAL,  DIMENSION(size(x, dim=1), &
+         size(x, dim=2), size(x, dim=3))    :: maske
+
+    if (present(mask)) then
+       shapemask = shape(mask)
+    else
+       shapemask =  shape(x)
+    end if
+    if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
+         stop 'LNNSE_dp_3d: shapes of inputs(x,y) or mask are not matching'
+    !
+    if (present(mask)) then
+       maske = mask
+    else
+       maske = .true.
+    endif
+    !
+    ! mask all negative and zero entries
+    where (x .lt. epsilon(1.0_dp) .or. y .lt. epsilon(1.0_dp))
+       maske = .false.
+    end where
+    n = count(maske)
+    if (n .LE. 1_i4) stop 'LNNSE_dp_2d: number of arguments must be at least 2'
+    !
+    ! mean of x
+    xmean = average(reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
+         mask=reshape(maske(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
+    !
+    LNNSE_dp_3d = 1.0_dp - &
+         sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
+         sum((log(x)-log(xmean))*(log(x)-log(xmean)), mask=maske)
+    !
+  END FUNCTION LNNSE_dp_3d
 
   ! ------------------------------------------------------------------
 
