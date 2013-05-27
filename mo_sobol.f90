@@ -214,10 +214,13 @@ MODULE mo_sobol
   !     EXAMPLE
   !         nDims   = 3
   !         nPoints = 4
-  !         skip    = 75
-  !         call sobol_array( nDims, nPoints, skip, sobol_set_sp ) 
+  !         skip    = 5
+  !         call sobol_array( nDims, nPoints, skip, sobol_database_sp ) 
   !
-  !         ---> sobol_set_sp = 0.0000000   0.0000000   0.0000000
+  !         ---> sobol_database_sp(1,:) = 0.87500000      0.87500000      0.12500000    
+  !         ---> sobol_database_sp(2,:) = 0.62500000      0.12500000      0.37500000    
+  !         ---> sobol_database_sp(3,:) = 0.12500000      0.62500000      0.87500000    
+  !         ---> sobol_database_sp(4,:) = 0.18750000      0.31250000      0.31250000 
   !
   !         -> see also example in test directory
 
