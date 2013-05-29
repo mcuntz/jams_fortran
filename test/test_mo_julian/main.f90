@@ -89,5 +89,12 @@ PROGRAM main
   ! dec1(1) = dec1(1) + date2dec(1,1,1990,1,0,0) - date2dec(1,1,1990,0,0,0)
   ! call dec2date(dec1(1), dd, mm, yy, hh, ii, ss)
   ! write(*,*) '#04: ', dec1(1), dd, mm, yy, hh, ii, ss
+  
+  ! ! Check date2dec with John
+  ! write(*,*) '#05: ', date2dec(22,12,2005,15,00,00)
+  ! write(*,*) '#06: ', date2dec(22,12,2005,16,00,00)
+  ! write(*,*) '#07: ', date2dec(22,12,2005,17,00,00)
+  ! write(*,*) '#08: ', date2dec(22,12,2005,17,01,00)
+  ! write(*,*) '#09: ', date2dec(22,12,2005,17,00,01)
 
 END PROGRAM main
