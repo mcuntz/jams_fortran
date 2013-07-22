@@ -10,7 +10,6 @@ program sobol_index_test
   integer(i4), parameter                 :: npara = 4                       ! number of parameter
   integer(i4), parameter                 :: nsets = 400                     ! number of parametersets 
   integer(i4), parameter                 :: nx = 10                         ! number of variable values
-  real(dp),    parameter                 :: delta = 0.01_dp                 ! delta used for derivative approximation
   integer(i8)                            :: skip = 30000_i8                 ! used for generating parameter sets via sobol sequences
 
   ! Samples and Model Output
