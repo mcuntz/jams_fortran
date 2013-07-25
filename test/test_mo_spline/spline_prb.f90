@@ -62,8 +62,7 @@ program main
   call test125 ( )
   call test126 ( )
   call test127 ( )
-  !call test13 ( )
-  call test131 ( )
+  call test13 ( )
   call test14 ( )
   call test143 ( )
   call test144 ( )
@@ -2589,109 +2588,6 @@ subroutine test13 ( )
 
   return
 end subroutine test13
-subroutine test131 ( )
-
-  !*****************************************************************************80
-  !
-  !! TEST131 tests SPLINE_B.
-  !
-  !  Licensing:
-  !
-  !    This code is distributed under the GNU LGPL license.
-  !
-  !  Modified:
-  !
-  !    17 June 2006
-  !
-  !  Author:
-  !
-  !    John Burkardt
-  !
-  use mo_kind
-  use mo_spline
-  implicit none
-  integer(i4), parameter :: ndata = 11
-
-  integer(i4) i
-  integer(i4) j
-  integer(i4) jhi
-  character mark
-  integer(i4), parameter :: nsample = 4
-  real(dp), parameter :: pi = 3.141592653589793D+00
-  real(dp) tdata(ndata)
-  real(dp) thi
-  real(dp) tlo
-  real(dp) tval(nsample+1)
-  real(dp) ydata(ndata)
-  real(dp) yval(nsample+1)
-
-  write(30, '(a)' ) ' '
-  write(30, '(a)' ) 'TEST13'
-  write(30, '(a)' ) '  SPLINE_B_VAL evaluates the B spline.'
-
-  do i = 1, ndata
-     tdata(i) = real ( i - 1, kind=dp )
-     ydata(i) = sin ( 2.0D+00 * pi * tdata(i) / real ( ndata - 1, kind=dp ) )
-  end do
-
-  write(30, '(a)'    ) ' '
-  write(30, '(a)'    ) '  The data to be interpolated:'
-  write(30, '(a)'    ) ' '
-  write(30, '(a,i8)' ) '  Number of data values = ', ndata
-  write(30, '(a)'    ) ' '
-  write(30, '(a)'    ) '       T             Y'
-  write(30, '(a)'    ) ' '
-
-  do i = 1, ndata
-     write(30, '(2x,2g14.6)' ) tdata(i), ydata(i)
-  end do
-
-  write(30, '(a)' ) ' '
-  write(30, '(a)' ) '       T           Spline(T)'
-  write(30, '(a)' ) ' '
-
-  do i = 0, ndata
-
-     if ( i == 0 ) then
-        tlo = tdata(1) - 0.5D+00 * ( tdata(2) - tdata(1) )
-        thi = tdata(1)
-     else if ( i < ndata ) then
-        tlo = tdata(i)
-        thi = tdata(i+1)
-     else if ( ndata <= i ) then
-        tlo = tdata(ndata)
-        thi = tdata(ndata) + 0.5D+00 * ( tdata(ndata) - tdata(ndata-1) )
-     end if
-
-     if ( i < ndata ) then
-        jhi = nsample - 1
-     else
-        jhi = nsample
-     end if
-
-     do j = 0, jhi
-        tval(j+1) = ( real ( nsample - j, kind=dp ) * tlo   &
-             + real (           j, kind=dp ) * thi ) &
-             / real ( nsample,     kind=dp )
-     end do
-     yval(1:jhi+1) = spline_b(tval(1:jhi+1), tdata, ydata)
-
-     do j = 0, jhi
-
-        if ( 0 < i .and. j == 0 ) then
-           mark = '*'
-        else
-           mark = ' '
-        end if
-
-        write(30, '(2x,a1,2g14.6)' ) mark, tval(j+1), yval(j+1)
-
-     end do
-
-  end do
-
-  return
-end subroutine test131
 subroutine test14 ( )
 
   !*****************************************************************************80

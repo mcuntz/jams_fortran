@@ -1,7 +1,7 @@
 PROGRAM main
   
   USE mo_kind,     ONLY: dp, sp
-  USE mo_interpol, ONLY: interpol
+  USE mo_interpol, ONLY: interpol, spline_b
   
   IMPLICIT NONE
   
@@ -22,8 +22,12 @@ PROGRAM main
   mask(:) = .true.
   dyin(5) = -9.
   mask(5) = .false.
+
   dyout = interpol(pack(dyin,mask), pack(dx,mask), dx)
   if (any(abs(dsoll-dyout) > 0._dp)) isgood = .false.
+
+  dyout = spline_b(pack(dyin,mask), pack(dx,mask), dx)
+  if (abs(dsoll(5)-dyout(5)) > 0._dp) isgood = .false.
 
   if (isgood) then
      write(*,*) 'mo_interpol double precision o.k.'
@@ -39,8 +43,12 @@ PROGRAM main
   mask(:) = .true.
   syin(5) = -9.
   mask(5) = .false.
+
   syout = interpol(pack(syin,mask), pack(sx,mask), sx)
   if (any(abs(ssoll-syout) > 0._sp)) isgood = .false.
+
+  syout = spline_b(pack(syin,mask), pack(sx,mask), sx)
+  if (abs(ssoll(5)-syout(5)) > 0._sp) isgood = .false.
 
   if (isgood) then
      write(*,*) 'mo_interpol single precision o.k.'
