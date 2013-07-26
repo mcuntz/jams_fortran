@@ -785,6 +785,7 @@ CONTAINS
     ! IFFT
     call realft(corrout,-1,cdat1)
     corr_dp(1:n) = corrout(1:n)
+    if (size(corr_dp) > n) corr_dp(n+1:) = 0.0_dp
 
     deallocate(dat1)
     deallocate(dat2)
@@ -893,6 +894,7 @@ CONTAINS
     ! IFFT
     call realft(corrout,-1,cdat1)
     corr_sp(1:n) = corrout(1:n)
+    if (size(corr_sp) > n) corr_sp(n+1:) = 0.0_sp
 
     deallocate(dat1)
     deallocate(dat2)
