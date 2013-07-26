@@ -39,7 +39,7 @@ program test
   ! -----------------------------------------------
   ! Testing double precision sobol vector
   ! -----------------------------------------------
-  dims_i8 = 3_i4
+  dims_i8 = 3_i8
   allocate(sobol_set_dp(dims_i8))
   seed_i8 = 0_i8
   write(*,*) ''

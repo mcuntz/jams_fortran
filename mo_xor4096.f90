@@ -470,6 +470,7 @@ CONTAINS
     end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
+       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -598,6 +599,7 @@ CONTAINS
 
     Do j = 1, m
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
+          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else
@@ -701,6 +703,7 @@ CONTAINS
     end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
+       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -838,6 +841,7 @@ CONTAINS
 
     Do j = 1,m !Loop over every stream
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
+          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else
@@ -939,6 +943,7 @@ CONTAINS
     end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
+       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -1066,6 +1071,7 @@ CONTAINS
 
     Do j=1,m
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
+          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else
@@ -1167,6 +1173,7 @@ CONTAINS
     end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
+       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -1303,6 +1310,7 @@ CONTAINS
 
     Do j=1,m
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
+          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else
@@ -1414,6 +1422,7 @@ CONTAINS
     end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
+       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -1619,6 +1628,7 @@ CONTAINS
 
     Do j=1,m !Loop over every stream
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
+          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else
@@ -1782,6 +1792,7 @@ CONTAINS
     end if
 
     If ((i .lt. 0_i8) .or. (seed .ne. 0_i8)) then     ! Initialization necessary
+       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -1983,6 +1994,7 @@ CONTAINS
 
     Do j=1,m !Loop over every stream
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
+          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else

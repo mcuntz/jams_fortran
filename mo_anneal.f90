@@ -556,8 +556,6 @@ CONTAINS
     endif
 
     idummy = nITERmax_in/LEN_IN+1_i4
-    ! to allow storage of the last objective function value in case nITERmax is no multiple of LEN
-    if (Mod(nITERmax_in,LEN_IN) .ne. 0_i4) idummy=idummy+1_i4
     allocate(history_out(idummy,2))
 
     if (present(nST)) then
@@ -995,7 +993,7 @@ CONTAINS
        if ( (iTotalCounter > nITERmax_in) .and. & !(ac_ratio > acc_in) .and. &
             (sum(iPos_iNeg_history(:,:)) .ge. 1_i4 )) then
 
-          ! store so far achieved history
+          ! store achieved history so far
           allocate(history_out_tmp(size(history_out,1),size(history_out,2)))
           history_out_tmp = history_out
           deallocate(history_out)
@@ -1007,8 +1005,6 @@ CONTAINS
 
           ! increase lenght of history vecor
           idummy = nITERmax_in/LEN_IN+1_i4
-          ! to allow storage of the last objective function value in case nITERmax is no multiple of LEN
-          if (Mod(nITERmax_in,LEN_IN) .ne. 0_i4) idummy=idummy+1_i4
           allocate(history_out(idummy,2))
 
           do j=1,size(history_out_tmp,1)
@@ -1024,7 +1020,6 @@ CONTAINS
        end if
 
     end do loopTest
-
 
     ! calculate cost function again (only for check and return values)
     parabest = gamma(:)%best

@@ -78,6 +78,7 @@ program xor4096_apps
 
   ! initialize a stream and save its state
   seed3 = (/ 123456_i8, 154725_i8 /)
+
   call xor4096g(seed3, rn_mvn(1,:), save_state=save_state3)
   seed3 = 0_i8
   ! now ready for usage
@@ -86,7 +87,6 @@ program xor4096_apps
   cov(1,:) = (/ 1.0_dp, 0.25_dp /)
   cov(2,:) = (/ 0.25_dp, 1.0_dp /)
   lcho = cov
-!MC  call DPOTRF('L', size(lcho,1), lcho, size(lcho,1), 0_i4) ! changes lower triangular (incl. main diagonal) of Lcho
   call DPOTRF('L', size(lcho,2), lcho, size(lcho,1), info) ! changes lower triangular (incl. main diagonal) of Lcho
   ! DONT forget to set upper triangular matrix to zero
   lcho(1,2) = 0._dp

@@ -84,6 +84,8 @@ MODULE mo_sobol
   !
   !>        \details Generates a new quasirandom Sobol vector with each call. \n
   !>                 The original code was by J. Burkardt and adapted to the CHS FORTRAN library standard.
+  !>
+  !                  sobol has to be initialised with seed=0 once.
   !
   !     INTENT(IN)
   !>        \param[in] "integer(i4/i8) :: dim_num"        Dimension of the Sobol vector \n
@@ -2392,6 +2394,9 @@ CONTAINS
     integer(i4)                  :: seed
     integer(i4)                  :: skip
 
+    seed = 0
+    call i4_sobol( m, seed, r(1,1:m) ) ! initialise sobol routine
+
     do j = 1, n
        seed = skip + j - 1
        call i4_sobol ( m, seed, r(j,1:m) )
@@ -2407,15 +2412,21 @@ CONTAINS
     integer(i4)                  :: m
     integer(i4)                  :: n
 
-    integer(i4)                  :: j
+    integer(i8)                  :: j
     real(dp), dimension ( n, m ) :: r
     integer(i8)                  :: seed
     integer(i4)                  :: skip
+    integer(i8)                  :: m8, skip8
 
-    seed = skip
+    m8    = int(m,i8)
+    skip8 = int(skip,i8)
 
-    do j = 1, n
-       call i8_sobol ( int(m,i8), seed, r(j,1:m) )
+    seed = 0
+    call i8_sobol( m8, seed, r(1,1:m) ) ! initialise sobol routine
+
+    do j = 1, int(n,i8)
+       seed = skip8 + j - 1_i8
+       call i8_sobol ( m8, seed, r(j,1:m) )
     end do
 
     return

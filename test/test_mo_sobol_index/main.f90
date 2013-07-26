@@ -29,6 +29,7 @@ program sobol_index_test
   !                                                                         !    based on ya, yb, and yc
   real(dp),    dimension(npara,nx)       :: sti                             ! Sobol index (total effect) per time point and parameter
   !                                                                         !    based on ya, yb, and yc
+  integer(i8) :: seed
 
   ! Dummy variables
   integer(i4)                            :: set, para, i
@@ -46,6 +47,8 @@ program sobol_index_test
   ! ------------------------------------------------------------------
   ! Generating model outputs for parameter sets A, B, and C(i)
   ! ------------------------------------------------------------------
+  seed = 0_i8
+  call sobol(int(2*npara,i8), seed, sample_sobol)
   do set = 1,nsets
      ! sobol sequence
      call sobol(int(2*npara,i8), skip, sample_sobol)

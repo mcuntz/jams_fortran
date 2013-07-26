@@ -330,7 +330,7 @@ CONTAINS
     ! (1) Query for optimal workspace: lwork=-1
     allocate(work(1))
     lwork = -1_i4
-    call dsyev( 'Vectors', 'Lower', count(maskpara), my_evectors, count(maskpara), my_evalues, work, lwork, info )
+    call dsyev( 'V', 'L', count(maskpara), my_evectors, count(maskpara), my_evalues, work, lwork, info )
     lwork =int( work(1) ) 
     deallocate(work)
 
@@ -338,7 +338,7 @@ CONTAINS
     allocate(work(lwork))
 
     ! (3) calculate eigenvalues
-    call dsyev( 'Vectors', 'Lower', count(maskpara), my_evectors, count(maskpara), my_evalues, work, lwork, info )
+    call dsyev( 'V', 'L', count(maskpara), my_evectors, count(maskpara), my_evalues, work, lwork, info )
 
     ! (4) Info statement
     if ( info .gt. 0_i4 ) then

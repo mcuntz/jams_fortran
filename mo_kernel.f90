@@ -1045,7 +1045,7 @@ CONTAINS
     ! local variables
     integer(i4)              :: nin
     real(dp)                 :: nn
-    real(dp)                 :: h, hmin, fmin
+    real(dp)                 :: h, hmin, fmin ! fmin set but never referenced
     real(dp), dimension(2)   :: bounds
     real(dp), parameter      :: pre_h = 1.05922384104881_dp
     real(dp), dimension(:), allocatable :: x
@@ -1095,7 +1095,7 @@ CONTAINS
     ! local variables
     integer(i4)              :: nin
     real(sp)                 :: nn
-    real(sp)                 :: h, hmin, fmin
+    real(sp)                 :: h, hmin, fmin ! fmin set but never referenced
     real(sp), dimension(2)   :: bounds
     real(sp), parameter      :: pre_h = 1.05922384104881_sp
     real(sp), dimension(:), allocatable :: x
@@ -1786,6 +1786,7 @@ CONTAINS
     real(dp)                       :: sum_w
     logical,  dimension(size(z,1)) :: mask1d
     real(dp)                       :: large_z
+    real(dp), dimension(size(z,1)) :: ztmp
 
     if (present(mask)) then
        mask1d = mask
@@ -1794,9 +1795,14 @@ CONTAINS
     end if
 
     large_z = sqrt(-2.0_dp*log(tiny(1.0_dp)*sqrt(twopi_dp)))
-    where (mask1d .and. (abs(z) .lt. large_z))
+    where (mask1d) ! temporary store z in w in case of mask
+       ztmp = z
+    elsewhere
+       ztmp = 0.0_dp
+    end where
+    where (mask1d .and. (abs(ztmp) .lt. large_z))
        w = (1.0_dp/sqrt(twopi_dp)) * exp(-0.5_dp*z*z)
-    elsewhere (mask1d)
+    elsewhere
        w = 0.0_dp
     end where
     sum_w = sum(w, mask=mask1d)
@@ -1830,6 +1836,7 @@ CONTAINS
     real(sp)                       :: sum_w
     logical,  dimension(size(z,1)) :: mask1d
     real(sp)                       :: large_z
+    real(sp), dimension(size(z,1)) :: ztmp
 
     if (present(mask)) then
        mask1d = mask
@@ -1838,9 +1845,14 @@ CONTAINS
     end if
 
     large_z = sqrt(-2.0_sp*log(tiny(1.0_sp)*sqrt(twopi_sp)))
-    where (mask1d .and. (abs(z) .lt. large_z))
+    where (mask1d) ! temporary store z in w in case of mask
+       ztmp = z
+    elsewhere
+       ztmp = 0.0_sp
+    end where
+    where (mask1d .and. (abs(ztmp) .lt. large_z))
        w = (1.0_sp/sqrt(twopi_sp)) * exp(-0.5_sp*z*z)
-    elsewhere (mask1d)
+    elsewhere
        w = 0.0_sp
     end where
     sum_w = sum(w, mask=mask1d)
@@ -1876,6 +1888,7 @@ CONTAINS
     logical,  dimension(size(z,1))            :: mask1d
     logical,  dimension(size(z,1), size(z,2)) :: mask2d
     real(dp)                                  :: large_z
+    real(dp), dimension(size(z,1), size(z,2)) :: ztmp
 
     if (present(mask)) then
        mask1d = mask
@@ -1886,12 +1899,17 @@ CONTAINS
     end if
 
     large_z = sqrt(-2.0_dp*log(tiny(1.0_dp)*sqrt(twopi_dp)))
-    where (mask2d .and. (abs(z) .lt. large_z))
+    where (mask2d) ! temporary store z in kerf in case of mask
+       ztmp = z
+    elsewhere
+       ztmp = 0.0_dp
+    end where
+    where (mask2d .and. (abs(ztmp) .lt. large_z))
        kerf = (1.0_dp/sqrt(twopi_dp)) * exp(-0.5_dp*z*z)
-    elsewhere (mask2d)
+    elsewhere
        kerf = 0.0_dp
     end where
-    w    = product(kerf, dim=2, mask=mask2d)
+    w     = product(kerf, dim=2, mask=mask2d)
     sum_w = sum(w, mask=mask1d)
 
     if (present(valid)) valid = .true.
@@ -1925,6 +1943,7 @@ CONTAINS
     logical,  dimension(size(z,1))            :: mask1d
     logical,  dimension(size(z,1), size(z,2)) :: mask2d
     real(sp)                                  :: large_z
+    real(sp), dimension(size(z,1), size(z,2)) :: ztmp
 
     if (present(mask)) then
        mask1d = mask
@@ -1935,12 +1954,17 @@ CONTAINS
     end if
 
     large_z = sqrt(-2.0_sp*log(tiny(1.0_sp)*sqrt(twopi_sp)))
-    where (mask2d .and. (abs(z) .lt. large_z))
+    where (mask2d) ! temporary store z in kerf in case of mask
+       ztmp = z
+    elsewhere
+       ztmp = 0.0_sp
+    end where
+    where (mask2d .and. (abs(ztmp) .lt. large_z))
        kerf = (1.0_sp/sqrt(twopi_sp)) * exp(-0.5_sp*z*z)
-    elsewhere (mask2d)
+    elsewhere
        kerf = 0.0_sp
     end where
-    w    = product(kerf, dim=2, mask=mask2d)
+    w     = product(kerf, dim=2, mask=mask2d)
     sum_w = sum(w, mask=mask1d)
 
     if (present(valid)) valid = .true.
@@ -1986,6 +2010,7 @@ CONTAINS
     mask  = .true.
     do ii=1, nn
        mask(ii) = .false.
+       zz(:,:) = 0.0_dp
        forall(kk=1:nn, mask(kk)) zz(kk,:) = (global_x_dp(kk,:) - global_x_dp(ii,:)) / h(:)
        out(ii) = nadaraya_watson(zz, y=global_y_dp, mask=mask, valid=valid_tmp)
        valid = valid .and. valid_tmp

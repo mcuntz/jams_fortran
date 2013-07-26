@@ -465,6 +465,11 @@ CONTAINS
     allocate(criter(kstop+1))  
     allocate(xname(nopt))
     allocate(history_tmp(maxn))
+    if (maxit) then
+       criter(:) = -huge(1.0_dp)
+    else
+       criter(:) = huge(1.0_dp)
+    endif
 
     if (iprint .lt. 2) then
        write (*,*) ' enter the sceua subroutine --- '   

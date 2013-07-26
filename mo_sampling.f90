@@ -714,6 +714,8 @@ contains
     if ( allocated(save_the_setup_g) ) deallocate(save_the_setup_g)
     if ( Nunif .ne. 0_i4 )  allocate( save_the_setup_u(Nunif, n_save_state) )
     if ( Ngauss .ne. 0_i4 ) allocate( save_the_setup_g(Ngauss, n_save_state) )
+    save_the_setup_u = 0_i4
+    save_the_setup_g = 0_i4
 
     ! setup xor4096 - xor4096g
     if ( present(seed) ) then

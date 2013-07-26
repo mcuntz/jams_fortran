@@ -25,7 +25,8 @@ program pi_index_test
   real(dp),    dimension(npara)          :: pi                           ! Parameter importance index 
   real(dp),    dimension(:), allocatable :: bi                           ! B index
   integer(i4), dimension(:), allocatable :: counter_pi                   ! number of valid entries in ith column of matrix S 
-
+  integer(i8)                            :: seed                         ! seed sobol sequence
+ 
   ! Dummy variables
   integer(i4)                            :: set, para, i
   logical                                :: isgood = .true.
@@ -42,6 +43,8 @@ program pi_index_test
   ! ------------------------------------------------------------------
   ! Generating sensitivity matrix S using Sobol sequences
   ! ------------------------------------------------------------------
+  seed = 0
+  call sobol(int(npara,i8), seed, sample)
   do set = 1,nsets
      ! sobol sequence
      call sobol(int(npara,i8), skip, sample)
