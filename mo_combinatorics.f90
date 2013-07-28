@@ -1509,7 +1509,7 @@ CONTAINS
     INTEGER(i8), DIMENSION(n_save_state), OPTIONAL, INTENT(INOUT) :: save_state
     INTEGER(i8), DIMENSION(n)                                     :: random_index_permut_i8
 
-    INTEGER(i4) :: i
+    INTEGER(i8) :: i
 
     forall(i=1:n) random_index_permut_i8(i) = i
     if (present(save_state)) then

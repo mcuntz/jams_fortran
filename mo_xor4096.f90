@@ -351,7 +351,7 @@ module mo_xor4096
   PRIVATE
 
   !> Dimension of vector saving the state of a stream
-  integer(i4), parameter :: n_save_state=132_i4
+  integer(i4), parameter :: n_save_state = 132_i4
 
   ! ------------------------------------------------------------------
 
@@ -470,7 +470,6 @@ CONTAINS
     end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
-       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -526,6 +525,7 @@ CONTAINS
        save_state(1:r)   = x(0:r-1)
        save_state(r+1)   = i
        save_state(r+2)   = w
+       if ((r+3) <= n_save_state) save_state(r+3:n_save_state) = 0
     end if
 
   end subroutine xor4096s_0d
@@ -599,7 +599,6 @@ CONTAINS
 
     Do j = 1, m
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
-          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else
@@ -659,6 +658,7 @@ CONTAINS
        save_state(:,1:r)   = x(:,0:r-1)
        save_state(:,r+1)   = i(:)
        save_state(:,r+2)   = w(:)
+       if ((r+3) <= n_save_state) save_state(:,r+3:n_save_state) = 0
     end if
 
   end subroutine xor4096s_1d
@@ -703,7 +703,6 @@ CONTAINS
     end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
-       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -763,6 +762,7 @@ CONTAINS
        save_state(1:r)   = x(0:r-1)
        save_state(r+1)   = i
        save_state(r+2)   = w
+       if ((r+3) <= n_save_state) save_state(r+3:n_save_state) = 0
     end if
 
   end subroutine xor4096f_0d
@@ -841,7 +841,6 @@ CONTAINS
 
     Do j = 1,m !Loop over every stream
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
-          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else
@@ -904,6 +903,7 @@ CONTAINS
        save_state(:,1:r)   = x(:,0:r-1)
        save_state(:,r+1)   = i(:)
        save_state(:,r+2)   = w(:)
+       if ((r+3) <= n_save_state) save_state(:,r+3:n_save_state) = 0
     end if
 
   end subroutine xor4096f_1d
@@ -943,7 +943,6 @@ CONTAINS
     end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
-       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -997,6 +996,7 @@ CONTAINS
        save_state(1:r)   = x(0:r-1)
        save_state(r+1)   = i
        save_state(r+2)   = w
+       if ((r+3) <= n_save_state) save_state(r+3:n_save_state) = 0
     end if
 
   end subroutine xor4096l_0d
@@ -1071,7 +1071,6 @@ CONTAINS
 
     Do j=1,m
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
-          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else
@@ -1128,6 +1127,7 @@ CONTAINS
        save_state(:,1:r)   = x(:,0:r-1)
        save_state(:,r+1)   = i(:)
        save_state(:,r+2)   = w(:)
+       if ((r+3) <= n_save_state) save_state(:,r+3:n_save_state) = 0
     end if
 
   end subroutine xor4096l_1d
@@ -1173,7 +1173,6 @@ CONTAINS
     end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
-       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -1231,6 +1230,7 @@ CONTAINS
        save_state(1:r)   = x(0:r-1)
        save_state(r+1)   = i
        save_state(r+2)   = w
+       if ((r+3) <= n_save_state) save_state(r+3:n_save_state) = 0
     end if
 
   end subroutine xor4096d_0d
@@ -1310,7 +1310,6 @@ CONTAINS
 
     Do j=1,m
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
-          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else
@@ -1371,6 +1370,7 @@ CONTAINS
        save_state(:,1:r)   = x(:,0:r-1)
        save_state(:,r+1)   = i(:)
        save_state(:,r+2)   = w(:)
+       if ((r+3) <= n_save_state) save_state(:,r+3:n_save_state) = 0
     end if
 
   end subroutine xor4096d_1d
@@ -1422,7 +1422,6 @@ CONTAINS
     end if
 
     If ((i .lt. 0) .or. (seed .ne. 0)) then     ! Initialization necessary
-       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -1527,6 +1526,7 @@ CONTAINS
        save_state(r+2) = w
        save_state(r+3) = flag
        save_state(r+4) = transfer(y2, 1_i4)
+       if ((r+5) <= n_save_state) save_state(r+5:n_save_state) = 0
     end if
 
   end subroutine xor4096gf_0d
@@ -1628,7 +1628,6 @@ CONTAINS
 
     Do j=1,m !Loop over every stream
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
-          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else
@@ -1739,6 +1738,7 @@ CONTAINS
        do j=1,m
           save_state(j,r+4) = transfer(y2(j), 1_i4)
        end do
+       if ((r+5) <= n_save_state) save_state(:,r+5:n_save_state) = 0
     end if
 
   end subroutine xor4096gf_1d
@@ -1792,7 +1792,6 @@ CONTAINS
     end if
 
     If ((i .lt. 0_i8) .or. (seed .ne. 0_i8)) then     ! Initialization necessary
-       save_state = 0
        If (seed .ne. 0) then                   ! v must be nonzero
           v = seed
        else
@@ -1894,6 +1893,7 @@ CONTAINS
        save_state(r+2) = w
        save_state(r+3) = flag
        save_state(r+4) = transfer(y2, 1_i8)
+       if ((r+5) <= n_save_state) save_state(r+5:n_save_state) = 0
     end if
 
 
@@ -1994,7 +1994,6 @@ CONTAINS
 
     Do j=1,m !Loop over every stream
        If ((i(j) .lt. 0) .or. (seed(j) .ne. 0)) then     ! Initialization necessary
-          save_state(j,:) = 0
           If (seed(j) .ne. 0) then                   ! v must be nonzero
              v(j) = seed(j)
           else
@@ -2104,6 +2103,7 @@ CONTAINS
        do j=1,m
           save_state(j,r+4) = transfer(y2(j), 1_i8)
        end do
+       if ((r+5) <= n_save_state) save_state(:,r+5:n_save_state) = 0
     end if
 
   end subroutine xor4096gd_1d
