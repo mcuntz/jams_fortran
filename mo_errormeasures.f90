@@ -161,6 +161,7 @@ MODULE mo_errormeasures
 
   !     HISTORY
   !         Written,  Juliane Mai, May 2013
+  !         updated,  Rohin Kumar, May 2013  ! for mean of logQ
   INTERFACE LNNSE
      MODULE PROCEDURE LNNSE_sp_1d, LNNSE_dp_1d, LNNSE_dp_2d, LNNSE_sp_2d, LNNSE_sp_3d, LNNSE_dp_3d
   END INTERFACE LNNSE
@@ -821,10 +822,10 @@ CONTAINS
     if (n .LE. 1_i4) stop 'LNNSE_sp_1d: number of arguments must be at least 2'
 
     ! mean of x
-    xmean = average(x, mask=maske)
+    xmean = average(log(x), mask=maske)
     !
-    v1 = merge(log(y) - log(x)    , 0.0_sp, maske)
-    v2 = merge(log(x) - log(xmean), 0.0_sp, maske)
+    v1 = merge(log(y) - log(x), 0.0_sp, maske)
+    v2 = merge(log(x) - xmean,  0.0_sp, maske)
     !
     LNNSE_sp_1d = 1.0_sp - dot_product(v1,v1) / dot_product(v2,v2)
 
@@ -870,10 +871,10 @@ CONTAINS
     if (n .LE. 1_i4) stop 'LNNSE_dp_1d: number of arguments must be at least 2'
 
     ! mean of x
-    xmean = average(x, mask=maske)
+    xmean = average(log(x), mask=maske)
     !
-    v1 = merge(log(y) - log(x)    , 0.0_dp, maske)
-    v2 = merge(log(x) - log(xmean), 0.0_dp, maske)
+    v1 = merge(log(y) - log(x), 0.0_dp, maske)
+    v2 = merge(log(x) -  xmean, 0.0_dp, maske)
     !
     LNNSE_dp_1d = 1.0_dp - dot_product(v1,v1) / dot_product(v2,v2)
 
@@ -918,12 +919,12 @@ CONTAINS
     if (n .LE. 1_i4) stop 'LNNSE_sp_2d: number of arguments must be at least 2'
     !
     ! mean of x
-    xmean = average(reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
-         mask=reshape(maske(:,:), (/size(x, dim=1)*size(x, dim=2)/)))
+    xmean = average(reshape(log(x(:,:)), (/size(x, dim=1)*size(x, dim=2)/)), &
+               mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/)))
     !
     LNNSE_sp_2d = 1.0_sp - &
          sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
-         sum((log(x)-log(xmean))*(log(x)-log(xmean)), mask=maske)
+         sum((log(x)- xmean)*(log(x)- xmean), mask=maske)
     !
   END FUNCTION LNNSE_sp_2d
 
@@ -966,12 +967,12 @@ CONTAINS
     if (n .LE. 1_i4) stop 'LNNSE_dp_2d: number of arguments must be at least 2'
     !
     ! mean of x
-    xmean = average(reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
-         mask=reshape(maske(:,:), (/size(x, dim=1)*size(x, dim=2)/)))
+    xmean = average(reshape( log(x(:,:)), (/size(x, dim=1)*size(x, dim=2)/)), &
+                 mask=reshape(maske(:,:), (/size(x, dim=1)*size(x, dim=2)/)))
     !
     LNNSE_dp_2d = 1.0_dp - &
          sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
-         sum((log(x)-log(xmean))*(log(x)-log(xmean)), mask=maske)
+         sum((log(x)-xmean )*(log(x)- xmean), mask=maske)
     !
   END FUNCTION LNNSE_dp_2d
 
@@ -1015,12 +1016,12 @@ CONTAINS
     if (n .LE. 1_i4) stop 'LNNSE_dp_2d: number of arguments must be at least 2'
     !
     ! mean of x
-    xmean = average(reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
-         mask=reshape(maske(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
+    xmean = average(reshape(log(x(:,:,:)), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
+                mask=reshape(maske(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
     !
     LNNSE_sp_3d = 1.0_sp - &
          sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
-         sum((log(x)-log(xmean))*(log(x)-log(xmean)), mask=maske)
+         sum((log(x)-xmean )*(log(x)-xmean ), mask=maske)
     !
   END FUNCTION LNNSE_sp_3d
 
@@ -1064,12 +1065,12 @@ CONTAINS
     if (n .LE. 1_i4) stop 'LNNSE_dp_2d: number of arguments must be at least 2'
     !
     ! mean of x
-    xmean = average(reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
+    xmean = average(reshape(log(x(:,:,:)), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
          mask=reshape(maske(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
     !
     LNNSE_dp_3d = 1.0_dp - &
          sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
-         sum((log(x)-log(xmean))*(log(x)-log(xmean)), mask=maske)
+         sum((log(x)-xmean )*(log(x)- xmean), mask=maske)
     !
   END FUNCTION LNNSE_dp_3d
 
