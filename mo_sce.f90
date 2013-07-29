@@ -664,7 +664,7 @@ CONTAINS
        ithread = 1
        !$OMP parallel default(shared) &
        !$OMP private(igs, loop, ithread, k, k1, k2, j, lpos_ok, lpos, rand, cx, cf, lcs, s, sf) &
-       !$OMP private(icall_merk, iicall, ihistory_tmp) copyin(cx, cf, lcs, s, sf, ihistory_tmp)
+       !$OMP private(icall_merk, iicall, ihistory_tmp)
        allocate(cx(npg,nopt)) 
        allocate(cf(npg))
        allocate(lcs(nps))
