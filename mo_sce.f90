@@ -33,37 +33,6 @@ MODULE mo_sce
 
   ! Copyright 2011-2012 Matthias Cuntz, Juliane Mai
 
-
-  ! Note on Numerical Recipes License
-  ! ---------------------------------
-  ! Be aware that some code is under the Numerical Recipes License 3rd
-  ! edition <http://www.nr.com/aboutNR3license.html>
-
-  ! The Numerical Recipes Personal Single-User License lets you personally
-  ! use Numerical Recipes code ("the code") on any number of computers,
-  ! but only one computer at a time. You are not permitted to allow anyone
-  ! else to access or use the code. You may, under this license, transfer
-  ! precompiled, executable applications incorporating the code to other,
-  ! unlicensed, persons, providing that (i) the application is
-  ! noncommercial (i.e., does not involve the selling or licensing of the
-  ! application for a fee), and (ii) the application was first developed,
-  ! compiled, and successfully run by you, and (iii) the code is bound
-  ! into the application in such a manner that it cannot be accessed as
-  ! individual routines and cannot practicably be unbound and used in
-  ! other programs. That is, under this license, your application user
-  ! must not be able to use Numerical Recipes code as part of a program
-  ! library or "mix and match" workbench.
-
-  ! Businesses and organizations that purchase the disk or code download,
-  ! and that thus acquire one or more Numerical Recipes Personal
-  ! Single-User Licenses, may permanently assign those licenses, in the
-  ! number acquired, to individual employees. Such an assignment must be
-  ! made before the code is first used and, once made, it is irrevocable
-  ! and can not be transferred.
-
-  ! If you do not hold a Numerical Recipes License, this code is only for
-  ! informational and educational purposes but cannot be used.
-
   IMPLICIT NONE
 
   PUBLIC :: sce        ! sce optimization
@@ -177,6 +146,8 @@ MODULE mo_sce
   !
   !     RESTRICTIONS
   !>       \note No mask of parameters implemented yet.
+  !>             SCE is OpenMP enabled on the loop over the complexes.
+  !>             OMP_NUM_THREADS > 1 does not give reproducible results even when seeded!
   !
   !     EXAMPLE
   !         use mo_opt_functions, only: griewank
@@ -224,6 +195,7 @@ CONTAINS
     use mo_kind,    only: i4, i8, dp
     use mo_sort,    only: sort
     use mo_xor4096, only: get_timeseed, n_save_state, xor4096, xor4096g
+    !$ use omp_lib, only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
 
     implicit none
     ! 
@@ -300,6 +272,7 @@ CONTAINS
     real(dp)                                         :: alpha       ! parameter for reflection  of points in complex
     real(dp)                                         :: beta        ! parameter for contraction of points in complex
     real(dp), dimension(:), allocatable              :: history_tmp ! history of best function values after each iteration
+    real(dp), dimension(:), allocatable              :: ihistory_tmp ! local history for OpenMP
     real(dp)                                         :: bestf_tmp   ! function value of bestx(.)
     !
     ! local variables
@@ -308,7 +281,7 @@ CONTAINS
     real(dp)                                         :: fpini       ! function value at initial point
     real(dp),    dimension(:,:), allocatable         :: x           ! coordinates of points in the population 
     real(dp),    dimension(:),   allocatable         :: xf          ! function values of x                    
-    real(dp),    dimension(:),   allocatable         :: xx          ! coordinates of a single point in x
+    real(dp),    dimension(size(pini,1))             :: xx          ! coordinates of a single point in x
     real(dp),    dimension(:,:), allocatable         :: cx          ! coordinates of points in a complex      
     real(dp),    dimension(:),   allocatable         :: cf          ! function values of cx
     real(dp),    dimension(:,:), allocatable         :: s           ! coordinates of points in the current sub-complex !simplex
@@ -336,6 +309,7 @@ CONTAINS
     !                                                               ! probability distribution
     integer(i4)                                      :: npt1
     integer(i8)                                      :: icall       ! counter for function evaluations
+    integer(i8)                                      :: icall_merk, iicall ! local icall for OpenMP
     integer(i4)                                      :: igs, ipr
     integer(i4)                                      :: k1, k2
     real(dp)                                         :: denomi      ! for checking improvement of last steps
@@ -346,9 +320,30 @@ CONTAINS
     character(4), dimension(:),  allocatable         :: xname       ! only for printing of parameter sets
     ! for random numbers
     real(dp)                                         :: rand        ! random number
-    integer(i8)                                      :: iseed       ! initial random seed  
-    integer(i8), dimension(n_save_state)             :: save_state_unif    ! save state of uniform stream
-    integer(i8), dimension(n_save_state)             :: save_state_gauss   ! save state of gaussian stream
+    integer(i8), dimension(:),   allocatable         :: iseed       ! initial random seed  
+    integer(i8), dimension(:,:), allocatable         :: save_state_unif    ! save state of uniform stream
+    integer(i8), dimension(:,:), allocatable         :: save_state_gauss   ! save state of gaussian stream
+    real(dp),    dimension(:),   allocatable         :: rand_tmp    ! random number
+    integer(i4)                                      :: ithread, n_threads   ! OMP or not
+    integer(i8), dimension(n_save_state)             :: itmp
+    real(dp),    dimension(:,:), allocatable         :: xtmp          ! tmp array for complex reduction
+    real(dp),    dimension(:),   allocatable         :: ftmp          ! %
+
+    ! OpenMP or not
+    n_threads = 1
+    !$  write(*,*) '--------------------------------------------------'
+    !$OMP parallel
+    !$    n_threads = OMP_GET_NUM_THREADS()
+    !$OMP end parallel
+    !$  write(*,*) '   SCE is parellel with ',n_threads,' threads'
+    !$  write(*,*) '--------------------------------------------------'
+
+    ! One random number chain per OpenMP thread
+    allocate(rand_tmp(n_threads))
+    allocate(iseed(n_threads))
+    allocate(save_state_unif(n_threads,n_save_state))
+    allocate(save_state_gauss(n_threads,n_save_state))
+
     !
     ! Unit for printing, i.e. standard output
     ipr = 6
@@ -391,7 +386,7 @@ CONTAINS
     end if
     if(present(myseed)) then
        if (myseed .lt. 1_i8) stop 'sceua: seed should be non-negative'
-       iseed = myseed
+       forall(i=1:n_threads) iseed(i) = myseed + (i-1)*1000_i8
     else
        call get_timeseed(iseed)
     end if
@@ -452,19 +447,15 @@ CONTAINS
     ! allocation of arrays
     allocate(x(ngs*npg,nopt))
     allocate(xf(ngs*npg))
-    allocate(xx(nopt))
-    allocate(cx(npg,nopt)) 
-    allocate(cf(npg))
-    allocate(s(nps,nopt))
-    allocate(sf(nps))
     allocate(worstx(nopt))
     allocate(xnstd(nopt))
-    allocate(lcs(nps))
     allocate(bound(nopt))
     allocate(unit(nopt))
     allocate(criter(kstop+1))  
     allocate(xname(nopt))
-    allocate(history_tmp(maxn))
+    allocate(history_tmp(maxn+3*ngs*nspl))
+    allocate(xtmp(npg,nopt)) 
+    allocate(ftmp(npg))
     if (maxit) then
        criter(:) = -huge(1.0_dp)
     else
@@ -490,13 +481,13 @@ CONTAINS
     !
     !  Print seed
     if (iprint .lt. 2) then
-       write (*,*) ' Seed used : ',iseed
+       write (*,*) ' Seeds used : ',iseed
     end if
     !  initialize random number generator: Uniform
-    call xor4096(iseed, rand, save_state=save_state_unif)
+    call xor4096(iseed, rand_tmp, save_state=save_state_unif)
     !  initialize random number generator: Gaussian
     iseed = iseed + 1000_i8
-    call xor4096g(iseed, rand, save_state=save_state_gauss)
+    call xor4096g(iseed, rand_tmp, save_state=save_state_gauss)
     iseed = 0_i8
     !
     !  compute the total number of points in initial popualtion
@@ -544,7 +535,9 @@ CONTAINS
        !
        !  else, generate a point randomly and set it equal to x(1,.)
     else
-       call getpnt(1,bl(1:nopt),bu(1:nopt),unit(1:nopt),bl(1:nopt),save_state_unif,xx)
+       itmp = save_state_unif(1,:)
+       call getpnt(1,bl(1:nopt),bu(1:nopt),unit(1:nopt),bl(1:nopt),itmp,xx)
+       save_state_unif(1,:) = itmp
        do j=1, nopt
           x(1,j) = xx(j)
        end do
@@ -562,8 +555,14 @@ CONTAINS
     !
     !  generate npt1-1 random points distributed uniformly in the parameter
     !  space, and compute the corresponding function values
+    ithread = 1
+    !$OMP parallel default(shared) private(i,j,ithread,xx)
+    !$OMP do
     do i = 2, npt1
-       call getpnt(1,bl(1:nopt),bu(1:nopt),unit(1:nopt),bl(1:nopt),save_state_unif,xx)
+       !$ ithread = OMP_GET_THREAD_NUM() + 1
+       itmp = save_state_unif(ithread,:)
+       call getpnt(1,bl(1:nopt),bu(1:nopt),unit(1:nopt),bl(1:nopt),itmp,xx)
+       save_state_unif(ithread,:) = itmp
        do j = 1, nopt
           x(i,j) = xx(j)
        end do
@@ -576,12 +575,9 @@ CONTAINS
           icall = icall + 1_i8
           history_tmp(icall) = max(history_tmp(icall-1),-xf(i))
        end if
-       
-       if (icall .ge. maxn) then
-          npt1 = i
-          exit
-       end if
     end do
+    !$OMP end do
+    !$OMP end parallel
     !
     !  arrange the points in order of increasing function value
     call sort_matrix(x(1:npt1,1:nopt),xf(1:npt1))
@@ -665,7 +661,19 @@ CONTAINS
        !
        !  begin loop on complexes
        !     <beta> loop from duan(1993)
+       ithread = 1
+       !$OMP parallel default(shared) &
+       !$OMP private(igs, loop, ithread, k, k1, k2, j, lpos_ok, lpos, rand, cx, cf, lcs, s, sf) &
+       !$OMP private(icall_merk, iicall, ihistory_tmp) copyin(cx, cf, lcs, s, sf, ihistory_tmp)
+       allocate(cx(npg,nopt)) 
+       allocate(cf(npg))
+       allocate(lcs(nps))
+       allocate(s(nps,nopt))
+       allocate(sf(nps))
+       allocate(ihistory_tmp(maxn+3*ngs*nspl))
+       !$OMP do
        comploop: do igs = 1, ngs1
+          !$ ithread = OMP_GET_THREAD_NUM() + 1
           !
           !  assign points into complexes
           do k1 = 1, npg
@@ -690,13 +698,13 @@ CONTAINS
                    lcs(k) = k
                 end do
              else
-                call xor4096(iseed, rand, save_state=save_state_unif)
+                call xor4096(iseed(ithread), rand, save_state=save_state_unif(ithread,:))
                 lcs(1) = 1 + int(npg + 0.5_dp - sqrt( (npg+.5)**2 - npg * (npg+1) * rand ))
                 do k = 2, nps
                    lpos_ok = .false.
                    do while (.not. lpos_ok)
                       lpos_ok = .true.
-                      call xor4096(iseed, rand, save_state=save_state_unif)
+                      call xor4096(iseed(ithread), rand, save_state=save_state_unif(ithread,:))
                       lpos = 1 + int(npg + 0.5_dp - sqrt((npg+.5)**2 -  npg * (npg+1) * rand ))
                       ! test if point already chosen: returns lpos_ok=false if any point already exists
                       do k1 = 1, k-1
@@ -719,8 +727,13 @@ CONTAINS
              end do
              !
              !  use the sub-complex to generate new point(s)
+             icall_merk = icall
+             iicall     = icall
+             ihistory_tmp = history_tmp
              call cce(s(1:nps,1:nopt),sf(1:nps),bl(1:nopt),bu(1:nopt),xnstd(1:nopt),  &
-                      icall,maxn,maxit,save_state_gauss,functn, alpha,beta,history_tmp)
+                      iicall,maxn,maxit,save_state_gauss(ithread,:),functn,alpha,beta,ihistory_tmp)
+             history_tmp(icall+1:icall+(iicall-icall_merk)) = ihistory_tmp(icall_merk+1:iicall)
+             icall = icall + (iicall-icall_merk)
              !
              !  if the sub-complex is accepted, replace the new sub-complex
              !  into the complex
@@ -734,8 +747,8 @@ CONTAINS
              !  sort the points
              call sort_matrix(cx(1:npg,1:nopt),cf(1:npg))
              !
-             !  if maximum number of runs exceeded, break out of the loop
-             if (icall .ge. maxn) exit
+             ! !  if maximum number of runs exceeded, break out of the loop
+             ! if (icall .ge. maxn) exit
              !
           end do subcomploop ! <alpha loop>
           !
@@ -747,10 +760,19 @@ CONTAINS
              end do
              xf(k2) = cf(k1)
           end do
-          if (icall .ge. maxn) exit
+          ! if (icall .ge. maxn) exit
           !
           !  end loop on complexes
        end do comploop  ! <beta loop> 
+       !$OMP end do
+       deallocate(cx)
+       deallocate(cf)
+       deallocate(lcs)
+       deallocate(s)
+       deallocate(sf)
+       deallocate(ihistory_tmp)
+       !$OMP end parallel
+
        !
        !  re-sort the points
        call sort_matrix(x(1:npt1,1:nopt),xf(1:npt1))
@@ -859,10 +881,13 @@ CONTAINS
           ngs2 = ngs1
           ngs1 = ngs1 - 1
           npt1 = ngs1 * npg
-          call comp(ngs2,npg,x(1:ngs2*npg,1:nopt),xf(1:ngs2*npg),cx(1:ngs2*npg,1:nopt),cf(1:ngs2*npg))
+          call comp(ngs2,npg,x(1:ngs2*npg,1:nopt),xf(1:ngs2*npg),xtmp(1:ngs2*npg,1:nopt),ftmp(1:ngs2*npg))
        end if
     end do mainloop
     
+    deallocate(xtmp)
+    deallocate(ftmp)
+
     call set_optional()
 
 400 format('==================================================',/, &
