@@ -12,7 +12,9 @@ MODULE mo_sce
 
   ! This module is a template for the UFZ CHS Fortran library.
 
-  ! Written  Juliane Mai, Feb 2013
+  ! Written Juliane Mai, Feb 2013
+  ! Modified Juliane Mai, Matthias Cuntz, Jul 2013 - OpenMP
+  !                                                - NaN and Inf in objective function
 
   ! License
   ! -------
@@ -169,7 +171,8 @@ MODULE mo_sce
   !     HISTORY
   !>        \author Juliane Mai
   !>        \date Feb 2013
-  !         Modified, 
+  !         Modified Juliane Mai, Matthias Cuntz, Jul 2013 - OpenMP
+  !                                                        - NaN and Inf in objective function
 
   ! ------------------------------------------------------------------
 
@@ -196,6 +199,9 @@ CONTAINS
     use mo_sort,    only: sort
     use mo_xor4096, only: get_timeseed, n_save_state, xor4096, xor4096g
     !$ use omp_lib, only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
+#ifndef GFORTRAN
+    use ieee_arithmetic, only: ieee_is_finite
+#endif
 
     implicit none
     ! 
@@ -327,7 +333,8 @@ CONTAINS
     integer(i4)                                      :: ithread, n_threads   ! OMP or not
     integer(i8), dimension(n_save_state)             :: itmp
     real(dp),    dimension(:,:), allocatable         :: xtmp          ! tmp array for complex reduction
-    real(dp),    dimension(:),   allocatable         :: ftmp          ! %
+    real(dp),    dimension(:),   allocatable         :: ftmp          !            %
+    real(dp)                                         :: large         ! for treating NaNs
 
     ! OpenMP or not
     n_threads = 1
@@ -372,73 +379,73 @@ CONTAINS
     else
        maxit = .false.
     end if
-    if(present(mykstop)) then
+    if (present(mykstop)) then
        if (mykstop .lt. 1_i4) stop 'sceua: kstop has to be at least 1'
        kstop = mykstop
     else
        kstop = 10_i4
     end if
-    if(present(mypcento)) then
+    if (present(mypcento)) then
        if (mypcento .lt. 0_dp) stop 'sceua: pcento should be positive'
        pcento = mypcento
     else
        pcento = 0.0001_dp
     end if
-    if(present(myseed)) then
+    if (present(myseed)) then
        if (myseed .lt. 1_i8) stop 'sceua: seed should be non-negative'
        forall(i=1:n_threads) iseed(i) = myseed + (i-1)*1000_i8
     else
        call get_timeseed(iseed)
     end if
-    if(present(myngs)) then
+    if (present(myngs)) then
        if (myngs .lt. 1_i4) stop 'sceua: ngs has to be at least 1'
        ngs = myngs
     else
        ngs = 2_i4
     end if
-    if(present(mynpg)) then
+    if (present(mynpg)) then
        if (mynpg .lt. 3_i4) stop 'sceua: npg has to be at least 3'
        npg = mynpg
     else
        npg = 2*nopt + 1
     end if
-    if(present(mynps)) then
+    if (present(mynps)) then
        if (mynps .lt. 2_i4) stop 'sceua: nps has to be at least 2'
        nps = mynps
     else
        nps = nopt + 1_i4
     end if
-    if(present(mynspl)) then
+    if (present(mynspl)) then
        if (mynspl .lt. 3_i4) stop 'sceua: nspl has to be at least 3'
        nspl = mynspl
     else
        nspl = 2*nopt + 1
     end if
-    if(present(mymings)) then
+    if (present(mymings)) then
        if (mymings .lt. 1_i4) stop 'sceua: mings has to be at least 1'
        mings = mymings
     else
        mings = ngs  ! no reduction of complexes
     end if
-    if(present(myiniflg)) then
+    if (present(myiniflg)) then
        if ( (myiniflg .ne. 1_i4) .and. (myiniflg .ne. 0_i4)) stop 'sceua: iniflg has to be 0 or 1'
        iniflg = myiniflg
     else
        iniflg = 1_i4
     end if
-    if(present(myprint)) then
+    if (present(myprint)) then
        if ( (myprint .lt. 0_i4) .or. (myprint .gt. 2_i4)) stop 'sceua: iprint has to be 0, 1 or 2'
        iprint = myprint
     else
        iprint = 2_i4  ! no printing
        iprint = 0_i4
     end if
-    if(present(myalpha)) then
+    if (present(myalpha)) then
        alpha = myalpha
     else
        alpha = 0.8_dp
     end if
-    if(present(mybeta)) then
+    if (present(mybeta)) then
        beta = mybeta
     else
        beta = 0.45_dp
@@ -457,10 +464,11 @@ CONTAINS
     allocate(xtmp(npg,nopt)) 
     allocate(ftmp(npg))
     if (maxit) then
-       criter(:) = -huge(1.0_dp)
+       large = -huge(1.0_dp)
     else
-       criter(:) = huge(1.0_dp)
+       large = huge(1.0_dp)
     endif
+    criter(:) = large
 
     if (iprint .lt. 2) then
        write (*,*) ' enter the sceua subroutine --- '   
@@ -580,6 +588,18 @@ CONTAINS
     !$OMP end parallel
     !
     !  arrange the points in order of increasing function value
+    if (maxit) then
+       large = minval(xf(1:npt1))
+       large = merge(0.9_dp*large, 1.1_dp*large, large>0._dp)
+    else
+       large = maxval(xf(1:npt1))
+       large = merge(1.1_dp*large, 0.9_dp*large, large>0._dp)
+    endif
+#ifndef GFORTRAN
+    xf(1:npt1) = merge(xf(1:npt1), large, ieee_is_finite(xf(1:npt1))) ! NaN and Infinite
+#else
+    xf(1:npt1) = merge(xf(1:npt1), large, xf(1:npt1) == xf(1:npt1))   ! only NaN
+#endif
     call sort_matrix(x(1:npt1,1:nopt),xf(1:npt1))
     !
     !  record the best and worst points
@@ -664,7 +684,7 @@ CONTAINS
        ithread = 1
        !$OMP parallel default(shared) &
        !$OMP private(igs, loop, ithread, k, k1, k2, j, lpos_ok, lpos, rand, cx, cf, lcs, s, sf) &
-       !$OMP private(icall_merk, iicall, ihistory_tmp)
+       !$OMP private(icall_merk, iicall, ihistory_tmp, large)
        allocate(cx(npg,nopt)) 
        allocate(cf(npg))
        allocate(lcs(nps))
@@ -714,7 +734,7 @@ CONTAINS
                    lcs(k) = lpos
                 end do
                 !
-                !  arrange the sub-complex in order of inceasing function value
+                !  arrange the sub-complex in order of increasing function value
                 call sort(lcs(1:nps))
              end if
              !
@@ -725,6 +745,15 @@ CONTAINS
                 end do
                 sf(k) = cf(lcs(k))
              end do
+             !
+             ! remember largest for treating of NaNs
+             if (maxit) then
+                large = minval(cf(1:npg))
+                large = merge(0.9_dp*large, 1.1_dp*large, large>0._dp)
+             else
+                large = maxval(cf(1:npg))
+                large = merge(1.1_dp*large, 0.9_dp*large, large>0._dp)
+             endif
              !
              !  use the sub-complex to generate new point(s)
              icall_merk = icall
@@ -745,6 +774,11 @@ CONTAINS
              end do
              !
              !  sort the points
+#ifndef GFORTRAN
+             cf(1:npg) = merge(cf(1:npg), large, ieee_is_finite(cf(1:npg))) ! NaN and Infinite
+#else
+             cf(1:npg) = merge(cf(1:npg), large, cf(1:npg) == cf(1:npg))   ! only NaN
+#endif
              call sort_matrix(cx(1:npg,1:nopt),cf(1:npg))
              !
              ! !  if maximum number of runs exceeded, break out of the loop
