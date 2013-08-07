@@ -292,14 +292,26 @@ CONTAINS
        
        var_ab = variance(yab)
        var_b  = variance(yb(:,iout))
-       
+
        f0_ab  = dot_product(ya(:,iout),yb(:,iout)) / real(nsets,dp)
        f0_b2  = (sum(yb(:,iout)) / real(nsets,dp) )**2
        
-       do ii=1, npara
-          si(ii,iout)  =          ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_ab) / var_ab 
-          sti(ii,iout) = 1.0_dp - ( dot_product(yb(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_b2) / var_b 
-       end do
+       if ( var_ab .gt. tiny(1.0_dp) ) then
+          if ( var_b .gt. tiny(1.0_dp) ) then
+              do ii=1, npara
+                si(ii,iout)  =          ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_ab) / var_ab
+                sti(ii,iout) = 1.0_dp - ( dot_product(yb(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_b2) / var_b
+              end do
+          else
+              do ii=1, npara
+                si(ii,iout)  =          ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_ab) / var_ab
+              end do
+              sti(:,iout) = 0.0_dp
+          end if
+       else
+          si(:,iout)  = 0.0_dp
+          sti(:,iout) = 0.0_dp
+       end if
 
     end do
        
