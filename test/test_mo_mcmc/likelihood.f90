@@ -1,6 +1,7 @@
 module mo_likelihood
 
-  USE mo_kind, ONLY: i4, dp
+  USE mo_kind,   only: i4, dp
+  USE mo_moment, only: stddev
 
   Implicit NONE
 
@@ -10,7 +11,6 @@ module mo_likelihood
   PUBLIC :: model
   PUBLIC :: likelihood_dp, loglikelihood_dp
   PUBLIC :: setmeas
-  PUBLIC :: stdev_data_dp
 
   INTERFACE data
      MODULE PROCEDURE data_dp
@@ -33,52 +33,60 @@ CONTAINS
   ! -------------------------------
   ! A Likelihood function
   ! -------------------------------
-  function likelihood_dp(paraset,stddev)
-    REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset            ! parameter set
-    REAL(DP),               INTENT(IN)  :: stddev             ! standard deviation of data
-    REAL(DP)                            :: likelihood_dp
+  function likelihood_dp(paraset,stddev_in,stddev_new,likeli_new)
+    REAL(DP), DIMENSION(:), INTENT(IN)            :: paraset          ! parameter set
+    REAL(DP),               INTENT(IN)            :: stddev_in        ! standard deviation of data
+    REAL(DP),               INTENT(OUT), OPTIONAL :: stddev_new       ! standard deviation of errors using paraset
+    REAL(DP),               INTENT(OUT), OPTIONAL :: likeli_new       ! likelihood using stddev_new, 
+    !                                                                 ! i.e. using new parameter set
+    REAL(DP)                                      :: likelihood_dp
 
     ! local
     REAL(DP), DIMENSION(size(meas,1))   :: errors
+    REAL(DP)                            :: stddev_err
 
     errors  = model(paraset)-data()
-    likelihood_dp = sum( errors(:) * errors(:) / stddev**2 )
-    likelihood_dp = exp(-0.5_dp * likelihood_dp)
+    likelihood_dp = exp(-0.5_dp * sum( errors(:) * errors(:) / stddev_in**2 ))
+
+    ! optional out
+    stddev_err = stddev(errors)
+    if (present( stddev_new )) then
+       stddev_new = stddev_err
+    end if
+    if (present( likeli_new )) then
+       likeli_new = exp(-0.5_dp * sum( errors(:) * errors(:) / stddev_err**2 ))
+    end if
 
   end function likelihood_dp
 
   ! -------------------------------
   ! A Log-Likelihood function
   ! -------------------------------
-  function loglikelihood_dp(paraset,stddev)
-    REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset            ! parameter set
-    REAL(DP),               INTENT(IN)  :: stddev             ! standard deviation of data
-    REAL(DP)                            :: loglikelihood_dp
+  function loglikelihood_dp(paraset,stddev_in,stddev_new,likeli_new)
+    REAL(DP), DIMENSION(:), INTENT(IN)            :: paraset          ! parameter set
+    REAL(DP),               INTENT(IN)            :: stddev_in        ! standard deviation of data
+    REAL(DP),               INTENT(OUT), OPTIONAL :: stddev_new       ! standard deviation of errors using paraset
+    REAL(DP),               INTENT(OUT), OPTIONAL :: likeli_new       ! likelihood using stddev_new, 
+    !                                                                 ! i.e. using new parameter set
+    REAL(DP)                                      :: loglikelihood_dp
 
     ! local
     REAL(DP), DIMENSION(size(meas,1))   :: errors
+    REAL(DP)                            :: stddev_err
 
-    errors(:) = model(paraset)-data()
-    loglikelihood_dp = sum( errors(:) * errors(:) / stddev**2 )
-    loglikelihood_dp = -0.5_dp * loglikelihood_dp
+    errors(:) = model(paraset)-data() 
+    loglikelihood_dp = -0.5_dp * sum( errors(:) * errors(:) / stddev_in**2 )
+
+    ! optional out
+    stddev_err = stddev(errors)
+    if (present( stddev_new )) then
+       stddev_new = stddev_err
+    end if
+    if (present( likeli_new )) then
+       likeli_new = -0.5_dp * sum( errors(:) * errors(:) / stddev_err**2 )
+    end if
 
   end function loglikelihood_dp
-
-  ! -------------------------------
-  ! Standard Deviation of the data points
-  ! -------------------------------
-  function stdev_data_dp(paraset)
-    use mo_moment, only: mean
-    REAL(DP), DIMENSION(:), INTENT(IN)  :: paraset
-    REAL(DP)                            :: stdev_data_dp
-    
-    ! local
-    REAL(DP), DIMENSION(size(meas,1))   :: errors
-    
-    errors = model_dp(paraset)-data()
-    stdev_data_dp  = sqrt(sum( (errors(:) - mean(errors)) * (errors(:) - mean(errors))) / real(size(meas,1)-1,dp))
-    
-  end function stdev_data_dp
 
   ! -------------------------------
   ! A Model: p1*x^2 + p2*x + p3
