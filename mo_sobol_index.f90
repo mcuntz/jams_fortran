@@ -122,13 +122,20 @@ MODULE mo_sobol_index
   !         None
   !
   !     INTENT(OUT), OPTIONAL
-  !         None
+  !>        \param[out] "real(sp/dp)      :: smean(:,:)"      Average index per parameter \n
+  !>                                                             dim_1 = number of parameters \n
+  !>                                                             dim_2 = 2, i.e. SI and STI
+  !>        \param[out] "real(sp/dp)      :: wmean(:,:)"      Variance weighted average index per parameter \n
+  !>                                                             dim_1 = number of parameters \n
+  !>                                                             dim_2 = 2, i.e. SI and STI
   !
   !     RETURN
   !         None
   !
   !     RESTRICTIONS
-  !>       \note Input values must be floating points.
+  !>       \note Input values must be floating points.\n
+  !>             Average indexes are only calculated when ya has more than one dimension, i.e. modeloutput is not scalar. 
+  !>             Else average indexes are equal si and sti.
   !
   !     EXAMPLE
   !         ya      = (/ 1., 2, 3., -999., 5., 6. /)
@@ -168,16 +175,25 @@ MODULE mo_sobol_index
 
 CONTAINS
 
-  subroutine sobol_index_0d_dp(ya, yb, yc, si, sti)
+  subroutine sobol_index_0d_dp(ya, yb, yc, si, sti, smean, wmean)
 
-    real(dp), dimension(:),                   intent(in)           :: ya     ! Output running model with parameter sets A
-    real(dp), dimension(:),                   intent(in)           :: yb     ! Output running model with parameter sets B
-    real(dp), dimension(:,:),                 intent(in)           :: yc     ! Output running model with parameter sets C
-    !                                                                        ! dim1 = number of parameter sets 
-    !                                                                        !      = size(ya) = size(yb)
-    !                                                                        ! dim2 = number of parameters
-    real(dp), dimension(:),                   intent(out)          :: si     ! Sobol index (main effect)
-    real(dp), dimension(:),                   intent(out)          :: sti    ! Sobol index (total effect)
+    real(dp), dimension(:),                       intent(in)  :: ya     ! Output running model with parameter sets A
+    real(dp), dimension(:),                       intent(in)  :: yb     ! Output running model with parameter sets B
+    real(dp), dimension(:,:),                     intent(in)  :: yc     ! Output running model with parameter sets C
+    !                                                                   ! dim1 = number of parameter sets 
+    !                                                                   !      = size(ya) = size(yb)
+    !                                                                   ! dim2 = number of parameters
+    real(dp), dimension(size(yc,2)),              intent(out) :: si     ! Sobol index (main effect)
+    real(dp), dimension(size(yc,2)),              intent(out) :: sti    ! Sobol index (total effect)
+    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+    !                                                                   ! == (/ si, sti /) in 0d version !!
+    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: wmean  ! Variance weighted mean Sobol index 
+    !                                                                   ! (main and total effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+    !                                                                   ! == (/ si, sti /) in 0d version !!
 
     ! local variables
     integer(i4)                          :: ii
@@ -199,25 +215,51 @@ CONTAINS
     f0_ab  = dot_product(ya,yb) / real(nsets,dp)
     f0_b2  = (sum(yb) / real(nsets,dp) )**2
 
-    do ii=1, npara
-       si(ii)  =          ( dot_product(ya,yc(:,ii)) / real(nsets,dp) - f0_ab) / var_ab 
-       sti(ii) = 1.0_dp - ( dot_product(yb,yc(:,ii)) / real(nsets,dp) - f0_b2) / var_b 
-    end do
+    if ( var_ab .gt. tiny(1.0_dp) ) then
+       ! model outputs are different (usual case)
+       do ii=1, npara
+          si(ii)  =          ( dot_product(ya(:),yc(:,ii)) / real(nsets,dp) - f0_ab) / var_ab
+          sti(ii) = 1.0_dp - ( dot_product(yb(:),yc(:,ii)) / real(nsets,dp) - f0_b2) / var_b
+       end do
+    else
+       ! model outputs are equal (should never happen)
+       si(:)  = 0.0_dp
+       sti(:) = 0.0_dp
+    end if
+
+   if ( present(smean) ) then
+       smean(:,1) = si(:)
+       smean(:,2) = sti(:)
+    end if
+
+    if ( present(wmean) ) then
+       wmean(:,1) = si(:)
+       wmean(:,2) = sti(:)
+    end if
 
     deallocate(yab)
 
   end subroutine sobol_index_0d_dp
 
-  subroutine sobol_index_0d_sp(ya, yb, yc, si, sti)
+  subroutine sobol_index_0d_sp(ya, yb, yc, si, sti, smean, wmean)
 
-    real(sp), dimension(:),                   intent(in)           :: ya     ! Output running model with parameter sets A
-    real(sp), dimension(:),                   intent(in)           :: yb     ! Output running model with parameter sets B
-    real(sp), dimension(:,:),                 intent(in)           :: yc     ! Output running model with parameter sets C
-    !                                                                        ! dim1 = number of parameter sets 
-    !                                                                        !      = size(ya) = size(yb)
-    !                                                                        ! dim2 = number of parameters
-    real(sp), dimension(:),                   intent(out)          :: si     ! Sobol index (main effect)
-    real(sp), dimension(:),                   intent(out)          :: sti    ! Sobol index (total effect)
+    real(sp), dimension(:),                       intent(in)  :: ya     ! Output running model with parameter sets A
+    real(sp), dimension(:),                       intent(in)  :: yb     ! Output running model with parameter sets B
+    real(sp), dimension(:,:),                     intent(in)  :: yc     ! Output running model with parameter sets C
+    !                                                                   ! dim1 = number of parameter sets 
+    !                                                                   !      = size(ya) = size(yb)
+    !                                                                   ! dim2 = number of parameters
+    real(sp), dimension(size(yc,2)),              intent(out) :: si     ! Sobol index (main effect)
+    real(sp), dimension(size(yc,2)),              intent(out) :: sti    ! Sobol index (total effect)
+    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+    !                                                                   ! == (/ si, sti /) in 0d version !!
+    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: wmean  ! Variance weighted mean Sobol index 
+    !                                                                   ! (main and total effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+    !                                                                   ! == (/ si, sti /) in 0d version !!
 
     ! local variables
     integer(i4)                          :: ii
@@ -239,39 +281,63 @@ CONTAINS
     f0_ab  = dot_product(ya,yb) / real(nsets,sp)
     f0_b2  = (sum(yb) / real(nsets,sp) )**2
 
-    do ii=1, npara
-       si(ii)  =          ( dot_product(ya,yc(:,ii)) / real(nsets,sp) - f0_ab) / var_ab 
-       sti(ii) = 1.0_sp - ( dot_product(yb,yc(:,ii)) / real(nsets,sp) - f0_b2) / var_b 
-    end do
+    if ( var_ab .gt. tiny(1.0_sp) ) then
+       ! model outputs are different (usual case)
+       do ii=1, npara
+          si(ii)  =          ( dot_product(ya(:),yc(:,ii)) / real(nsets,sp) - f0_ab) / var_ab
+          sti(ii) = 1.0_sp - ( dot_product(yb(:),yc(:,ii)) / real(nsets,sp) - f0_b2) / var_b
+       end do
+    else
+       ! model outputs are equal (should never happen)
+       si(:)  = 0.0_sp
+       sti(:) = 0.0_sp
+    end if
+
+    if ( present(smean) ) then
+       smean(:,1) = si(:)
+       smean(:,2) = sti(:)
+    end if
+
+    if ( present(wmean) ) then
+       wmean(:,1) = si(:)
+       wmean(:,2) = sti(:)
+    end if
 
     deallocate(yab)
 
   end subroutine sobol_index_0d_sp
 
-  subroutine sobol_index_1d_dp(ya, yb, yc, si, sti)
+  subroutine sobol_index_1d_dp(ya, yb, yc, si, sti, smean, wmean)
 
-    real(dp), dimension(:,:),                 intent(in)           :: ya     ! Output running model with parameter sets A
-    !                                                                        ! dim1 = number of parameter sets 
-    !                                                                        ! dim2 = number of modeloutputs 
-    !                                                                        !        (e.g. number of timesteps)
-    real(dp), dimension(:,:),                 intent(in)           :: yb     ! Output running model with parameter sets B
-    !                                                                        ! dim1 = number of parameter sets 
-    !                                                                        ! dim2 = number of modeloutputs 
-    !                                                                        !        (e.g. number of timesteps)
-    real(dp), dimension(:,:,:),               intent(in)           :: yc     ! Output running model with parameter sets C
-    !                                                                        ! dim1 = number of parameter sets 
-    !                                                                        !      = size(ya) = size(yb)
-    !                                                                        ! dim2 = number of parameters
-    !                                                                        ! dim3 = number of modeloutputs 
-    !                                                                        !        (e.g. number of timesteps)
-    real(dp), dimension(:,:),                 intent(out)          :: si     ! Sobol index (main effect)
-    !                                                                        ! dim1 = number of parameters
-    !                                                                        ! dim2 = number of modeloutputs 
-    !                                                                        !        (e.g. number of timesteps)
-    real(dp), dimension(:,:),                 intent(out)          :: sti    ! Sobol index (total effect)
-    !                                                                        ! dim1 = number of parameters
-    !                                                                        ! dim2 = number of modeloutputs 
-    !                                                                        !        (e.g. number of timesteps)
+    real(dp), dimension(:,:),                     intent(in)  :: ya     ! Output running model with parameter sets A
+    !                                                                   ! dim1 = number of parameter sets 
+    !                                                                   ! dim2 = number of modeloutputs 
+    !                                                                   !        (e.g. number of timesteps)
+    real(dp), dimension(:,:),                     intent(in)  :: yb     ! Output running model with parameter sets B
+    !                                                                   ! dim1 = number of parameter sets 
+    !                                                                   ! dim2 = number of modeloutputs 
+    !                                                                   !        (e.g. number of timesteps)
+    real(dp), dimension(:,:,:),                   intent(in)  :: yc     ! Output running model with parameter sets C
+    !                                                                   ! dim1 = number of parameter sets 
+    !                                                                   !      = size(ya) = size(yb)
+    !                                                                   ! dim2 = number of parameters
+    !                                                                   ! dim3 = number of modeloutputs 
+    !                                                                   !        (e.g. number of timesteps)
+    real(dp), dimension(size(yc,2),size(yc,3)),   intent(out) :: si     ! Sobol index (main effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = number of modeloutputs 
+    !                                                                   !        (e.g. number of timesteps)
+    real(dp), dimension(size(yc,2),size(yc,3)),   intent(out) :: sti    ! Sobol index (total effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = number of modeloutputs 
+    !                                                                   !        (e.g. number of timesteps)
+    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: wmean  ! Variance weighted mean Sobol index 
+    !                                                                   ! (main and total effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = 2 (i.e. SI and STI)
 
     ! local variables
     integer(i4)                          :: ii, iout
@@ -279,70 +345,107 @@ CONTAINS
     real(dp), dimension(:), allocatable  :: yab
     real(dp)                             :: var_ab, var_b
     real(dp)                             :: f0_ab, f0_b2
+    ! for averaging
+    real(dp), dimension(:), allocatable  :: si_num, sti_num
+    real(dp)                             :: si_denom, sti_denom
+    real(dp)                             :: si_num_ii, sti_num_ii
 
     nsets = size(yc,1)
     npara = size(yc,2)
     nout  = size(yc,3)
 
+    si(:,:)  = 0.0_dp
+    sti(:,:) = 0.0_dp
+
     allocate(yab(2*nsets))
+
+    allocate(si_num(npara))
+    allocate(sti_num(npara))
+
+    si_num(:)  = 0.0_dp
+    sti_num(:) = 0.0_dp
+    si_denom   = 0.0_dp
+    sti_denom  = 0.0_dp
 
     do iout=1, nout
        yab(      1:  nsets) = ya(:,iout)
        yab(nsets+1:2*nsets) = yb(:,iout)
        
+       f0_ab  = dot_product(ya(:,iout),yb(:,iout)) / real(nsets,dp)
+       f0_b2  = (sum(yb(:,iout)) / real(nsets,dp) )**2
+
        var_ab = variance(yab)
        var_b  = variance(yb(:,iout))
 
-       f0_ab  = dot_product(ya(:,iout),yb(:,iout)) / real(nsets,dp)
-       f0_b2  = (sum(yb(:,iout)) / real(nsets,dp) )**2
+       si_denom   = si_denom  + var_ab
+       sti_denom  = sti_denom + var_b
        
        if ( var_ab .gt. tiny(1.0_dp) ) then
-          if ( var_b .gt. tiny(1.0_dp) ) then
-              do ii=1, npara
-                si(ii,iout)  =          ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_ab) / var_ab
-                sti(ii,iout) = 1.0_dp - ( dot_product(yb(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_b2) / var_b
-              end do
-          else
-              do ii=1, npara
-                si(ii,iout)  =          ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_ab) / var_ab
-              end do
-              sti(:,iout) = 0.0_dp
-          end if
-       else
-          si(:,iout)  = 0.0_dp
-          sti(:,iout) = 0.0_dp
-       end if
+          ! model outputs are different (usual case)
+          do ii=1, npara
+             si_num_ii   = ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_ab )
+             sti_num_ii  = ( dot_product(yb(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_b2 )
 
+             si_num(ii)  = si_num(ii)  + si_num_ii
+             sti_num(ii) = sti_num(ii) + sti_num_ii
+             
+             si(ii,iout)  =          si_num_ii  / var_ab
+             sti(ii,iout) = 1.0_dp - sti_num_ii / var_b
+          end do
+       end if
     end do
+
+    if (present(smean)) then
+       smean = 0.0_dp
+       smean(:,1) = sum(si, dim=2) / real(nout,dp)
+       smean(:,2) = sum(sti,dim=2) / real(nout,dp)
+    end if
+
+    if (present(wmean)) then
+       wmean = 0.0_dp
+       if ( si_denom .gt. tiny(1.0_dp) ) then
+          wmean(:,1) =          si_num(:)  / si_denom
+       end if
+       if ( sti_denom .gt. tiny(1.0_dp) ) then
+          wmean(:,2) = 1.0_dp - sti_num(:) / sti_denom
+       end if
+    end if
        
-    deallocate(yab)
+    deallocate(yab, si_num, sti_num)
 
   end subroutine sobol_index_1d_dp
 
-  subroutine sobol_index_1d_sp(ya, yb, yc, si, sti)
+  subroutine sobol_index_1d_sp(ya, yb, yc, si, sti, smean, wmean)
 
-    real(sp), dimension(:,:),                 intent(in)           :: ya     ! Output running model with parameter sets A
-    !                                                                        ! dim1 = number of parameter sets 
-    !                                                                        ! dim2 = number of modeloutputs 
-    !                                                                        !        (e.g. number of timesteps)
-    real(sp), dimension(:,:),                 intent(in)           :: yb     ! Output running model with parameter sets B
-    !                                                                        ! dim1 = number of parameter sets 
-    !                                                                        ! dim2 = number of modeloutputs 
-    !                                                                        !        (e.g. number of timesteps)
-    real(sp), dimension(:,:,:),               intent(in)           :: yc     ! Output running model with parameter sets C
-    !                                                                        ! dim1 = number of parameter sets 
-    !                                                                        !      = size(ya) = size(yb)
-    !                                                                        ! dim2 = number of parameters
-    !                                                                        ! dim3 = number of modeloutputs 
-    !                                                                        !        (e.g. number of timesteps)
-    real(sp), dimension(:,:),                 intent(out)          :: si     ! Sobol index (main effect)
-    !                                                                        ! dim1 = number of parameters
-    !                                                                        ! dim2 = number of modeloutputs 
-    !                                                                        !        (e.g. number of timesteps)
-    real(sp), dimension(:,:),                 intent(out)          :: sti    ! Sobol index (total effect)
-    !                                                                        ! dim1 = number of parameters
-    !                                                                        ! dim2 = number of modeloutputs 
-    !                                                                        !        (e.g. number of timesteps)
+    real(sp), dimension(:,:),                     intent(in)  :: ya     ! Output running model with parameter sets A
+    !                                                                   ! dim1 = number of parameter sets 
+    !                                                                   ! dim2 = number of modeloutputs 
+    !                                                                   !        (e.g. number of timesteps)
+    real(sp), dimension(:,:),                     intent(in)  :: yb     ! Output running model with parameter sets B
+    !                                                                   ! dim1 = number of parameter sets 
+    !                                                                   ! dim2 = number of modeloutputs 
+    !                                                                   !        (e.g. number of timesteps)
+    real(sp), dimension(:,:,:),                   intent(in)  :: yc     ! Output running model with parameter sets C
+    !                                                                   ! dim1 = number of parameter sets 
+    !                                                                   !      = size(ya) = size(yb)
+    !                                                                   ! dim2 = number of parameters
+    !                                                                   ! dim3 = number of modeloutputs 
+    !                                                                   !        (e.g. number of timesteps)
+    real(sp), dimension(size(yc,2),size(yc,3)),   intent(out) :: si     ! Sobol index (main effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = number of modeloutputs 
+    !                                                                   !        (e.g. number of timesteps)
+    real(sp), dimension(size(yc,2),size(yc,3)),   intent(out) :: sti    ! Sobol index (total effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = number of modeloutputs 
+    !                                                                   !        (e.g. number of timesteps)
+    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: wmean  ! Variance weighted mean Sobol index 
+    !                                                                   ! (main and total effect)
+    !                                                                   ! dim1 = number of parameters
+    !                                                                   ! dim2 = 2 (i.e. SI and STI)
 
     ! local variables
     integer(i4)                          :: ii, iout
@@ -350,31 +453,73 @@ CONTAINS
     real(sp), dimension(:), allocatable  :: yab
     real(sp)                             :: var_ab, var_b
     real(sp)                             :: f0_ab, f0_b2
+    ! for averaging
+    real(sp), dimension(:), allocatable  :: si_num, sti_num
+    real(sp)                             :: si_denom, sti_denom
+    real(sp)                             :: si_num_ii, sti_num_ii
 
     nsets = size(yc,1)
     npara = size(yc,2)
     nout  = size(yc,3)
 
+    si(:,:)  = 0.0_sp
+    sti(:,:) = 0.0_sp
+
     allocate(yab(2*nsets))
+
+    allocate(si_num(npara))
+    allocate(sti_num(npara))
+
+    si_num(:)  = 0.0_sp
+    sti_num(:) = 0.0_sp
+    si_denom   = 0.0_sp
+    sti_denom  = 0.0_sp
 
     do iout=1, nout
        yab(      1:  nsets) = ya(:,iout)
        yab(nsets+1:2*nsets) = yb(:,iout)
        
-       var_ab = variance(yab)
-       var_b  = variance(yb(:,iout))
-       
        f0_ab  = dot_product(ya(:,iout),yb(:,iout)) / real(nsets,sp)
        f0_b2  = (sum(yb(:,iout)) / real(nsets,sp) )**2
-       
-       do ii=1, npara
-          si(ii,iout)  =          ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,sp) - f0_ab) / var_ab 
-          sti(ii,iout) = 1.0_sp - ( dot_product(yb(:,iout),yc(:,ii,iout)) / real(nsets,sp) - f0_b2) / var_b 
-       end do
 
-    end do
+       var_ab = variance(yab)
+       var_b  = variance(yb(:,iout))
+
+       si_denom   = si_denom  + var_ab
+       sti_denom  = sti_denom + var_b
        
-    deallocate(yab)
+       if ( var_ab .gt. tiny(1.0_sp) ) then
+          ! model outputs are different (usual case)
+          do ii=1, npara
+             si_num_ii   = ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,sp) - f0_ab )
+             sti_num_ii  = ( dot_product(yb(:,iout),yc(:,ii,iout)) / real(nsets,sp) - f0_b2 )
+
+             si_num(ii)  = si_num(ii)  + si_num_ii
+             sti_num(ii) = sti_num(ii) + sti_num_ii
+             
+             si(ii,iout)  =          si_num_ii  / var_ab
+             sti(ii,iout) = 1.0_sp - sti_num_ii / var_b
+          end do
+       end if
+    end do
+
+    if (present(smean)) then
+       smean = 0.0_sp
+       smean(:,1) = sum(si, dim=2) / real(nout,sp)
+       smean(:,2) = sum(sti,dim=2) / real(nout,sp)
+    end if
+
+    if (present(wmean)) then
+       wmean = 0.0_sp
+       if ( si_denom .gt. tiny(1.0_sp) ) then
+          wmean(:,1) =          si_num(:)  / si_denom
+       end if
+       if ( sti_denom .gt. tiny(1.0_sp) ) then
+          wmean(:,2) = 1.0_sp - sti_num(:) / sti_denom
+       end if
+    end if
+       
+    deallocate(yab, si_num, sti_num)
 
   end subroutine sobol_index_1d_sp
 
