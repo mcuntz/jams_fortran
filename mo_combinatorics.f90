@@ -1511,7 +1511,7 @@ CONTAINS
 
     INTEGER(i8) :: i
 
-    forall(i=1:n) random_index_permut_i8(i) = i
+    forall(i=1_i8:n) random_index_permut_i8(i) = i
     if (present(save_state)) then
        call random_permut(random_index_permut_i8, save_state=save_state)
     else

@@ -104,18 +104,18 @@ program test
   ! LNNSE
   ! Attention masks might have changed since inout
   !
-  isgood = isgood .and. (anint(10000._sp*LNNSE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. -8375._sp)
-  isgood = isgood .and. (anint(10000._dp*LNNSE(vec1, vec2, mask=maskvec)) .EQ. -8375._dp)
+  isgood = isgood .and. (anint(10000._sp*LNNSE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. -8993._sp)
+  isgood = isgood .and. (anint(10000._dp*LNNSE(vec1, vec2, mask=maskvec)) .EQ. -8993._dp)
   isgood = isgood .and. (anint(10000._sp*LNNSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. &
-           -20625._sp)
-  isgood = isgood .and. (anint(10000._dp*LNNSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. -20625._dp)
-  isgood = isgood .and. (anint(10000._sp*LNNSE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 8962._sp) 
-  isgood = isgood .and. (anint(10000._dp*LNNSE(arr1, arr2, mask=mask)) .EQ. 8962._dp)
+           -21656._sp)
+  isgood = isgood .and. (anint(10000._dp*LNNSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. -21656._dp)
+  isgood = isgood .and. (anint(10000._sp*LNNSE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 8915._sp) 
+  isgood = isgood .and. (anint(10000._dp*LNNSE(arr1, arr2, mask=mask)) .EQ. 8915._dp)
   !
   if (isgood) then
      write(*,*) 'mo_errormeasures o.k.'
   else
-     write(*,*) '***ERROR: mo_errormeasures failed! ***'
+     write(*,*) 'mo_errormeasures failed'
   endif
   !
 end program test

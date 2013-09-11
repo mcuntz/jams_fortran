@@ -1,6 +1,6 @@
 !*******************************************************
 !
-!   TO TEST xor4096_apps
+!   TO TEST mo_combinatorics
 !
 !*******************************************************
 program combinatorics
@@ -71,14 +71,17 @@ program combinatorics
   ! Test: All k of n subset
   !--------------------------------------------------
 
+  allocate(all_i4(binomcoeffi(5,3),3))
+
   all_i4 = all_kofn(5,3)
   write(*,*) 'ALL_KOFN (5,3)                   : '
   do i=1,size(all_i4,1)
      write(*,*) '         subset #',i,'   ',all_i4(i,:)
   end do
   if ( any(all_i4(5,:) .ne. (/ 1_i4, 3_i4, 5_i4 /)) ) isgood = .false.
-  deallocate(all_i4)
   write(*,*) ' '
+
+  deallocate(all_i4)
 
   !--------------------------------------------------
   ! Test: Random index permutation
@@ -111,6 +114,7 @@ program combinatorics
   !--------------------------------------------------
   ! Test: All index permutations
   !--------------------------------------------------
+  allocate(all_i4(factorial(3),3))
 
   all_i4 = all_index_permut(3)
   write(*,*) 'ALL_INDEX_PERMUT of 3                     : '

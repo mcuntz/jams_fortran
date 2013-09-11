@@ -138,8 +138,8 @@ module mo_ncwrite
   !         If dimension
 
   !     EXAMPLE
-  !         call dump_netcdf('test.nc, myarray)
-  !         call dump_netcdf('test.nc, myarray, netcdf4=.true.)
+  !         call dump_netcdf('test.nc', myarray)
+  !         call dump_netcdf('test.nc', myarray, netcdf4=.true.)
   !         -> see also example in test directory
 
   !     LITERATURE
