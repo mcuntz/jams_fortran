@@ -30,7 +30,7 @@ program main
 
   !  call timestamp ( )
 
-  open(unit=30, file="../FORTRAN_chs_lib/test/test_mo_spline/spline_prb_output.txt",  status="replace", recl=100)
+  open(unit=30, file="spline_make_check_test_file",  status="replace", recl=100)
 
   write(30, '(a)' ) ' '
   write(30, '(a)' ) 'SPLINE_PRB'
@@ -96,7 +96,7 @@ program main
 
   ! Check against standard output
   open(unit=30, file="../FORTRAN_chs_lib/test/test_mo_spline/spline_prb_std_output.txt",  action="read", status="old")
-  open(unit=31, file="../FORTRAN_chs_lib/test/test_mo_spline/spline_prb_output.txt",      action="read", status="old")
+  open(unit=31, file="spline_make_check_test_file",      action="read", status="old")
 
   ! If you do diff, you see small differences in the last digits with some compiler,
   ! i.e. different between gfortran and nag. -> Compare only the first six charachters.

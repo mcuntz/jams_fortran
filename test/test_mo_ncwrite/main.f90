@@ -57,7 +57,7 @@ Varname = 'time'
 call Get_NcVar(Filename, Varname, t)
 
 ! WRITE nc file -------------------------------------------------------
-Filename = 'Test.nc'
+Filename = 'ncwrite_make_check_test_file'
 
 ! 1st set netcdf structure V
 call setnc
@@ -87,7 +87,7 @@ call Get_NcVar(Filename,Varname,data1)
 if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
 
 ! WRITE nc4 file -------------------------------------------------------
-Filename = 'Test.nc'
+Filename = 'ncwrite_make_check_test_file'
 call create_netcdf(Filename, ncid, netcdf4=.true.)
 call write_static_netcdf(ncid)
 V(3)%G0_d => t(1)
@@ -104,7 +104,7 @@ call Get_NcVar(Filename,Varname,data1)
 if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
 
 ! Dump nc file -------------------------------------------------------
-Filename = 'Test.nc'
+Filename = 'ncwrite_make_check_test_file'
 Varname  = 'var'
 ! 1D
 allocate(data7(size(data,1)))
@@ -286,7 +286,7 @@ call Get_NcVar(Filename,Varname,data11)
 if (any(abs(data-data11) > epsilon(1.0_sp))) isgood = .false.
 
 ! ! 3D - netcdf4, deflate=0
-! Filename = 'Test.nc'
+! Filename = 'ncwrite_make_check_test_file'
 ! !deallocate(ddata2)
 ! allocate(ddata2(1000,1000,100))
 ! ddata2 = 1.0_dp
