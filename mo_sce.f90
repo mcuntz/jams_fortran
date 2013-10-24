@@ -37,7 +37,7 @@ MODULE mo_sce
 
   IMPLICIT NONE
 
-  PUBLIC :: sce        ! sce optimization
+  PUBLIC :: sce      ! sce optimization
 
   ! ------------------------------------------------------------------
 
@@ -96,42 +96,57 @@ MODULE mo_sce
   !         None
   !
   !     INTENT(IN), OPTIONAL
-  !>        \param[out] "integer(i8), optional :: mymaxn"    max no. of trials allowed before optimization is terminated\n
+  !>        \param[in] "integer(i8), optional :: mymaxn"    max no. of trials allowed before optimization is terminated\n
   !>                                                             DEFAULT: 1000_i8
-  !>        \param[out] "logical,     optional :: mymaxit"   maximization (.true.) or minimization (.false.) of function\n
+  !>        \param[in] "logical,     optional :: mymaxit"   maximization (.true.) or minimization (.false.) of function\n
   !>                                                             DEFAULT: false
-  !>        \param[out] "integer(i4), optional :: mykstop"   number of shuffling loops in which the criterion value must
+  !>        \param[in] "integer(i4), optional :: mykstop"   number of shuffling loops in which the criterion value must
   !>                                                             change by given percentage before optimiz. is terminated\n
   !>                                                             DEFAULT: 10_i4
-  !>        \param[out] "real(dp),    optional :: mypcento"  percentage by which the criterion value must change in
+  !>        \param[in] "real(dp),    optional :: mypcento"  percentage by which the criterion value must change in
   !>                                                             given number of shuffling loops\n
   !>                                                             DEFAULT: 0.0001_dp
-  !>        \param[out] "integer(i8), optional :: myseed"    initial random seed\n
+  !>        \param[in] "real(dp),    optional :: mypeps"    optimization is terminated if volume of complex has 
+  !>                                                             converged to given percentage of feasible space\n
+  !>                                                             DEFAULT: 0.001_dp
+  !>        \param[in] "integer(i8), optional :: myseed"    initial random seed\n
   !>                                                             DEFAULT: get_timeseed
-  !>        \param[out] "integer(i4), optional :: myngs"     number of complexes in the initial population\n
+  !>        \param[in] "integer(i4), optional :: myngs"     number of complexes in the initial population\n
   !>                                                             DEFAULT: 2_i4
-  !>        \param[out] "integer(i4), optional :: mynpg"     number of points in each complex\n
+  !>        \param[in] "integer(i4), optional :: mynpg"     number of points in each complex\n
   !>                                                             DEFAULT: 2*n+1
-  !>        \param[out] "integer(i4), optional :: mynps"     number of points in a sub-complex\n
+  !>        \param[in] "integer(i4), optional :: mynps"     number of points in a sub-complex\n
   !>                                                             DEFAULT: n+1
-  !>        \param[out] "integer(i4), optional :: mynspl"    number of evolution steps allowed for each complex before
+  !>        \param[in] "integer(i4), optional :: mynspl"    number of evolution steps allowed for each complex before
   !>                                                             complex shuffling\n
   !>                                                             DEFAULT: 2*n+1
-  !>        \param[out] "integer(i4), optional :: mymings"   minimum number of complexes required, if the number of 
+  !>        \param[in] "integer(i4), optional :: mymings"   minimum number of complexes required, if the number of 
   !>                                                             complexes is allowed to reduce as the 
   !>                                                             optimization proceeds\n
   !>                                                             DEFAULT: ngs = number of complexes in initial population
-  !>        \param[out] "integer(i4), optional :: myiniflg"  flag on whether to include the initial point in population\n
+  !>        \param[in] "integer(i4), optional :: myiniflg"  flag on whether to include the initial point in population\n
   !>                                                             0, not included\n
   !>                                                             1, included (DEFAULT)
-  !>        \param[out] "integer(i4), optional :: myprint"   flag for controlling print-out after each shuffling loop\n
+  !>        \param[in] "integer(i4), optional :: myprint"   flag for controlling print-out after each shuffling loop\n
   !>                                                             0, print information on the best point of the population\n
   !>                                                             1, print information on every point of the population\n
   !>                                                             2, no printing (DEFAULT)
-  !>        \param[out] "real(dp),    optional :: myalpha"   parameter for reflection  of points in complex\n
+  !>        \param[in] "real(dp),    optional :: myalpha"   parameter for reflection  of points in complex\n
   !>                                                             DEFAULT: 0.8_dp
-  !>        \param[out] "real(dp),    optional :: mybeta"    parameter for contraction of points in complex\n
+  !>        \param[in] "real(dp),    optional :: mybeta"    parameter for contraction of points in complex\n
   !>                                                             DEFAULT: 0.45_dp
+  !>        \param[in]  "character(len=*), optional  :: tmp_file"    file for temporal output: write results after evolution loop\n
+  !>                                                                    # of headlines: 7\n
+  !>                                                                    format: '# nloop   icall   ngs1   bestf   worstf ... \n
+  !>                                                                             ... gnrng   (bestx(j),j=1,nn)'
+  !>        \param[in]  "character(len=*), optional  :: popul_file"  file for temporal output: writes whole population \n
+  !>                                                                    # of headlines: 1 \n
+  !>                                                                    format: #_evolution_loop, xf(i), (x(i,j),j=1,nn)\n
+  !>                                                                    total number of lines written <= neval <= mymaxn\n
+  !>        \param[in]  "logical, optional  :: parallel"    sce runs in parallel (true) or not (false)
+  !>                                                             parallel sce should only be used if model/ objective 
+  !>                                                             is not parallel
+  !>                                                             DEAFULT: .false.
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -173,6 +188,11 @@ MODULE mo_sce
   !>        \date Feb 2013
   !         Modified Juliane Mai, Matthias Cuntz, Jul 2013 - OpenMP
   !                                                        - NaN and Inf in objective function
+  !                  Juliane Mai                  Oct 2013 - added peps as optional argument
+  !                                                        - allow for masked parameter
+  !                                                        - write population to file --> popul_file
+  !                                                        - write intermediate results to file --> tmp_file
+  !                                                        - flag parallel introduced
 
   ! ------------------------------------------------------------------
 
@@ -189,16 +209,19 @@ MODULE mo_sce
 CONTAINS
 
   function sce(functn,pini,prange,                        & ! IN
-       mymaxn,mymaxit,mykstop,mypcento,myseed,            & ! Optional IN
+       mymaxn,mymaxit,mykstop,mypcento,mypeps,myseed,     & ! Optional IN
        myngs,mynpg,mynps,mynspl,mymings,myiniflg,myprint, & ! Optional IN
-       myalpha, mybeta,                                   & ! Optional IN
+       mymask,myalpha, mybeta,                            & ! Optional IN
+       tmp_file, popul_file,                              & ! Optional IN
+       parallel,                                          & ! OPTIONAL IN
        bestf,neval,history                                & ! Optional OUT
-    ) result(bestx)
+       ) result(bestx)
 
-    use mo_kind,    only: i4, i8, dp
-    use mo_sort,    only: sort
-    use mo_xor4096, only: get_timeseed, n_save_state, xor4096, xor4096g
-    !$ use omp_lib, only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
+    use mo_kind,         only: i4, i8, dp
+    use mo_sort,         only: sort
+    use mo_string_utils, only: num2str, compress
+    use mo_xor4096,      only: get_timeseed, n_save_state, xor4096, xor4096g
+    !$ use omp_lib,      only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
 #ifndef GFORTRAN
     use ieee_arithmetic, only: ieee_is_finite
 #endif
@@ -227,6 +250,9 @@ CONTAINS
     real(dp),    optional,               intent(in)  :: mypcento    ! percentage by which the criterion value must change in
     !                                                               !     given number of shuffling loops
     !                                                               !     DEFAULT: 0.0001_dp
+    real(dp),    optional,               intent(in)  :: mypeps      ! optimization is terminated if volume of complex has 
+    !                                                               ! converged to given percentage of feasible space
+    !                                                               !     DEFAULT: 0.001_dp
     integer(i8), optional,               intent(in)  :: myseed      ! initial random seed
     !                                                               !     DEFAULT: get_timeseed
     integer(i4), optional,               intent(in)  :: myngs       ! number of complexes in the initial population
@@ -249,10 +275,25 @@ CONTAINS
     !                                                               !     0, print information on the best point of the population
     !                                                               !     1, print information on every point of the population
     !                                                               !     2, no printing (DEFAULT)
+    logical,     optional,               intent(in), &
+         dimension(size(pini,1))                     :: mymask      ! parameter included in optimization (true) or discarded (false)
+    !                                                               !     DEFAULT: .true.
     real(dp),    optional,               intent(in)  :: myalpha     ! parameter for reflection  of points in complex
     !                                                               !     DEFAULT: 0.8_dp
     real(dp),    optional,               intent(in)  :: mybeta      ! parameter for contraction of points in complex
     !                                                               !     DEFAULT: 0.45_dp
+    character(len=*), optional,          intent(in)  :: tmp_file    ! file for temporal output: write results after evolution loop
+    !                                                               !     # of headlines: 7
+    !                                                               !     format: '# nloop   icall   ngs1   bestf   worstf ...
+    !                                                               !              ... gnrng   (bestx(j),j=1,nn)'
+    character(len=*), optional,          intent(in)  :: popul_file  ! file for temporal output: writes whole population
+    !                                                               !     # of headlines: 1
+    !                                                               !     format: #_evolution_loop, xf(i), (x(i,j),j=1,nn)
+    !                                                               !     total number of lines written <= neval <= mymaxn
+    logical,     optional,               intent(in)  :: parallel    ! sce runs in parallel (true) or not (false)
+    !                                                               !     parallel sce should only be used if model/ objective 
+    !                                                               !     is not parallel
+    !                                                               !     DEAFULT: .false.
     real(dp),    optional,               intent(out) :: bestf       ! function value of bestx(.)
     integer(i8), optional,               intent(out) :: neval       ! number of function evaluations
     real(dp),    optional, &
@@ -267,6 +308,8 @@ CONTAINS
     integer(i4)                                      :: kstop       ! number of shuffling loops in which the criterion value
     !                                                               !     must change
     real(dp)                                         :: pcento      ! percentage by which the criterion value must change
+    real(dp)                                         :: peps        ! optimization is terminated if volume of complex has 
+    !                                                               ! converged to given percentage of feasible space
     integer(i4)                                      :: ngs         ! number of complexes in the initial population
     integer(i4)                                      :: npg         ! number of points in each complex
     integer(i4)                                      :: nps         ! number of points in a sub-complex
@@ -275,15 +318,20 @@ CONTAINS
     integer(i4)                                      :: mings       ! minimum number of complexes required
     integer(i4)                                      :: iniflg      ! flag on whether to include the initial point in population
     integer(i4)                                      :: iprint      ! flag for controlling print-out after each shuffling loop
+    logical, dimension(size(pini,1))                 :: maskpara    ! mask(i) = .true.  --> parameter i will be optimized 
+    !                                                               ! mask(i) = .false. --> parameter i will not be optimized 
     real(dp)                                         :: alpha       ! parameter for reflection  of points in complex
     real(dp)                                         :: beta        ! parameter for contraction of points in complex
     real(dp), dimension(:), allocatable              :: history_tmp ! history of best function values after each iteration
     real(dp), dimension(:), allocatable              :: ihistory_tmp ! local history for OpenMP
     real(dp)                                         :: bestf_tmp   ! function value of bestx(.)
+    logical                                          :: parall      ! if sce is used parallel or not
     !
     ! local variables
     integer(i4)                                      :: nopt        ! number of parameters to be optimized
+    integer(i4)                                      :: nn          ! total number of parameters 
     integer(i4)                                      :: npt         ! total number of points in initial population (npt=ngs*npg)
+    integer(i4), dimension(:),   allocatable         :: truepara    ! indexes of parameters which will be optimized
     real(dp)                                         :: fpini       ! function value at initial point
     real(dp),    dimension(:,:), allocatable         :: x           ! coordinates of points in the population 
     real(dp),    dimension(:),   allocatable         :: xf          ! function values of x                    
@@ -309,7 +357,7 @@ CONTAINS
     !                                                               !      1, parameter convergence satisfied
     integer(i4)                                      :: nloop
     integer(i4)                                      :: loop
-    integer(i4)                                      :: i, j, k, l
+    integer(i4)                                      :: ii, jj, kk, ll
     integer(i4)                                      :: lpos
     logical                                          :: lpos_ok     ! for selction of points based on triangular 
     !                                                               ! probability distribution
@@ -321,9 +369,9 @@ CONTAINS
     real(dp)                                         :: denomi      ! for checking improvement of last steps
     real(dp)                                         :: timeou      ! for checking improvement of last steps
     real(dp)                                         :: rtiny       ! for checking improvement of last steps
-    integer(i4)                                      :: nopt1       ! only for printing of parameter sets
-    integer(i4)                                      :: nopt2       ! only for printing of parameter sets
-    character(4), dimension(:),  allocatable         :: xname       ! only for printing of parameter sets
+    character(4), dimension(:),  allocatable         :: xname       ! parameter names: "p1", "p2", "p3", ...
+    character(512)                                   :: format_str1 ! format string
+    character(512)                                   :: format_str2 ! format string
     ! for random numbers
     real(dp)                                         :: rand        ! random number
     integer(i8), dimension(:),   allocatable         :: iseed       ! initial random seed  
@@ -336,14 +384,24 @@ CONTAINS
     real(dp),    dimension(:),   allocatable         :: ftmp          !            %
     real(dp)                                         :: large         ! for treating NaNs
 
-    ! OpenMP or not
-    n_threads = 1
-    !$  write(*,*) '--------------------------------------------------'
-    !$OMP parallel
-    !$    n_threads = OMP_GET_NUM_THREADS()
-    !$OMP end parallel
-    !$  write(*,*) '   SCE is parellel with ',n_threads,' threads'
-    !$  write(*,*) '--------------------------------------------------'
+    if (present(parallel)) then
+       parall = parallel
+    else
+       parall = .false.
+    end if
+
+    if (parall) then
+       ! OpenMP or not
+       n_threads = 1
+       !$  write(*,*) '--------------------------------------------------'
+       !$OMP parallel
+       !$    n_threads = OMP_GET_NUM_THREADS()
+       !$OMP end parallel
+       !$  write(*,*) '   SCE is parellel with ',n_threads,' threads'
+       !$  write(*,*) '--------------------------------------------------'
+    else
+       n_threads = 1
+    end if
 
     ! One random number chain per OpenMP thread
     allocate(rand_tmp(n_threads))
@@ -355,21 +413,41 @@ CONTAINS
     ! Unit for printing, i.e. standard output
     ipr = 6
 
-    nopt = size(pini,dim=1)
+    if (present(mymask)) then
+       if (.not. any(mymask)) stop 'mo_sce: all parameters are masked --> none will be optimized' 
+       maskpara = mymask
+    else
+       maskpara = .true.
+    end if
+
+    ! number of parameters to optimize
+    nopt = count(maskpara,dim=1)
+    ! total number of parameters
+    nn   = size(pini,1)
+
+    ! truepara contains indexes of parameters which have to be optimized
+    allocate(truepara(nopt))
+    jj = 0
+    do ii=1, nn
+       if (maskpara(ii)) then
+          jj = jj + 1
+          truepara(jj) = ii
+       end if
+    end do
+
+    ! input checking
+    if (size(prange,dim=1) .ne. size(pini,1)) then
+       stop 'mo_sce: prange has not matching rows'
+    end if
+    if (size(prange,dim=2) .ne. 2) then
+       stop 'mo_sce: two colums expected for prange'
+    end if
     bl(:)   = prange(:,1)
     bu(:)   = prange(:,2)
     !
-    ! input checking
-    if (size(prange,dim=1) .ne. nopt) then
-       stop 'sceua: prange has not matching rows'
-    end if
-    if (size(prange,dim=2) .ne. 2) then
-       stop 'sceua: two colums expected for prange'
-    end if
-    !
     ! optionals checking
     if (present(mymaxn)) then
-       if (mymaxn .lt. 2_i4) stop 'sceua: maxn has to be at least 2'
+       if (mymaxn .lt. 2_i4) stop 'mo_sce: maxn has to be at least 2'
        maxn = mymaxn
     else
        maxn = 1000_i8
@@ -380,61 +458,67 @@ CONTAINS
        maxit = .false.
     end if
     if (present(mykstop)) then
-       if (mykstop .lt. 1_i4) stop 'sceua: kstop has to be at least 1'
+       if (mykstop .lt. 1_i4) stop 'mo_sce: kstop has to be at least 1'
        kstop = mykstop
     else
        kstop = 10_i4
     end if
     if (present(mypcento)) then
-       if (mypcento .lt. 0_dp) stop 'sceua: pcento should be positive'
+       if (mypcento .lt. 0_dp) stop 'mo_sce: pcento should be positive'
        pcento = mypcento
     else
        pcento = 0.0001_dp
     end if
+    if (present(mypeps)) then
+       if (mypeps .lt. 0_dp) stop 'mo_sce: peps should be positive'
+       peps = mypeps
+    else
+       peps = 0.001_dp
+    end if
     if (present(myseed)) then
-       if (myseed .lt. 1_i8) stop 'sceua: seed should be non-negative'
-       forall(i=1:n_threads) iseed(i) = myseed + (i-1)*1000_i8
+       if (myseed .lt. 1_i8) stop 'mo_sce: seed should be non-negative'
+       forall(ii=1:n_threads) iseed(ii) = myseed + (ii-1)*1000_i8
     else
        call get_timeseed(iseed)
     end if
     if (present(myngs)) then
-       if (myngs .lt. 1_i4) stop 'sceua: ngs has to be at least 1'
+       if (myngs .lt. 1_i4) stop 'mo_sce: ngs has to be at least 1'
        ngs = myngs
     else
        ngs = 2_i4
     end if
     if (present(mynpg)) then
-       if (mynpg .lt. 3_i4) stop 'sceua: npg has to be at least 3'
+       if (mynpg .lt. 3_i4) stop 'mo_sce: npg has to be at least 3'
        npg = mynpg
     else
        npg = 2*nopt + 1
     end if
     if (present(mynps)) then
-       if (mynps .lt. 2_i4) stop 'sceua: nps has to be at least 2'
+       if (mynps .lt. 2_i4) stop 'mo_sce: nps has to be at least 2'
        nps = mynps
     else
        nps = nopt + 1_i4
     end if
     if (present(mynspl)) then
-       if (mynspl .lt. 3_i4) stop 'sceua: nspl has to be at least 3'
+       if (mynspl .lt. 3_i4) stop 'mo_sce: nspl has to be at least 3'
        nspl = mynspl
     else
        nspl = 2*nopt + 1
     end if
     if (present(mymings)) then
-       if (mymings .lt. 1_i4) stop 'sceua: mings has to be at least 1'
+       if (mymings .lt. 1_i4) stop 'mo_sce: mings has to be at least 1'
        mings = mymings
     else
        mings = ngs  ! no reduction of complexes
     end if
     if (present(myiniflg)) then
-       if ( (myiniflg .ne. 1_i4) .and. (myiniflg .ne. 0_i4)) stop 'sceua: iniflg has to be 0 or 1'
+       if ( (myiniflg .ne. 1_i4) .and. (myiniflg .ne. 0_i4)) stop 'mo_sce: iniflg has to be 0 or 1'
        iniflg = myiniflg
     else
        iniflg = 1_i4
     end if
     if (present(myprint)) then
-       if ( (myprint .lt. 0_i4) .or. (myprint .gt. 2_i4)) stop 'sceua: iprint has to be 0, 1 or 2'
+       if ( (myprint .lt. 0_i4) .or. (myprint .gt. 2_i4)) stop 'mo_sce: iprint has to be 0, 1 or 2'
        iprint = myprint
     else
        iprint = 2_i4  ! no printing
@@ -450,18 +534,36 @@ CONTAINS
     else
        beta = 0.45_dp
     end if
-    
+
+    if(present(tmp_file)) then
+       open(unit=999,file=trim(adjustl(tmp_file)), action='write', status = 'unknown')
+       write(999,*) '# settings :: general'
+       write(999,*) '# nIterations    seed'
+       write(999,*) maxn, iseed
+       write(999,*) '# settings :: sce specific'
+       write(999,*) '# sce_ngs    sce_npg    sce_nps'
+       write(999,*) ngs, npg, nps
+       write(999,*) '# nloop   icall   ngs1   bestf   worstf   gnrng   (bestx(j),j=1,nn)'
+       close(999)
+    end if
+
+    if(present(popul_file)) then
+       open(unit=999,file=trim(adjustl(popul_file)), action='write', status = 'unknown')
+       write(999,*) '#   xf(i)   (x(i,j),j=1,nn)'
+       close(999)
+    end if
+
     ! allocation of arrays
-    allocate(x(ngs*npg,nopt))
+    allocate(x(ngs*npg,nn))
     allocate(xf(ngs*npg))
-    allocate(worstx(nopt))
-    allocate(xnstd(nopt))
-    allocate(bound(nopt))
-    allocate(unit(nopt))
+    allocate(worstx(nn))
+    allocate(xnstd(nn))
+    allocate(bound(nn))
+    allocate(unit(nn))
     allocate(criter(kstop+1))  
-    allocate(xname(nopt))
+    allocate(xname(nn))
     allocate(history_tmp(maxn+3*ngs*nspl))
-    allocate(xtmp(npg,nopt)) 
+    allocate(xtmp(npg,nn)) 
     allocate(ftmp(npg))
     if (maxit) then
        large = -huge(1.0_dp)
@@ -469,23 +571,26 @@ CONTAINS
        large = huge(1.0_dp)
     endif
     criter(:) = large
-
-    if (iprint .lt. 2) then
-       write (*,*) ' enter the sceua subroutine --- '   
-    end if
     !
     !  initialize variables
-    do i=1,nopt
-       xname(i) = 'XXXX'
+    do ii=1,nn
+       xname(ii) = compress('p'//num2str(ii))
     end do
 
     nloop = 0_i4
     loop  = 0_i4
     igs   = 0_i4
-    nopt1 = 8_i4
-    if (nopt .lt. 8)  nopt1 = nopt
-    nopt2 = 12_i4
-    if (nopt .lt. 12) nopt2 = nopt
+    !
+    !  compute the total number of points in initial population
+    npt = ngs * npg
+    ngs1 = ngs
+    npt1 = npt
+    !
+    if (iprint .lt. 2) then
+       write(ipr,*) '=================================================='
+       write(ipr,*) 'ENTER THE SHUFFLED COMPLEX EVOLUTION GLOBAL SEARCH'
+       write(ipr,*) '=================================================='
+    end if
     !
     !  Print seed
     if (iprint .lt. 2) then
@@ -498,20 +603,10 @@ CONTAINS
     call xor4096g(iseed, rand_tmp, save_state=save_state_gauss)
     iseed = 0_i8
     !
-    !  compute the total number of points in initial popualtion
-    npt = ngs * npg
-    ngs1 = ngs
-    npt1 = npt
-    !
-    if (iprint .lt. 2) then
-       write(ipr,400)
-       write (*,*) ' ***  Evolution Loop Number ',nloop
-    end if
-    !
     !  compute the bound for parameters being optimized
-    do j = 1, nopt
-       bound(j) = bu(j) - bl(j)
-       unit(j) = 1.0_dp
+    do ii = 1, nn
+       bound(ii) = bu(ii) - bl(ii)
+       unit(ii) = 1.0_dp
     end do
     !--------------------------------------------------
     !  compute the function value of the initial point
@@ -529,31 +624,41 @@ CONTAINS
     bestx = pini
     bestf_tmp = fpini
     if (iprint .lt. 2) then
-       write(ipr,500)
-       call write_best()
+       write(ipr,*) ''
+       write(ipr,*) ''
+       write(ipr,*) '*** PRINT THE INITIAL POINT AND ITS CRITERION VALUE ***'
+       call write_best_final()
     end if
+    file_write_initial: if (present(tmp_file)) then
+       open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append')
+       if (.not. maxit) then
+          write(999,*) 0,1,ngs1,fpini,fpini,1.0_dp, pini
+       else
+          write(999,*) 0,1,ngs1,-fpini,-fpini,1.0_dp, pini
+       end if
+       close(999)
+    end if file_write_initial
     !
     !  generate an initial set of npt1 points in the parameter space
     !  if iniflg is equal to 1, set x(1,.) to initial point pini(.)
     if (iniflg .eq. 1) then
-       do j = 1, nopt
-          x(1,j) = pini(j)
+       do ii = 1, nn
+          x(1,ii) = pini(ii)
        end do
        xf(1) = fpini
        !
        !  else, generate a point randomly and set it equal to x(1,.)
     else
        itmp = save_state_unif(1,:)
-       call getpnt(1,bl(1:nopt),bu(1:nopt),unit(1:nopt),bl(1:nopt),itmp,xx)
+       call getpnt(1,bl(1:nn),bu(1:nn),unit(1:nn),pini(1:nn),maskpara,itmp,xx)
        save_state_unif(1,:) = itmp
-       do j=1, nopt
-          x(1,j) = xx(j)
+       do ii=1, nn
+          x(1,ii) = xx(ii)
        end do
-       xf(1) = functn(xx)
        if (.not. maxit) then
-          xf(1) = functn(pini)
+          xf(1) = functn(xx)
        else
-          xf(1) = -functn(pini)
+          xf(1) = -functn(xx)
        end if
     end if
     !
@@ -561,31 +666,69 @@ CONTAINS
     icall = 1_i8
     ! if (icall .ge. maxn) return 
     !
-    !  generate npt1-1 random points distributed uniformly in the parameter
-    !  space, and compute the corresponding function values
-    ithread = 1
-    !$OMP parallel default(shared) private(i,j,ithread,xx)
-    !$OMP do
-    do i = 2, npt1
-       !$ ithread = OMP_GET_THREAD_NUM() + 1
-       itmp = save_state_unif(ithread,:)
-       call getpnt(1,bl(1:nopt),bu(1:nopt),unit(1:nopt),bl(1:nopt),itmp,xx)
-       save_state_unif(ithread,:) = itmp
-       do j = 1, nopt
-          x(i,j) = xx(j)
+    if (parall) then
+       
+       ! -----------------------------------------------------------------------
+       ! Parallel version of complex-loop
+       ! -----------------------------------------------------------------------
+       !  generate npt1-1 random points distributed uniformly in the parameter
+       !  space, and compute the corresponding function values
+       ithread = 1
+       !$OMP parallel default(shared) private(ii,jj,ithread,xx)
+       !$OMP do
+       do ii = 2, npt1
+          !$ ithread = OMP_GET_THREAD_NUM() + 1
+          itmp = save_state_unif(ithread,:)
+          call getpnt(1,bl(1:nn),bu(1:nn),unit(1:nn),pini(1:nn),maskpara,itmp,xx)
+          save_state_unif(ithread,:) = itmp
+          do jj = 1, nn
+             x(ii,jj) = xx(jj)
+          end do
+          if (.not. maxit) then
+             xf(ii) = functn(xx)
+             history_tmp(ii) = xf(ii) ! min(history_tmp(ii-1),xf(ii)) --> will be sorted later
+          else
+             xf(ii) = -functn(xx)
+             history_tmp(ii) = -xf(ii) ! max(history_tmp(ii-1),-xf(ii)) --> will be sorted later
+          end if
        end do
-       if (.not. maxit) then
-          xf(i) = functn(xx)
-          icall = icall + 1_i8
-          history_tmp(icall) = min(history_tmp(icall-1),xf(i))
-       else
-          xf(i) = -functn(xx)
-          icall = icall + 1_i8
-          history_tmp(icall) = max(history_tmp(icall-1),-xf(i))
-       end if
-    end do
-    !$OMP end do
-    !$OMP end parallel
+       !$OMP end do
+       !$OMP end parallel
+
+    else
+
+       ! -----------------------------------------------------------------------
+       ! Non-Parallel version of complex-loop
+       ! -----------------------------------------------------------------------
+       !  generate npt1-1 random points distributed uniformly in the parameter
+       !  space, and compute the corresponding function values
+       ithread = 1
+
+       do ii = 2, npt1
+          call getpnt(1,bl(1:nn),bu(1:nn),unit(1:nn),pini(1:nn),maskpara,save_state_unif(ithread,:),xx)
+          do jj = 1, nn
+             x(ii,jj) = xx(jj)
+          end do
+          if (.not. maxit) then
+             xf(ii) = functn(xx)
+             icall = icall + 1_i8
+             history_tmp(icall) = xf(ii) ! min(history_tmp(icall-1),xf(ii)) --> will be sorted later
+          else
+             xf(ii) = -functn(xx)
+             icall = icall + 1_i8
+             history_tmp(icall) = -xf(ii) ! max(history_tmp(icall-1),-xf(ii)) --> will be sorted later
+          end if
+          
+          if (icall .ge. maxn) then
+             npt1 = ii
+             exit
+          end if
+       end do
+
+    end if
+
+    call sort(history_tmp(1:npt1))
+    icall = int(npt1,i8)
     !
     !  arrange the points in order of increasing function value
     if (maxit) then
@@ -600,42 +743,37 @@ CONTAINS
 #else
     xf(1:npt1) = merge(xf(1:npt1), large, xf(1:npt1) == xf(1:npt1))   ! only NaN
 #endif
-    call sort_matrix(x(1:npt1,1:nopt),xf(1:npt1))
+    call sort_matrix(x(1:npt1,1:nn),xf(1:npt1))
     !
     !  record the best and worst points
-    do j = 1, nopt
-       bestx(j) = x(1,j)
-       worstx(j) = x(npt1,j)
+    do ii = 1, nn
+       bestx(ii) = x(1,ii)
+       worstx(ii) = x(npt1,ii)
     end do
     bestf_tmp = xf(1)
     worstf = xf(npt1)
     !
     !  compute the parameter range for the initial population
-    call parstt(x(1:npt1,1:nopt),bound,xnstd,gnrng,ipcnvg)
+    call parstt(x(1:npt1,1:nn),bound,peps,maskpara,xnstd,gnrng,ipcnvg)
+    !
+    ! write currently best x and xf to temporal file
+    if (present(tmp_file)) then
+       call write_best_intermediate(.true.)
+    end if
+
+    ! write population to file
+    if (present(popul_file)) then
+       call write_population(.true.)
+    end if
     !
     !  print the results for the initial population
     print: if (iprint .lt. 2) then
-       write(ipr,600)
-       write(ipr,610) (xname(j),j=1,nopt1)
-       if (nopt .gt. 8) then 
-          write(ipr,620) (xname(j),j=9,nopt)
-       end if
-       if (.not. maxit) then
-          write(ipr,630) nloop,icall,ngs1,bestf_tmp,worstf,gnrng, (bestx(j),j=1,nopt1)
-       else
-          write(ipr,630) nloop,icall,ngs1,-bestf_tmp,-worstf,gnrng, (bestx(j),j=1,nopt1)
-       end if
-       if (nopt .gt. 8) then
-          write(ipr,640) (bestx(j),j=9,nopt)
-       end if
+       ! write currently best x and xf to screen
+       call write_best_intermediate(.false.)
+
+       ! write population on screen
        if (iprint .eq. 1) then
-          write(ipr,650) nloop
-          do i = 1, npt1
-             write(ipr,660) xf(i),(x(i,j),j=1,nopt1)
-             if (nopt .gt. 8) then
-                write(ipr,640) (x(i,j),j=9,nopt)
-             end if
-          end do
+          call write_population(.false.)
        end if
     end if print
     !
@@ -643,10 +781,8 @@ CONTAINS
     if (icall .ge. maxn) then 
        if (iprint .lt. 2) then
           ! maximum trials reached
-          write(ipr,800) maxn,loop,igs,nloop
-          ! parameter set
-          write(ipr,830)
-          call write_best()
+          call write_termination_case(1)
+          call write_best_final()
        end if
        call set_optional()
        ! -----------------------
@@ -659,10 +795,8 @@ CONTAINS
     if (ipcnvg .eq. 1) then 
        if (iprint .lt. 2) then
           ! converged because feasible parameter space small
-          write(ipr,820) gnrng*100.
-          ! parameter set
-          write(ipr,830)
-          call write_best()
+          call write_termination_case(3)
+          call write_best_final()
        end if
        call set_optional()
        ! -----------------------
@@ -676,177 +810,304 @@ CONTAINS
        nloop = nloop + 1
        !
        if (iprint .lt. 2) then
-          write (*,*) ' ***  Evolution Loop Number ',nloop
+          write(ipr, *) ''
+          write(ipr,'(A28,I4)') ' ***  Evolution Loop Number ',nloop
        end if
        !
        !  begin loop on complexes
        !     <beta> loop from duan(1993)
-       ithread = 1
-       !$OMP parallel default(shared) &
-       !$OMP private(igs, loop, ithread, k, k1, k2, j, lpos_ok, lpos, rand, cx, cf, lcs, s, sf) &
-       !$OMP private(icall_merk, iicall, ihistory_tmp, large)
-       allocate(cx(npg,nopt)) 
-       allocate(cf(npg))
-       allocate(lcs(nps))
-       allocate(s(nps,nopt))
-       allocate(sf(nps))
-       allocate(ihistory_tmp(maxn+3*ngs*nspl))
-       !$OMP do
-       comploop: do igs = 1, ngs1
-          !$ ithread = OMP_GET_THREAD_NUM() + 1
-          !
-          !  assign points into complexes
-          do k1 = 1, npg
-             k2 = (k1-1) * ngs1 + igs
-             do j = 1, nopt
-                cx(k1,j) = x(k2,j)
-             end do
-             cf(k1) = xf(k2)
-          end do
-          !
-          !  begin inner loop - random selection of sub-complexes 
-          !     <alpha> loop from duan(1993)
-          subcomploop: do loop = 1, nspl
+
+       if (parall) then
+
+          ! -----------------------------------------------------------------------
+          ! Parallel version of complex-loop
+          ! -----------------------------------------------------------------------
+
+          ithread = 1
+          !$OMP parallel default(shared) &
+          !$OMP private(igs, loop, ithread, kk, k1, k2, jj, lpos_ok, lpos, rand, cx, cf, lcs, s, sf) &
+          !$OMP private(icall_merk, iicall, ihistory_tmp, large)
+          allocate(cx(npg,nn)) 
+          allocate(cf(npg))
+          allocate(lcs(nps))
+          allocate(s(nps,nn))
+          allocate(sf(nps))
+          allocate(ihistory_tmp(maxn+3*ngs*nspl))
+          !$OMP do
+          comploop_omp: do igs = 1, ngs1
+             !$ ithread = OMP_GET_THREAD_NUM() + 1
              !
-             !  choose a sub-complex (nps points) according to a linear
-             !  probability distribution
-             !
-             ! if number of points in subcomplex (nps) = number of points in complex (npg)
-             ! --> select all
-             if (nps .eq. npg) then
-                do k = 1, nps
-                   lcs(k) = k
+             !  assign points into complexes
+             do k1 = 1, npg
+                k2 = (k1-1) * ngs1 + igs
+                do jj = 1, nn
+                   cx(k1,jj) = x(k2,jj)
                 end do
-             else
-                call xor4096(iseed(ithread), rand, save_state=save_state_unif(ithread,:))
-                lcs(1) = 1 + int(npg + 0.5_dp - sqrt( (npg+.5)**2 - npg * (npg+1) * rand ))
-                do k = 2, nps
-                   lpos_ok = .false.
-                   do while (.not. lpos_ok)
-                      lpos_ok = .true.
-                      call xor4096(iseed(ithread), rand, save_state=save_state_unif(ithread,:))
-                      lpos = 1 + int(npg + 0.5_dp - sqrt((npg+.5)**2 -  npg * (npg+1) * rand ))
-                      ! test if point already chosen: returns lpos_ok=false if any point already exists
-                      do k1 = 1, k-1
-                         if (lpos .eq. lcs(k1)) lpos_ok = (lpos_ok .and. .false.)
-                      end do
+                cf(k1) = xf(k2)
+             end do
+             !
+             !  begin inner loop - random selection of sub-complexes 
+             !     <alpha> loop from duan(1993)
+             subcomploop_omp: do loop = 1, nspl
+                !
+                !  choose a sub-complex (nps points) according to a linear
+                !  probability distribution
+                !
+                ! if number of points in subcomplex (nps) = number of points in complex (npg)
+                ! --> select all
+                if (nps .eq. npg) then
+                   do kk = 1, nps
+                      lcs(kk) = kk
                    end do
-                   lcs(k) = lpos
+                else
+                   call xor4096(iseed(ithread), rand, save_state=save_state_unif(ithread,:))
+                   lcs(1) = 1 + int(real(npg,dp) + 0.5_dp &
+                        - sqrt( (real(npg,dp)+.5_dp)**2 - real(npg,dp) * real(npg+1,dp) * rand ))
+                   do kk = 2, nps
+                      lpos_ok = .false.
+                      do while (.not. lpos_ok)
+                         lpos_ok = .true.
+                         call xor4096(iseed(ithread), rand, save_state=save_state_unif(ithread,:))
+                         lpos = 1 + int(real(npg,dp) + 0.5_dp &
+                              - sqrt( (real(npg,dp)+.5_dp)**2 - real(npg,dp) * real(npg+1,dp) * rand ))
+                         ! test if point already chosen: returns lpos_ok=false if any point already exists
+                         do k1 = 1, kk-1
+                            if (lpos .eq. lcs(k1)) lpos_ok = (lpos_ok .and. .false.)
+                         end do
+                      end do
+                      lcs(kk) = lpos
+                   end do
+                   !
+                   !  arrange the sub-complex in order of increasing function value
+                   call sort(lcs(1:nps))
+                end if
+                !
+                !  create the sub-complex arrays
+                do kk = 1, nps
+                   do jj = 1, nn
+                      s(kk,jj) = cx(lcs(kk),jj)
+                   end do
+                   sf(kk) = cf(lcs(kk))
                 end do
                 !
-                !  arrange the sub-complex in order of increasing function value
-                call sort(lcs(1:nps))
-             end if
-             !
-             !  create the sub-complex arrays
-             do k = 1, nps
-                do j = 1, nopt
-                   s(k,j) = cx(lcs(k),j)
+                ! remember largest for treating of NaNs
+                if (maxit) then
+                   large = minval(cf(1:npg))
+                   large = merge(0.9_dp*large, 1.1_dp*large, large>0._dp)
+                else
+                   large = maxval(cf(1:npg))
+                   large = merge(1.1_dp*large, 0.9_dp*large, large>0._dp)
+                endif
+                !
+                !  use the sub-complex to generate new point(s)
+                icall_merk = icall
+                iicall     = icall
+                ihistory_tmp = history_tmp
+                call cce(s(1:nps,1:nn),sf(1:nps),bl(1:nn),bu(1:nn),maskpara,xnstd(1:nn),  &
+                     iicall,maxn,maxit,save_state_gauss(ithread,:),functn,alpha,beta,ihistory_tmp)
+                history_tmp(icall+1:icall+(iicall-icall_merk)) = ihistory_tmp(icall_merk+1:iicall)
+                icall = icall + (iicall-icall_merk)
+                !
+                !  if the sub-complex is accepted, replace the new sub-complex
+                !  into the complex
+                do kk = 1, nps
+                   do jj = 1, nn
+                      cx(lcs(kk),jj) = s(kk,jj)
+                   end do
+                   cf(lcs(kk)) = sf(kk)
                 end do
-                sf(k) = cf(lcs(k))
-             end do
-             !
-             ! remember largest for treating of NaNs
-             if (maxit) then
-                large = minval(cf(1:npg))
-                large = merge(0.9_dp*large, 1.1_dp*large, large>0._dp)
-             else
-                large = maxval(cf(1:npg))
-                large = merge(1.1_dp*large, 0.9_dp*large, large>0._dp)
-             endif
-             !
-             !  use the sub-complex to generate new point(s)
-             icall_merk = icall
-             iicall     = icall
-             ihistory_tmp = history_tmp
-             call cce(s(1:nps,1:nopt),sf(1:nps),bl(1:nopt),bu(1:nopt),xnstd(1:nopt),  &
-                      iicall,maxn,maxit,save_state_gauss(ithread,:),functn,alpha,beta,ihistory_tmp)
-             history_tmp(icall+1:icall+(iicall-icall_merk)) = ihistory_tmp(icall_merk+1:iicall)
-             icall = icall + (iicall-icall_merk)
-             !
-             !  if the sub-complex is accepted, replace the new sub-complex
-             !  into the complex
-             do k = 1, nps
-                do j = 1, nopt
-                   cx(lcs(k),j) = s(k,j)
-                end do
-                cf(lcs(k)) = sf(k)
-             end do
-             !
-             !  sort the points
+                !
+                !  sort the points
 #ifndef GFORTRAN
-             cf(1:npg) = merge(cf(1:npg), large, ieee_is_finite(cf(1:npg))) ! NaN and Infinite
+                cf(1:npg) = merge(cf(1:npg), large, ieee_is_finite(cf(1:npg))) ! NaN and Infinite
 #else
-             cf(1:npg) = merge(cf(1:npg), large, cf(1:npg) == cf(1:npg))   ! only NaN
+                cf(1:npg) = merge(cf(1:npg), large, cf(1:npg) == cf(1:npg))   ! only NaN
 #endif
-             call sort_matrix(cx(1:npg,1:nopt),cf(1:npg))
+                call sort_matrix(cx(1:npg,1:nn),cf(1:npg))
+                !
+                ! !  if maximum number of runs exceeded, break out of the loop
+                ! if (icall .ge. maxn) exit
+                !
+             end do subcomploop_omp ! <alpha loop>
              !
-             ! !  if maximum number of runs exceeded, break out of the loop
+             !  replace the new complex into original array x(.,.)
+             do k1 = 1, npg
+                k2 = (k1-1) * ngs1 + igs
+                do jj = 1, nn
+                   x(k2,jj) = cx(k1,jj)
+                end do
+                xf(k2) = cf(k1)
+             end do
              ! if (icall .ge. maxn) exit
              !
-          end do subcomploop ! <alpha loop>
-          !
-          !  replace the new complex into original array x(.,.)
-          do k1 = 1, npg
-             k2 = (k1-1) * ngs1 + igs
-             do j = 1, nopt
-                x(k2,j) = cx(k1,j)
-             end do
-             xf(k2) = cf(k1)
-          end do
-          ! if (icall .ge. maxn) exit
-          !
-          !  end loop on complexes
-       end do comploop  ! <beta loop> 
-       !$OMP end do
-       deallocate(cx)
-       deallocate(cf)
-       deallocate(lcs)
-       deallocate(s)
-       deallocate(sf)
-       deallocate(ihistory_tmp)
-       !$OMP end parallel
+             !  end loop on complexes
+          end do comploop_omp  ! <beta loop> 
+          !$OMP end do
+          deallocate(cx)
+          deallocate(cf)
+          deallocate(lcs)
+          deallocate(s)
+          deallocate(sf)
+          deallocate(ihistory_tmp)
+          !$OMP end parallel
 
+       else
+
+          ! -----------------------------------------------------------------------
+          ! Non-parallel version of complex-loop
+          ! -----------------------------------------------------------------------
+
+          allocate(cx(npg,nn)) 
+          allocate(cf(npg))
+          allocate(lcs(nps))
+          allocate(s(nps,nn))
+          allocate(sf(nps))
+
+          ithread = 1
+
+          comploop: do igs = 1, ngs1
+             !
+             !  assign points into complexes
+             do k1 = 1, npg
+                k2 = (k1-1) * ngs1 + igs
+                do jj = 1, nn
+                   cx(k1,jj) = x(k2,jj)
+                end do
+                cf(k1) = xf(k2)
+             end do
+             !
+             !  begin inner loop - random selection of sub-complexes 
+             !     <alpha> loop from duan(1993)
+             subcomploop: do loop = 1, nspl
+                !
+                !  choose a sub-complex (nps points) according to a linear
+                !  probability distribution
+                !
+                ! if number of points in subcomplex (nps) = number of points in complex (npg)
+                ! --> select all
+                if (nps .eq. npg) then
+                   do kk = 1, nps
+                      lcs(kk) = kk
+                   end do
+                else
+                   call xor4096(iseed(ithread), rand, save_state=save_state_unif(ithread,:))
+                   lcs(1) = 1 + int(real(npg,dp) + 0.5_dp &
+                        - sqrt( (real(npg,dp)+.5_dp)**2 - real(npg,dp) * real(npg+1,dp) * rand ))
+                   do kk = 2, nps
+                      lpos_ok = .false.
+                      do while (.not. lpos_ok)
+                         lpos_ok = .true.
+                         call xor4096(iseed(ithread), rand, save_state=save_state_unif(ithread,:))
+                         lpos = 1 + int(real(npg,dp) + 0.5_dp &
+                              - sqrt( (real(npg,dp)+.5_dp)**2 - real(npg,dp) * real(npg+1,dp) * rand ))
+                         ! test if point already chosen: returns lpos_ok=false if any point already exists
+                         do k1 = 1, kk-1
+                            if (lpos .eq. lcs(k1)) lpos_ok = (lpos_ok .and. .false.)
+                         end do
+                      end do
+                      lcs(kk) = lpos
+                   end do
+                   !
+                   !  arrange the sub-complex in order of inceasing function value
+                   call sort(lcs(1:nps))
+                end if
+                !
+                !  create the sub-complex arrays
+                do kk = 1, nps
+                   do jj = 1, nn
+                      s(kk,jj) = cx(lcs(kk),jj)
+                   end do
+                   sf(kk) = cf(lcs(kk))
+                end do
+                !
+                ! remember largest for treating of NaNs
+                if (maxit) then
+                   large = minval(cf(1:npg))
+                   large = merge(0.9_dp*large, 1.1_dp*large, large>0._dp)
+                else
+                   large = maxval(cf(1:npg))
+                   large = merge(1.1_dp*large, 0.9_dp*large, large>0._dp)
+                endif
+                !
+                !  use the sub-complex to generate new point(s)
+                call cce(s(1:nps,1:nn),sf(1:nps),bl(1:nn),bu(1:nn),maskpara,xnstd(1:nn),  &
+                     icall,maxn,maxit,save_state_gauss(ithread,:),functn, alpha,beta,history_tmp)
+                !
+                !  if the sub-complex is accepted, replace the new sub-complex
+                !  into the complex
+                do kk = 1, nps
+                   do jj = 1, nn
+                      cx(lcs(kk),jj) = s(kk,jj)
+                   end do
+                   cf(lcs(kk)) = sf(kk)
+                end do
+                !
+                !  sort the points
+#ifndef GFORTRAN
+                cf(1:npg) = merge(cf(1:npg), large, ieee_is_finite(cf(1:npg))) ! NaN and Infinite
+#else
+                cf(1:npg) = merge(cf(1:npg), large, cf(1:npg) == cf(1:npg))   ! only NaN
+#endif
+                call sort_matrix(cx(1:npg,1:nn),cf(1:npg))
+                !
+                !  if maximum number of runs exceeded, break out of the loop
+                if (icall .ge. maxn) exit
+                !
+             end do subcomploop ! <alpha loop>
+             !
+             !  replace the new complex into original array x(.,.)
+             do k1 = 1, npg
+                k2 = (k1-1) * ngs1 + igs
+                do jj = 1, nn
+                   x(k2,jj) = cx(k1,jj)
+                end do
+                xf(k2) = cf(k1)
+             end do
+             if (icall .ge. maxn) exit
+             !
+             !  end loop on complexes
+          end do comploop  ! <beta loop> 
+
+          deallocate(cx)
+          deallocate(cf)
+          deallocate(lcs)
+          deallocate(s)
+          deallocate(sf)
+
+       end if ! end parallel/non-parallel region
        !
        !  re-sort the points
-       call sort_matrix(x(1:npt1,1:nopt),xf(1:npt1))
+       call sort_matrix(x(1:npt1,1:nn),xf(1:npt1))
        !
        !  record the best and worst points
-       do j = 1, nopt
-          bestx(j) = x(1,j)
-          worstx(j) = x(npt1,j)
+       do jj = 1, nn
+          bestx(jj) = x(1,jj)
+          worstx(jj) = x(npt1,jj)
        end do
        bestf_tmp = xf(1)
        worstf    = xf(npt1)
        !
        !  test the population for parameter convergence
-       call parstt(x(1:npt1,1:nopt),bound,xnstd,gnrng,ipcnvg)
+       call parstt(x(1:npt1,1:nn),bound,peps,maskpara,xnstd,gnrng,ipcnvg)
+       !
+       ! write currently best x and xf to temporal file
+       if (present(tmp_file)) then
+          call write_best_intermediate(.true.)
+       end if
+       !
+       ! write population to file
+       if (present(popul_file)) then
+          call write_population(.true.)
+       end if
        !
        !  print the results for current population
        if (iprint .lt. 2) then
-          if (mod(nloop,5) .eq. 0) then
-             write(ipr,610) (xname(j),j=1,nopt1)
-             if (nopt .gt. 8) then
-                write(ipr,620) (xname(j),j=9,nopt)
-             end if
-          end if
-          if (.not. maxit) then
-             write(ipr,630) nloop,icall,ngs1,bestf_tmp,worstf,gnrng, (bestx(j),j=1,nopt1)
-          else
-             write(ipr,630) nloop,icall,ngs1,-bestf_tmp,-worstf,gnrng, (bestx(j),j=1,nopt1)
-          end if
-          if (nopt .gt. 8) then 
-             write(ipr,640) (bestx(j),j=9,nopt)
-          end if
+          call write_best_intermediate(.false.)
+
           if (iprint .eq. 1) then
-             write(ipr,650) nloop
-             do i = 1, npt1
-                write(ipr,660) xf(i),(x(i,j),j=1,nopt1)
-                if (nopt .gt. 8) then 
-                   write(ipr,640) (x(i,j),j=9,nopt)
-                end if
-             end do
+             call write_population(.false.)
           end if
+
        end if
        !
        !  test if maximum number of function evaluations exceeded
@@ -854,10 +1115,8 @@ CONTAINS
        if (icall .ge. maxn) then
           if (iprint .lt. 2) then
              ! maximum trials reached
-             write(ipr,800) maxn,loop,igs,nloop
-             ! parameter set
-             write(ipr,830)
-             call write_best()
+             call write_termination_case(1)
+             call write_best_final()
           end if
           call set_optional()
           ! -----------------------
@@ -876,10 +1135,8 @@ CONTAINS
           if (timeou .lt. pcento) then 
              if (iprint .lt. 2) then
                 ! criterion value has not changed during last loops
-                write(ipr,810) pcento*100.,kstop
-                ! parameter set
-                write(ipr,830)
-                call write_best()
+                call write_termination_case(2)
+                call write_best_final()
              end if
              call set_optional()
              ! -----------------------
@@ -888,18 +1145,16 @@ CONTAINS
              return
           end if
        end if
-       do l = 1, kstop
-          criter(l) = criter(l+1)
+       do ll = 1, kstop
+          criter(ll) = criter(ll+1)
        end do
        !
        !  if population is converged into a sufficiently small space
        if (ipcnvg .eq. 1) then 
           if (iprint .lt. 2) then
              ! converged because feasible parameter space small
-             write(ipr,820) gnrng*100.
-             ! parameter set
-             write(ipr,830)
-             call write_best()
+             call write_termination_case(3)
+             call write_best_final()
           end if
           call set_optional()
           ! -----------------------
@@ -915,69 +1170,137 @@ CONTAINS
           ngs2 = ngs1
           ngs1 = ngs1 - 1
           npt1 = ngs1 * npg
-          call comp(ngs2,npg,x(1:ngs2*npg,1:nopt),xf(1:ngs2*npg),xtmp(1:ngs2*npg,1:nopt),ftmp(1:ngs2*npg))
+          call comp(ngs2,npg,x(1:ngs2*npg,1:nn),xf(1:ngs2*npg),xtmp(1:ngs2*npg,1:nn),ftmp(1:ngs2*npg))
        end if
     end do mainloop
-    
+
     deallocate(xtmp)
     deallocate(ftmp)
 
     call set_optional()
 
-400 format('==================================================',/, &
-         'ENTER THE SHUFFLED COMPLEX EVOLUTION GLOBAL SEARCH',/, &
-         '==================================================',/   )
-500 format(//,'*** PRINT THE INITIAL POINT AND ITS CRITERION VALUE ***')
-600 format(//,1x,'*** PRINT THE RESULTS OF THE SCE SEARCH ***')
-610 format(/,1x,'LOOP',1x,'TRIALS',1x,'COMPLXS',2x,'BEST F',3x,'WORST F',3x,'PAR RNG',1x,8(6x,a4))
-620 format(49x,8(6x,a4))
-630 format(i5,1x,i5,3x,i5,3g10.3,8(f10.3))
-640 format(49x,8(f10.3))
-650 format(/,1x,'POPULATION AT LOOP ',i3,/,1x,'---------------------------')
-660 format(15x,g10.3,20x,8(f10.3))
-800 format(//,1x,'*** OPTIMIZATION SEARCH TERMINATED BECAUSE THE',  &
-         ' LIMIT ON THE MAXIMUM',/,5x,'NUMBER OF TRIALS ',i5,     &
-         ' EXCEEDED.  SEARCH WAS STOPPED AT',/,5x,'SUB-COMPLEX ', &
-         i3,' OF COMPLEX ',i3,' IN SHUFFLING LOOP ',i3,' ***')
-810 format(//,1x,'*** OPTIMIZATION TERMINATED BECAUSE THE CRITERION', &
-         ' VALUE HAS NOT CHANGED ',/,5x,f5.2,' PERCENT IN',i3,        &
-         ' SHUFFLING LOOPS ***')
-820 format(//,1x,'*** OPTIMIZATION TERMINATED BECAUSE THE POPULATION', &
-         ' HAS CONVERGED INTO ',/,4x,f5.2,' PERCENT OF THE', &
-         ' FEASIBLE SPACE ***')
-830 format(//,'*** PRINT THE FINAL PARAMETER ESTIMATE AND ITS', &
-         ' CRITERION VALUE ***')
-
   contains
 
-    subroutine write_best()
+    subroutine write_best_intermediate(to_file)
 
       implicit none
 
-      ! parameter set
-      write(ipr,510) (xname(j),j=1,nopt2)
-      if (.not. maxit) then
-         write(ipr,520) bestf_tmp,(bestx(j),j=1,nopt2)
+      logical, intent(in) :: to_file
+
+      if (to_file) then
+         open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append')
+         if (.not. maxit) then
+            write(999,*) nloop,icall,ngs1,bestf_tmp,worstf,gnrng, (bestx(jj),jj=1,nn)
+         else
+            write(999,*) nloop,icall,ngs1,-bestf_tmp,-worstf,gnrng, (bestx(jj),jj=1,nn)
+         end if
+         close(999)
       else
-         write(ipr,520) -bestf_tmp,(bestx(j),j=1,nopt2)
-      end if
-      if (nopt .gt. 12) then
-         write(ipr,530) (xname(j),j=13,nopt)
-         write(ipr,540) (bestx(j),j=13,nopt)
+         write(format_str1,'(A13,I3,A8)') '( A49, ',nn,'(6x,a4))'
+         write(format_str2,'(A26,I3,A8)') '(i5,1x,i5,3x,i5,3(f10.3), ',nn,'(f10.3))'
+         if (nloop == 0) then
+            write(ipr,*) ''
+            write(ipr,'(A44)') ' *** PRINT THE RESULTS OF THE SCE SEARCH ***'
+            write(ipr,*) ''
+            write(ipr,format_str1) ' LOOP TRIALS COMPLXS  BEST F   WORST F   PAR RNG ',(xname(jj),jj=1,nn)
+         end if
+         if (.not. maxit) then
+            write(ipr,format_str2) nloop,icall,ngs1,bestf_tmp,worstf,gnrng, (bestx(jj),jj=1,nn)
+         else
+            write(ipr,format_str2) nloop,icall,ngs1,-bestf_tmp,-worstf,gnrng, (bestx(jj),jj=1,nn)
+         end if
       end if
 
-510   format(/,' CRITERION',12(6x,a4),/, &
-              '------------------------------------------------------------')
-520   format(g10.3,12f10.3)
-530   format(10x,12(6x,a4))
-540   format(10x,12f10.3)
-      
-    end subroutine write_best
+    end subroutine write_best_intermediate
+
+    subroutine write_best_final()
+
+      implicit none
+
+      write(format_str1,'(A13,I3,A8)') '( A10, ',nn,'(6x,a4))'
+      write(format_str2,'(A14,I3,A8)') '(f10.3, ',nn,'(f10.3))'
+
+      write(ipr,format_str1) 'CRITERION ',(xname(jj),jj=1,nn)
+      if (.not. maxit) then
+         write(ipr,format_str2) bestf_tmp,(bestx(jj),jj=1,nn)
+      else
+         write(ipr,format_str2) -bestf_tmp,(bestx(jj),jj=1,nn)
+      end if
+
+    end subroutine write_best_final
+
+    subroutine write_population(to_file)
+
+      logical, intent(in) :: to_file
+
+      if (to_file) then
+         write(format_str2,'(A13,I3,A9)') '(I4, e22.14, ',nn,'(e22.14))'
+         open(unit=999,file=trim(adjustl(popul_file)), action='write', position='append')
+         if (.not. maxit) then
+            do ii = 1, npt1
+               write(999,*) nloop, xf(ii), (x(ii,jj),jj=1,nn)
+            end do
+         else
+            do ii = 1, npt1
+               write(999,*) nloop, -xf(ii), (x(ii,jj),jj=1,nn)
+            end do
+         end if
+         close(999)
+      else
+         write(format_str2,'(A8,I3,A8)') '(f10.3, ',nn,'(f10.3))'
+         write(ipr,*) ''
+         write(ipr,'(A22,I3)') '   POPULATION AT LOOP ',nloop
+         write(ipr,'(A27)')    '---------------------------'
+         if (.not. maxit) then
+            do ii = 1, npt1
+               write(ipr,format_str2) nloop, xf(ii), (x(ii,jj),jj=1,nn)
+            end do
+         else
+            do ii = 1, npt1
+               write(ipr,format_str2) nloop, -xf(ii), (x(ii,jj),jj=1,nn)
+            end do
+         end if
+      end if
+
+    end subroutine write_population
+
+    subroutine write_termination_case(case)
+
+      integer(i4), intent(in) :: case
+
+      select case (case)
+      case (1) ! maximal number of iterations reached
+         write(ipr,*) ''
+         write(ipr,'(A46,I7,A39,I4,A12,I4,A19,I4,A4)') &
+              '*** OPTIMIZATION SEARCH TERMINATED BECAUSE THE', &
+              ' LIMIT ON THE MAXIMUM NUMBER OF TRIALS ',maxn,   &
+              ' EXCEEDED.  SEARCH WAS STOPPED AT SUB-COMPLEX ', &
+              loop,' OF COMPLEX ',igs,' IN SHUFFLING LOOP ',nloop,' ***'
+         !
+      case(2) ! objective not changed during last evolution loops
+         write(ipr,*) ''
+         write(ipr,'(A72,F8.4,A12,I3,A20)') '*** OPTIMIZATION TERMINATED BECAUSE THE CRITERION VALUE HAS NOT CHANGED ', &
+              pcento*100._dp,' PERCENT IN ', kstop, ' SHUFFLING LOOPS ***'
+         !
+      case(3) ! complexes converged
+         write(ipr,*) ''
+         write(ipr,'(A50,A20,F8.4,A34)') '*** OPTIMIZATION TERMINATED BECAUSE THE POPULATION', &
+              ' HAS CONVERGED INTO ',gnrng*100._dp,' PERCENT OF THE FEASIBLE SPACE ***'
+         !
+      case default
+         write(ipr,*) 'This termination case is not implemented!'
+         stop
+      end select
+
+      write(ipr,*) ''
+      write(ipr,'(A66)') '*** PRINT THE FINAL PARAMETER ESTIMATE AND ITS CRITERION VALUE ***'
+
+    end subroutine write_termination_case
 
     subroutine set_optional()
 
       implicit none
-      
+
       if (present(neval))                   neval = icall
       if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
       if (present(bestf) .and. maxit)       bestf = -bestf_tmp
@@ -991,7 +1314,7 @@ CONTAINS
   end function sce
 
 
-  subroutine parstt(x,bound,xnstd,gnrng,ipcnvg)   
+  subroutine parstt(x,bound,peps,mask,xnstd,gnrng,ipcnvg)   
     !
     !  subroutine checking for parameter convergence
     !
@@ -999,17 +1322,20 @@ CONTAINS
 
     implicit none  
 
-    real(dp),    dimension(:,:),           intent(in)  :: x      ! points in population, cols=nopt, rows=npt1 (!)
+    real(dp),    dimension(:,:),           intent(in)  :: x      ! points in population, cols=nn, rows=npt1 (!)
     real(dp),    dimension(:),             intent(in)  :: bound  ! difference of upper and lower limit per parameter
+    real(dp),                              intent(in)  :: peps   ! optimization is terminated if volume of complex has 
+    !                                                            ! converged to given percentage of feasible space
+    logical,     dimension(:),            intent(in)   :: mask   ! mask of parameters
     real(dp),    dimension(size(bound,1)), intent(out) :: xnstd  ! std. deviation of points in population per parameter
     real(dp),                              intent(out) :: gnrng  ! fraction of feasible space covered by complexes
     integer(i4),                           intent(out) :: ipcnvg ! 1 : population converged into sufficiently small space
     !                                                            ! 0 : not converged
     !
     ! local variables
-    integer(i4)                         :: nopt    ! number of parameters
+    integer(i4)                         :: nn      ! number of parameters
     integer(i4)                         :: npt1    ! number of points in current population
-    integer(i4)                         :: i, k
+    integer(i4)                         :: ii, kk
     real(dp)                            :: xsum1   ! sum           of all values per parameter
     real(dp)                            :: xsum2   ! sum of square of all values per parameter
     real(dp)                            :: gsum    ! sum of all (range scaled) currently covered parameter ranges: 
@@ -1018,34 +1344,35 @@ CONTAINS
     real(dp), dimension(size(bound,1))  :: xmax    ! maximal value per parameter
     real(dp), dimension(size(bound,1))  :: xmean   ! mean    value per parameter
     real(dp),                 parameter :: delta = tiny(1.0_dp)
-    real(dp),                 parameter :: peps  = 0.001_dp
     !
-    nopt = size(bound,1)
+    nn   = size(x,2)
     npt1 = size(x,1)
 
     !  compute maximum, minimum and standard deviation of parameter values
     gsum = 0._dp
-    do k = 1, nopt
-       xmax(k) = -huge(1.0_dp)
-       xmin(k) =  huge(1.0_dp)
-       xsum1 = 0._dp
-       xsum2 = 0._dp
-       do i = 1, npt1
-          xmax(k) = dmax1(x(i,k), xmax(k))
-          xmin(k) = dmin1(x(i,k), xmin(k))
-          xsum1 = xsum1 + x(i,k)
-          xsum2 = xsum2 + x(i,k)*x(i,k)
-       end do
-       xmean(k) = xsum1 / real(npt1,dp)
-       xnstd(k) = (xsum2 / real(npt1,dp) - xmean(k)*xmean(k))
-       if (xnstd(k) .le. delta) then
-          xnstd(k) = delta
+    do kk = 1, nn
+       if (mask(kk)) then
+          xmax(kk) = -huge(1.0_dp)
+          xmin(kk) =  huge(1.0_dp)
+          xsum1 = 0._dp
+          xsum2 = 0._dp
+          do ii = 1, npt1
+             xmax(kk) = dmax1(x(ii,kk), xmax(kk))
+             xmin(kk) = dmin1(x(ii,kk), xmin(kk))
+             xsum1 = xsum1 + x(ii,kk)
+             xsum2 = xsum2 + x(ii,kk)*x(ii,kk)
+          end do
+          xmean(kk) = xsum1 / real(npt1,dp)
+          xnstd(kk) = (xsum2 / real(npt1,dp) - xmean(kk)*xmean(kk))
+          if (xnstd(kk) .le. delta) then
+             xnstd(kk) = delta
+          end if
+          xnstd(kk) = sqrt(xnstd(kk))
+          xnstd(kk) = xnstd(kk) / bound(kk)
+          gsum = gsum + log( delta + (xmax(kk)-xmin(kk))/bound(kk) )
        end if
-       xnstd(k) = sqrt(xnstd(k))
-       xnstd(k) = xnstd(k) / bound(k)
-       gsum = gsum + log( delta + (xmax(k)-xmin(k))/bound(k) )
     end do
-    gnrng = exp(gsum/real(nopt,dp))
+    gnrng = exp(gsum/real(nn,dp))
     !
     !  check if normalized standard deviation of parameter is <= eps
     ipcnvg = 0_i4
@@ -1122,10 +1449,10 @@ CONTAINS
 
     real(dp), dimension(:),   intent(inout) :: ra    ! rows: number of points in population --> npt1
     real(dp), dimension(:,:), intent(inout) :: rb    ! rows: number of points in population --> npt1
-    !                                                ! cols: number of parameters --> nopt
+    !                                                ! cols: number of parameters --> nn
     ! local variables
     integer(i4)                        :: n          ! number of points in population --> npt1
-    integer(i4)                        :: m          ! number of parameters --> nopt
+    integer(i4)                        :: m          ! number of parameters --> nn
     integer(i4)                        :: i
     integer(i4), dimension(size(rb,1)) :: iwk
     !
@@ -1145,7 +1472,7 @@ CONTAINS
 
   end subroutine sort_matrix
 
-  subroutine chkcst(x,bl,bu,ibound)
+  subroutine chkcst(x,bl,bu,mask,ibound)
     !
     !     This subroutine check if the trial point satisfies all
     !     constraints.
@@ -1153,7 +1480,7 @@ CONTAINS
     !     ibound - violation indicator
     !            = 0  no violation
     !            = 1  violation
-    !     nopt = number of optimizing variables
+    !     nn = number of optimizing variables
     !     ii = the ii'th variable of the arrays x, bl, and bu
     !
     !     Note: removed checking for implicit constraints (was anyway empty)
@@ -1161,28 +1488,32 @@ CONTAINS
     use mo_kind, only: i4, dp
     implicit none
 
-    real(dp), dimension(:),    intent(in)  :: x      ! trial point dim=(nopt)
-    real(dp), dimension(:),    intent(in)  :: bl     ! lower bound dim=(nopt)
-    real(dp), dimension(:),    intent(in)  :: bu     ! upper bound dim=(nopt)
+    real(dp), dimension(:),    intent(in)  :: x      ! trial point dim=(nn)
+    real(dp), dimension(:),    intent(in)  :: bl     ! lower bound dim=(nn)
+    real(dp), dimension(:),    intent(in)  :: bu     ! upper bound dim=(nn)
+    logical,  dimension(:),    intent(in)  :: mask   ! parameter mask
     integer(i4),               intent(out) :: ibound ! violation indicator
+
     ! local variables
     integer(i4) :: ii
-    integer(i4) :: nopt
+    integer(i4) :: nn
     !
     ibound = 0_i4
-    nopt   = size(x,1)
+    nn   = size(x,1)
 
-    do ii=1, nopt
-       if ( (x(ii) .lt. bl(ii)) .or. (x(ii) .gt. bu(ii)) ) then
-          ! This constraint is violated   
-          ibound = 1_i4
-          return
+    do ii=1, nn
+       if (mask(ii)) then
+          if ( (x(ii) .lt. bl(ii)) .or. (x(ii) .gt. bu(ii)) ) then
+             ! This constraint is violated   
+             ibound = 1_i4
+             return
+          end if
        end if
     end do
 
   end subroutine chkcst
 
-  subroutine getpnt(idist,bl,bu,std,xi,save_state,x)
+  subroutine getpnt(idist,bl,bu,std,xi,mask,save_state,x)
     !
     !     This subroutine generates a new point within feasible region
     !
@@ -1200,33 +1531,43 @@ CONTAINS
     real(dp),    dimension(:),            intent(in)    :: bu               ! upper bound
     real(dp),    dimension(:),            intent(in)    :: std              ! standard deviation of probability distribution
     real(dp),    dimension(:),            intent(in)    :: xi               ! focal point
+    logical,     dimension(:),            intent(in)    :: mask             ! mask of parameters
     integer(i8), dimension(n_save_state), intent(inout) :: save_state       ! save state of random number stream
     !                                                                       ! --> stream has to be according to idist
     real(dp),    dimension(size(xi,1)),   intent(out)   :: x                ! new point
     ! 
     ! local variables
-    integer(i4) :: nopt    ! number of parameters
-    integer(i4) :: j
+    integer(i4) :: nn    ! number of parameters
+    integer(i4) :: jj
     integer(i4) :: ibound   ! 0=point in bound, 1=point out of bound
     real(dp)    :: rand
     !
-    nopt = size(xi,1)
-    do j=1, nopt
-       ibound = 1
-       do while (ibound .eq. 1)
-          if (idist .eq. 1) call xor4096(0_i8, rand, save_state=save_state)  
-          if (idist .eq. 2) call xor4096g(0_i8, rand, save_state=save_state)  
-          x(j) = xi(j) + std(j) * rand * (bu(j) - bl(j))
-          !
-          !     Check explicit constraints
-          !        
-          call chkcst((/x(j)/),(/bl(j)/),(/bu(j)/),ibound)
-       end do
+    nn = size(xi,1)
+    do jj=1, nn
+       if (mask(jj)) then
+          ibound = 1
+          do while (ibound .eq. 1)
+             if (idist .eq. 1) then
+                call xor4096(0_i8, rand, save_state=save_state)
+                x(jj) = bl(jj) + std(jj) * rand * (bu(jj) - bl(jj))
+             end if
+             if (idist .eq. 2) then
+                call xor4096g(0_i8, rand, save_state=save_state)  
+                x(jj) = xi(jj) + std(jj) * rand * (bu(jj) - bl(jj))
+             end if
+             !
+             !     Check explicit constraints
+             !      
+             call chkcst((/x(jj)/),(/bl(jj)/),(/bu(jj)/),(/mask(jj)/),ibound)
+          end do
+       else
+          x(jj) = xi(jj)
+       end if
     end do
 
   end subroutine getpnt
 
-  subroutine cce(s,sf,bl,bu,xnstd,icall,maxn,maxit,save_state_gauss, functn, &
+  subroutine cce(s,sf,bl,bu,maskpara,xnstd,icall,maxn,maxit,save_state_gauss, functn, &
        alpha,beta,history)
     !
     !  algorithm generate a new point(s) from a sub-complex
@@ -1239,11 +1580,12 @@ CONTAINS
 
     implicit none    
 
-    real(dp),    dimension(:,:),          intent(inout) :: s                ! points in sub-complex, cols=nopt, rows=nps
+    real(dp),    dimension(:,:),          intent(inout) :: s                ! points in sub-complex, cols=nn, rows=nps
     real(dp),    dimension(:),            intent(inout) :: sf               ! objective function value of points in 
     !                                                                       ! sub-complex, rows=nps
     real(dp),    dimension(:),            intent(in)    :: bl               ! lower bound per parameter
     real(dp),    dimension(:),            intent(in)    :: bu               ! upper bound per parameter
+    logical,     dimension(:),            intent(in)    :: maskpara         ! mask of parameters
     real(dp),    dimension(:),            intent(in)    :: xnstd            ! standard deviation of points in 
     !                                                                       ! sub-complex per parameter
     integer(i8),                          intent(inout) :: icall            ! number of function evaluations
@@ -1263,11 +1605,11 @@ CONTAINS
     real(dp), dimension(maxn),   intent(inout) :: history ! history of best function value
     !
     ! local variables
-    integer(i4)                                :: nopt    ! number of parameters
+    integer(i4)                                :: nn      ! number of parameters
     integer(i4)                                :: nps     ! number of points in a sub-complex
     integer(i4)                                :: i, j
     integer(i4)                                :: n       ! nps  = number of points in sub-complex 
-    integer(i4)                                :: m       ! nopt = number of parameters
+    integer(i4)                                :: m       ! nn = number of parameters
     integer(i4)                                :: ibound  ! ibound = flag indicating if constraints are violated
     !                                                     !        = 1   yes
     !                                                     !        = 0   no
@@ -1279,11 +1621,11 @@ CONTAINS
     real(dp)                                   :: fnew    ! function value of the new point
 
     nps  = size(s,1)
-    nopt = size(s,2)
+    nn   = size(s,2)
     !
     ! equivalence of variables for readabilty of code
     n = nps
-    m = nopt
+    m = nn
     !
     ! identify the worst point wo of the sub-complex s
     ! compute the centroid ce of the remaining points
@@ -1304,18 +1646,22 @@ CONTAINS
     !
     ! first try a reflection step
     do j = 1, m
-       snew(j) = ce(j) + alpha * (ce(j) - sw(j))
+       if (maskpara(j)) then
+          snew(j) = ce(j) + alpha * (ce(j) - sw(j))
+       else
+          snew(j) = s(1,j)
+       end if
     end do
     !
     ! check if snew satisfies all constraints
-    call chkcst(snew(1:nopt),bl(1:nopt),bu(1:nopt),ibound)
+    call chkcst(snew(1:nn),bl(1:nn),bu(1:nn),maskpara(1:nn),ibound)
     !
     ! snew is outside the bound,
     ! choose a point at random within feasible region according to
     ! a normal distribution with best point of the sub-complex
     ! as mean and standard deviation of the population as std
     if (ibound .eq. 1) then
-       call getpnt(2,bl(1:nopt),bu(1:nopt),xnstd(1:nopt),sb(1:nopt),save_state_gauss,snew)
+       call getpnt(2,bl(1:nn),bu(1:nn),xnstd(1:nn),sb(1:nn),maskpara(1:nn),save_state_gauss,snew)
     end if
     !
     ! compute the function value at snew
@@ -1336,7 +1682,11 @@ CONTAINS
     ! fnew is greater than fw, so try a contraction step
     if (fnew .gt. fw) then
        do j = 1, m
-          snew(j) = ce(j) - beta * (ce(j) - sw(j))
+          if (maskpara(j)) then
+             snew(j) = ce(j) - beta * (ce(j) - sw(j))
+          else
+             snew(j) = s(1,j)
+          end if
        end do
        !
        ! compute the function value of the contracted point
@@ -1360,7 +1710,7 @@ CONTAINS
           ! if both reflection and contraction fail, choose another point
           ! according to a normal distribution with best point of the sub-complex
           ! as mean and standard deviation of the population as std
-          call getpnt(2,bl(1:nopt),bu(1:nopt),xnstd(1:nopt),sb(1:nopt),save_state_gauss,snew)
+          call getpnt(2,bl(1:nn),bu(1:nn),xnstd(1:nn),sb(1:nn),maskpara(1:nn),save_state_gauss,snew)
           !
           ! compute the function value at the random point
           if (.not. maxit) then
@@ -1392,6 +1742,5 @@ CONTAINS
     sf(n) = fnew
 
   end subroutine cce
-
 
 END MODULE mo_sce

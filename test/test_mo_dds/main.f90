@@ -40,6 +40,7 @@ program main
   dv_opt   = DDS(griewank, dv_ini, dv_range, r=r_val, seed=seed, maxiter=nIterMax, maxit=to_max)
 
   write(*,*) ''
+  write(*,*) 'DDS'
   write(*,'(A,10F9.4)') 'Should be    3.0825   0.0629   0.0362  -0.0063   0.0026  -7.6358   0.0718  -0.0528  -0.1008   0.0037'
   write(*,'(A,10F9.4)') 'Output is ', dv_opt
 
@@ -66,6 +67,7 @@ program main
   dv_opt   = MDDS(griewank, dv_ini, dv_range, seed=seed, maxiter=nIterMax, maxit=to_max)
 
   write(*,*) ''
+  write(*,*) 'MDDS'
   write(*,'(A,10F9.4)') 'Should be    3.1209   0.0577  -0.0168  -6.3592  -0.0393   0.0191  -8.2359   0.0158  -9.4605  -0.0736'
   write(*,'(A,10F9.4)') 'Output is ', dv_opt
 
