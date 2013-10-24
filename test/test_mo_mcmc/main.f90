@@ -47,7 +47,7 @@ program test_mcmc
   !     (2) posterior distribution of the parameters at the minimum (best parameterset) 
   !         will be sampled by MCMC
   call mcmc(loglikelihood_dp, parabest, rangePar, mcmc_paras, burnin_paras, &
-       ParaSelectMode_in=2_i4,tmp_file='tmp_parasets.nc',                   &
+       ParaSelectMode_in=2_i4,tmp_file='make_check_test_file',              &
        seed_in=seed, loglike_in=.true., maskpara_in=maskpara, printflag_in=.true.)
 
   write(*,*)''
