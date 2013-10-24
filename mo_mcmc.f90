@@ -553,7 +553,7 @@ CONTAINS
           if (allocated(history_accRatio)) deallocate(history_accRatio)
 
           parabestChanged = .false.
-          stepsize   = 0.15_dp
+          stepsize   = 1.0_dp
           trial      = 1_i4
           iStop      = .false.
           accMult    = 1.01_dp
