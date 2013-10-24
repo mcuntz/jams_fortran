@@ -331,7 +331,6 @@ CONTAINS
     integer(i4)                                      :: nopt        ! number of parameters to be optimized
     integer(i4)                                      :: nn          ! total number of parameters 
     integer(i4)                                      :: npt         ! total number of points in initial population (npt=ngs*npg)
-    integer(i4), dimension(:),   allocatable         :: truepara    ! indexes of parameters which will be optimized
     real(dp)                                         :: fpini       ! function value at initial point
     real(dp),    dimension(:,:), allocatable         :: x           ! coordinates of points in the population 
     real(dp),    dimension(:),   allocatable         :: xf          ! function values of x                    
@@ -425,16 +424,6 @@ CONTAINS
     ! total number of parameters
     nn   = size(pini,1)
 
-    ! truepara contains indexes of parameters which have to be optimized
-    allocate(truepara(nopt))
-    jj = 0
-    do ii=1, nn
-       if (maskpara(ii)) then
-          jj = jj + 1
-          truepara(jj) = ii
-       end if
-    end do
-
     ! input checking
     if (size(prange,dim=1) .ne. size(pini,1)) then
        stop 'mo_sce: prange has not matching rows'
@@ -444,6 +433,13 @@ CONTAINS
     end if
     bl(:)   = prange(:,1)
     bu(:)   = prange(:,2)
+    do ii=1, nn
+       if( (bu(ii)-bl(ii) .lt. epsilon(1.0_dp) ) .and. maskpara(ii) ) then
+          write(*,*) 'para #',ii,'  :: range = ( ',bl(ii),' , ',bu(ii),' )'
+          stop 'mo_sce: inconsistent or too small parameter range'
+       end if
+    end do
+    
     !
     ! optionals checking
     if (present(mymaxn)) then
