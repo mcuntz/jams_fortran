@@ -1,8 +1,13 @@
-MODULE mo_mcmc
+!> \file mo_mcmc.f90
 
-  ! This module is Monte Carlo Markov Chain sampling of a posterior parameter distribution
-  !
-  ! Written  Maren Goehler & Juliane Mai, Aug 2012
+!> \brief This module is Monte Carlo Markov Chain sampling of a posterior parameter distribution.
+
+!> \details This module is Monte Carlo Markov Chain sampling of a posterior parameter distribution.
+
+!> \authors Maren Goehler & Juliane Mai
+!> \date Aug 2012
+
+MODULE mo_mcmc
 
   ! License
   ! -------
@@ -27,7 +32,7 @@ MODULE mo_mcmc
   USE mo_xor4096, only: xor4096, xor4096g, get_timeseed, n_save_state
   USE mo_append,  only: append
   USE mo_moment,  only: stddev
-  !$ USE omp_lib,    only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
+  !$ USE omp_lib,    only: OMP_GET_NUM_THREADS
   use mo_ncwrite, only: dump_netcdf
 
   IMPLICIT NONE
@@ -38,37 +43,45 @@ MODULE mo_mcmc
   !
 
   ! NAME
-  !>        \brief mcmc
+  !>        \brief This module is Monte Carlo Markov Chain sampling of a posterior parameter distribution
   !
 
   ! PURPOSE
-  !>        \details Sample posterior parameter distribution with Metropolis Algorithm
+  !>        \details Sample posterior parameter distribution with Metropolis Algorithm.\n
+  !>                 This sampling is performed in two steps, i.e. the burn-in phase for adjusting 
+  !>                 model dependent parameters for the second step which is the proper 
+  !>                 sampling using the Metropolis Hastings Algorithm.\n\n
   !
-  !>     (1) BURN IN PHASE: FIND THE OPTIMAL STEP SIZE \n
-  !>          Purpose:\n
-  !>            find optimal stepsize for each parameter such that the
-  !>            acceptance ratio converges to a value around 0.3\n
-  !>          Important variables:\n
-  !>            burnin_iter           ... length of markov chain performed to calculate acceptance ratio\n
-  !>            acceptance ratio      ... ratio between accepted jumps and all trials (LEN)\n
-  !>            acceptance multiplier ... stepsize of a parameter is multiplied with
-  !>                                      this value when jump is accepted
-  !>                                      (initial : 1.01)\n
-  !>            rejection multiplier  ... stepsize of a parameter is multiplied with
-  !>                                      this value when jump is rejected\n
-  !>                                      (initial : 0.99 and will never be changed)\n
-  !>            stepsize              ... a new parameter value is chosen based on a uniform distribution\n
-  !>                                      pnew_i = pold_i + Unif[-stepsize_i, stepsize_i]\n
-  !>                                      (initial : stepsize_i = 1.0 for all i)\n
-  !>          Algorithm:\n
-  !>            (A) start a new markov chain of length burnin_iter with initial parameter set is the OPTIMAL one\n
-  !>                - select a set of parameters to change
-  !>                  (  accurate: choose 1,
-  !>                     comput. efficient: chose all,
-  !>                     moderate accurate & efficient: choose half )\n
+  !>     <b>1. BURN IN PHASE: FIND THE OPTIMAL STEP SIZE </b>\n\n
+  !
+  !>          <b><i>Purpose:</i></b>\n
+  !>            Find optimal stepsize for each parameter such that the
+  !>            acceptance ratio converges to a value around 0.3.\n
+  !>
+  !>          <b><i>Important variables:</i></b>\n
+  !>
+  !>            <b> Variable           |  Description                                                     </b> 
+  !>            ---------------------- | -----------------------------------------------------------------------
+  !>            burnin_iter            | length of markov chain performed to calculate acceptance ratio\n
+  !>            acceptance ratio       | ratio between accepted jumps and all trials (LEN)\n
+  !>            acceptance multiplier  | stepsize of a parameter is multiplied with this value when jump is 
+  !>                                     accepted (initial : 1.01)
+  !>            rejection multiplier   | stepsize of a parameter is multiplied with this value when jump is rejected 
+  !>                                     (initial : 0.99 and will never be changed)
+  !>            stepsize               | a new parameter value is chosen based on a uniform distribution 
+  !>                                     pnew_i = pold_i + Unif(-stepsize_i, stepsize_i) (initial : stepsize_i = 1.0 for all i)
+  !
+  !>          \n
+  !>          <b><i>Algorithm:</i></b>\n
+  !>          <ol>
+  !>          <li>start a new markov chain of length burnin_iter with initial parameter set is the OPTIMAL one</i>\n
+  !>                - select a set of parameters to change:\n
+  !>                  * accurate --> choose one parameter,\n
+  !>                  * comput. efficient --> choose all parameters,\n
+  !>                  * moderate accurate & efficient --> choose half of the parameters\n
   !>                - change parameter(s) based on their stepsize\n
   !>                - decide whether changed parameter set is accepted or rejected:\n
-  !>                  * odds Ratio = likelihood(p_new) / likelihood(p_old)\n
+  !>                  * \f$ \mathrm{odds Ratio} = \frac{\mathrm{likelihood}(p_{new})}{\mathrm{likelihood}(p_{old})} \f$\n
   !>                  * random number r = Uniform[0,1]\n
   !>                  * odds Ratio > 0 --> positive accept\n
   !>                    odds Ratio > r --> negative accept\n
@@ -77,8 +90,10 @@ MODULE mo_mcmc
   !>                  * accepted step: stepsize_i = stepsize_i * accptance multiplier\n
   !>                  * rejected step: stepsize_i = stepsize_i * rejection multiplier\n
   !>                - if step is accepted: for all changed parameter(s) change stepsize\n
-  !>            (B) calculate acceptance ratio of the Markov Chain\n
-  !>            (C) adjust acceptance multiplier acc_mult and
+  !
+  !>          <li>calculate acceptance ratio of the Markov Chain</i>\n
+  !
+  !>          <li>adjust acceptance multiplier acc_mult and
   !>                store good ratios in history list\n
   !>                - acceptance ratio < 0.23 --> acc_mult = acc_mult * 0.99\n
   !>                                              delete history list\n
@@ -86,36 +101,45 @@ MODULE mo_mcmc
   !>                                              delete history list\n
   !>                - 0.23 < acceptance ratio < 0.44\n
   !>                                              add acceptance ratio to history list\n
-  !>            (D) check if already 10 values are stored in history list and
+  !
+  !>          <li>check if already 10 values are stored in history list and
   !>                if they have converged to a value above 0.3\n
-  !>                ( mean above 0.3 and variance less Sqrt(1/12*0.05**2) = Variance
+  !>                ( mean above 0.3 and variance less \f$\sqrt{1/12*0.05^2}\f$ = Variance
   !>                  of uniform [acc_ratio +/- 2.5%] )\n
   !>                - if check is positive abort and save stepsizes\n
-  !>                  else goto (A)\n
-
-  !>      (2) MONTE CARLO MARKOV CHAIN: SAMPLE POSTERIOR DISTRIBUTION OF PARAMETER\n
-  !>          Purpose:\n
+  !>                  else goto (1)\n\n
+  !>          </ol>
+  !
+  !>
+  !>     <b>2. MONTE CARLO MARKOV CHAIN: SAMPLE POSTERIOR DISTRIBUTION OF PARAMETER</b>\n\n
+  !>          <b><i>Purpose:</i></b>\n
   !>            use the previous adapted stepsizes and perform ONE monte carlo markov chain\n
   !>            the accepted parameter sets show the posterior distribution of parameters\n
-  !>          Important variables:\n
-  !>            iter_mcmc             ... length of the markov chain (>> iter_burnin)\n
-  !>            stepsize              ... a new parameter value is chosen based on a uniform distribution\n
-  !>                                      pnew_i = pold_i + Unif[-stepsize_i, stepsize_i]\n
-  !>                                      use stepsizes of the burn-in (1)\n
-  !>          Algorithm:\n
-  !>            (A) select a set of parameters to change\n
-  !>                ( accurate: choose 1,
-  !>                  comput. efficient: chose all,
-  !>                  moderate accurate & efficient: choose half )\n
-  !>            (B) change parameter(s) based on their stepsize\n
-  !>            (C) decide whether changed parameter set is accepted or rejected:\n
-  !>                * odds Ratio = likelihood(p_new) / likelihood(p_old)\n
-  !>                * random number r = Uniform[0,1]\n
-  !>                * odds Ratio > 0 --> positive accept\n
-  !>                  odds Ratio > r --> negative accept\n
-  !>                  odds Ratio < r --> reject\n
-  !>            (D) if step is accepted: save parameter set\n
-  !>            (E) goto (A)\n
+  !>
+  !>          <b><i>Important variables:</i></b>\n
+  !>            <b> Variable           |  Description                                                     </b> 
+  !>            ---------------------- | -----------------------------------------------------------------------
+  !>            iter_mcmc              | length of the markov chain (>> iter_burnin)\n
+  !>            stepsize               | a new parameter value is chosen based on a uniform distribution 
+  !>                                     pnew_i = pold_i + Unif(-stepsize_i, stepsize_i) use stepsizes of the burn-in (1)\n
+  !
+  !>          \n
+  !>          <b><i>Algorithm:</i></b>\n
+  !>          <ol>
+  !>          <li> select a set of parameters to change\n
+  !>               * accurate --> choose one parameter,\n
+  !>               * comput. efficient --> choose all parameters,\n
+  !>               * moderate accurate & efficient --> choose half of the parameters\n
+  !>          <li> change parameter(s) based on their stepsize\n
+  !>          <li> decide whether changed parameter set is accepted or rejected:\n
+  !>               * \f$ \mathrm{odds Ratio} = \frac{\mathrm{likelihood}(p_{new})}{\mathrm{likelihood}(p_{old})} \f$\n
+  !>               * random number r = Uniform[0,1]\n
+  !>               * odds Ratio > 0 --> positive accept\n
+  !>                 odds Ratio > r --> negative accept\n
+  !>                 odds Ratio < r --> reject\n
+  !>          <li> if step is accepted: save parameter set\n
+  !>          <li> goto (1)\n
+  !>          </ol>
 
   !     CALLING SEQUENCE
   !         call mcmc(  likelihood, stddev_function, para, rangePar, mcmc_paras, burnin_paras, &
@@ -223,8 +247,8 @@ MODULE mo_mcmc
   !                                          - different modes of parameter selection
   !                                          OpenMP for chains of MCMC
   !                                          optional file for temporal output
-  !                              Nov. 2012 : Temporary file writing as NetCDF
-  !                              Aug. 2013 : New likelihood interface to reduce number of function evaluations
+  !                  Mai,        Nov. 2012 : Temporary file writing as NetCDF
+  !                  Mai,        Aug. 2013 : New likelihood interface to reduce number of function evaluations
   !                                          Only one seed has to be given
   INTERFACE mcmc
      MODULE PROCEDURE mcmc_dp
@@ -493,6 +517,7 @@ CONTAINS
     seeds = 0_i8
 
     parabest   = para
+    ! print*, parabest
 
     ! initialize likelihood and sigma
     likelibest  = likelihood(parabest,1.0_dp,stddev_new=stddev_new,likeli_new=likeli_new)
@@ -528,7 +553,7 @@ CONTAINS
           if (allocated(history_accRatio)) deallocate(history_accRatio)
 
           parabestChanged = .false.
-          stepsize   = 1.0_dp
+          stepsize   = 0.15_dp
           trial      = 1_i4
           iStop      = .false.
           accMult    = 1.01_dp
@@ -541,9 +566,10 @@ CONTAINS
           if (printflag) then
              print*, ' '
              print*, 'Restart Burn-In with new approximation of std.dev. of data: '
-             print*, '   stddev     = ',stddev_data
-             print*, '   likelihood = ',likelibest
-             print*, '   ssq        = ',-2.0_dp * stddev_data**2 * likelibest
+             print*, '   parabest   = ', parabest
+             print*, '   stddev     = ', stddev_data
+             print*, '   likelihood = ', likelibest
+             print*, '   ssq        = ', -2.0_dp * stddev_data**2 * likelibest
              print*, ' '
           end if
 
@@ -566,7 +592,6 @@ CONTAINS
                 ! (A) Generate new parameter set
                 ChangePara = .false.
                 paranew    = paraold
-
                 ! using RN from chain #1
                 call GenerateNewParameterset_dp(ParaSelectMode, paraold, truepara, rangePar, stepsize, &
                      save_state_2(1,:),&
@@ -584,6 +609,7 @@ CONTAINS
                    oddsRatio = likelinew/likeliold
                    if (oddsRatio .gt. 1.0_dp) oddsSwitch1 = .true.
                 end if
+! print*, 'oddsRatio = ',oddsRatio
 
                 ! (C) Accept or Reject?
                 If (oddsSwitch1) then
@@ -597,6 +623,7 @@ CONTAINS
                    end where
                    if (likelinew .gt. likelibest) then
                       parabest        = paranew
+                      likeliold       = likeli_new !JM
                       ! Here the sigma is reset!
                       likelibest      = likeli_new
                       stddev_data     = stddev_new
@@ -608,6 +635,7 @@ CONTAINS
                       print*, ''
                    end if
                    burnin_paras_part(Ipos(1)+Ineg(1),:) = paranew(:)
+! print*, 'positive accept'
 
                 else
 
@@ -626,10 +654,12 @@ CONTAINS
                       Ineg(1)   = Ineg(1) + 1_i4
                       paraold   = paranew
                       likeliold = likelinew
+                      ! stddev_data     = stddev_new !JM
                       where (changePara)
                          stepsize = stepsize * accMult
                       end where
                       burnin_paras_part(Ipos(1)+Ineg(1),:) = paranew(:) 
+! print*, 'negative accept'
 
                    else
 
@@ -637,10 +667,13 @@ CONTAINS
                       where (changePara)
                          stepsize = stepsize * rejMult
                       end where
+! print*, 'reject'
 
                    end if
 
                 end if
+
+! print*, ''
 
              end do markovchain
 
@@ -1078,6 +1111,8 @@ CONTAINS
        inbound = .false.
        call xor4096g(0_i8,RN3, save_state=save_state_3)
        paranew(iPar) = parGenNorm_dp( paraold(iPar), stepsize(iPar), rangePar(iPar,1), rangePar(iPar,2),RN3,inbound)
+! print*, 'p_old(',iPar,') = ',paraold(iPar)
+! print*, 'p_new(',iPar,') = ',paranew(iPar)
        ChangePara(iPar) = .True.
 
     case(3_i4)    ! change all
