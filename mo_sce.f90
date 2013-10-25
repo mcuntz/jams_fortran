@@ -1243,7 +1243,7 @@ CONTAINS
          end if
          close(999)
       else
-         write(format_str2,'(A8,I3,A8)') '(f10.3, ',nn,'(f10.3))'
+         write(format_str2,'(A12,I3,A8)') '(i4, f10.3, ',nn,'(f10.3))'
          write(ipr,*) ''
          write(ipr,'(A22,I3)') '   POPULATION AT LOOP ',nloop
          write(ipr,'(A27)')    '---------------------------'
