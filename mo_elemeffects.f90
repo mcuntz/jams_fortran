@@ -174,8 +174,8 @@ CONTAINS
        ! only within a trajectory
        if (changedpara(i) .gt. 0_i4) then
           ! determine model value
-          if ( modelstatus(i) .and. modelstatus(i+1) &
-               .and. (abs(para(i+1,changedpara(i))-para(i,changedpara(i))) .gt. tiny(0.0_dp)) ) then
+          if ( modelstatus(i) .and. modelstatus(i+1) .and. &
+               abs(para(i+1,changedpara(i))-para(i,changedpara(i))) .gt. epsilon(0.0_dp) ) then
              elemeffect(changedpara(i)) = elemeffect(changedpara(i)) &
                   + abs(                                             &
                   (modeloutput_0d(i+1)-modeloutput_0d(i))/           &
@@ -234,8 +234,8 @@ CONTAINS
        ! only within a trajectory
        if (changedpara(i) .gt. 0_i4) then
           ! determine model value
-          if ( modelstatus(i) .and. modelstatus(i+1) &
-               .and. (abs(para(i+1,changedpara(i))-para(i,changedpara(i))) .gt. tiny(0.0_sp)) ) then
+          if ( modelstatus(i) .and. modelstatus(i+1) .and. &
+               abs(para(i+1,changedpara(i))-para(i,changedpara(i))) .gt. epsilon(0.0_sp) ) then
              elemeffect(changedpara(i)) = elemeffect(changedpara(i)) &
                   + abs(                                             &
                   (modeloutput_0d(i+1)-modeloutput_0d(i))/           &
@@ -296,7 +296,8 @@ CONTAINS
        ! only within a trajectory
        if (changedpara(i) .gt. 0_i4) then
           ! only if both both parameter sets were valid
-          if (modelstatus(i) .and. modelstatus(i+1)) then
+          if (modelstatus(i) .and. modelstatus(i+1) .and. &
+              abs(para(i+1,changedpara(i))-para(i,changedpara(i))) .gt. epsilon(1.0_dp) ) then
              elemeffect(changedpara(i)) = elemeffect(changedpara(i)) &
                   + sum( abs(                                        &
                   (modeloutput_1d(i+1,:)-modeloutput_1d(i,:))/       &
@@ -358,7 +359,8 @@ CONTAINS
        ! only within a trajectory
        if (changedpara(i) .gt. 0_i4) then
           ! only if both both parameter sets were valid
-          if (modelstatus(i) .and. modelstatus(i+1)) then
+          if (modelstatus(i) .and. modelstatus(i+1) .and. &
+              abs(para(i+1,changedpara(i))-para(i,changedpara(i))) .gt. epsilon(1.0_sp) ) then
              elemeffect(changedpara(i)) = elemeffect(changedpara(i)) &
                   + sum( abs(                                        &
                   (modeloutput_1d(i+1,:)-modeloutput_1d(i,:))/       &
