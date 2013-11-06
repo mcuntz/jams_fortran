@@ -86,14 +86,18 @@ CONTAINS
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !>        \param[in] "integer(i8), optinal :: seed"      User seed to initialise the random number generator
-  !>                                                       (default: None)
-  !>        \param[in] "integer(i8), optinal :: maxiter"   Maximum number of iteration or function evaluation
-  !>                                                       (default: 1000)
-  !>        \param[in] "logical, optinal     :: maxit"     Maximization (.True.) or minimization (.False.) of function
-  !>                                                       (default: .False.)
-  !>        
-  !>        \param[in] "real(dp), optinal    :: r"         DDS perturbation parameter (default: 0.2)\n
+  !>        \param[in] "real(dp), optional           :: r"                 DDS perturbation parameter\n
+  !>                                                                       (default: 0.2)
+  !>        \param[in] "integer(i8), optional        :: seed"              User seed to initialise the random number generator
+  !>                                                                       (default: None)
+  !>        \param[in] "integer(i8), optional        :: maxiter"           Maximum number of iteration or function evaluation
+  !>                                                                       (default: 1000)
+  !>        \param[in] "logical, optional            :: maxit"             Maximization (.True.) or 
+  !>                                                                       minimization (.False.) of function
+  !>                                                                       (default: .False.)
+  !>        \param[in] "logical, optional            :: mask(size(pini))"  parameter to be optimized (true or false)
+  !>                                                                       (default: .True.)
+  !>        \param[in]  "character(len=*) , optional :: tmp_file"          file with temporal output
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -133,7 +137,7 @@ CONTAINS
   !                   Juliane Mai,                  Nov 2012 - masked parameter
   !                   Juliane Mai,                  Dec 2012 - history output
 
-  function DDS(obj_func, pini, prange, r, seed, maxiter, maxit, mask, funcbest, history)
+  function DDS(obj_func, pini, prange, r, seed, maxiter, maxit, mask, tmp_file, funcbest, history)
 
     use mo_kind,    only: i4, i8, dp
     use mo_xor4096, only: xor4096, xor4096g
@@ -148,16 +152,17 @@ CONTAINS
          real(dp) :: obj_func
        end function obj_func
     END INTERFACE
-    real(dp),    dimension(:),   intent(in)            :: pini     ! inital value of decision variables
-    real(dp),    dimension(:,:), intent(in)            :: prange   ! Min/max values of decision variables
+    real(dp),    dimension(:),             intent(in)  :: pini     ! inital value of decision variables
+    real(dp),    dimension(:,:),           intent(in)  :: prange   ! Min/max values of decision variables
     real(dp),                    optional, intent(in)  :: r        ! DDS perturbation parameter (-> 0.2 by default)
     integer(i8),                 optional, intent(in)  :: seed     ! User seed to initialise the random number generator
     integer(i8),                 optional, intent(in)  :: maxiter  ! Maximum number of iteration or function evaluation
     logical,                     optional, intent(in)  :: maxit    ! Maximization or minimization of function
     logical,     dimension(:),   optional, intent(in)  :: mask     ! parameter to be optimized (true or false)
+    character(len=*),            optional, intent(in)  :: tmp_file    ! file for temporal output
     real(dp),                    optional, intent(out) :: funcbest ! Best value of the function.
-    real(dp),    dimension(:),   &
-         allocatable,    optional, intent(out) :: history  ! History of objective function values
+    real(dp),    dimension(:),   optional, intent(out), &
+         allocatable                                   :: history  ! History of objective function values
     real(dp),    dimension(size(pini))                 :: DDS      ! Best value of decision variables
 
     ! Local variables
@@ -235,6 +240,19 @@ CONTAINS
        call xor4096g(iseed,ranval)
     endif
 
+    ! Temporal file writing
+    if(present(tmp_file)) then
+       open(unit=999,file=trim(adjustl(tmp_file)), action='write', status = 'unknown')
+       write(999,*) '# settings :: general'
+       write(999,*) '# nIterations    iseed'
+       write(999,*) imaxiter, iseed
+       write(999,*) '# settings :: dds specific'
+       write(999,*) '# dds_r'
+       write(999,*) ir
+       write(999,*) '# iter   bestf   (bestx(j),j=1,nopt)'
+       close(999)
+    end if
+
     ! Evaluate initial solution and return objective function value
     ! and Initialise the other variables (e.g. of_best)
     ! imaxit is 1.0 for MIN problems, -1 for MAX problems
@@ -242,6 +260,16 @@ CONTAINS
     of_new     = imaxit * obj_func(pini)
     of_best    = of_new
     if (present(history)) history(1) = of_new
+
+    file_write: if (present(tmp_file)) then
+       open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append')
+       if (imaxit .lt. 0.0_dp) then
+          write(999,*) '0', of_best, pini
+       else
+          write(999,*) '0', -of_best, pini
+       end if
+       close(999)
+    end if file_write
 
     ! Code below is now the DDS algorithm as presented in Figure 1 of Tolson and Shoemaker (2007)
 
@@ -281,6 +309,17 @@ CONTAINS
           DDS     = pnew
        end if
        if (present(history)) history(i+1) = of_best
+
+       file_write2: if (present(tmp_file)) then
+          open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append')
+          if (imaxit .lt. 0.0_dp) then
+             write(999,*) i, of_best, dds
+          else
+             write(999,*) i, -of_best, dds
+          end if
+          close(999)
+       end if file_write2
+
     end do
     if (present(funcbest)) funcbest = of_best
 
@@ -327,12 +366,16 @@ CONTAINS
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !>        \param[in] "integer(i8), optinal :: seed"      User seed to initialise the random number generator
-  !>                                                       (default: None)
-  !>        \param[in] "integer(i8), optinal :: maxiter"   Maximum number of iteration or function evaluation
-  !>                                                       (default: 1000)
-  !>        \param[in] "logical, optinal     :: maxit"     Maximization (.True.) or minimization (.False.) of function
-  !>                                                       (default: .False.)
+  !>        \param[in] "integer(i8), optional        :: seed"              User seed to initialise the random number generator
+  !>                                                                       (default: None)
+  !>        \param[in] "integer(i8), optional        :: maxiter"           Maximum number of iteration or function evaluation
+  !>                                                                       (default: 1000)
+  !>        \param[in] "logical, optional            :: maxit"             Maximization (.True.) or 
+  !>                                                                       minimization (.False.) of function
+  !>                                                                       (default: .False.)
+  !>        \param[in] "logical, optional            :: mask(size(pini))"  parameter to be optimized (true or false)
+  !>                                                                       (default: .True.)
+  !>        \param[in]  "character(len=*) , optional :: tmp_file"          file with temporal output
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -373,7 +416,7 @@ CONTAINS
   !         Modified, Juliane Mai,                  Nov 2012 - masked parameter
   !                   Juliane Mai,                  Dec 2012 - history output
 
-  function MDDS(obj_func, pini, prange, seed, maxiter, maxit, mask, funcbest, history)
+  function MDDS(obj_func, pini, prange, seed, maxiter, maxit, mask, tmp_file, funcbest, history)
 
     use mo_kind,    only: i4, i8, dp
     use mo_xor4096, only: xor4096, xor4096g
@@ -388,16 +431,17 @@ CONTAINS
          real(dp) :: obj_func
        end function obj_func
     END INTERFACE
-    real(dp),    dimension(:),           intent(in)  :: pini     ! inital value of decision variables
-    real(dp),    dimension(:,:),         intent(in)  :: prange   ! Min/max values of decision variables
-    integer(i8),               optional, intent(in)  :: seed     ! User seed to initialise the random number generator
-    integer(i8),               optional, intent(in)  :: maxiter  ! Maximum number of iteration or function evaluation
-    logical,                   optional, intent(in)  :: maxit    ! Maximization or minimization of function
-    logical,     dimension(:), optional, intent(in)  :: mask     ! parameter to be optimized (true or false)
-    real(dp),                  optional, intent(out) :: funcbest ! Best value of the function.
-    real(dp),    dimension(:),   &
-         allocatable,  optional, intent(out) :: history  ! History of objective function values
-    real(dp),    dimension(size(pini))               :: MDDS     ! Best value of decision variables
+    real(dp),    dimension(:),             intent(in)  :: pini     ! inital value of decision variables
+    real(dp),    dimension(:,:),           intent(in)  :: prange   ! Min/max values of decision variables
+    integer(i8),                 optional, intent(in)  :: seed     ! User seed to initialise the random number generator
+    integer(i8),                 optional, intent(in)  :: maxiter  ! Maximum number of iteration or function evaluation
+    logical,                     optional, intent(in)  :: maxit    ! Maximization or minimization of function
+    logical,     dimension(:),   optional, intent(in)  :: mask     ! parameter to be optimized (true or false)
+    character(len=*),            optional, intent(in)  :: tmp_file ! file for temporal output
+    real(dp),                    optional, intent(out) :: funcbest ! Best value of the function.
+    real(dp),    dimension(:),   optional, intent(out), &
+         allocatable                                   :: history  ! History of objective function values
+    real(dp),    dimension(size(pini))                 :: MDDS     ! Best value of decision variables
 
     ! Local variables
     integer(i4)                             :: pnum                   ! Total number of decision variables
@@ -471,6 +515,19 @@ CONTAINS
        end if
     end do
 
+    ! Temporal file writing
+    if(present(tmp_file)) then
+       open(unit=999,file=trim(adjustl(tmp_file)), action='write', status = 'unknown')
+       write(999,*) '# settings :: general'
+       write(999,*) '# nIterations    iseed'
+       write(999,*) imaxiter, iseed
+       write(999,*) '# settings :: mdds specific'
+       write(999,*) '# None'
+       write(999,*) ''
+       write(999,*) '# iter   bestf   (bestx(j),j=1,nopt)'
+       close(999)
+    end if
+
     ! Evaluate initial solution and return objective function value
     ! and Initialise the other variables (e.g. of_best)
     ! imaxit is 1.0 for MIN problems, -1 for MAX problems
@@ -478,6 +535,16 @@ CONTAINS
     of_new  = imaxit * obj_func(pini)
     of_best = of_new
     if (present(history)) history(1) = of_new
+
+    file_write: if (present(tmp_file)) then
+       open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append')
+       if (imaxit .lt. 0.0_dp) then
+          write(999,*) '0', of_best, mdds
+       else
+          write(999,*) '0', -of_best, mdds
+       end if
+       close(999)
+    end if file_write
 
     ! Code below is now the MDDS algorithm as presented in Figure 1 of Tolson and Shoemaker (2007)
 
@@ -536,6 +603,17 @@ CONTAINS
              history(i+1) = min(history(i),of_best)
           end if
        end if
+
+       file_write2: if (present(tmp_file)) then
+          open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append')
+          if (imaxit .lt. 0.0_dp) then
+             write(999,*) i, of_best, mdds
+          else
+             write(999,*) i, -of_best, mdds
+          end if
+          close(999)
+       end if file_write2
+
     end do
     if (present(funcbest)) funcbest = of_best
 
