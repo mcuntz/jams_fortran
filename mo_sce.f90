@@ -1193,7 +1193,7 @@ CONTAINS
          close(999)
       else
          write(format_str1,'(A13,I3,A8)') '( A49, ',nn,'(6x,a4))'
-         write(format_str2,'(A26,I3,A8)') '(i5,1x,i5,3x,i5,3(f10.3), ',nn,'(f10.3))'
+         write(format_str2,'(A26,I3,A8)') '(i5,1x,i5,3x,i5,3(e22.14), ',nn,'(f10.3))'
          if (nloop == 0) then
             write(ipr,*) ''
             write(ipr,'(A44)') ' *** PRINT THE RESULTS OF THE SCE SEARCH ***'
@@ -1214,7 +1214,7 @@ CONTAINS
       implicit none
 
       write(format_str1,'(A13,I3,A8)') '( A10, ',nn,'(6x,a4))'
-      write(format_str2,'(A14,I3,A8)') '(f10.3, ',nn,'(f10.3))'
+      write(format_str2,'(A14,I3,A8)') '(e22.14, ',nn,'(f10.3))'
 
       write(ipr,format_str1) 'CRITERION ',(xname(jj),jj=1,nn)
       if (.not. maxit) then
@@ -1243,7 +1243,7 @@ CONTAINS
          end if
          close(999)
       else
-         write(format_str2,'(A12,I3,A8)') '(i4, f10.3, ',nn,'(f10.3))'
+         write(format_str2,'(A12,I3,A8)') '(i4, e22.14, ',nn,'(f10.3))'
          write(ipr,*) ''
          write(ipr,'(A22,I3)') '   POPULATION AT LOOP ',nloop
          write(ipr,'(A27)')    '---------------------------'
@@ -1267,7 +1267,7 @@ CONTAINS
       select case (case)
       case (1) ! maximal number of iterations reached
          write(ipr,*) ''
-         write(ipr,'(A46,I7,A39,I4,A12,I4,A19,I4,A4)') &
+         write(ipr,'(A46,A39,I7,A46,I4,A12,I4,A19,I4,A4)') &
               '*** OPTIMIZATION SEARCH TERMINATED BECAUSE THE', &
               ' LIMIT ON THE MAXIMUM NUMBER OF TRIALS ',maxn,   &
               ' EXCEEDED.  SEARCH WAS STOPPED AT SUB-COMPLEX ', &
