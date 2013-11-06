@@ -56,10 +56,10 @@ MODULE mo_anneal
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         anneal
+  !>        \brief anneal
 
   !     PURPOSE
-  !         Optimizes a user provided cost function using the Simulated Annealing strategy
+  !>        \details Optimizes a user provided cost function using the Simulated Annealing strategy.
 
 
   !     CALLING SEQUENCE
@@ -74,116 +74,125 @@ MODULE mo_anneal
 
   !         see also test folder for a detailed example
 
-  !     FUNCTION RETURN
-  !         REAL(DP),    DIMENSION(size(para,1))   :: parabest ... parameter set minimizing the
-  !                                                                cost function
-
   !     INTENT(IN)
-  !         INTERFACE                              :: cost_dp  ... interface calculating the
-  !                                                                cost function at a given point
+  !>        \param[in]  "INTERFACE                       :: cost_dp"         interface calculating the
+  !>                                                                         cost function at a given point
 
-  !         REAL(DP),    DIMENSION(:)              :: para     ... initial parameter set
+  !>        \param[in]  "REAL(DP),    DIMENSION(:)       :: para"            initial parameter set
 
   !     INTENT(INOUT)
   !         None
   !
   !     INTENT(OUT)
   !         None
+  !
   !     INTENT(IN), OPTIONAL
-  !         REAL(DP), DIMENSION(size(para),2) :: prange         ... lower and upper bound per parameter
+  !>        \param[in]  "REAL(DP), DIMENSION(size(para),2), optional :: prange"
+  !>                                                                         lower and upper bound per parameter
   !             OR
-  !         INTERFACE                         :: prange_func    ... interface calculating the
-  !                                                                 feasible range for a parameter
-  !                                                                 at a certain point, if ranges are variable
+  !>        \param[in]  "INTERFACE, optional             :: prange_func"     interface calculating the
+  !>                                                                         feasible range for a parameter
+  !>                                                                         at a certain point, if ranges are variable
 
-  !         REAL(DP)                          :: temp           ... initial temperature
-  !                                                                 DEFAULT: Get_Temperature
+  !>        \param[in]  "REAL(DP), optional              :: temp"            initial temperature \n
+  !>                                                                         DEFAULT: Get_Temperature
 
-  !         REAL(DP)                          :: DT             ... geometrical decreement of temperture
-  !                                                                 0.7<DT<0.999
-  !                                                                 DEFAULT: 0.9_dp
+  !>        \param[in]  "REAL(DP), optional              :: DT"              geometrical decreement of temperature \n
+  !>                                                                         0.7<DT<0.999 \n
+  !>                                                                         DEFAULT: 0.9_dp
 
-  !         INTEGER(I4)                       :: nITERmax       ... maximal number of iterations
-  !                                                                 will be increased by 10% if stopping criteria of
-  !                                                                 acceptance ratio or epsilon decreement of cost
-  !                                                                 function is not fullfilled
-  !                                                                 DEFAULT: 1000_i4
+  !>        \param[in]  "INTEGER(I4), optional           :: nITERmax"        maximal number of iterations \n
+  !>                                                                         will be increased by 10% if stopping criteria of
+  !>                                                                         acceptance ratio or epsilon decreement of cost
+  !>                                                                         function is not fullfilled \n
+  !>                                                                         DEFAULT: 1000_i4
 
-  !         INTEGER(I4)                       :: LEN            ... Length of Markov Chain
-  !                                                                 DEFAULT: MAX(250_i4, size(para,1))
+  !>        \param[in]  "INTEGER(I4), optional           :: LEN"             Length of Markov Chain \n
+  !>                                                                         DEFAULT: MAX(250_i4, size(para,1))
 
-  !         INTEGER(I4)                       :: nST            ... Number of consecutive LEN steps
-  !                                                                 DEFAULT: 5_i4
+  !>        \param[in]  "INTEGER(I4), optional           :: nST"             Number of consecutive LEN steps \n
+  !>                                                                         DEFAULT: 5_i4
 
-  !         REAL(DP)                          :: eps            ... Stopping criteria of epsilon decreement of
-  !                                                                 cost function
-  !                                                                 DEFAULT: 0.0001_dp
+  !>        \param[in]  "REAL(DP), optional              :: eps"             Stopping criteria of epsilon decreement of
+  !>                                                                         cost function \n
+  !>                                                                         DEFAULT: 0.0001_dp
 
-  !         REAL(DP)                          :: acc            ... Stopping criteria for Acceptance Ratio
-  !                                                                 acc    <= 0.1_dp
-  !                                                                 DEFAULT: 0.1_dp
+  !>        \param[in]  "REAL(DP), optional              :: acc"             Stopping criteria for Acceptance Ratio \n
+  !>                                                                         acc    <= 0.1_dp \n
+  !>                                                                         DEFAULT: 0.1_dp
 
-  !         INTEGER(I4/I8), DIMENSION(3)      :: seeds          ... Seeds of random numbers used for random parameter
-  !                                                                 set generation
-  !                                                                 DEFAULT: dependent on current time
+  !>        \param[in]  "INTEGER(I4/I8), DIMENSION(3), optional      :: seeds" 
+  !>                                                                         Seeds of random numbers used for random parameter
+  !>                                                                         set generation \n
+  !>                                                                         DEFAULT: dependent on current time
 
-  !         LOGICAL                           :: printflag      ... If .true. detailed command line output is written
-  !                                                                 DEFAULT: .false.
-  !         LOGICAL, DIMENSION(size(para,1))  :: maskpara       ... vector of logicals
-  !                                                                 maskpara(i) = .true.  --> parameter is optimized
-  !                                                                 maskpara(i) = .false. --> parameter is discarded
-  !                                                                                           from optimiztaion
-  !                                                                 DEFAULT: .true.
+  !>        \param[in]  "LOGICAL, optional                           :: printflag" 
+  !>                                                                         If .true. detailed command line output is written \n
+  !>                                                                         DEFAULT: .false.
 
-  !         REAL(DP), DIMENSION(size(para,1)) :: weight         ... vector of weights per parameter
-  !                                                                 gives the frequency of parameter to be chosen for
-  !                                                                 optimization (will be scaled to a CDF internally)
-  !                                                                 eg. [1,2,1] --> parameter 2 is chosen twice as
-  !                                                                 often as parameter 1 and 2
-  !                                                                 DEFAULT: weight = 1.0_dp
-  !         INTEGER(I4)                       :: changeParaMode ... which and how many param.are changed in one step
-  !                                                                 1 = one parameter
-  !                                                                 2 = all parameter
-  !                                                                 3 = neighborhood parameter
-  !                                                                 DEFAULT: 1_i4
+  !>        \param[in]  "LOGICAL, DIMENSION(size(para)), optional  :: maskpara"
+  !>                                                                         maskpara(i) = .true.  --> parameter is optimized \n
+  !>                                                                         maskpara(i) = .false. --> parameter is discarded
+  !>                                                                                                   from optimiztaion \n
+  !>                                                                         DEFAULT: .true.
 
-  !         LOGICAL                           :: reflectionFlag ... if new parameter values are Gaussian distributed and
-  !                                                                  reflected (.true.) or uniform in range (.false.)
-  !                                                                  DEFAULT: .false.
+  !>        \param[in]  "REAL(DP), DIMENSION(size(para)), optional :: weight" 
+  !>                                                                         vector of weights per parameter: \n
+  !>                                                                         gives the frequency of parameter to be chosen for
+  !>                                                                         optimization (will be scaled to a CDF internally) \n
+  !>                                                                         eg. [1,2,1] --> parameter 2 is chosen twice as
+  !>                                                                         often as parameter 1 and 2 \n
+  !>                                                                         DEFAULT: weight = 1.0_dp
 
-  !         LOGICAL                           :: pertubFlexFlag ... if pertubation of Gaussian distributed parameter
-  !                                                                 values is constant 0.2 (.false.) or
-  !                                                                 depends on dR (.true.)
-  !                                                                 DEFAULT: .true.
+  !>        \param[in]  "INTEGER(I4), optional           :: changeParaMode"  which and how many param.are changed in one step \n
+  !>                                                                         1 = one parameter \n
+  !>                                                                         2 = all parameter \n
+  !>                                                                         3 = neighborhood parameter \n
+  !>                                                                         DEFAULT: 1_i4
 
-  !         LOGICAL                           :: maxit          ... .true.  for maximizing a function
-  !                                                                 .false. for minimizing a function
-  !                                                                 DEFAULT: .false. (minimization)
-  !         REAL(DP)                          :: undef_funcval  ... objective function value defining invalid
-  !                                                                 model output, e.g. -999.0_dp
-  !                                                                 DEFAULT: not present
+  !>        \param[in]  "LOGICAL, optional               :: reflectionFlag"  if new parameter values are Gaussian 
+  !>                                                                         distributed and reflected (.true.) or
+  !>                                                                         uniform in range (.false.) \n
+  !>                                                                         DEFAULT: .false.
+
+  !>        \param[in]  "LOGICAL, optional               :: pertubFlexFlag"  if pertubation of Gaussian distributed 
+  !>                                                                         parameter values is constant 
+  !>                                                                         at 0.2 (.false.) or 
+  !>                                                                         depends on dR (.true.) \n
+  !>                                                                         DEFAULT: .true.
+
+  !>        \param[in]  "LOGICAL, optional               :: maxit"           maximizing (.true.) or minimizing (.false.)
+  !>                                                                         a function \n
+  !>                                                                         DEFAULT: .false. (minimization)
+
+  !>        \param[in]  "REAL(DP), optional              :: undef_funcval"   objective function value defining invalid
+  !>                                                                         model output, e.g. -999.0_dp \n
+
+  !>        \param[in]  "character(len=*) , optional     :: tmp_file"        file with temporal output
 
   !     INTENT(INOUT), OPTIONAL
   !         None
 
   !     INTENT(OUT), OPTIONAL
-  !         REAL(DP)                               :: funcbest ... minimized value of cost function
-  !         REAL(DP), DIMENSION(:,:), ALLOCATABLE  :: history  ... returns a vector of achieved objective
-  !                                                                after ith model evaluation
+  !>        \param[out]  "REAL(DP), optional             :: funcbest"        minimized value of cost function
+
+  !>        \param[out]  "REAL(DP), DIMENSION(:,:), ALLOCATABLE, optional
+  !>                                                     :: history"         returns a vector of achieved objective
+  !                                                                          after ith model evaluation
+
+  !     RETURN                                                            
+  !>        \return real(dp) :: parabest(size(para))  &mdash;  Parameter set minimizing the cost function.
 
   !     RESTRICTIONS
-  !         Either fixed parameter range (prange) OR flexible parameter range (function interface prange_func)
-  !         has to be given in calling sequence.
-
-  !         Only double precision version.
-  !         If single precision is needed not only DP has to be replaced by SP
-  !         but also I8 of save_state (random number variables) has to be replaced by I4.
-
-  !         ParaChangeMode > 1 is not applied in GetTemperature.
-  !         For Temperature estimation always only one single parameter is changed (ParaChangeMode=1)
-  !         which should give theoretically always the best estimate.
-
-  !         Cost and prange_func are user defined functions. See interface definition.
+  !>        \note Either fixed parameter range (prange) OR flexible parameter range (function interface prange_func)
+  !>              has to be given in calling sequence. \n
+  !>              Only double precision version available. \n
+  !>              If single precision is needed not only DP has to be replaced by SP
+  !>              but also I8 of save_state (random number variables) has to be replaced by I4. \n
+  !>              ParaChangeMode > 1 is not applied in GetTemperature. 
+  !>              For Temperature estimation always only one single parameter is changed (ParaChangeMode=1)
+  !>              which should give theoretically always the best estimate. \n
+  !>              Cost and prange_func are user defined functions. See interface definition.
 
   !     EXAMPLE
   !         see test/test_mo_anneal/
@@ -217,11 +226,11 @@ MODULE mo_anneal
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         GetTemperature
+  !>        \brief GetTemperature
 
   !     PURPOSE
-  !         Determines an initial temperature for Simulated Annealing achieving
-  !         certain acceptance ratio
+  !>        \details Determines an initial temperature for Simulated Annealing achieving
+  !         certain acceptance ratio.
 
 
   !     CALLING SEQUENCE
@@ -237,17 +246,11 @@ MODULE mo_anneal
 
   !         see also test folder for a detailed example
 
-  !     FUNCTION RETURN
-  !         REAL(DP)                    :: temperature ... temperature achieving a certain
-  !                                                        acceptance ratio for Sim. Ann.
-
   !     INTENT(IN)
-  !         REAL(DP),    DIMENSION(:)   :: paraset     ... initial (valid) parameter set
-
-  !         INTERFACE                   :: cost_dp     ... interface calculating the
-  !                                                        cost function at a given point
-
-  !         REAL(DP)                    :: acc_goal    ... Acceptance Ratio which has to be achieved
+  !>        \param[in] "REAL(DP),    DIMENSION(:)   :: paraset"   initial (valid) parameter set
+  !>        \param[in] "INTERFACE                   :: cost_dp"   interface calculating the
+  !>                                                              cost function at a given point
+  !>        \param[in] "REAL(DP)                    :: acc_goal"  Acceptance Ratio which has to be achieved
 
   !     INTENT(INOUT)
   !         None
@@ -256,42 +259,46 @@ MODULE mo_anneal
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !         REAL(DP), DIMENSION(size(para),2) :: prange         ... lower and upper bound per parameter
+  !>        \param[in] "REAL(DP), DIMENSION(size(para),2), optional :: prange"
+  !>                                                                         lower and upper bound per parameter
   !             OR
-  !         INTERFACE                         :: prange_func    ... interface calculating the
-  !                                                                 feasible range for a parameter
-  !                                                                 at a certain point, if ranges are variable
+  !>        \param[in] "INTERFACE, optional              :: prange_func"     interface calculating the
+  !>                                                                         feasible range for a parameter
+  !>                                                                         at a certain point, if ranges are variable
 
-  !         INTEGER(I4)                       :: samplesize     ... number of iterations the estimation of temperature
-  !                                                                 is based on
-  !                                                                 DEFAULT: Max(20_i4*n,250_i4)
+  !>        \param[in] "INTEGER(I4), optional            :: samplesize"      number of iterations the estimation of temperature
+  !>                                                                         is based on \n
+  !>                                                                         DEFAULT: Max(20_i4*n,250_i4)
 
-  !         LOGICAL, DIMENSION(size(para,1))  :: maskpara       ... vector of logicals
-  !                                                                 maskpara(i) = .true.  --> parameter is optimized
-  !                                                                 maskpara(i) = .false. --> parameter is discarded
-  !                                                                                           from optimiztaion
-  !                                                                 DEFAULT: .true.
+  !>        \param[in] "LOGICAL, DIMENSION(size(para)), optional    :: maskpara"
+  !>                                                                         maskpara(i) = .true.  --> parameter is optimized \n
+  !>                                                                         maskpara(i) = .false. --> parameter is discarded
+  !>                                                                                                   from optimiztaion \n
+  !>                                                                         DEFAULT: .true.
 
-  !         INTEGER(I4/I8), DIMENSION(2)      :: seeds          ... Seeds of random numbers used for random parameter
-  !                                                                 set generation
-  !                                                                 DEFAULT: dependent on current time
+  !>        \param[in] "INTEGER(I4/I8), DIMENSION(2), optional      :: seeds"
+  !>                                                                         Seeds of random numbers used for random parameter
+  !>                                                                         set generation \n
+  !>                                                                         DEFAULT: dependent on current time
 
-  !         LOGICAL                           :: printflag      ... If .true. detailed command line output is written
-  !                                                                 DEFAULT: .false.
+  !>        \param[in] "LOGICAL, optional                           :: printflag"
+  !>                                                                         If .true. detailed command line output is written
+  !>                                                                         DEFAULT: .false.
 
-  !         REAL(DP), DIMENSION(size(para,1)) :: weight         ... vector of weights per parameter
-  !                                                                 gives the frequency of parameter to be chosen for
-  !                                                                 optimization (will be scaled to a CDF internally)
-  !                                                                 eg. [1,2,1] --> parameter 2 is chosen twice as
-  !                                                                                 often as parameter 1 and 2
-  !                                                                 DEFAULT: weight = 1.0_dp
-  !         LOGICAL                           :: maxit          ... .true.  for maximizing a function
-  !                                                                 .false. for minimizing a function
-  !                                                                 DEFAULT: .false. (minimization)
+  !>        \param[in] "REAL(DP), DIMENSION(size(para,1)), optional :: weight"
+  !>                                                                         vector of weights per parameter \n
+  !>                                                                         gives the frequency of parameter to be chosen for
+  !>                                                                         optimization (will be scaled to a CDF internally) \n
+  !>                                                                         eg. [1,2,1] --> parameter 2 is chosen twice as
+  !>                                                                                         often as parameter 1 and 2 \n
+  !                                                                          DEFAULT: weight = 1.0_dp
 
-  !         REAL(DP)                          :: undef_funcval  ... objective function value defining invalid
-  !                                                                 model output, e.g. -999.0_dp
-  !                                                                 DEFAULT: not present
+  !>        \param[in] "LOGICAL, optional                :: maxit"            minimizing (.false.) or maximizing (.true.) 
+  !>                                                                          a function \n
+  !>                                                                          DEFAULT: .false. (minimization)
+
+  !>        \param[in] "REAL(DP), optional               :: undef_funcval"    objective function value defining invalid
+  !>                                                                          model output, e.g. -999.0_dp 
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -299,19 +306,23 @@ MODULE mo_anneal
   !     INTENT(OUT), OPTIONAL
   !         None
 
+  !     RETURN
+  !>        \return real(dp) :: temperature  &mdash;  Temperature achieving a certain
+  !>                                                  acceptance ratio in Simulated Annealing
+
   !     RESTRICTIONS
-  !         Either fixed parameter range (prange) OR flexible parameter range (function interface prange_func)
-  !         has to be given in calling sequence.
+  !>        \note Either fixed parameter range (prange) OR flexible parameter range (function interface prange_func)
+  !>              has to be given in calling sequence. \n
 
-  !         Only double precision version.
-  !         If single precision is needed not only DP has to be replaced by SP
-  !         but also I8 of save_state (random number variables) has to be replaced by I4.
+  !>              Only double precision version available.
+  !>              If single precision is needed not only DP has to be replaced by SP
+  !>              but also I8 of save_state (random number variables) has to be replaced by I4. \n
 
-  !         ParaChangeMode > 1 is not applied in GetTemperature.
-  !         For Temperature estimation always only one single parameter is changed (ParaChangeMode=1)
-  !         which should give theoretically always the best estimate.
+  !>              ParaChangeMode > 1 is not applied in GetTemperature.
+  !>              For Temperature estimation always only one single parameter is changed (ParaChangeMode=1)
+  !>              which should give theoretically always the best estimate. \n
 
-  !         Cost and prange_func are user defined functions. See interface definition.
+  !>              Cost and prange_func are user defined functions. See interface definition.
 
   !     EXAMPLE
   !         see test/test_mo_anneal/
@@ -346,6 +357,7 @@ CONTAINS
        seeds, printflag, maskpara, weight,        &   ! optional IN
        changeParaMode, reflectionFlag,            &   ! optional IN
        pertubFlexFlag, maxit, undef_funcval,      &   ! optional IN
+       tmp_file,                                  &   ! optional IN
        funcbest, history                          &   ! optional OUT
        ) &
        result(parabest)
@@ -441,13 +453,15 @@ CONTAINS
     !                                                                  ! parameter set leads to  invalid model results,
     !                                                                  ! e.g. -9999.0_dp
     !                                                                  ! (DEFAULT: not present)
+    CHARACTER(LEN=*), OPTIONAL,                         INTENT(IN)  :: tmp_file    
+    !                                                                  ! file for temporal output
     REAL(DP),    OPTIONAL,                              INTENT(OUT) :: funcbest
     !                                                                  ! minimized value of cost function
     !                                                                  ! (DEFAULT: not present)
     REAL(DP),    OPTIONAL, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: history
     !                                                                  ! returns a vector of achieved objective
-    ! after ith model evaluation
-    ! (DEFAULT: not present)
+    !                                                                  ! after ith model evaluation
+    !                                                                  ! (DEFAULT: not present)
 
     ! local variables
     INTEGER(I4)                              :: n              ! Number of parameters
@@ -678,6 +692,19 @@ CONTAINS
        pertubFlexFlag_inin = .true.
     end if
 
+    ! Temporal file writing
+    if(present(tmp_file)) then
+       open(unit=999,file=trim(adjustl(tmp_file)), action='write', status = 'unknown')
+       write(999,*) '# settings :: general'
+       write(999,*) '# nIterations    iseed'
+       write(999,*) nITERmax_in, seeds_in
+       write(999,*) '# settings :: anneal specific'
+       write(999,*) '# sa_tmp'
+       write(999,*) T_in
+       write(999,*) '# iter   bestf   (bestx(j),j=1,nopt)'
+       close(999)
+    end if
+
     ! INITIALIZATION
 
     allocate ( truepara(count(maskpara_in)) )
@@ -732,6 +759,16 @@ CONTAINS
     ! Generate and evaluate the initial solution state
     fo = cost(gamma(:)%old) * maxit_in
     if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit_in
+
+    file_write: if (present(tmp_file)) then
+       open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append')
+       if (.not. ldummy) then
+          write(999,*) '0', fo, gamma(:)%old
+       else
+          write(999,*) '0', -fo, gamma(:)%old
+       end if
+       close(999)
+    end if file_write
 
     ! initialize counters /var for new SA
     iConL=           0_i4
@@ -940,6 +977,12 @@ CONTAINS
        ! store current best in history vector
        history_out(iTotalCounter/LEN_IN,1) = real(iTotalCounter,dp)
        history_out(iTotalCounter/LEN_IN,2) = maxit_in * fBest*normPhi
+
+       file_write2: if (present(tmp_file)) then
+          open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append')
+          write(999,*) iTotalCounter, maxit_in * fBest*normPhi, gamma(:)%best
+          close(999)
+       end if file_write2
 
        if (printflag_in) then
           print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T_in, &
