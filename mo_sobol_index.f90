@@ -83,14 +83,18 @@ MODULE mo_sobol_index
   !>                 model response due to parameter changes.\n
   !>                 Here, the main effect (Si) and the total effect (STi) are implemented. \n
   !>                 The model output has to be provided for:\n
-  !>                   - a parameter set A \n
-  !>                   - a parameter set B which is independent to A \n
+  !>                   - a parameter set A = f(A)\n
+  !>                   - a parameter set B which is independent to A  = f(B)\n
+  !>                 For method #3, #4, #5, #6, #7, #8, #9=Default: \n
+  !>                   - n parameter sets Ci where Ci equals parameter set A except parameter i 
+  !>                     which is the value of parameter set B = f(A_B)\n
+  !>                 For method #1, #2, #6: \n
   !>                   - n parameter sets Ci where Ci equals parameter set B except parameter i 
-  !>                     which is the value of parameter set A \n
-  !>                 This has to be repeated several times.  
+  !>                     which is the value of parameter set A = f(B_A)\n
+  !>                 This has to be repeated several times. \n
   !>                 The model response can be either a scalar or a vector (e.g. a timeseries). 
   !>                 If the model response is a vector, the Si and STi are calculated for each time point 
-  !>                 independently such that the returned Si and STi are also vectors.
+  !>                 independently such that the returned Si and STi are also vectors. \n
   !
   !     INTENT(IN)
   !>        \param[in] "real(sp/dp)      :: ya(:)/ya(:,:)"       Model output for parameter sets A \n
@@ -175,7 +179,7 @@ MODULE mo_sobol_index
 
 CONTAINS
 
-  subroutine sobol_index_0d_dp(ya, yb, yc, si, sti, smean, wmean)
+  subroutine sobol_index_0d_dp(ya, yb, yc, si, sti, method, smean, wmean)
 
     real(dp), dimension(:),                       intent(in)  :: ya     ! Output running model with parameter sets A
     real(dp), dimension(:),                       intent(in)  :: yb     ! Output running model with parameter sets B
@@ -185,6 +189,15 @@ CONTAINS
     !                                                                   ! dim2 = number of parameters
     real(dp), dimension(size(yc,2)),              intent(out) :: si     ! Sobol index (main effect)
     real(dp), dimension(size(yc,2)),              intent(out) :: sti    ! Sobol index (total effect)
+    integer(i4),                        optional, intent(in)  :: method ! (1) 'Saltelli2008'  needs Ci = B_A
+                                                                        ! (2) 'Homma1996'     needs Ci = B_A
+                                                                        ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
+                                                                        ! (4) 'Saltelli2010'  needs Ci = A_B
+                                                                        ! (5) 'Jansen1999'    needs Ci = A_B
+                                                                        ! (6) 'Mai2012'       needs Ci = B_A
+                                                                        ! (7) 'Mai2013'       needs Ci = A_B
+                                                                        ! (8) 'Mai2014'       needs Ci = A_B
+                                                                        ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
     real(dp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
     !                                                                   ! dim1 = number of parameters
     !                                                                   ! dim2 = 2 (i.e. SI and STI)
@@ -198,34 +211,184 @@ CONTAINS
     ! local variables
     integer(i4)                          :: ii
     integer(i4)                          :: nsets, npara
+    integer(i4)                          :: meth
     real(dp), dimension(:), allocatable  :: yab
-    real(dp)                             :: var_ab, var_b
-    real(dp)                             :: f0_ab, f0_b2
+    real(dp)                             :: var_a, var_b, var_ab
+    real(dp)                             :: mean_a, mean_b, mean_ab
+
+    if (present(method)) then
+       meth = method
+    else
+       meth = 9
+    end if
 
     nsets = size(yc,1)
     npara = size(yc,2)
 
-    allocate(yab(2*nsets))
-    yab(      1:  nsets) = ya
-    yab(nsets+1:2*nsets) = yb
+    select case(meth)
+       case(1)
+          ! 'Saltelli2008' - The formulation presented in 'The Primer'. (yc=f(B_A))
+          !                  Si  = (1/n*sum_j(f(A)_j*f(B_A^i)_j) - mean(f(A))^2)/var(f(A))
+          !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(A))^2))/var(f(A))
+          var_a  = variance(ya)
+          mean_a = sum( ya(:) ) / real(nsets,dp)
+          if ( var_a .gt. tiny(1.0_dp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  =          ( dot_product( ya(:) , (yc(:,ii)) ) / real(nsets,dp) - mean_a**2 ) / var_a
+                sti(ii) = 1.0_dp - ( dot_product( yb(:) , (yc(:,ii)) ) / real(nsets,dp) - mean_a**2 ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_dp
+             sti(:) = 0.0_dp
+          end if
+       case(2)
+          ! 'Homma1996'    - Si takes mixed A, B term for squared mean in nominator. (yc=f(B_A))
+          !                  Si  = 1/n*sum_j(f(A)_j*(f(B_A^i)_j - f(B)_j))/var(f(A))
+          !                  STi as Saltelli2008
+          var_a  = variance(ya)
+          mean_a = sum( ya(:) ) / real(nsets,dp)
+          if ( var_a .gt. tiny(1.0_dp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  =          ( dot_product( ya(:) , (yc(:,ii)-yb(:)) ) / real(nsets,dp) ) / var_a
+                sti(ii) = 1.0_dp - ( dot_product( yb(:) , (yc(:,ii)) ) / real(nsets,dp) - mean_a**2 ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_dp
+             sti(:) = 0.0_dp
+          end if
+       case(3)
+          stop 'mo_sobol_index: Sobol2007 would need f(A_B) and f(B_A). It is thus not implemented here.'
+       case(4)
+          ! 'Saltelli2010' - Si takes B, A_B instead of A, B_A (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var(f(A))
+          !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j-f(A_B^i)_j))/var(f(A))
+          var_a  = variance(ya)
+          if ( var_a .gt. tiny(1.0_dp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  = ( dot_product( yb(:) , (yc(:,ii)-ya(:)) ) / real(nsets,dp) ) / var_a
+                sti(ii) = ( dot_product( ya(:) , (ya(:)-yc(:,ii)) ) / real(nsets,dp) ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_dp
+             sti(:) = 0.0_dp
+          end if
+       case(5)
+          ! 'Jansen1999'   - Calculate Si and STi by expectation(variance) instead of variance(expectation) (yc=f(A_B))
+          !                  Si  = (var(f(A)) - 1/2n*sum_j(f(B)_j - f(A_B^i)_j)^2)/var(f(A))
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          var_a  = variance(ya)
+          if ( var_a .gt. tiny(1.0_dp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  = 1.0_dp - ( sum( (yb(:)-yc(:,ii))**2 ) / real(2*nsets,dp) ) / var_a
+                sti(ii) =          ( sum( (ya(:)-yc(:,ii))**2 ) / real(2*nsets,dp) ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_dp
+             sti(:) = 0.0_dp
+          end if
+       case(6)
+          ! 'Mai2012'      - Si of Homma 1996 but denominator is variance of A and B (yc=f(B_A)) and
+          !                  STi of Homma 1996 but mean and variance of f(A) replaced by f(B)
+          !                  Si  = 1/n*sum_j(f(A)_j*(f(B_A^i)_j - f(B)_j))/var([f(A),f(B)])
+          !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(B)^2)))/var(f(B))
+          allocate(yab(2*nsets))
+          yab(      1:  nsets) = ya
+          yab(nsets+1:2*nsets) = yb
+          var_ab = variance(yab)
+          var_b  = variance(yb)
 
-    var_ab = variance(yab)
-    var_b  = variance(yb)
+          mean_ab = dot_product(ya,yb) / real(nsets,dp)
+          mean_b  = sum(yb) / real(nsets,dp)
 
-    f0_ab  = dot_product(ya,yb) / real(nsets,dp)
-    f0_b2  = (sum(yb) / real(nsets,dp) )**2
+          if ( var_ab .gt. tiny(1.0_dp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  =          ( dot_product(ya(:),yc(:,ii)) / real(nsets,dp) - mean_ab)   / var_ab
+                sti(ii) = 1.0_dp - ( dot_product(yb(:),yc(:,ii)) / real(nsets,dp) - mean_b**2) / var_b
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_dp
+             sti(:) = 0.0_dp
+          end if
+          deallocate(yab)
+       case(7)
+          ! 'Mai2013'      - Si of Saltelli2010 but denominator is variance of A and B (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var([f(A),f(B)])
+          !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j)-f(A_B^i)_j)/var(f(A))
+          allocate(yab(2*nsets))
+          yab(      1:  nsets) = ya
+          yab(nsets+1:2*nsets) = yb
+          var_ab = variance(yab)
+          var_a  = variance(ya)
 
-    if ( var_ab .gt. tiny(1.0_dp) ) then
-       ! model outputs are different (usual case)
-       do ii=1, npara
-          si(ii)  =          ( dot_product(ya(:),yc(:,ii)) / real(nsets,dp) - f0_ab) / var_ab
-          sti(ii) = 1.0_dp - ( dot_product(yb(:),yc(:,ii)) / real(nsets,dp) - f0_b2) / var_b
-       end do
-    else
-       ! model outputs are equal (should never happen)
-       si(:)  = 0.0_dp
-       sti(:) = 0.0_dp
-    end if
+          if ( var_ab .gt. tiny(1.0_dp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  = ( dot_product( yb(:) , (yc(:,ii)-ya(:)) ) / real(nsets,dp) ) / var_ab
+                sti(ii) = ( dot_product( ya(:) , (ya(:)-yc(:,ii)) ) / real(nsets,dp) ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_dp
+             sti(:) = 0.0_dp
+          end if
+          deallocate(yab)
+       case(8)
+          ! 'Mai2014'      - SI of Jansen1999  but denominator is variance of A and B (yc=f(A_B))
+          !                  Si  = (var([f(A),f(B)]) - 1/2n*sum_j(f(B)_j - f(A_B^i)_j)^2)/var([f(A),f(B)])
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          allocate(yab(2*nsets))
+          yab(      1:  nsets) = ya
+          yab(nsets+1:2*nsets) = yb
+          var_ab = variance(yab)
+          var_a  = variance(ya)
+
+          if ( var_ab .gt. tiny(1.0_dp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  = 1.0_dp - ( sum( (yb(:)-yc(:,ii))**2 ) / real(2*nsets,dp) ) / var_ab
+                sti(ii) =          ( sum( (ya(:)-yc(:,ii))**2 ) / real(2*nsets,dp) ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_dp
+             sti(:) = 0.0_dp
+          end if
+          deallocate(yab)
+       case(9)
+          ! 'Mai1999'      - SI of Mai2013 (Saltelli2010 with var([f(A),f(B)])) and STi of Jansen1999 (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var([f(A),f(B)])
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          allocate(yab(2*nsets))
+          yab(      1:  nsets) = ya
+          yab(nsets+1:2*nsets) = yb
+          var_ab = variance(yab)
+          var_a  = variance(ya)
+
+          if ( var_ab .gt. tiny(1.0_dp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  = ( dot_product( yb(:) , (yc(:,ii)-ya(:)) ) / real(nsets,dp) ) / var_ab
+                sti(ii) = ( sum( (ya(:)-yc(:,ii))**2 ) / real(2*nsets,dp) ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_dp
+             sti(:) = 0.0_dp
+          end if
+          deallocate(yab)
+       case default
+          stop 'mo_sobol_index: This method is not implemented!'
+       end select
 
    if ( present(smean) ) then
        smean(:,1) = si(:)
@@ -237,11 +400,9 @@ CONTAINS
        wmean(:,2) = sti(:)
     end if
 
-    deallocate(yab)
-
   end subroutine sobol_index_0d_dp
 
-  subroutine sobol_index_0d_sp(ya, yb, yc, si, sti, smean, wmean)
+  subroutine sobol_index_0d_sp(ya, yb, yc, si, sti, method, smean, wmean)
 
     real(sp), dimension(:),                       intent(in)  :: ya     ! Output running model with parameter sets A
     real(sp), dimension(:),                       intent(in)  :: yb     ! Output running model with parameter sets B
@@ -251,6 +412,15 @@ CONTAINS
     !                                                                   ! dim2 = number of parameters
     real(sp), dimension(size(yc,2)),              intent(out) :: si     ! Sobol index (main effect)
     real(sp), dimension(size(yc,2)),              intent(out) :: sti    ! Sobol index (total effect)
+    integer(i4),                        optional, intent(in)  :: method ! (1) 'Saltelli2008'  needs Ci = B_A
+                                                                        ! (2) 'Homma1996'     needs Ci = B_A
+                                                                        ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
+                                                                        ! (4) 'Saltelli2010'  needs Ci = A_B
+                                                                        ! (5) 'Jansen1999'    needs Ci = A_B
+                                                                        ! (6) 'Mai2012'       needs Ci = B_A
+                                                                        ! (7) 'Mai2013'       needs Ci = A_B
+                                                                        ! (8) 'Mai2014'       needs Ci = A_B
+                                                                        ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
     real(sp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
     !                                                                   ! dim1 = number of parameters
     !                                                                   ! dim2 = 2 (i.e. SI and STI)
@@ -264,36 +434,186 @@ CONTAINS
     ! local variables
     integer(i4)                          :: ii
     integer(i4)                          :: nsets, npara
+    integer(i4)                          :: meth
     real(sp), dimension(:), allocatable  :: yab
-    real(sp)                             :: var_ab, var_b
-    real(sp)                             :: f0_ab, f0_b2
+    real(sp)                             :: var_a, var_b, var_ab
+    real(sp)                             :: mean_a, mean_b, mean_ab
+
+    if (present(method)) then
+       meth = method
+    else
+       meth = 9
+    end if
 
     nsets = size(yc,1)
     npara = size(yc,2)
 
-    allocate(yab(2*nsets))
-    yab(      1:  nsets) = ya
-    yab(nsets+1:2*nsets) = yb
+    select case(meth)
+       case(1)
+          ! 'Saltelli2008' - The formulation presented in 'The Primer'. (yc=f(B_A))
+          !                  Si  = (1/n*sum_j(f(A)_j*f(B_A^i)_j) - mean(f(A))^2)/var(f(A))
+          !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(A))^2))/var(f(A))
+          var_a  = variance(ya)
+          mean_a = sum( ya(:) ) / real(nsets,sp)
+          if ( var_a .gt. tiny(1.0_sp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  =          ( dot_product( ya(:) , (yc(:,ii)) ) / real(nsets,sp) - mean_a**2 ) / var_a
+                sti(ii) = 1.0_sp - ( dot_product( yb(:) , (yc(:,ii)) ) / real(nsets,sp) - mean_a**2 ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_sp
+             sti(:) = 0.0_sp
+          end if
+       case(2)
+          ! 'Homma1996'    - Si takes mixed A, B term for squared mean in nominator. (yc=f(B_A))
+          !                  Si  = 1/n*sum_j(f(A)_j*(f(B_A^i)_j - f(B)_j))/var(f(A))
+          !                  STi as Saltelli2008
+          var_a  = variance(ya)
+          mean_a = sum( ya(:) ) / real(nsets,sp)
+          if ( var_a .gt. tiny(1.0_sp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  =          ( dot_product( ya(:) , (yc(:,ii)-yb(:)) ) / real(nsets,sp) ) / var_a
+                sti(ii) = 1.0_sp - ( dot_product( yb(:) , (yc(:,ii)) ) / real(nsets,sp) - mean_a**2 ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_sp
+             sti(:) = 0.0_sp
+          end if
+       case(3)
+          stop 'mo_sobol_index: Sobol2007 would need f(A_B) and f(B_A). It is thus not implemented here.'
+       case(4)
+          ! 'Saltelli2010' - Si takes B, A_B instead of A, B_A (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var(f(A))
+          !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j-f(A_B^i)_j))/var(f(A))
+          var_a  = variance(ya)
+          if ( var_a .gt. tiny(1.0_sp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  = ( dot_product( yb(:) , (yc(:,ii)-ya(:)) ) / real(nsets,sp) ) / var_a
+                sti(ii) = ( dot_product( ya(:) , (ya(:)-yc(:,ii)) ) / real(nsets,sp) ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_sp
+             sti(:) = 0.0_sp
+          end if
+       case(5)
+          ! 'Jansen1999'   - Calculate Si and STi by expectation(variance) instead of variance(expectation) (yc=f(A_B))
+          !                  Si  = (var(f(A)) - 1/2n*sum_j(f(B)_j - f(A_B^i)_j)^2)/var(f(A))
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          var_a  = variance(ya)
+          if ( var_a .gt. tiny(1.0_sp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  = 1.0_sp - ( sum( (yb(:)-yc(:,ii))**2 ) / real(2*nsets,sp) ) / var_a
+                sti(ii) =          ( sum( (ya(:)-yc(:,ii))**2 ) / real(2*nsets,sp) ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_sp
+             sti(:) = 0.0_sp
+          end if
+       case(6)
+          ! 'Mai2012'      - Si of Homma 1996 but denominator is variance of A and B (yc=f(B_A)) and
+          !                  STi of Homma 1996 but mean and variance of f(A) replaced by f(B)
+          !                  Si  = 1/n*sum_j(f(A)_j*(f(B_A^i)_j - f(B)_j))/var([f(A),f(B)])
+          !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(B)^2)))/var(f(B))
+          allocate(yab(2*nsets))
+          yab(      1:  nsets) = ya
+          yab(nsets+1:2*nsets) = yb
+          var_ab = variance(yab)
+          var_b  = variance(yb)
 
-    var_ab = variance(yab)
-    var_b  = variance(yb)
+          mean_ab = dot_product(ya,yb) / real(nsets,sp)
+          mean_b  = sum(yb) / real(nsets,sp)
 
-    f0_ab  = dot_product(ya,yb) / real(nsets,sp)
-    f0_b2  = (sum(yb) / real(nsets,sp) )**2
+          if ( var_ab .gt. tiny(1.0_sp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  =          ( dot_product(ya(:),yc(:,ii)) / real(nsets,sp) - mean_ab)   / var_ab
+                sti(ii) = 1.0_sp - ( dot_product(yb(:),yc(:,ii)) / real(nsets,sp) - mean_b**2) / var_b
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_sp
+             sti(:) = 0.0_sp
+          end if
+          deallocate(yab)
+       case(7)
+          ! 'Mai2013'      - Si of Saltelli2010 but denominator is variance of A and B (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var([f(A),f(B)])
+          !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j)-f(A_B^i)_j)/var(f(A))
+          allocate(yab(2*nsets))
+          yab(      1:  nsets) = ya
+          yab(nsets+1:2*nsets) = yb
+          var_ab = variance(yab)
+          var_a  = variance(ya)
 
-    if ( var_ab .gt. tiny(1.0_sp) ) then
-       ! model outputs are different (usual case)
-       do ii=1, npara
-          si(ii)  =          ( dot_product(ya(:),yc(:,ii)) / real(nsets,sp) - f0_ab) / var_ab
-          sti(ii) = 1.0_sp - ( dot_product(yb(:),yc(:,ii)) / real(nsets,sp) - f0_b2) / var_b
-       end do
-    else
-       ! model outputs are equal (should never happen)
-       si(:)  = 0.0_sp
-       sti(:) = 0.0_sp
-    end if
+          if ( var_ab .gt. tiny(1.0_sp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  = ( dot_product( yb(:) , (yc(:,ii)-ya(:)) ) / real(nsets,sp) ) / var_ab
+                sti(ii) = ( dot_product( ya(:) , (ya(:)-yc(:,ii)) ) / real(nsets,sp) ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_sp
+             sti(:) = 0.0_sp
+          end if
+          deallocate(yab)
+       case(8)
+          ! 'Mai2014'      - SI of Jansen1999  but denominator is variance of A and B (yc=f(A_B))
+          !                  Si  = (var([f(A),f(B)]) - 1/2n*sum_j(f(B)_j - f(A_B^i)_j)^2)/var([f(A),f(B)])
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          allocate(yab(2*nsets))
+          yab(      1:  nsets) = ya
+          yab(nsets+1:2*nsets) = yb
+          var_ab = variance(yab)
+          var_a  = variance(ya)
 
-    if ( present(smean) ) then
+          if ( var_ab .gt. tiny(1.0_sp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  = 1.0_sp - ( sum( (yb(:)-yc(:,ii))**2 ) / real(2*nsets,sp) ) / var_ab
+                sti(ii) =          ( sum( (ya(:)-yc(:,ii))**2 ) / real(2*nsets,sp) ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_sp
+             sti(:) = 0.0_sp
+          end if
+          deallocate(yab)
+       case(9)
+          ! 'Mai1999'      - SI of Mai2013 (Saltelli2010 with var([f(A),f(B)])) and STi of Jansen1999 (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var([f(A),f(B)])
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          allocate(yab(2*nsets))
+          yab(      1:  nsets) = ya
+          yab(nsets+1:2*nsets) = yb
+          var_ab = variance(yab)
+          var_a  = variance(ya)
+
+          if ( var_ab .gt. tiny(1.0_sp) ) then
+             ! model outputs are different (usual case)
+             do ii=1, npara
+                si(ii)  = ( dot_product( yb(:) , (yc(:,ii)-ya(:)) ) / real(nsets,sp) ) / var_ab
+                sti(ii) = ( sum( (ya(:)-yc(:,ii))**2 ) / real(2*nsets,sp) ) / var_a
+             end do
+          else
+             ! model outputs are equal (should never happen)
+             si(:)  = 0.0_sp
+             sti(:) = 0.0_sp
+          end if
+          deallocate(yab)
+       case default
+          stop 'mo_sobol_index: This method is not implemented!'
+       end select
+
+   if ( present(smean) ) then
        smean(:,1) = si(:)
        smean(:,2) = sti(:)
     end if
@@ -303,11 +623,9 @@ CONTAINS
        wmean(:,2) = sti(:)
     end if
 
-    deallocate(yab)
-
   end subroutine sobol_index_0d_sp
 
-  subroutine sobol_index_1d_dp(ya, yb, yc, si, sti, smean, wmean)
+  subroutine sobol_index_1d_dp(ya, yb, yc, si, sti, method, smean, wmean)
 
     real(dp), dimension(:,:),                     intent(in)  :: ya     ! Output running model with parameter sets A
     !                                                                   ! dim1 = number of parameter sets 
@@ -331,6 +649,15 @@ CONTAINS
     !                                                                   ! dim1 = number of parameters
     !                                                                   ! dim2 = number of modeloutputs 
     !                                                                   !        (e.g. number of timesteps)
+    integer(i4),                        optional, intent(in)  :: method ! (1) 'Saltelli2008'  needs Ci = B_A
+                                                                        ! (2) 'Homma1996'     needs Ci = B_A
+                                                                        ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
+                                                                        ! (4) 'Saltelli2010'  needs Ci = A_B
+                                                                        ! (5) 'Jansen1999'    needs Ci = A_B
+                                                                        ! (6) 'Mai2012'       needs Ci = B_A
+                                                                        ! (7) 'Mai2013'       needs Ci = A_B
+                                                                        ! (8) 'Mai2014'       needs Ci = A_B
+                                                                        ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
     real(dp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
     !                                                                   ! dim1 = number of parameters
     !                                                                   ! dim2 = 2 (i.e. SI and STI)
@@ -342,13 +669,20 @@ CONTAINS
     ! local variables
     integer(i4)                          :: ii, iout
     integer(i4)                          :: nsets, npara, nout
+    integer(i4)                          :: meth
     real(dp), dimension(:), allocatable  :: yab
-    real(dp)                             :: var_ab, var_b
-    real(dp)                             :: f0_ab, f0_b2
+    real(dp)                             :: var_a, var_b, var_ab
+    real(dp)                             :: mean_a, mean_b, mean_ab
     ! for averaging
     real(dp), dimension(:), allocatable  :: si_num, sti_num
     real(dp)                             :: si_denom, sti_denom
     real(dp)                             :: si_num_ii, sti_num_ii
+
+    if (present(method)) then
+       meth = method
+    else
+       meth = 9
+    end if
 
     nsets = size(yc,1)
     npara = size(yc,2)
@@ -356,8 +690,6 @@ CONTAINS
 
     si(:,:)  = 0.0_dp
     sti(:,:) = 0.0_dp
-
-    allocate(yab(2*nsets))
 
     allocate(si_num(npara))
     allocate(sti_num(npara))
@@ -367,33 +699,262 @@ CONTAINS
     si_denom   = 0.0_dp
     sti_denom  = 0.0_dp
 
-    do iout=1, nout
-       yab(      1:  nsets) = ya(:,iout)
-       yab(nsets+1:2*nsets) = yb(:,iout)
-       
-       f0_ab  = dot_product(ya(:,iout),yb(:,iout)) / real(nsets,dp)
-       f0_b2  = (sum(yb(:,iout)) / real(nsets,dp) )**2
+    select case(meth)
+    case(1)
+          ! 'Saltelli2008' - The formulation presented in 'The Primer'. (yc=f(B_A))
+          !                  Si  = (1/n*sum_j(f(A)_j*f(B_A^i)_j) - mean(f(A))^2)/var(f(A))
+          !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(A))^2))/var(f(A))
+          do iout=1, nout
+             var_a  = variance(ya(:,iout))
+             mean_a  = sum(ya(:,iout)) / real(nsets,dp)
 
-       var_ab = variance(yab)
-       var_b  = variance(yb(:,iout))
-
-       si_denom   = si_denom  + var_ab
-       sti_denom  = sti_denom + var_b
-       
-       if ( var_ab .gt. tiny(1.0_dp) ) then
-          ! model outputs are different (usual case)
-          do ii=1, npara
-             si_num_ii   = ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_ab )
-             sti_num_ii  = ( dot_product(yb(:,iout),yc(:,ii,iout)) / real(nsets,dp) - f0_b2 )
-
-             si_num(ii)  = si_num(ii)  + si_num_ii
-             sti_num(ii) = sti_num(ii) + sti_num_ii
+             si_denom   = si_denom  + var_a
+             sti_denom  = sti_denom + var_a
              
-             si(ii,iout)  =          si_num_ii  / var_ab
-             sti(ii,iout) = 1.0_dp - sti_num_ii / var_b
+             if ( var_a .gt. tiny(1.0_dp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product( ya(:,iout) , (yc(:,ii,iout)) ) / real(nsets,dp) - mean_a**2 )
+                   sti_num_ii = ( dot_product( yb(:,iout) , (yc(:,ii,iout)) ) / real(nsets,dp) - mean_a**2 )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_a
+                   sti(ii,iout) = 1.0_dp - sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_dp
+                sti(:,iout) = 0.0_dp
+             end if
           end do
-       end if
-    end do
+       case(2)
+          ! 'Homma1996'    - Si takes mixed A, B term for squared mean in nominator. (yc=f(B_A))
+          !                  Si  = 1/n*sum_j(f(A)_j*(f(B_A^i)_j - f(B)_j))/var(f(A))
+          !                  STi as Saltelli2008
+          do iout=1, nout
+             var_a  = variance(ya(:,iout))
+             mean_a  = sum(ya(:,iout)) / real(nsets,dp)
+
+             si_denom   = si_denom  + var_a
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_a .gt. tiny(1.0_dp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product( ya(:,iout) , (yc(:,ii,iout)-yb(:,iout)) ) / real(nsets,dp) )
+                   sti_num_ii = ( dot_product( yb(:,iout) , (yc(:,ii,iout)) ) / real(nsets,dp) - mean_a**2 )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_a
+                   sti(ii,iout) = 1.0_dp - sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_dp
+                sti(:,iout) = 0.0_dp
+             end if
+          end do
+       case(3)
+          stop 'mo_sobol_index: Sobol2007 would need f(A_B) and f(B_A). It is thus not implemented here.'
+       case(4)
+          ! 'Saltelli2010' - Si takes B, A_B instead of A, B_A (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var(f(A))
+          !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j-f(A_B^i)_j))/var(f(A))
+          do iout=1, nout
+             var_a  = variance(ya(:,iout))
+
+             si_denom   = si_denom  + var_a
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_a .gt. tiny(1.0_dp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product( yb(:,iout) , (yc(:,ii,iout)-ya(:,iout)) ) / real(nsets,dp) )
+                   sti_num_ii = ( dot_product( ya(:,iout) , (ya(:,iout)-yc(:,ii,iout)) ) / real(nsets,dp) )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_a
+                   sti(ii,iout) =          sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_dp
+                sti(:,iout) = 0.0_dp
+             end if
+          end do
+       case(5)
+          ! 'Jansen1999'   - Calculate Si and STi by expectation(variance) instead of variance(expectation) (yc=f(A_B))
+          !                  Si  = (var(f(A)) - 1/2n*sum_j(f(B)_j - f(A_B^i)_j)^2)/var(f(A))
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          do iout=1, nout
+             var_a  = variance(ya(:,iout))
+
+             si_denom   = si_denom  + var_a
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_a .gt. tiny(1.0_dp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( sum( (yb(:,iout)-yc(:,ii,iout))**2 ) / real(2*nsets,dp) )
+                   sti_num_ii = ( sum( (ya(:,iout)-yc(:,ii,iout))**2 ) / real(2*nsets,dp) )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  = 1.0_dp - si_num_ii  / var_a
+                   sti(ii,iout) =          sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_dp
+                sti(:,iout) = 0.0_dp
+             end if
+          end do
+       case(6)
+          ! 'Mai2012'      - Si of Homma 1996 but denominator is variance of A and B (yc=f(B_A)) and
+          !                  STi of Homma 1996 but mean and variance of f(A) replaced by f(B)
+          !                  Si  = 1/n*sum_j(f(A)_j*(f(B_A^i)_j - f(B)_j))/var([f(A),f(B)])
+          !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(B)^2)))/var(f(B))
+          allocate(yab(2*nsets))
+          do iout=1, nout
+             yab(      1:  nsets) = ya(:,iout)
+             yab(nsets+1:2*nsets) = yb(:,iout)
+             var_ab = variance(yab)
+             var_b  = variance(yb(:,iout))
+             
+             mean_ab = dot_product(ya(:,iout),yb(:,iout)) / real(nsets,dp)
+             mean_b  = sum(yb(:,iout)) / real(nsets,dp)
+
+             si_denom   = si_denom  + var_ab
+             sti_denom  = sti_denom + var_b
+             
+             if ( var_ab .gt. tiny(1.0_dp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,dp) - mean_ab ) 
+                   sti_num_ii = ( dot_product(yb(:,iout),yc(:,ii,iout)) / real(nsets,dp) - mean_b**2 )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_ab
+                   sti(ii,iout) = 1.0_dp - sti_num_ii / var_b
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_dp
+                sti(:,iout) = 0.0_dp
+             end if
+          end do
+          deallocate(yab)
+       case(7)
+          ! 'Mai2013'      - Si of Saltelli2010 but denominator is variance of A and B (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var([f(A),f(B)])
+          !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j)-f(A_B^i)_j)/var(f(A))
+          allocate(yab(2*nsets))
+          do iout=1, nout
+             yab(      1:  nsets) = ya(:,iout)
+             yab(nsets+1:2*nsets) = yb(:,iout)
+             var_ab = variance(yab)
+             var_a  = variance(ya(:,iout))
+
+             si_denom   = si_denom  + var_ab
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_ab .gt. tiny(1.0_dp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product( yb(:,iout) , (yc(:,ii,iout)-ya(:,iout)) ) / real(nsets,dp) )
+                   sti_num_ii = ( dot_product( ya(:,iout) , (ya(:,iout)-yc(:,ii,iout)) ) / real(nsets,dp) )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_ab
+                   sti(ii,iout) =          sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_dp
+                sti(:,iout) = 0.0_dp
+             end if
+          end do
+          deallocate(yab)
+       case(8)
+          ! 'Mai2014'      - SI of Jansen1999  but denominator is variance of A and B (yc=f(A_B))
+          !                  Si  = (var([f(A),f(B)]) - 1/2n*sum_j(f(B)_j - f(A_B^i)_j)^2)/var([f(A),f(B)])
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          allocate(yab(2*nsets))
+          do iout=1, nout
+             yab(      1:  nsets) = ya(:,iout)
+             yab(nsets+1:2*nsets) = yb(:,iout)
+             var_ab = variance(yab)
+             var_a  = variance(ya(:,iout))
+
+             si_denom   = si_denom  + var_ab
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_ab .gt. tiny(1.0_dp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( sum( (yb(:,iout)-yc(:,ii,iout))**2 ) / real(2*nsets,dp) )
+                   sti_num_ii = ( sum( (ya(:,iout)-yc(:,ii,iout))**2 ) / real(2*nsets,dp) )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  = 1.0_dp - si_num_ii  / var_ab
+                   sti(ii,iout) =          sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_dp
+                sti(:,iout) = 0.0_dp
+             end if
+          end do
+          deallocate(yab)
+       case(9)
+          ! 'Mai1999'      - SI of Mai2013 (Saltelli2010 with var([f(A),f(B)])) and STi of Jansen1999 (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var([f(A),f(B)])
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          allocate(yab(2*nsets))
+          do iout=1, nout
+             yab(      1:  nsets) = ya(:,iout)
+             yab(nsets+1:2*nsets) = yb(:,iout)
+             var_ab = variance(yab)
+             var_a  = variance(ya(:,iout))
+
+             si_denom   = si_denom  + var_ab
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_ab .gt. tiny(1.0_dp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product( yb(:,iout) , (yc(:,ii,iout)-ya(:,iout)) ) / real(nsets,dp) )
+                   sti_num_ii = ( sum( (ya(:,iout)-yc(:,ii,iout))**2 ) / real(2*nsets,dp) )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_ab
+                   sti(ii,iout) =          sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_dp
+                sti(:,iout) = 0.0_dp
+             end if
+          end do
+          deallocate(yab)
+       case default
+          stop 'mo_sobol_index: This method is not implemented!'
+    end select
 
     if (present(smean)) then
        smean = 0.0_dp
@@ -403,19 +964,37 @@ CONTAINS
 
     if (present(wmean)) then
        wmean = 0.0_dp
-       if ( si_denom .gt. tiny(1.0_dp) ) then
-          wmean(:,1) =          si_num(:)  / si_denom
-       end if
-       if ( sti_denom .gt. tiny(1.0_dp) ) then
-          wmean(:,2) = 1.0_dp - sti_num(:) / sti_denom
-       end if
+       select case(meth)
+          case(1,2,4,6,7,9)
+             if ( si_denom .gt. tiny(1.0_dp) ) then
+                wmean(:,1) =          si_num(:)  / si_denom
+             end if
+          case(5,8)
+             if ( si_denom .gt. tiny(1.0_dp) ) then
+                wmean(:,1) = 1.0_dp - si_num(:)  / si_denom
+             end if
+          case default
+             stop 'mo_sobol_index: This averaging method is not implemented!'
+       end select
+       select case(meth)
+          case(1,2,6)
+             if ( sti_denom .gt. tiny(1.0_dp) ) then
+                wmean(:,2) = 1.0_dp - sti_num(:) / sti_denom
+             end if
+          case(4,5,7,8,9)
+             if ( sti_denom .gt. tiny(1.0_dp) ) then
+                wmean(:,2) =          sti_num(:) / sti_denom
+             end if
+          case default
+             stop 'mo_sobol_index: This averaging method is not implemented!'
+       end select
     end if
        
-    deallocate(yab, si_num, sti_num)
+    deallocate(si_num, sti_num)
 
   end subroutine sobol_index_1d_dp
 
-  subroutine sobol_index_1d_sp(ya, yb, yc, si, sti, smean, wmean)
+  subroutine sobol_index_1d_sp(ya, yb, yc, si, sti, method, smean, wmean)
 
     real(sp), dimension(:,:),                     intent(in)  :: ya     ! Output running model with parameter sets A
     !                                                                   ! dim1 = number of parameter sets 
@@ -439,6 +1018,15 @@ CONTAINS
     !                                                                   ! dim1 = number of parameters
     !                                                                   ! dim2 = number of modeloutputs 
     !                                                                   !        (e.g. number of timesteps)
+    integer(i4),                        optional, intent(in)  :: method ! (1) 'Saltelli2008'  needs Ci = B_A
+                                                                        ! (2) 'Homma1996'     needs Ci = B_A
+                                                                        ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
+                                                                        ! (4) 'Saltelli2010'  needs Ci = A_B
+                                                                        ! (5) 'Jansen1999'    needs Ci = A_B
+                                                                        ! (6) 'Mai2012'       needs Ci = B_A
+                                                                        ! (7) 'Mai2013'       needs Ci = A_B
+                                                                        ! (8) 'Mai2014'       needs Ci = A_B
+                                                                        ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
     real(sp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
     !                                                                   ! dim1 = number of parameters
     !                                                                   ! dim2 = 2 (i.e. SI and STI)
@@ -450,13 +1038,20 @@ CONTAINS
     ! local variables
     integer(i4)                          :: ii, iout
     integer(i4)                          :: nsets, npara, nout
+    integer(i4)                          :: meth
     real(sp), dimension(:), allocatable  :: yab
-    real(sp)                             :: var_ab, var_b
-    real(sp)                             :: f0_ab, f0_b2
+    real(sp)                             :: var_a, var_b, var_ab
+    real(sp)                             :: mean_a, mean_b, mean_ab
     ! for averaging
     real(sp), dimension(:), allocatable  :: si_num, sti_num
     real(sp)                             :: si_denom, sti_denom
     real(sp)                             :: si_num_ii, sti_num_ii
+
+    if (present(method)) then
+       meth = method
+    else
+       meth = 9
+    end if
 
     nsets = size(yc,1)
     npara = size(yc,2)
@@ -464,8 +1059,6 @@ CONTAINS
 
     si(:,:)  = 0.0_sp
     sti(:,:) = 0.0_sp
-
-    allocate(yab(2*nsets))
 
     allocate(si_num(npara))
     allocate(sti_num(npara))
@@ -475,33 +1068,262 @@ CONTAINS
     si_denom   = 0.0_sp
     sti_denom  = 0.0_sp
 
-    do iout=1, nout
-       yab(      1:  nsets) = ya(:,iout)
-       yab(nsets+1:2*nsets) = yb(:,iout)
-       
-       f0_ab  = dot_product(ya(:,iout),yb(:,iout)) / real(nsets,sp)
-       f0_b2  = (sum(yb(:,iout)) / real(nsets,sp) )**2
+    select case(meth)
+    case(1)
+          ! 'Saltelli2008' - The formulation presented in 'The Primer'. (yc=f(B_A))
+          !                  Si  = (1/n*sum_j(f(A)_j*f(B_A^i)_j) - mean(f(A))^2)/var(f(A))
+          !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(A))^2))/var(f(A))
+          do iout=1, nout
+             var_a  = variance(ya(:,iout))
+             mean_a  = sum(ya(:,iout)) / real(nsets,sp)
 
-       var_ab = variance(yab)
-       var_b  = variance(yb(:,iout))
-
-       si_denom   = si_denom  + var_ab
-       sti_denom  = sti_denom + var_b
-       
-       if ( var_ab .gt. tiny(1.0_sp) ) then
-          ! model outputs are different (usual case)
-          do ii=1, npara
-             si_num_ii   = ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,sp) - f0_ab )
-             sti_num_ii  = ( dot_product(yb(:,iout),yc(:,ii,iout)) / real(nsets,sp) - f0_b2 )
-
-             si_num(ii)  = si_num(ii)  + si_num_ii
-             sti_num(ii) = sti_num(ii) + sti_num_ii
+             si_denom   = si_denom  + var_a
+             sti_denom  = sti_denom + var_a
              
-             si(ii,iout)  =          si_num_ii  / var_ab
-             sti(ii,iout) = 1.0_sp - sti_num_ii / var_b
+             if ( var_a .gt. tiny(1.0_sp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product( ya(:,iout) , (yc(:,ii,iout)) ) / real(nsets,sp) - mean_a**2 )
+                   sti_num_ii = ( dot_product( yb(:,iout) , (yc(:,ii,iout)) ) / real(nsets,sp) - mean_a**2 )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_a
+                   sti(ii,iout) = 1.0_sp - sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_sp
+                sti(:,iout) = 0.0_sp
+             end if
           end do
-       end if
-    end do
+       case(2)
+          ! 'Homma1996'    - Si takes mixed A, B term for squared mean in nominator. (yc=f(B_A))
+          !                  Si  = 1/n*sum_j(f(A)_j*(f(B_A^i)_j - f(B)_j))/var(f(A))
+          !                  STi as Saltelli2008
+          do iout=1, nout
+             var_a  = variance(ya(:,iout))
+             mean_a  = sum(ya(:,iout)) / real(nsets,sp)
+
+             si_denom   = si_denom  + var_a
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_a .gt. tiny(1.0_sp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product( ya(:,iout) , (yc(:,ii,iout)-yb(:,iout)) ) / real(nsets,sp) )
+                   sti_num_ii = ( dot_product( yb(:,iout) , (yc(:,ii,iout)) ) / real(nsets,sp) - mean_a**2 )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_a
+                   sti(ii,iout) = 1.0_sp - sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_sp
+                sti(:,iout) = 0.0_sp
+             end if
+          end do
+       case(3)
+          stop 'mo_sobol_index: Sobol2007 would need f(A_B) and f(B_A). It is thus not implemented here.'
+       case(4)
+          ! 'Saltelli2010' - Si takes B, A_B instead of A, B_A (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var(f(A))
+          !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j-f(A_B^i)_j))/var(f(A))
+          do iout=1, nout
+             var_a  = variance(ya(:,iout))
+
+             si_denom   = si_denom  + var_a
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_a .gt. tiny(1.0_sp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product( yb(:,iout) , (yc(:,ii,iout)-ya(:,iout)) ) / real(nsets,sp) )
+                   sti_num_ii = ( dot_product( ya(:,iout) , (ya(:,iout)-yc(:,ii,iout)) ) / real(nsets,sp) )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_a
+                   sti(ii,iout) =          sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_sp
+                sti(:,iout) = 0.0_sp
+             end if
+          end do
+       case(5)
+          ! 'Jansen1999'   - Calculate Si and STi by expectation(variance) instead of variance(expectation) (yc=f(A_B))
+          !                  Si  = (var(f(A)) - 1/2n*sum_j(f(B)_j - f(A_B^i)_j)^2)/var(f(A))
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          do iout=1, nout
+             var_a  = variance(ya(:,iout))
+
+             si_denom   = si_denom  + var_a
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_a .gt. tiny(1.0_sp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( sum( (yb(:,iout)-yc(:,ii,iout))**2 ) / real(2*nsets,sp) )
+                   sti_num_ii = ( sum( (ya(:,iout)-yc(:,ii,iout))**2 ) / real(2*nsets,sp) )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  = 1.0_sp - si_num_ii  / var_a
+                   sti(ii,iout) =          sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_sp
+                sti(:,iout) = 0.0_sp
+             end if
+          end do
+       case(6)
+          ! 'Mai2012'      - Si of Homma 1996 but denominator is variance of A and B (yc=f(B_A)) and
+          !                  STi of Homma 1996 but mean and variance of f(A) replaced by f(B)
+          !                  Si  = 1/n*sum_j(f(A)_j*(f(B_A^i)_j - f(B)_j))/var([f(A),f(B)])
+          !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(B)^2)))/var(f(B))
+          allocate(yab(2*nsets))
+          do iout=1, nout
+             yab(      1:  nsets) = ya(:,iout)
+             yab(nsets+1:2*nsets) = yb(:,iout)
+             var_ab = variance(yab)
+             var_b  = variance(yb(:,iout))
+             
+             mean_ab = dot_product(ya(:,iout),yb(:,iout)) / real(nsets,sp)
+             mean_b  = sum(yb(:,iout)) / real(nsets,sp)
+
+             si_denom   = si_denom  + var_ab
+             sti_denom  = sti_denom + var_b
+             
+             if ( var_ab .gt. tiny(1.0_sp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product(ya(:,iout),yc(:,ii,iout)) / real(nsets,sp) - mean_ab ) 
+                   sti_num_ii = ( dot_product(yb(:,iout),yc(:,ii,iout)) / real(nsets,sp) - mean_b**2 )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_ab
+                   sti(ii,iout) = 1.0_sp - sti_num_ii / var_b
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_sp
+                sti(:,iout) = 0.0_sp
+             end if
+          end do
+          deallocate(yab)
+       case(7)
+          ! 'Mai2013'      - Si of Saltelli2010 but denominator is variance of A and B (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var([f(A),f(B)])
+          !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j)-f(A_B^i)_j)/var(f(A))
+          allocate(yab(2*nsets))
+          do iout=1, nout
+             yab(      1:  nsets) = ya(:,iout)
+             yab(nsets+1:2*nsets) = yb(:,iout)
+             var_ab = variance(yab)
+             var_a  = variance(ya(:,iout))
+
+             si_denom   = si_denom  + var_ab
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_ab .gt. tiny(1.0_sp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product( yb(:,iout) , (yc(:,ii,iout)-ya(:,iout)) ) / real(nsets,sp) )
+                   sti_num_ii = ( dot_product( ya(:,iout) , (ya(:,iout)-yc(:,ii,iout)) ) / real(nsets,sp) )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_ab
+                   sti(ii,iout) =          sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_sp
+                sti(:,iout) = 0.0_sp
+             end if
+          end do
+          deallocate(yab)
+       case(8)
+          ! 'Mai2014'      - SI of Jansen1999  but denominator is variance of A and B (yc=f(A_B))
+          !                  Si  = (var([f(A),f(B)]) - 1/2n*sum_j(f(B)_j - f(A_B^i)_j)^2)/var([f(A),f(B)])
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          allocate(yab(2*nsets))
+          do iout=1, nout
+             yab(      1:  nsets) = ya(:,iout)
+             yab(nsets+1:2*nsets) = yb(:,iout)
+             var_ab = variance(yab)
+             var_a  = variance(ya(:,iout))
+
+             si_denom   = si_denom  + var_ab
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_ab .gt. tiny(1.0_sp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( sum( (yb(:,iout)-yc(:,ii,iout))**2 ) / real(2*nsets,sp) )
+                   sti_num_ii = ( sum( (ya(:,iout)-yc(:,ii,iout))**2 ) / real(2*nsets,sp) )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  = 1.0_sp - si_num_ii  / var_ab
+                   sti(ii,iout) =          sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_sp
+                sti(:,iout) = 0.0_sp
+             end if
+          end do
+          deallocate(yab)
+       case(9)
+          ! 'Mai1999'      - SI of Mai2013 (Saltelli2010 with var([f(A),f(B)])) and STi of Jansen1999 (yc=f(A_B))
+          !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var([f(A),f(B)])
+          !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
+          allocate(yab(2*nsets))
+          do iout=1, nout
+             yab(      1:  nsets) = ya(:,iout)
+             yab(nsets+1:2*nsets) = yb(:,iout)
+             var_ab = variance(yab)
+             var_a  = variance(ya(:,iout))
+
+             si_denom   = si_denom  + var_ab
+             sti_denom  = sti_denom + var_a
+             
+             if ( var_ab .gt. tiny(1.0_sp) ) then
+                ! model outputs are different (usual case)
+                do ii=1, npara
+                   si_num_ii  = ( dot_product( yb(:,iout) , (yc(:,ii,iout)-ya(:,iout)) ) / real(nsets,sp) )
+                   sti_num_ii = ( sum( (ya(:,iout)-yc(:,ii,iout))**2 ) / real(2*nsets,sp) )
+
+                   si_num(ii)  = si_num(ii)  + si_num_ii
+                   sti_num(ii) = sti_num(ii) + sti_num_ii
+                   
+                   si(ii,iout)  =          si_num_ii  / var_ab
+                   sti(ii,iout) =          sti_num_ii / var_a
+                end do
+             else
+                ! model outputs are equal (should never happen)
+                si(:,iout)  = 0.0_sp
+                sti(:,iout) = 0.0_sp
+             end if
+          end do
+          deallocate(yab)
+       case default
+          stop 'mo_sobol_index: This method is not implemented!'
+    end select
 
     if (present(smean)) then
        smean = 0.0_sp
@@ -511,15 +1333,33 @@ CONTAINS
 
     if (present(wmean)) then
        wmean = 0.0_sp
-       if ( si_denom .gt. tiny(1.0_sp) ) then
-          wmean(:,1) =          si_num(:)  / si_denom
-       end if
-       if ( sti_denom .gt. tiny(1.0_sp) ) then
-          wmean(:,2) = 1.0_sp - sti_num(:) / sti_denom
-       end if
+       select case(meth)
+          case(1,2,4,6,7,9)
+             if ( si_denom .gt. tiny(1.0_sp) ) then
+                wmean(:,1) =          si_num(:)  / si_denom
+             end if
+          case(5,8)
+             if ( si_denom .gt. tiny(1.0_sp) ) then
+                wmean(:,1) = 1.0_sp - si_num(:)  / si_denom
+             end if
+          case default
+             stop 'mo_sobol_index: This averaging method is not implemented!'
+       end select
+       select case(meth)
+          case(1,2,6)
+             if ( sti_denom .gt. tiny(1.0_sp) ) then
+                wmean(:,2) = 1.0_sp - sti_num(:) / sti_denom
+             end if
+          case(4,5,7,8,9)
+             if ( sti_denom .gt. tiny(1.0_sp) ) then
+                wmean(:,2) =          sti_num(:) / sti_denom
+             end if
+          case default
+             stop 'mo_sobol_index: This averaging method is not implemented!'
+       end select
     end if
        
-    deallocate(yab, si_num, sti_num)
+    deallocate(si_num, sti_num)
 
   end subroutine sobol_index_1d_sp
 
