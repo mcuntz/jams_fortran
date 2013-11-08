@@ -72,36 +72,6 @@ program sobol_index_test
      end do
   end do
 
-  open(unit=500, file='/Users/mai/Documents/py-lib/iya.txt', recl=50000, action='read')
-  do i=1,nx
-     read(500,*) ya(:,i)
-  end do
-  close(500)
-
-  open(unit=500, file='/Users/mai/Documents/py-lib/iyb.txt', recl=50000, action='read')
-  do i=1,nx
-     read(500,*) yb(:,i)
-  end do
-  close(500)
-
-  open(unit=500, file='/Users/mai/Documents/py-lib/iyc1.txt', recl=50000, action='read')
-  do i=1,nx
-     read(500,*) yc(:,1,i)
-  end do
-  close(500)
-
-  open(unit=500, file='/Users/mai/Documents/py-lib/iyc2.txt', recl=50000, action='read')
-  do i=1,nx
-     read(500,*) yc(:,2,i)
-  end do
-  close(500)
-
-  open(unit=500, file='/Users/mai/Documents/py-lib/iyc3.txt', recl=50000, action='read')
-  do i=1,nx
-     read(500,*) yc(:,3,i)
-  end do
-  close(500)
-
   ! ------------------------------------------------------------------
   ! Calculate Sobol index: Main Effect (Si) and Total Effect (STi)
   ! ------------------------------------------------------------------
@@ -120,12 +90,12 @@ program sobol_index_test
   write(*,'(A40)') '----------------------------------------'
   write(*,*) ' '
 
-  if (nint(si(1,3)*10000._dp)      .ne.  3339_i4)  isgood = .false.
-  if (nint(si(2,3)*10000._dp)      .ne.  1245_i4)  isgood = .false.
-  if (nint(si(3,3)*10000._dp)      .ne. -  20_i4)  isgood = .false.
-  if (nint(sti(1,3)*10000._dp)     .ne.  8660_i4)  isgood = .false.
-  if (nint(sti(2,3)*10000._dp)     .ne.  1478_i4)  isgood = .false.
-  if (nint(sti(3,3)*10000._dp)     .ne.  5548_i4)  isgood = .false.
+  if (nint(si(1,3)*10000._dp)      .ne.  3226_i4)  isgood = .false.
+  if (nint(si(2,3)*10000._dp)      .ne.  1404_i4)  isgood = .false.
+  if (nint(si(3,3)*10000._dp)      .ne. -  58_i4)  isgood = .false.
+  if (nint(sti(1,3)*10000._dp)     .ne.  7826_i4)  isgood = .false.
+  if (nint(sti(2,3)*10000._dp)     .ne.  1490_i4)  isgood = .false.
+  if (nint(sti(3,3)*10000._dp)     .ne.  5348_i4)  isgood = .false.
 
   write(*,'(A40)')         '----------------------------------------'
   write(*,'(A40)')         '     Mean Sobol index                   '
@@ -137,12 +107,12 @@ program sobol_index_test
   write(*,'(A40)') '----------------------------------------'
   write(*,*) ' '
 
-  if (nint(smean(1,1)*10000._dp)     .ne.  2660_i4)  isgood = .false.
-  if (nint(smean(2,1)*10000._dp)     .ne.  3345_i4)  isgood = .false.
-  if (nint(smean(3,1)*10000._dp)     .ne. -  52_i4)  isgood = .false.
-  if (nint(smean(1,2)*10000._dp)     .ne.  6309_i4)  isgood = .false.
-  if (nint(smean(2,2)*10000._dp)     .ne.  3621_i4)  isgood = .false.
-  if (nint(smean(3,2)*10000._dp)     .ne.  4127_i4)  isgood = .false.
+  if (nint(smean(1,1)*10000._dp)     .ne.  2417_i4)  isgood = .false.
+  if (nint(smean(2,1)*10000._dp)     .ne.  3689_i4)  isgood = .false.
+  if (nint(smean(3,1)*10000._dp)     .ne.    13_i4)  isgood = .false.
+  if (nint(smean(1,2)*10000._dp)     .ne.  5784_i4)  isgood = .false.
+  if (nint(smean(2,2)*10000._dp)     .ne.  3820_i4)  isgood = .false.
+  if (nint(smean(3,2)*10000._dp)     .ne.  3980_i4)  isgood = .false.
 
   write(*,'(A40)')         '----------------------------------------'
   write(*,'(A40)')         '     Var. weighted mean Sobol index     '
@@ -154,12 +124,12 @@ program sobol_index_test
   write(*,'(A40)') '----------------------------------------'
   write(*,*) ' '
 
-  if (nint(wmean(1,1)*10000._dp)     .ne.  2572_i4)  isgood = .false.
-  if (nint(wmean(2,1)*10000._dp)     .ne.  3602_i4)  isgood = .false.
-  if (nint(wmean(3,1)*10000._dp)     .ne. -  55_i4)  isgood = .false.
-  if (nint(wmean(1,2)*10000._dp)     .ne.  6027_i4)  isgood = .false.
-  if (nint(wmean(2,2)*10000._dp)     .ne.  3879_i4)  isgood = .false.
-  if (nint(wmean(3,2)*10000._dp)     .ne.  3954_i4)  isgood = .false.
+  if (nint(wmean(1,1)*10000._dp)     .ne.  2319_i4)  isgood = .false.
+  if (nint(wmean(2,1)*10000._dp)     .ne.  3963_i4)  isgood = .false.
+  if (nint(wmean(3,1)*10000._dp)     .ne.    20_i4)  isgood = .false.
+  if (nint(wmean(1,2)*10000._dp)     .ne.  5535_i4)  isgood = .false.
+  if (nint(wmean(2,2)*10000._dp)     .ne.  4102_i4)  isgood = .false.
+  if (nint(wmean(3,2)*10000._dp)     .ne.  3813_i4)  isgood = .false.
 
   if (isgood) then
      write(*,*) 'mo_sobol_index o.k.'
