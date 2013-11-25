@@ -71,9 +71,77 @@ MODULE mo_nrutil
   INTEGER(I4), PARAMETER :: NPAR_POLY=8
   INTEGER(I4), PARAMETER :: NPAR_POLYTERM=8
 
+  ! -------------------------------------------------------------
+  ! interfaces sorted alphabetically
+  ! -------------------------------------------------------------
   INTERFACE array_copy
      MODULE PROCEDURE array_copy_r, array_copy_d, array_copy_i
   END INTERFACE array_copy
+  INTERFACE arth
+     MODULE PROCEDURE arth_r, arth_d, arth_i
+  END INTERFACE arth
+  INTERFACE assert
+     MODULE PROCEDURE assert1,assert2,assert3,assert4,assert_v
+  END INTERFACE assert
+  INTERFACE assert_eq
+     MODULE PROCEDURE assert_eq2,assert_eq3,assert_eq4,assert_eqn
+  END INTERFACE assert_eq
+
+  INTERFACE cumsum
+     MODULE PROCEDURE cumsum_r,cumsum_i
+  END INTERFACE cumsum
+
+  INTERFACE diagadd
+     MODULE PROCEDURE diagadd_rv,diagadd_r
+  END INTERFACE diagadd
+  INTERFACE diagmult
+     MODULE PROCEDURE diagmult_rvsp,diagmult_rsp, diagmult_rvdp,diagmult_rdp
+  END INTERFACE diagmult
+
+  INTERFACE geop
+     MODULE PROCEDURE geop_r, geop_d, geop_i, geop_c, geop_dv
+  END INTERFACE geop
+  INTERFACE get_diag
+     MODULE PROCEDURE get_diag_rv, get_diag_dv
+  END INTERFACE get_diag
+
+  INTERFACE imaxloc
+     MODULE PROCEDURE imaxloc_r,imaxloc_i
+  END INTERFACE imaxloc
+  INTERFACE iminloc
+     MODULE PROCEDURE iminloc_s,iminloc_d
+  END INTERFACE iminloc
+
+  INTERFACE outerdiff
+     MODULE PROCEDURE outerdiff_r,outerdiff_d,outerdiff_i
+  END INTERFACE outerdiff
+  INTERFACE outerprod
+     MODULE PROCEDURE outerprod_r,outerprod_d
+  END INTERFACE outerprod
+
+  INTERFACE poly
+     MODULE PROCEDURE poly_rr,poly_rrv,poly_dd,poly_ddv,&
+          poly_rc,poly_ddc,poly_cc,poly_dcdc,poly_msk_rrv,poly_msk_ddv
+  END INTERFACE poly
+  INTERFACE poly_term
+     MODULE PROCEDURE poly_term_rr, poly_term_dd, poly_term_cc, poly_term_dcdc
+  END INTERFACE poly_term
+  INTERFACE put_diag
+     MODULE PROCEDURE put_diag_rv, put_diag_r
+  END INTERFACE put_diag
+
+  INTERFACE reallocate
+     MODULE PROCEDURE reallocate_rv,reallocate_rm,&
+          reallocate_iv,reallocate_im,reallocate_hv, &
+          reallocate_dv, reallocate_dm
+  END INTERFACE reallocate
+
+  INTERFACE scatter_add
+     MODULE PROCEDURE scatter_add_r,scatter_add_d
+  END INTERFACE scatter_add
+  INTERFACE scatter_max
+     MODULE PROCEDURE scatter_max_r,scatter_max_d
+  END INTERFACE scatter_max
   INTERFACE swap
      MODULE PROCEDURE swap_i,  swap_r,  swap_d,  swap_c,  swap_z, &
           swap_iv, swap_rv, swap_dv, swap_cv, swap_zv, &
@@ -84,63 +152,15 @@ MODULE mo_nrutil
           masked_swap_cs, masked_swap_cv, masked_swap_cm, &
           masked_swap_zs, masked_swap_zv, masked_swap_zm
   END INTERFACE swap
-  INTERFACE reallocate
-     MODULE PROCEDURE reallocate_rv,reallocate_rm,&
-          reallocate_iv,reallocate_im,reallocate_hv, &
-          reallocate_dv, reallocate_dm
-  END INTERFACE reallocate
-  INTERFACE imaxloc
-     MODULE PROCEDURE imaxloc_r,imaxloc_i
-  END INTERFACE imaxloc
-  INTERFACE iminloc
-     MODULE PROCEDURE iminloc_s,iminloc_d
-  END INTERFACE iminloc
-  INTERFACE assert
-     MODULE PROCEDURE assert1,assert2,assert3,assert4,assert_v
-  END INTERFACE assert
-  INTERFACE assert_eq
-     MODULE PROCEDURE assert_eq2,assert_eq3,assert_eq4,assert_eqn
-  END INTERFACE assert_eq
-  INTERFACE arth
-     MODULE PROCEDURE arth_r, arth_d, arth_i
-  END INTERFACE arth
-  INTERFACE geop
-     MODULE PROCEDURE geop_r, geop_d, geop_i, geop_c, geop_dv
-  END INTERFACE geop
-  INTERFACE cumsum
-     MODULE PROCEDURE cumsum_r,cumsum_i
-  END INTERFACE cumsum
-  INTERFACE poly
-     MODULE PROCEDURE poly_rr,poly_rrv,poly_dd,poly_ddv,&
-          poly_rc,poly_ddc,poly_cc,poly_dcdc,poly_msk_rrv,poly_msk_ddv
-  END INTERFACE poly
-  INTERFACE poly_term
-     MODULE PROCEDURE poly_term_rr, poly_term_dd, poly_term_cc, poly_term_dcdc
-  END INTERFACE poly_term
-  INTERFACE outerprod
-     MODULE PROCEDURE outerprod_r,outerprod_d
-  END INTERFACE outerprod
-  INTERFACE outerdiff
-     MODULE PROCEDURE outerdiff_r,outerdiff_d,outerdiff_i
-  END INTERFACE outerdiff
-  INTERFACE scatter_add
-     MODULE PROCEDURE scatter_add_r,scatter_add_d
-  END INTERFACE scatter_add
-  INTERFACE scatter_max
-     MODULE PROCEDURE scatter_max_r,scatter_max_d
-  END INTERFACE scatter_max
-  INTERFACE diagadd
-     MODULE PROCEDURE diagadd_rv,diagadd_r
-  END INTERFACE diagadd
-  INTERFACE diagmult
-     MODULE PROCEDURE diagmult_rvsp,diagmult_rsp, diagmult_rvdp,diagmult_rdp
-  END INTERFACE diagmult
-  INTERFACE get_diag
-     MODULE PROCEDURE get_diag_rv, get_diag_dv
-  END INTERFACE get_diag
-  INTERFACE put_diag
-     MODULE PROCEDURE put_diag_rv, put_diag_r
-  END INTERFACE put_diag
+
+  INTERFACE unit_matrix
+     MODULE PROCEDURE unit_matrix_sp, unit_matrix_dp
+  END INTERFACE unit_matrix
+
+  INTERFACE vabs
+     MODULE PROCEDURE vabs_sp, vabs_dp
+  END INTERFACE vabs
+
 CONTAINS
   !BL
   SUBROUTINE array_copy_r(src,dest,n_copied,n_not_copied)
@@ -1529,7 +1549,7 @@ CONTAINS
     end do
   END SUBROUTINE put_diag_r
   !BL
-  SUBROUTINE unit_matrix(mat)
+  SUBROUTINE unit_matrix_sp(mat)
     REAL(SP), DIMENSION(:,:), INTENT(OUT) :: mat
     INTEGER(I4) :: i,n
     n=min(size(mat,1),size(mat,2))
@@ -1537,7 +1557,16 @@ CONTAINS
     do i=1,n
        mat(i,i)=1.0_sp
     end do
-  END SUBROUTINE unit_matrix
+  END SUBROUTINE unit_matrix_sp
+  SUBROUTINE unit_matrix_dp(mat)
+    REAL(DP), DIMENSION(:,:), INTENT(OUT) :: mat
+    INTEGER(I4) :: i,n
+    n=min(size(mat,1),size(mat,2))
+    mat(:,:)=0.0_dp
+    do i=1,n
+       mat(i,i)=1.0_dp
+    end do
+  END SUBROUTINE unit_matrix_dp
   !BL
   FUNCTION upper_triangle(j,k,extra)
     INTEGER(I4), INTENT(IN) :: j,k
@@ -1559,10 +1588,15 @@ CONTAINS
     lower_triangle=(outerdiff(arth_i(1,1,j),arth_i(1,1,k)) > -n)
   END FUNCTION lower_triangle
   !BL
-  FUNCTION vabs(v)
+  FUNCTION vabs_sp(v)
     REAL(SP), DIMENSION(:), INTENT(IN) :: v
-    REAL(SP) :: vabs
-    vabs=sqrt(dot_product(v,v))
-  END FUNCTION vabs
+    REAL(SP) :: vabs_sp
+    vabs_sp=sqrt(dot_product(v,v))
+  END FUNCTION vabs_sp
+  FUNCTION vabs_dp(v)
+    REAL(DP), DIMENSION(:), INTENT(IN) :: v
+    REAL(DP) :: vabs_dp
+    vabs_dp=sqrt(dot_product(v,v))
+  END FUNCTION vabs_dp
   !BL
 END MODULE mo_nrutil

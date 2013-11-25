@@ -810,8 +810,8 @@ MODULE mo_nr
        LOGICAL(LGT) :: decchk
      END FUNCTION decchk
   END INTERFACE
-  INTERFACE
-     SUBROUTINE dfpmin(p,gtol,iter,fret,func,dfunc)
+  INTERFACE dfpmin
+     SUBROUTINE dfpmin_sp(p,gtol,iter,fret,func,dfunc)
        USE mo_kind
        INTEGER(I4), INTENT(OUT) :: iter
        REAL(SP), INTENT(IN) :: gtol
@@ -830,8 +830,28 @@ MODULE mo_nr
             REAL(SP), DIMENSION(size(p)) :: dfunc
           END FUNCTION dfunc
        END INTERFACE
-     END SUBROUTINE dfpmin
-  END INTERFACE
+     END SUBROUTINE dfpmin_sp
+     SUBROUTINE dfpmin_dp(p,gtol,iter,fret,func,dfunc)
+       USE mo_kind
+       INTEGER(I4), INTENT(OUT) :: iter
+       REAL(DP), INTENT(IN) :: gtol
+       REAL(DP), INTENT(OUT) :: fret
+       REAL(DP), DIMENSION(:), INTENT(INOUT) :: p
+       INTERFACE
+          FUNCTION func(p)
+            USE mo_kind
+            REAL(DP), DIMENSION(:), INTENT(IN) :: p
+            REAL(DP) :: func
+          END FUNCTION func
+          !BL
+          FUNCTION dfunc(p)
+            USE mo_kind
+            REAL(DP), DIMENSION(:), INTENT(IN) :: p
+            REAL(DP), DIMENSION(size(p)) :: dfunc
+          END FUNCTION dfunc
+       END INTERFACE
+     END SUBROUTINE dfpmin_dp
+  END INTERFACE dfpmin
   INTERFACE
      FUNCTION dfridr(func,x,h,err)
        USE mo_kind
@@ -1808,8 +1828,8 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:), TARGET, INTENT(INOUT) :: p,xi
      END SUBROUTINE linmin
   END INTERFACE
-  INTERFACE
-     SUBROUTINE lnsrch(xold,fold,g,p,x,f,stpmax,check,func)
+  INTERFACE lnsrch
+     SUBROUTINE lnsrch_sp(xold,fold,g,p,x,f,stpmax,check,func)
        USE mo_kind
        REAL(SP), DIMENSION(:), INTENT(IN) :: xold,g
        REAL(SP), DIMENSION(:), INTENT(INOUT) :: p
@@ -1824,8 +1844,24 @@ MODULE mo_nr
             REAL(SP), DIMENSION(:), INTENT(IN) :: x
           END FUNCTION func
        END INTERFACE
-     END SUBROUTINE lnsrch
-  END INTERFACE
+     END SUBROUTINE lnsrch_sp
+     SUBROUTINE lnsrch_dp(xold,fold,g,p,x,f,stpmax,check,func)
+       USE mo_kind
+       REAL(DP), DIMENSION(:), INTENT(IN) :: xold,g
+       REAL(DP), DIMENSION(:), INTENT(INOUT) :: p
+       REAL(DP), INTENT(IN) :: fold,stpmax
+       REAL(DP), DIMENSION(:), INTENT(OUT) :: x
+       REAL(DP), INTENT(OUT) :: f
+       LOGICAL(LGT), INTENT(OUT) :: check
+       INTERFACE
+          FUNCTION func(x)
+            USE mo_kind
+            REAL(DP) :: func
+            REAL(DP), DIMENSION(:), INTENT(IN) :: x
+          END FUNCTION func
+       END INTERFACE
+     END SUBROUTINE lnsrch_dp
+  END INTERFACE lnsrch
   INTERFACE
      FUNCTION locate(xx,x)
        USE mo_kind
