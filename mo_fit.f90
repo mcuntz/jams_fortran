@@ -496,9 +496,9 @@ MODULE mo_fit
   INTERFACE pythag
      MODULE PROCEDURE pythag_dp, pythag_sp
   END INTERFACE pythag
-  INTERFACE svbksb
-     MODULE PROCEDURE svbksb_dp, svbksb_sp
-  END INTERFACE svbksb
+  INTERFACE svdksb
+     MODULE PROCEDURE svdksb_dp, svdksb_sp
+  END INTERFACE svdksb
   INTERFACE svdcmp
      MODULE PROCEDURE svdcmp_dp, svdcmp_sp
   END INTERFACE svdcmp
@@ -1247,7 +1247,7 @@ CONTAINS
   ! and np are the physical dimensions of a. b(1:m) is the input right-handside. x(1:n) is
   ! the output solution vector. No input quantities are destroyed, so the routine may be called
   ! sequentially with different bs.
-  SUBROUTINE svbksb_dp(u,w,v,b,x)
+  SUBROUTINE svdksb_dp(u,w,v,b,x)
 
     REAL(dp), DIMENSION(:,:), INTENT(IN) :: u,v
     REAL(dp), DIMENSION(:), INTENT(IN) :: w,b
@@ -1256,11 +1256,11 @@ CONTAINS
     REAL(dp), DIMENSION(size(x)) :: tmp
     REAL(dp), DIMENSION(size(w)) :: wtmp
 
-    if (size(u,1) /= size(b))   stop 'svbksb_dp: size(u,1) /= size(b)'
-    if (size(u,2) /= size(v,1)) stop 'svbksb_dp: size(u,2) /= size(v,1)'
-    if (size(u,2) /= size(v,2)) stop 'svbksb_dp: size(u,2) /= size(v,2)'
-    if (size(u,2) /= size(w))   stop 'svbksb_dp: size(u,2) /= size(w)'
-    if (size(u,2) /= size(x))   stop 'svbksb_dp: size(u,2) /= size(x)'
+    if (size(u,1) /= size(b))   stop 'svdksb_dp: size(u,1) /= size(b)'
+    if (size(u,2) /= size(v,1)) stop 'svdksb_dp: size(u,2) /= size(v,1)'
+    if (size(u,2) /= size(v,2)) stop 'svdksb_dp: size(u,2) /= size(v,2)'
+    if (size(u,2) /= size(w))   stop 'svdksb_dp: size(u,2) /= size(w)'
+    if (size(u,2) /= size(x))   stop 'svdksb_dp: size(u,2) /= size(x)'
     !mdum = size(u,1)
     !ndum = size(u,2)
     wtmp = w
@@ -1269,10 +1269,10 @@ CONTAINS
     where (abs(w) < tiny(1.0_dp)) tmp = 0.0_dp
     x = matmul(v,tmp)
 
-  END SUBROUTINE svbksb_dp
+  END SUBROUTINE svdksb_dp
 
 
-  SUBROUTINE svbksb_sp(u,w,v,b,x)
+  SUBROUTINE svdksb_sp(u,w,v,b,x)
 
     REAL(sp), DIMENSION(:,:), INTENT(IN) :: u,v
     REAL(sp), DIMENSION(:), INTENT(IN) :: w,b
@@ -1281,11 +1281,11 @@ CONTAINS
     REAL(sp), DIMENSION(size(x)) :: tmp
     REAL(sp), DIMENSION(size(w)) :: wtmp
 
-    if (size(u,1) /= size(b))   stop 'svbksb_sp: size(u,1) /= size(b)'
-    if (size(u,2) /= size(v,1)) stop 'svbksb_sp: size(u,2) /= size(v,1)'
-    if (size(u,2) /= size(v,2)) stop 'svbksb_sp: size(u,2) /= size(v,2)'
-    if (size(u,2) /= size(w))   stop 'svbksb_sp: size(u,2) /= size(w)'
-    if (size(u,2) /= size(x))   stop 'svbksb_sp: size(u,2) /= size(x)'
+    if (size(u,1) /= size(b))   stop 'svdksb_sp: size(u,1) /= size(b)'
+    if (size(u,2) /= size(v,1)) stop 'svdksb_sp: size(u,2) /= size(v,1)'
+    if (size(u,2) /= size(v,2)) stop 'svdksb_sp: size(u,2) /= size(v,2)'
+    if (size(u,2) /= size(w))   stop 'svdksb_sp: size(u,2) /= size(w)'
+    if (size(u,2) /= size(x))   stop 'svdksb_sp: size(u,2) /= size(x)'
     !mdum = size(u,1)
     !ndum = size(u,2)
     wtmp = w
@@ -1294,7 +1294,7 @@ CONTAINS
     where (abs(w) < tiny(1.0_sp)) tmp = 0.0_sp
     x = matmul(v,tmp)
 
-  END SUBROUTINE svbksb_sp
+  END SUBROUTINE svdksb_sp
 
   ! ------------------------------------------------------------------
 
@@ -1696,7 +1696,7 @@ CONTAINS
     usav = u
     call svdcmp(u,w,v)
     where (w < TOL*maxval(w)) w = 0.0_dp
-    call svbksb(u,w,v,b,a)
+    call svdksb(u,w,v,b,a)
     chisq = vabs(matmul(usav,a)-b)**2
 
     oa = real(a,dp)
@@ -1759,7 +1759,7 @@ CONTAINS
     usav = u
     call svdcmp(u,w,v)
     where (w < TOL*maxval(w)) w = 0.0_sp
-    call svbksb(u,w,v,b,a)
+    call svdksb(u,w,v,b,a)
     chisq = vabs(matmul(usav,a)-b)**2
 
     oa = real(a,sp)

@@ -10,11 +10,9 @@
 
 MODULE mo_sce
 
-  ! This module is a template for the UFZ CHS Fortran library.
+  ! This module is the Shuffled Complex Evolution optimization algorithm.
 
   ! Written Juliane Mai, Feb 2013
-  ! Modified Juliane Mai, Matthias Cuntz, Jul 2013 - OpenMP
-  !                                                - NaN and Inf in objective function
 
   ! License
   ! -------
@@ -33,7 +31,7 @@ MODULE mo_sce
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011-2012 Matthias Cuntz, Juliane Mai
+  ! Copyright 2011-2013 Juliane Mai, Matthias Cuntz
 
   IMPLICIT NONE
 
@@ -131,6 +129,8 @@ MODULE mo_sce
   !>                                                             0, print information on the best point of the population\n
   !>                                                             1, print information on every point of the population\n
   !>                                                             2, no printing (DEFAULT)
+  !>                                                             3, same as 0 but print progress '.' on every function call
+  !>                                                             4, same as 1 but print progress '.' on every function call
   !>        \param[in] "real(dp),    optional :: myalpha"   parameter for reflection  of points in complex\n
   !>                                                             DEFAULT: 0.8_dp
   !>        \param[in] "real(dp),    optional :: mybeta"    parameter for contraction of points in complex\n
@@ -188,11 +188,14 @@ MODULE mo_sce
   !>        \date Feb 2013
   !         Modified Juliane Mai, Matthias Cuntz, Jul 2013 - OpenMP
   !                                                        - NaN and Inf in objective function
-  !                  Juliane Mai                  Oct 2013 - added peps as optional argument
-  !                                                        - allow for masked parameter
+  !                  Juliane Mai,                 Oct 2013 - added peps as optional argument
+  !                                                        - allow for masked parameters
   !                                                        - write population to file --> popul_file
   !                                                        - write intermediate results to file --> tmp_file
   !                                                        - flag parallel introduced
+  !                  Matthias Cuntz,              Nov 2013 - progress dots
+  !                                                        - use iso_fortran_env
+  !                                                        - treat functn=NaN as worse function value in cce
 
   ! ------------------------------------------------------------------
 
@@ -222,6 +225,7 @@ CONTAINS
     use mo_string_utils, only: num2str, compress
     use mo_xor4096,      only: get_timeseed, n_save_state, xor4096, xor4096g
     !$ use omp_lib,      only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
+    use iso_fortran_env, only: output_unit, error_unit
 #ifndef GFORTRAN
     use ieee_arithmetic, only: ieee_is_finite
 #endif
@@ -318,6 +322,7 @@ CONTAINS
     integer(i4)                                      :: mings       ! minimum number of complexes required
     integer(i4)                                      :: iniflg      ! flag on whether to include the initial point in population
     integer(i4)                                      :: iprint      ! flag for controlling print-out after each shuffling loop
+    logical                                          :: idot        ! controls progress report .
     logical, dimension(size(pini,1))                 :: maskpara    ! mask(i) = .true.  --> parameter i will be optimized 
     !                                                               ! mask(i) = .false. --> parameter i will not be optimized 
     real(dp)                                         :: alpha       ! parameter for reflection  of points in complex
@@ -363,7 +368,7 @@ CONTAINS
     integer(i4)                                      :: npt1
     integer(i8)                                      :: icall       ! counter for function evaluations
     integer(i8)                                      :: icall_merk, iicall ! local icall for OpenMP
-    integer(i4)                                      :: igs, ipr
+    integer(i4)                                      :: igs
     integer(i4)                                      :: k1, k2
     real(dp)                                         :: denomi      ! for checking improvement of last steps
     real(dp)                                         :: timeou      ! for checking improvement of last steps
@@ -392,12 +397,12 @@ CONTAINS
     if (parall) then
        ! OpenMP or not
        n_threads = 1
-       !$  write(*,*) '--------------------------------------------------'
+       !$  write(output_unit,*) '--------------------------------------------------'
        !$OMP parallel
        !$    n_threads = OMP_GET_NUM_THREADS()
        !$OMP end parallel
-       !$  write(*,*) '   SCE is parellel with ',n_threads,' threads'
-       !$  write(*,*) '--------------------------------------------------'
+       !$  write(output_unit,*) '   SCE is parellel with ',n_threads,' threads'
+       !$  write(output_unit,*) '--------------------------------------------------'
     else
        n_threads = 1
     end if
@@ -407,10 +412,6 @@ CONTAINS
     allocate(iseed(n_threads))
     allocate(save_state_unif(n_threads,n_save_state))
     allocate(save_state_gauss(n_threads,n_save_state))
-
-    !
-    ! Unit for printing, i.e. standard output
-    ipr = 6
 
     if (present(mymask)) then
        if (.not. any(mymask)) stop 'mo_sce: all parameters are masked --> none will be optimized' 
@@ -435,7 +436,7 @@ CONTAINS
     bu(:)   = prange(:,2)
     do ii=1, nn
        if( (bu(ii)-bl(ii) .lt. epsilon(1.0_dp) ) .and. maskpara(ii) ) then
-          write(*,*) 'para #',ii,'  :: range = ( ',bl(ii),' , ',bu(ii),' )'
+          write(error_unit,*) 'para #',ii,'  :: range = ( ',bl(ii),' , ',bu(ii),' )'
           stop 'mo_sce: inconsistent or too small parameter range'
        end if
     end do
@@ -513,9 +514,15 @@ CONTAINS
     else
        iniflg = 1_i4
     end if
+    idot = .false.
     if (present(myprint)) then
-       if ( (myprint .lt. 0_i4) .or. (myprint .gt. 2_i4)) stop 'mo_sce: iprint has to be 0, 1 or 2'
-       iprint = myprint
+       if ( (myprint .lt. 0_i4) .or. (myprint .gt. 4_i4)) stop 'mo_sce: iprint has to be between 0 and 4'
+       if (myprint > 2_i4) then
+          iprint = myprint-3
+          idot = .true.
+       else
+          iprint = myprint
+       endif
     else
        iprint = 2_i4  ! no printing
        iprint = 0_i4
@@ -583,9 +590,9 @@ CONTAINS
     npt1 = npt
     !
     if (iprint .lt. 2) then
-       write(ipr,*) '=================================================='
-       write(ipr,*) 'ENTER THE SHUFFLED COMPLEX EVOLUTION GLOBAL SEARCH'
-       write(ipr,*) '=================================================='
+       write(output_unit,*) '=================================================='
+       write(output_unit,*) 'ENTER THE SHUFFLED COMPLEX EVOLUTION GLOBAL SEARCH'
+       write(output_unit,*) '=================================================='
     end if
     !
     !  Print seed
@@ -608,6 +615,7 @@ CONTAINS
     !  compute the function value of the initial point
     !--------------------------------------------------
     ! function evaluation will be counted later...
+    if (idot) write(output_unit,'(A1)') '.'
     if (.not. maxit) then
        fpini = functn(pini)
        history_tmp(1) = fpini
@@ -620,9 +628,9 @@ CONTAINS
     bestx = pini
     bestf_tmp = fpini
     if (iprint .lt. 2) then
-       write(ipr,*) ''
-       write(ipr,*) ''
-       write(ipr,*) '*** PRINT THE INITIAL POINT AND ITS CRITERION VALUE ***'
+       write(output_unit,*) ''
+       write(output_unit,*) ''
+       write(output_unit,*) '*** PRINT THE INITIAL POINT AND ITS CRITERION VALUE ***'
        call write_best_final()
     end if
     file_write_initial: if (present(tmp_file)) then
@@ -651,6 +659,7 @@ CONTAINS
        do ii=1, nn
           x(1,ii) = xx(ii)
        end do
+       if (idot) write(output_unit,'(A1)') '.'
        if (.not. maxit) then
           xf(1) = functn(xx)
        else
@@ -680,6 +689,7 @@ CONTAINS
           do jj = 1, nn
              x(ii,jj) = xx(jj)
           end do
+          if (idot) write(output_unit,'(A1)') '.'
           if (.not. maxit) then
              xf(ii) = functn(xx)
              history_tmp(ii) = xf(ii) ! min(history_tmp(ii-1),xf(ii)) --> will be sorted later
@@ -705,6 +715,7 @@ CONTAINS
           do jj = 1, nn
              x(ii,jj) = xx(jj)
           end do
+          if (idot) write(output_unit,'(A1)') '.'
           if (.not. maxit) then
              xf(ii) = functn(xx)
              icall = icall + 1_i8
@@ -806,8 +817,8 @@ CONTAINS
        nloop = nloop + 1
        !
        if (iprint .lt. 2) then
-          write(ipr, *) ''
-          write(ipr,'(A28,I4)') ' ***  Evolution Loop Number ',nloop
+          write(output_unit, *) ''
+          write(output_unit,'(A28,I4)') ' ***  Evolution Loop Number ',nloop
        end if
        !
        !  begin loop on complexes
@@ -900,7 +911,7 @@ CONTAINS
                 iicall     = icall
                 ihistory_tmp = history_tmp
                 call cce(s(1:nps,1:nn),sf(1:nps),bl(1:nn),bu(1:nn),maskpara,xnstd(1:nn),  &
-                     iicall,maxn,maxit,save_state_gauss(ithread,:),functn,alpha,beta,ihistory_tmp)
+                     iicall,maxn,maxit,save_state_gauss(ithread,:),functn,alpha,beta,ihistory_tmp,idot)
                 history_tmp(icall+1:icall+(iicall-icall_merk)) = ihistory_tmp(icall_merk+1:iicall)
                 icall = icall + (iicall-icall_merk)
                 !
@@ -1004,7 +1015,7 @@ CONTAINS
                       lcs(kk) = lpos
                    end do
                    !
-                   !  arrange the sub-complex in order of inceasing function value
+                   !  arrange the sub-complex in order of increasing function value
                    call sort(lcs(1:nps))
                 end if
                 !
@@ -1027,7 +1038,7 @@ CONTAINS
                 !
                 !  use the sub-complex to generate new point(s)
                 call cce(s(1:nps,1:nn),sf(1:nps),bl(1:nn),bu(1:nn),maskpara,xnstd(1:nn),  &
-                     icall,maxn,maxit,save_state_gauss(ithread,:),functn, alpha,beta,history_tmp)
+                     icall,maxn,maxit,save_state_gauss(ithread,:),functn, alpha,beta,history_tmp,idot)
                 !
                 !  if the sub-complex is accepted, replace the new sub-complex
                 !  into the complex
@@ -1192,18 +1203,18 @@ CONTAINS
          end if
          close(999)
       else
-         write(format_str1,'(A13,I3,A8)') '( A49, ',nn,'(6x,a4))'
-         write(format_str2,'(A26,I3,A8)') '(i5,1x,i5,3x,i5,3(e22.14), ',nn,'(f10.3))'
+         write(format_str1,'(A13,I3,A8)') '( A49, ',nn,'(6X,A4))'
+         write(format_str2,'(A26,I3,A8)') '(I5,1X,I5,3X,I5,3(E22.14), ',nn,'(G10.3))'
          if (nloop == 0) then
-            write(ipr,*) ''
-            write(ipr,'(A44)') ' *** PRINT THE RESULTS OF THE SCE SEARCH ***'
-            write(ipr,*) ''
-            write(ipr,format_str1) ' LOOP TRIALS COMPLXS  BEST F   WORST F   PAR RNG ',(xname(jj),jj=1,nn)
+            write(output_unit,*) ''
+            write(output_unit,'(A44)') ' *** PRINT THE RESULTS OF THE SCE SEARCH ***'
+            write(output_unit,*) ''
+            write(output_unit,format_str1) ' LOOP TRIALS COMPLXS  BEST F   WORST F   PAR RNG ',(xname(jj),jj=1,nn)
          end if
          if (.not. maxit) then
-            write(ipr,format_str2) nloop,icall,ngs1,bestf_tmp,worstf,gnrng, (bestx(jj),jj=1,nn)
+            write(output_unit,format_str2) nloop,icall,ngs1,bestf_tmp,worstf,gnrng, (bestx(jj),jj=1,nn)
          else
-            write(ipr,format_str2) nloop,icall,ngs1,-bestf_tmp,-worstf,gnrng, (bestx(jj),jj=1,nn)
+            write(output_unit,format_str2) nloop,icall,ngs1,-bestf_tmp,-worstf,gnrng, (bestx(jj),jj=1,nn)
          end if
       end if
 
@@ -1213,14 +1224,14 @@ CONTAINS
 
       implicit none
 
-      write(format_str1,'(A13,I3,A8)') '( A10, ',nn,'(6x,a4))'
-      write(format_str2,'(A14,I3,A8)') '(e22.14, ',nn,'(f10.3))'
+      write(format_str1,'(A13,I3,A8)') '( A10, ',nn,'(6X,A4))'
+      write(format_str2,'(A14,I3,A8)') '(E22.14, ',nn,'(G10.3))'
 
-      write(ipr,format_str1) 'CRITERION ',(xname(jj),jj=1,nn)
+      write(output_unit,format_str1) 'CRITERION ',(xname(jj),jj=1,nn)
       if (.not. maxit) then
-         write(ipr,format_str2) bestf_tmp,(bestx(jj),jj=1,nn)
+         write(output_unit,format_str2) bestf_tmp,(bestx(jj),jj=1,nn)
       else
-         write(ipr,format_str2) -bestf_tmp,(bestx(jj),jj=1,nn)
+         write(output_unit,format_str2) -bestf_tmp,(bestx(jj),jj=1,nn)
       end if
 
     end subroutine write_best_final
@@ -1230,7 +1241,7 @@ CONTAINS
       logical, intent(in) :: to_file
 
       if (to_file) then
-         write(format_str2,'(A13,I3,A9)') '(I4, e22.14, ',nn,'(e22.14))'
+         write(format_str2,'(A13,I3,A9)') '(I4, E22.14, ',nn,'(E22.14))'
          open(unit=999,file=trim(adjustl(popul_file)), action='write', position='append')
          if (.not. maxit) then
             do ii = 1, npt1
@@ -1243,17 +1254,17 @@ CONTAINS
          end if
          close(999)
       else
-         write(format_str2,'(A12,I3,A8)') '(i4, e22.14, ',nn,'(f10.3))'
-         write(ipr,*) ''
-         write(ipr,'(A22,I3)') '   POPULATION AT LOOP ',nloop
-         write(ipr,'(A27)')    '---------------------------'
+         write(format_str2,'(A12,I3,A8)') '(I4, E22.14, ',nn,'(G10.3))'
+         write(output_unit,*) ''
+         write(output_unit,'(A22,I3)') '   POPULATION AT LOOP ',nloop
+         write(output_unit,'(A27)')    '---------------------------'
          if (.not. maxit) then
             do ii = 1, npt1
-               write(ipr,format_str2) nloop, xf(ii), (x(ii,jj),jj=1,nn)
+               write(output_unit,format_str2) nloop, xf(ii), (x(ii,jj),jj=1,nn)
             end do
          else
             do ii = 1, npt1
-               write(ipr,format_str2) nloop, -xf(ii), (x(ii,jj),jj=1,nn)
+               write(output_unit,format_str2) nloop, -xf(ii), (x(ii,jj),jj=1,nn)
             end do
          end if
       end if
@@ -1266,30 +1277,30 @@ CONTAINS
 
       select case (case)
       case (1) ! maximal number of iterations reached
-         write(ipr,*) ''
-         write(ipr,'(A46,A39,I7,A46,I4,A12,I4,A19,I4,A4)') &
+         write(output_unit,*) ''
+         write(output_unit,'(A46,A39,I7,A46,I4,A12,I4,A19,I4,A4)') &
               '*** OPTIMIZATION SEARCH TERMINATED BECAUSE THE', &
-              ' LIMIT ON THE MAXIMUM NUMBER OF TRIALS ',maxn,   &
+              ' LIMIT ON THE MAXIMUM NUMBER OF TRIALS ', maxn,   &
               ' EXCEEDED.  SEARCH WAS STOPPED AT SUB-COMPLEX ', &
-              loop,' OF COMPLEX ',igs,' IN SHUFFLING LOOP ',nloop,' ***'
+              loop, ' OF COMPLEX ', igs,' IN SHUFFLING LOOP ', nloop, ' ***'
          !
       case(2) ! objective not changed during last evolution loops
-         write(ipr,*) ''
-         write(ipr,'(A72,F8.4,A12,I3,A20)') '*** OPTIMIZATION TERMINATED BECAUSE THE CRITERION VALUE HAS NOT CHANGED ', &
+         write(output_unit,*) ''
+         write(output_unit,'(A72,F8.4,A12,I3,A20)') '*** OPTIMIZATION TERMINATED BECAUSE THE CRITERION VALUE HAS NOT CHANGED ', &
               pcento*100._dp,' PERCENT IN ', kstop, ' SHUFFLING LOOPS ***'
          !
       case(3) ! complexes converged
-         write(ipr,*) ''
-         write(ipr,'(A50,A20,F8.4,A34)') '*** OPTIMIZATION TERMINATED BECAUSE THE POPULATION', &
-              ' HAS CONVERGED INTO ',gnrng*100._dp,' PERCENT OF THE FEASIBLE SPACE ***'
+         write(output_unit,*) ''
+         write(output_unit,'(A50,A20,F8.4,A34)') '*** OPTIMIZATION TERMINATED BECAUSE THE POPULATION', &
+              ' HAS CONVERGED INTO ', gnrng*100._dp, ' PERCENT OF THE FEASIBLE SPACE ***'
          !
       case default
-         write(ipr,*) 'This termination case is not implemented!'
+         write(error_unit,*) 'This termination case is not implemented!'
          stop
       end select
 
-      write(ipr,*) ''
-      write(ipr,'(A66)') '*** PRINT THE FINAL PARAMETER ESTIMATE AND ITS CRITERION VALUE ***'
+      write(output_unit,*) ''
+      write(output_unit,'(A66)') '*** PRINT THE FINAL PARAMETER ESTIMATE AND ITS CRITERION VALUE ***'
 
     end subroutine write_termination_case
 
@@ -1564,15 +1575,19 @@ CONTAINS
   end subroutine getpnt
 
   subroutine cce(s,sf,bl,bu,maskpara,xnstd,icall,maxn,maxit,save_state_gauss, functn, &
-       alpha,beta,history)
+       alpha,beta,history,idot)
     !
     !  algorithm generate a new point(s) from a sub-complex
     !
     !  Note: new intent IN    variables for flexible reflection & contraction: alpha, beta
     !        new intent INOUT variable for history of objective function values
     !
-    use mo_kind, only: i4, i8, dp
-    use mo_xor4096, only: n_save_state
+    use mo_kind,         only: i4, i8, dp
+    use mo_xor4096,      only: n_save_state
+    use iso_fortran_env, only: output_unit, error_unit
+#ifndef GFORTRAN
+    use ieee_arithmetic, only: ieee_is_finite
+#endif
 
     implicit none    
 
@@ -1599,6 +1614,7 @@ CONTAINS
     real(dp),                    intent(in)    :: alpha   ! parameter for reflection steps
     real(dp),                    intent(in)    :: beta    ! parameter for contraction steps
     real(dp), dimension(maxn),   intent(inout) :: history ! history of best function value
+    logical,                     intent(in)    :: idot    ! if true: progress report with '.'
     !
     ! local variables
     integer(i4)                                :: nn      ! number of parameters
@@ -1661,6 +1677,7 @@ CONTAINS
     end if
     !
     ! compute the function value at snew
+    if (idot) write(output_unit,'(A1)') '.'
     if (.not. maxit) then
        fnew = functn(snew)
        icall = icall + 1_i8
@@ -1676,7 +1693,11 @@ CONTAINS
     !
     ! compare fnew with the worst function value fw
     ! fnew is greater than fw, so try a contraction step
-    if (fnew .gt. fw) then
+#ifndef GFORTRAN
+    if ((fnew .gt. fw) .or. (.not. ieee_is_finite(fnew))) then
+#else
+    if ((fnew .gt. fw) .or. (fnew .ne. fnew)) then
+#endif
        do j = 1, m
           if (maskpara(j)) then
              snew(j) = ce(j) - beta * (ce(j) - sw(j))
@@ -1686,6 +1707,7 @@ CONTAINS
        end do
        !
        ! compute the function value of the contracted point
+       if (idot) write(output_unit,'(A1)') '.'
        if (.not. maxit) then
           fnew = functn(snew)
           icall = icall + 1_i8
@@ -1701,7 +1723,11 @@ CONTAINS
        !
        ! compare fnew to the worst value fw
        ! if fnew is less than or equal to fw, then accept the point and return
-       if (fnew .gt. fw) then
+#ifndef GFORTRAN
+       if ((fnew .gt. fw) .or. (.not. ieee_is_finite(fnew))) then
+#else
+       if ((fnew .gt. fw) .or. (fnew .ne. fnew)) then
+#endif
           !
           ! if both reflection and contraction fail, choose another point
           ! according to a normal distribution with best point of the sub-complex
@@ -1709,6 +1735,7 @@ CONTAINS
           call getpnt(2,bl(1:nn),bu(1:nn),xnstd(1:nn),sb(1:nn),maskpara(1:nn),save_state_gauss,snew)
           !
           ! compute the function value at the random point
+          if (idot) write(output_unit,'(A1)') '.'
           if (.not. maxit) then
              fnew = functn(snew)
              icall = icall + 1_i8
