@@ -913,7 +913,7 @@ CONTAINS
           fn = cost(gamma(:)%new) * maxit_in
           coststatus = .true.
           if (present(undef_funcval)) then
-             if ( abs(fn*maxit_in-undef_funcval) .lt. epsilon(1.0_dp) ) then
+             if ( abs(fn*maxit_in-undef_funcval) .lt. tiny(1.0_dp) ) then
                 coststatus = .false.
              end if
           end if
@@ -1335,7 +1335,7 @@ CONTAINS
        fn = cost(gamma(:)%new) * maxit_in
        coststatus = .true.
        if (present(undef_funcval)) then
-          if ( abs(fn*maxit_in-undef_funcval) .lt. epsilon(1.0_dp) ) then
+          if ( abs(fn*maxit_in-undef_funcval) .lt. tiny(1.0_dp) ) then
              coststatus = .false.
           end if
        end if

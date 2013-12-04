@@ -815,7 +815,7 @@ CONTAINS
     endif
 
     ! mask all negative and zero entries
-    where (x .lt. epsilon(1.0_sp) .or. y .lt. epsilon(1.0_sp))
+    where (x .lt. tiny(1.0_sp) .or. y .lt. tiny(1.0_sp))
        maske = .false.
     end where
     n = count(maske)
@@ -864,7 +864,7 @@ CONTAINS
     endif
 
     ! mask all negative and zero entries
-    where (x .lt. epsilon(1.0_dp) .or. y .lt. epsilon(1.0_dp))
+    where (x .lt. tiny(1.0_dp) .or. y .lt. tiny(1.0_dp))
        maske = .false.
     end where
     n = count(maske)
@@ -912,7 +912,7 @@ CONTAINS
     endif
     !
     ! mask all negative and zero entries
-    where (x .lt. epsilon(1.0_sp) .or. y .lt. epsilon(1.0_sp))
+    where (x .lt. tiny(1.0_sp) .or. y .lt. tiny(1.0_sp))
        maske = .false.
     end where
     n = count(maske)
@@ -960,7 +960,7 @@ CONTAINS
     endif
     !
     ! mask all negative and zero entries
-    where (x .lt. epsilon(1.0_dp) .or. y .lt. epsilon(1.0_dp))
+    where (x .lt. tiny(1.0_dp) .or. y .lt. tiny(1.0_dp))
        maske = .false.
     end where
     n = count(maske)
@@ -1009,7 +1009,7 @@ CONTAINS
     endif
     !
     ! mask all negative and zero entries
-    where (x .lt. epsilon(1.0_sp) .or. y .lt. epsilon(1.0_sp))
+    where (x .lt. tiny(1.0_sp) .or. y .lt. tiny(1.0_sp))
        maske = .false.
     end where
     n = count(maske)
@@ -1058,7 +1058,7 @@ CONTAINS
     endif
     !
     ! mask all negative and zero entries
-    where (x .lt. epsilon(1.0_dp) .or. y .lt. epsilon(1.0_dp))
+    where (x .lt. tiny(1.0_dp) .or. y .lt. tiny(1.0_dp))
        maske = .false.
     end where
     n = count(maske)

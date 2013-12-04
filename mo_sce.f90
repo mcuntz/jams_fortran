@@ -435,7 +435,7 @@ CONTAINS
     bl(:)   = prange(:,1)
     bu(:)   = prange(:,2)
     do ii=1, nn
-       if( (bu(ii)-bl(ii) .lt. epsilon(1.0_dp) ) .and. maskpara(ii) ) then
+       if( ((bu(ii)-bl(ii)) .lt. tiny(1.0_dp) ) .and. maskpara(ii) ) then
           write(error_unit,*) 'para #',ii,'  :: range = ( ',bl(ii),' , ',bu(ii),' )'
           stop 'mo_sce: inconsistent or too small parameter range'
        end if

@@ -118,6 +118,7 @@ CONTAINS
   !>        \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
   !>        \date Dec 2011
   !         Modified, Matthias Cuntz, Jan 2013 - quiet=.true. default
+  !         Modified, Luis Samaniegi, Nov 2013 comparison statements == -> .eq., etc
 
   SUBROUTINE open_nml(file, unit, quiet)
 
@@ -136,7 +137,7 @@ CONTAINS
     if (.not. iquiet) CALL message('    This is namelist ', trim(file))
     OPEN (nunitnml, file=file, iostat=istat, status='old', action='read', delim='apostrophe')
 
-    IF (istat /= 0) THEN
+    IF (istat .ne. 0) THEN
        write(message_text,'(A,A)') 'Could not open namelist file ', trim(file)
       CALL finish('OPEN_NML',trim(message_text))
     END IF
@@ -201,11 +202,11 @@ CONTAINS
     nnml = nunitnml
     if (present(unit)) nnml = unit
     
-    IF (nnml < 0) CALL finish('CLOSE_NML','No namelist file opened.')
+    IF (nnml .lt. 0) CALL finish('CLOSE_NML','No namelist file opened.')
 
     CLOSE(nnml, IOSTAT=istat)
 
-    IF (istat /= 0) CALL finish('CLOSE_NML','Could not close namelist file.')
+    IF (istat .ne. 0) CALL finish('CLOSE_NML','Could not close namelist file.')
 
     if (.not. present(unit)) nunitnml = -1
 
@@ -297,7 +298,7 @@ CONTAINS
 
     len_name = LEN_TRIM(name)
 
-    IF (len_name > LEN(test)) THEN
+    IF ( len_name .gt. LEN(test) ) THEN
        stat =  LENGTH_ERROR
        code = 'LENGTH_ERROR'
     END IF
@@ -310,14 +311,14 @@ CONTAINS
 
     ! Search start of namelist
     DO
-       IF (stat /= MISSING) EXIT
+       IF (stat .ne. MISSING) EXIT
 
        yline = ' '
 
-       READ (iunit,'(a)',IOSTAT=ios) yline
-       IF (ios < 0) THEN
+       READ (iunit,'(a)', IOSTAT=ios ) yline
+       IF (ios .lt. 0) THEN
           EXIT  ! MISSING
-       ELSE IF (ios > 0) THEN
+       ELSE IF (ios .gt. 0) THEN
           stat =  READ_ERROR
           code = 'READ_ERROR'
           EXIT
@@ -327,18 +328,18 @@ CONTAINS
 
        ind = INDEX(yline,TRIM(test))
 
-       IF (ind == 0) CYCLE
+       IF (ind .eq. 0) CYCLE
 
        indc = INDEX(yline,'!')
 
-       IF (indc > 0 .AND. indc < ind) CYCLE
+       IF (indc .gt. 0 .AND. indc .lt. ind) CYCLE
 
        ! test for delimiter
        ytest = yline(ind+len_name+1:ind+len_name+1)
 
        IF ( (LGE(ytest,'0') .AND. LLE(ytest,'9')) .OR. &
             (LGE(ytest,'a') .AND. LLE(ytest,'z')) .OR. &
-            ytest == '_'                         .OR. &
+            ytest .eq. '_'                         .OR. &
             (LGE(ytest,'A') .AND. LLE(ytest,'Z'))) THEN
           CYCLE
        ELSE 
