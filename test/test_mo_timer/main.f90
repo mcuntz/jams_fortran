@@ -17,9 +17,10 @@ program main
   !
   ! Do something
   call timer_start(1)
-  r = huge(1.0_dp)
+  ! r = huge(1.0_dp)
+  r = 1.0_dp/epsilon(1.0_dp)
   do i=1, 10
-     r = r**(1./real(i,dp))
+     r = r**(1.0_dp/real(i,dp))
   end do
   call timer_check(1)
   call timer_print(1)
