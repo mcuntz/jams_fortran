@@ -449,7 +449,7 @@ CONTAINS
     real(dp)                           :: thin_pole
 
     if (size(x,1) .gt. 1_i4) stop 'thin_pole: Input has to be array of size 1'
-    if ( x(1) == pi_dp ) then
+    if ( abs(x(1) - pi_dp) .lt. tiny(1.0_dp) ) then
        thin_pole = - 10000.0_dp
     else
        thin_pole = 3.0_dp * x(1) * x(1) + 1.0_dp + ( log ( ( x(1) - pi_dp ) * ( x(1) - pi_dp ) ) ) / pi_dp**4
@@ -3025,13 +3025,13 @@ CONTAINS
     a2 = r8_aint ( abs ( x(1) - r12 ) ) + r8_aint ( abs ( x(2) - r22 ) )
 
     if ( x(1) <= b ) then
-       if ( a1 == 0.0_dp ) then
+       if ( abs(a1) .lt. tiny(0.0_dp) ) then
           stuckman = r8_aint ( m1 )
        else
           stuckman = r8_aint ( m1 * sin ( a1 ) / a1 )
        end if
     else
-       if ( a2 == 0.0_dp ) then
+       if ( abs(a2) .lt. tiny(0.0_dp) ) then
           stuckman = r8_aint ( m2 )
        else
           stuckman = r8_aint ( m2 * sin ( a2 ) / a2 )
@@ -3341,7 +3341,7 @@ CONTAINS
     real(dp) :: term
     real(dp), dimension(:), intent(in) :: x
 
-    if ( x(2) == 0.0_dp ) then
+    if ( abs(x(2)) .lt. tiny(0.0_dp) ) then
        term = 0.0_dp
     else
        !arg = ( x(1) + 2.0_dp * x(2) + x(3) ) / x(2)

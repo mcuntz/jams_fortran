@@ -312,15 +312,16 @@ MODULE mo_percentile
 
   ! Private
   INTERFACE swap
-     MODULE PROCEDURE swap_i4, &
-          swap_sp, swap_1d_sp, &
-          swap_dp, swap_1d_dp, &
-          swap_spc, swap_1d_spc, &
-          swap_dpc, swap_1d_dpc, &
-          masked_swap_sp, masked_swap_1d_sp, masked_swap_2d_sp, &
-          masked_swap_dp, masked_swap_1d_dp, masked_swap_2d_dp, &
-          masked_swap_spc, masked_swap_1d_spc, masked_swap_2d_spc, &
-          masked_swap_dpc, masked_swap_1d_dpc, masked_swap_2d_dpc
+     MODULE PROCEDURE &
+          !swap_i4, &
+          swap_sp, & !swap_1d_sp, &
+          swap_dp, & !swap_1d_dp, &
+          !swap_spc, !swap_1d_spc, &
+          !swap_dpc, !swap_1d_dpc, &
+          masked_swap_sp, & !masked_swap_1d_sp, !masked_swap_2d_sp, &
+          masked_swap_dp  !, masked_swap_1d_dp, !masked_swap_2d_dp, &
+          !masked_swap_spc, !masked_swap_1d_spc, !masked_swap_2d_spc, &
+          !masked_swap_dpc, !masked_swap_1d_dpc, !masked_swap_2d_dpc
   END INTERFACE swap
 
   ! ------------------------------------------------------------------
@@ -1133,13 +1134,13 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  SUBROUTINE swap_i4(a,b)
-    INTEGER(i4), INTENT(INOUT) :: a,b
-    INTEGER(i4) :: dum
-    dum=a
-    a=b
-    b=dum
-  END SUBROUTINE swap_i4
+  ! SUBROUTINE swap_i4(a,b)
+  !   INTEGER(i4), INTENT(INOUT) :: a,b
+  !   INTEGER(i4) :: dum
+  !   dum=a
+  !   a=b
+  !   b=dum
+  ! END SUBROUTINE swap_i4
 
 
   SUBROUTINE swap_sp(a,b)
@@ -1163,37 +1164,37 @@ CONTAINS
   END SUBROUTINE masked_swap_sp
 
 
-  SUBROUTINE masked_swap_1d_sp(a,b,mask)
-    REAL(sp), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
-    REAL(sp), DIMENSION(size(a)) :: swp
-    where (mask)
-       swp=a
-       a=b
-       b=swp
-    end where
-  END SUBROUTINE masked_swap_1d_sp
+  ! SUBROUTINE masked_swap_1d_sp(a,b,mask)
+  !   REAL(sp), DIMENSION(:), INTENT(INOUT) :: a,b
+  !   LOGICAL, DIMENSION(:), INTENT(IN) :: mask
+  !   REAL(sp), DIMENSION(size(a)) :: swp
+  !   where (mask)
+  !      swp=a
+  !      a=b
+  !      b=swp
+  !   end where
+  ! END SUBROUTINE masked_swap_1d_sp
 
 
-  SUBROUTINE masked_swap_2d_sp(a,b,mask)
-    REAL(sp), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
-    REAL(sp), DIMENSION(size(a,1),size(a,2)) :: swp
-    where (mask)
-       swp=a
-       a=b
-       b=swp
-    end where
-  END SUBROUTINE masked_swap_2d_sp
+  ! SUBROUTINE masked_swap_2d_sp(a,b,mask)
+  !   REAL(sp), DIMENSION(:,:), INTENT(INOUT) :: a,b
+  !   LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
+  !   REAL(sp), DIMENSION(size(a,1),size(a,2)) :: swp
+  !   where (mask)
+  !      swp=a
+  !      a=b
+  !      b=swp
+  !   end where
+  ! END SUBROUTINE masked_swap_2d_sp
 
 
-  SUBROUTINE swap_1d_sp(a,b)
-    REAL(sp), DIMENSION(:), INTENT(INOUT) :: a,b
-    REAL(sp), DIMENSION(SIZE(a)) :: dum
-    dum=a
-    a=b
-    b=dum
-  END SUBROUTINE swap_1d_sp
+  ! SUBROUTINE swap_1d_sp(a,b)
+  !   REAL(sp), DIMENSION(:), INTENT(INOUT) :: a,b
+  !   REAL(sp), DIMENSION(SIZE(a)) :: dum
+  !   dum=a
+  !   a=b
+  !   b=dum
+  ! END SUBROUTINE swap_1d_sp
 
 
   SUBROUTINE swap_dp(a,b)
@@ -1205,13 +1206,13 @@ CONTAINS
   END SUBROUTINE swap_dp
 
 
-  SUBROUTINE swap_1d_dp(a,b)
-    REAL(dp), DIMENSION(:), INTENT(INOUT) :: a,b
-    REAL(dp), DIMENSION(SIZE(a)) :: dum
-    dum=a
-    a=b
-    b=dum
-  END SUBROUTINE swap_1d_dp
+  ! SUBROUTINE swap_1d_dp(a,b)
+  !   REAL(dp), DIMENSION(:), INTENT(INOUT) :: a,b
+  !   REAL(dp), DIMENSION(SIZE(a)) :: dum
+  !   dum=a
+  !   a=b
+  !   b=dum
+  ! END SUBROUTINE swap_1d_dp
 
 
   SUBROUTINE masked_swap_dp(a,b,mask)
@@ -1226,136 +1227,136 @@ CONTAINS
   END SUBROUTINE masked_swap_dp
 
 
-  SUBROUTINE masked_swap_1d_dp(a,b,mask)
-    REAL(dp), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
-    REAL(dp), DIMENSION(size(a)) :: swp
-    where (mask)
-       swp=a
-       a=b
-       b=swp
-    end where
-  END SUBROUTINE masked_swap_1d_dp
+  ! SUBROUTINE masked_swap_1d_dp(a,b,mask)
+  !   REAL(dp), DIMENSION(:), INTENT(INOUT) :: a,b
+  !   LOGICAL, DIMENSION(:), INTENT(IN) :: mask
+  !   REAL(dp), DIMENSION(size(a)) :: swp
+  !   where (mask)
+  !      swp=a
+  !      a=b
+  !      b=swp
+  !   end where
+  ! END SUBROUTINE masked_swap_1d_dp
 
 
-  SUBROUTINE masked_swap_2d_dp(a,b,mask)
-    REAL(dp), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
-    REAL(dp), DIMENSION(size(a,1),size(a,2)) :: swp
-    where (mask)
-       swp=a
-       a=b
-       b=swp
-    end where
-  END SUBROUTINE masked_swap_2d_dp
+  ! SUBROUTINE masked_swap_2d_dp(a,b,mask)
+  !   REAL(dp), DIMENSION(:,:), INTENT(INOUT) :: a,b
+  !   LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
+  !   REAL(dp), DIMENSION(size(a,1),size(a,2)) :: swp
+  !   where (mask)
+  !      swp=a
+  !      a=b
+  !      b=swp
+  !   end where
+  ! END SUBROUTINE masked_swap_2d_dp
 
 
-  SUBROUTINE swap_spc(a,b)
-    COMPLEX(spc), INTENT(INOUT) :: a,b
-    COMPLEX(spc) :: dum
-    dum=a
-    a=b
-    b=dum
-  END SUBROUTINE swap_spc
+  ! SUBROUTINE swap_spc(a,b)
+  !   COMPLEX(spc), INTENT(INOUT) :: a,b
+  !   COMPLEX(spc) :: dum
+  !   dum=a
+  !   a=b
+  !   b=dum
+  ! END SUBROUTINE swap_spc
 
 
-  SUBROUTINE masked_swap_spc(a,b,mask)
-    COMPLEX(spc), INTENT(INOUT) :: a,b
-    LOGICAL, INTENT(IN) :: mask
-    COMPLEX(spc) :: swp
-    if (mask) then
-       swp=a
-       a=b
-       b=swp
-    end if
-  END SUBROUTINE masked_swap_spc
+  ! SUBROUTINE masked_swap_spc(a,b,mask)
+  !   COMPLEX(spc), INTENT(INOUT) :: a,b
+  !   LOGICAL, INTENT(IN) :: mask
+  !   COMPLEX(spc) :: swp
+  !   if (mask) then
+  !      swp=a
+  !      a=b
+  !      b=swp
+  !   end if
+  ! END SUBROUTINE masked_swap_spc
 
 
-  SUBROUTINE masked_swap_1d_spc(a,b,mask)
-    COMPLEX(spc), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
-    COMPLEX(spc), DIMENSION(size(a)) :: swp
-    where (mask)
-       swp=a
-       a=b
-       b=swp
-    end where
-  END SUBROUTINE masked_swap_1d_spc
+  ! SUBROUTINE masked_swap_1d_spc(a,b,mask)
+  !   COMPLEX(spc), DIMENSION(:), INTENT(INOUT) :: a,b
+  !   LOGICAL, DIMENSION(:), INTENT(IN) :: mask
+  !   COMPLEX(spc), DIMENSION(size(a)) :: swp
+  !   where (mask)
+  !      swp=a
+  !      a=b
+  !      b=swp
+  !   end where
+  ! END SUBROUTINE masked_swap_1d_spc
 
 
-  SUBROUTINE masked_swap_2d_spc(a,b,mask)
-    COMPLEX(spc), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
-    COMPLEX(spc), DIMENSION(size(a,1),size(a,2)) :: swp
-    where (mask)
-       swp=a
-       a=b
-       b=swp
-    end where
-  END SUBROUTINE masked_swap_2d_spc
+  ! SUBROUTINE masked_swap_2d_spc(a,b,mask)
+  !   COMPLEX(spc), DIMENSION(:,:), INTENT(INOUT) :: a,b
+  !   LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
+  !   COMPLEX(spc), DIMENSION(size(a,1),size(a,2)) :: swp
+  !   where (mask)
+  !      swp=a
+  !      a=b
+  !      b=swp
+  !   end where
+  ! END SUBROUTINE masked_swap_2d_spc
 
 
-  SUBROUTINE swap_1d_spc(a,b)
-    COMPLEX(spc), DIMENSION(:), INTENT(INOUT) :: a,b
-    COMPLEX(spc), DIMENSION(SIZE(a)) :: dum
-    dum=a
-    a=b
-    b=dum
-  END SUBROUTINE swap_1d_spc
+  ! SUBROUTINE swap_1d_spc(a,b)
+  !   COMPLEX(spc), DIMENSION(:), INTENT(INOUT) :: a,b
+  !   COMPLEX(spc), DIMENSION(SIZE(a)) :: dum
+  !   dum=a
+  !   a=b
+  !   b=dum
+  ! END SUBROUTINE swap_1d_spc
 
 
-  SUBROUTINE swap_dpc(a,b)
-    COMPLEX(dpc), INTENT(INOUT) :: a,b
-    COMPLEX(dpc) :: dum
-    dum=a
-    a=b
-    b=dum
-  END SUBROUTINE swap_dpc
+  ! SUBROUTINE swap_dpc(a,b)
+  !   COMPLEX(dpc), INTENT(INOUT) :: a,b
+  !   COMPLEX(dpc) :: dum
+  !   dum=a
+  !   a=b
+  !   b=dum
+  ! END SUBROUTINE swap_dpc
 
 
-  SUBROUTINE masked_swap_dpc(a,b,mask)
-    COMPLEX(dpc), INTENT(INOUT) :: a,b
-    LOGICAL, INTENT(IN) :: mask
-    COMPLEX(dpc) :: swp
-    if (mask) then
-       swp=a
-       a=b
-       b=swp
-    end if
-  END SUBROUTINE masked_swap_dpc
+  ! SUBROUTINE masked_swap_dpc(a,b,mask)
+  !   COMPLEX(dpc), INTENT(INOUT) :: a,b
+  !   LOGICAL, INTENT(IN) :: mask
+  !   COMPLEX(dpc) :: swp
+  !   if (mask) then
+  !      swp=a
+  !      a=b
+  !      b=swp
+  !   end if
+  ! END SUBROUTINE masked_swap_dpc
 
 
-  SUBROUTINE masked_swap_1d_dpc(a,b,mask)
-    COMPLEX(dpc), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
-    COMPLEX(dpc), DIMENSION(size(a)) :: swp
-    where (mask)
-       swp=a
-       a=b
-       b=swp
-    end where
-  END SUBROUTINE masked_swap_1d_dpc
+  ! SUBROUTINE masked_swap_1d_dpc(a,b,mask)
+  !   COMPLEX(dpc), DIMENSION(:), INTENT(INOUT) :: a,b
+  !   LOGICAL, DIMENSION(:), INTENT(IN) :: mask
+  !   COMPLEX(dpc), DIMENSION(size(a)) :: swp
+  !   where (mask)
+  !      swp=a
+  !      a=b
+  !      b=swp
+  !   end where
+  ! END SUBROUTINE masked_swap_1d_dpc
 
 
-  SUBROUTINE masked_swap_2d_dpc(a,b,mask)
-    COMPLEX(dpc), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
-    COMPLEX(dpc), DIMENSION(size(a,1),size(a,2)) :: swp
-    where (mask)
-       swp=a
-       a=b
-       b=swp
-    end where
-  END SUBROUTINE masked_swap_2d_dpc
+  ! SUBROUTINE masked_swap_2d_dpc(a,b,mask)
+  !   COMPLEX(dpc), DIMENSION(:,:), INTENT(INOUT) :: a,b
+  !   LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
+  !   COMPLEX(dpc), DIMENSION(size(a,1),size(a,2)) :: swp
+  !   where (mask)
+  !      swp=a
+  !      a=b
+  !      b=swp
+  !   end where
+  ! END SUBROUTINE masked_swap_2d_dpc
 
 
-  SUBROUTINE swap_1d_dpc(a,b)
-    COMPLEX(dpc), DIMENSION(:), INTENT(INOUT) :: a,b
-    COMPLEX(dpc), DIMENSION(SIZE(a)) :: dum
-    dum=a
-    a=b
-    b=dum
-  END SUBROUTINE swap_1d_dpc
+  ! SUBROUTINE swap_1d_dpc(a,b)
+  !   COMPLEX(dpc), DIMENSION(:), INTENT(INOUT) :: a,b
+  !   COMPLEX(dpc), DIMENSION(SIZE(a)) :: dum
+  !   dum=a
+  !   a=b
+  !   b=dum
+  ! END SUBROUTINE swap_1d_dpc
 
   ! ------------------------------------------------------------------
 

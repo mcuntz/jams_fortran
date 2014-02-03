@@ -407,7 +407,8 @@ CONTAINS
        X(I)=coord(I,1)-P(1)
        Y(I)=coord(I,2)-P(2)
        ! Edge
-       if ( (X(I) .EQ. 0.0_dp) .and. (Y(I) .EQ. 0.0_dp) ) then
+       ! OLD: if ( (X(I) .EQ. 0.0_dp) .and. (Y(I) .EQ. 0.0_dp) ) then
+       if ( (abs(X(I)) .lt. tiny(0.0_dp)) .and. (abs(Y(I)) .lt. tiny(0.0_dp)) ) then
           erg=0_i4
           return
        end if
@@ -418,26 +419,30 @@ CONTAINS
     DO I=1,N
        J=1+MOD(I,N)
        ! vertical Vertex
-       If ( ( coord(I,1) .eq. coord(J,1) ) .and. ( coord(I,1) .eq. P(1) ) ) then
+       ! OLD: If ( ( coord(I,1) .eq. coord(J,1) ) .and. ( coord(I,1) .eq. P(1) ) ) then
+       If ( ( abs(coord(I,1) - coord(J,1)) .lt. tiny(1.0_dp) ) .and. ( abs(coord(I,1) - P(1)) .lt. tiny(1.0_dp) ) ) then
           ly = (P(2)-coord(J,2)) / (coord(I,2)-coord(J,2))
-          If ( ( ly .ge. 0.0_dp ) .and. ( ly .le. 1.0_dp) ) then
+          ! OLD: If ( ( ly .ge. 0.0_dp ) .and. ( ly .le. 1.0_dp) ) then
+          If ( ( ly .gt. -tiny(0.0_dp) ) .and. ( (ly - 1.0_dp) .lt. tiny(1.0_dp)) ) then
              erg=0_i4
              return
           end if
        end if
        ! horizontal Vertex
-       If ( ( coord(I,2) .eq. coord(J,2) ) .and. ( coord(I,2) .eq. P(2) ) ) then
+       ! OLD: If ( ( coord(I,2) .eq. coord(J,2) ) .and. ( coord(I,2) .eq. P(2) ) ) then
+       If ( ( abs(coord(I,2) - coord(J,2)) .lt. tiny(1.0_dp) ) .and. ( abs(coord(I,2) - P(2)) .lt. tiny(1.0_dp) ) ) then
           lx = (P(1)-coord(J,1)) / (coord(I,1)-coord(J,1))
-          If ( ( lx .ge. 0.0_dp ) .and. ( lx .le. 1.0_dp) ) then
+          ! OLD: If ( ( lx .ge. 0.0_dp ) .and. ( lx .le. 1.0_dp) ) then
+          If ( ( lx .gt. -tiny(0.0_dp) ) .and. ( (lx - 1.0_dp) .lt. tiny(1.0_dp)) ) then
              erg=0_i4
              return
           end if
        end if
        !
-       MX=X(I).GE.0.0_dp
-       NX=X(J).GE.0.0_dp
-       MY=Y(I).GE.0.0_dp
-       NY=Y(J).GE.0.0_dp
+       MX=X(I) .gt. -tiny(0.0_dp)
+       NX=X(J) .gt. -tiny(0.0_dp)
+       MY=Y(I) .gt. -tiny(0.0_dp)
+       NY=Y(J) .gt. -tiny(0.0_dp)
 
        test1 = .NOT.((MY.OR.NY).AND.(MX.OR.NX)).OR.(MX.AND.NX)
        test2 = .NOT.(MY.AND.NY.AND.(MX.OR.NX).AND..NOT.(MX.AND.NX))
@@ -490,7 +495,8 @@ CONTAINS
        X(I)=coord(I,1)-P(1)
        Y(I)=coord(I,2)-P(2)
        ! Edge
-       if ( (X(I) .EQ. 0.0_sp) .and. (Y(I) .EQ. 0.0_sp) ) then
+       ! OLD: if ( (X(I) .EQ. 0.0_sp) .and. (Y(I) .EQ. 0.0_sp) ) then
+       if ( (abs(X(I)) .lt. tiny(0.0_sp)) .and. (abs(Y(I)) .lt. tiny(0.0_sp)) ) then
           erg=0_i4
           return
        end if
@@ -501,26 +507,30 @@ CONTAINS
     DO I=1,N
        J=1+MOD(I,N)
        ! vertical Vertex
-       If ( ( coord(I,1) .eq. coord(J,1) ) .and. ( coord(I,1) .eq. P(1) ) ) then
+       ! OLD: If ( ( coord(I,1) .eq. coord(J,1) ) .and. ( coord(I,1) .eq. P(1) ) ) then
+       If ( ( abs(coord(I,1) - coord(J,1)) .lt. tiny(1.0_sp) ) .and. ( abs(coord(I,1) - P(1)) .lt. tiny(1.0_sp) ) ) then
           ly = (P(2)-coord(J,2)) / (coord(I,2)-coord(J,2))
-          If ( ( ly .ge. 0.0_sp ) .and. ( ly .le. 1.0_sp) ) then
+          ! OLD: If ( ( ly .ge. 0.0_sp ) .and. ( ly .le. 1.0_sp) ) then
+          If ( ( ly .gt. -tiny(0.0_sp) ) .and. ( (ly - 1.0_sp) .lt. tiny(1.0_sp)) ) then
              erg=0_i4
              return
           end if
        end if
        ! horizontal Vertex
-       If ( ( coord(I,2) .eq. coord(J,2) ) .and. ( coord(I,2) .eq. P(2) ) ) then
+       ! OLD: If ( ( coord(I,2) .eq. coord(J,2) ) .and. ( coord(I,2) .eq. P(2) ) ) then
+       If ( ( abs(coord(I,2) - coord(J,2)) .lt. tiny(1.0_sp) ) .and. ( abs(coord(I,2) - P(2)) .lt. tiny(1.0_sp) ) ) then
           lx = (P(1)-coord(J,1)) / (coord(I,1)-coord(J,1))
-          If ( ( lx .ge. 0.0_sp ) .and. ( lx .le. 1.0_sp) ) then
+          ! OLD: If ( ( lx .ge. 0.0_sp ) .and. ( lx .le. 1.0_sp) ) then
+          If ( ( lx .gt. -tiny(0.0_sp) ) .and. ( (lx - 1.0_sp) .lt. tiny(1.0_sp)) ) then
              erg=0_i4
              return
           end if
        end if
        !
-       MX=X(I).GE.0.0_sp
-       NX=X(J).GE.0.0_sp
-       MY=Y(I).GE.0.0_sp
-       NY=Y(J).GE.0.0_sp
+       MX=X(I) .gt. -tiny(0.0_sp)
+       NX=X(J) .gt. -tiny(0.0_sp)
+       MY=Y(I) .gt. -tiny(0.0_sp)
+       NY=Y(J) .gt. -tiny(0.0_sp)
 
        test1 = .NOT.((MY.OR.NY).AND.(MX.OR.NX)).OR.(MX.AND.NX)
        test2 = .NOT.(MY.AND.NY.AND.(MX.OR.NX).AND..NOT.(MX.AND.NX))

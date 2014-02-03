@@ -75,8 +75,8 @@ program main
   end do
   write(*,'(A16,I3,A23,F12.7)')    ' Minimum found (',icount,' iterations):            ',ynewlo
   write(*,*) 'Call 1: ', xmin, anint(100._dp*xmin)
-  isgood = isgood .and. (anint(100._dp*xmin(1)) == 100._dp)
-  isgood = isgood .and. (anint(100._dp*xmin(2)) == 100._dp)
+  isgood = isgood .and. (nint(100._dp*xmin(1)) == 100)
+  isgood = isgood .and. (nint(100._dp*xmin(2)) == 100)
 
   start(1:n) = (/ -1.2_dp, 1.0_dp /)
   reqmin = 1.0E-08_dp
@@ -85,8 +85,8 @@ program main
   kcount = 500
   xmin = nelmin(rosenbrock, start, varmin=reqmin, step=step, konvge=konvge, maxeval=kcount)
   write(*,*) 'Call 2: ', xmin, anint(100._dp*xmin)
-  isgood = isgood .and. (anint(100._dp*xmin(1)) == 100._dp)
-  isgood = isgood .and. (anint(100._dp*xmin(2)) == 100._dp)
+  isgood = isgood .and. (nint(100._dp*xmin(1)) == 100)
+  isgood = isgood .and. (nint(100._dp*xmin(2)) == 100)
 
   start(1:n) = (/ -1.2_dp, 1.0_dp /)
   reqmin = 1.0E-08_dp
@@ -94,29 +94,29 @@ program main
   kcount = 500
   xmin = nelmin(rosenbrock, start, varmin=reqmin, konvge=konvge, maxeval=kcount)
   write(*,*) 'Call 3: ', xmin, anint(100._dp*xmin)
-  isgood = isgood .and. (anint(100._dp*xmin(1)) == 100._dp)
+  isgood = isgood .and. (nint(100._dp*xmin(1)) == 100)
   ! Less precision with new starting points
-  isgood = isgood .and. (anint(100._dp*xmin(2)) == 99._dp)
+  isgood = isgood .and. (nint(100._dp*xmin(2)) == 99)
 
   start(1:n) = (/ -1.2_dp, 1.0_dp /)
   konvge = 10
   kcount = 500
   xmin = nelmin(rosenbrock, start, konvge=konvge, maxeval=kcount)
   write(*,*) 'Call 4: ', xmin, anint(100._dp*xmin)
-  isgood = isgood .and. (anint(100._dp*xmin(1)) == 100._dp)
-  isgood = isgood .and. (anint(100._dp*xmin(2)) == 100._dp)
+  isgood = isgood .and. (nint(100._dp*xmin(1)) == 100)
+  isgood = isgood .and. (nint(100._dp*xmin(2)) == 100)
 
   start(1:n) = (/ -1.2_dp, 1.0_dp /)
   xmin = nelmin(rosenbrock, start)
   write(*,*) 'Call 5: ', xmin, anint(100._dp*xmin)
-  isgood = isgood .and. (anint(100._dp*xmin(1)) == 100._dp)
-  isgood = isgood .and. (anint(100._dp*xmin(2)) == 100._dp)
+  isgood = isgood .and. (nint(100._dp*xmin(1)) == 100)
+  isgood = isgood .and. (nint(100._dp*xmin(2)) == 100)
 
   start(1:n) = (/ -12.0_dp, 10.0_dp /)
   xmin = nelmin(rosenbrock, start)
   write(*,*) 'Call 6: ', xmin, anint(100._dp*xmin)
-  isgood = isgood .and. (anint(100._dp*xmin(1)) == 100._dp)
-  isgood = isgood .and. (anint(100._dp*xmin(2)) == 100._dp)
+  isgood = isgood .and. (nint(100._dp*xmin(1)) == 100)
+  isgood = isgood .and. (nint(100._dp*xmin(2)) == 100)
 
   start(1:n) = (/ -12.0_dp, 10.0_dp /)
   xx(1) = 1.0_dp
@@ -128,8 +128,8 @@ program main
   end do
   write(*,'(A16,I3,A23,F12.7)')           ' Minimum found (',icount,' iterations):            ',ynewlo
   write(*,*) 'Call 7: ', xmin, anint(100._dp*xmin)
-  isgood = isgood .and. (anint(100._dp*xmin(1)) == 100._dp)
-  isgood = isgood .and. (anint(100._dp*xmin(2)) == 100._dp)
+  isgood = isgood .and. (nint(100._dp*xmin(1)) == 100)
+  isgood = isgood .and. (nint(100._dp*xmin(2)) == 100)
 
   if (isgood) then
      write(*,*) 'mo_nelmin double precision o.k.'

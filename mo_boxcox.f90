@@ -268,7 +268,7 @@ CONTAINS
        maske = mask
     endif
     if (any((x <= 0.0_sp) .and. maske)) stop 'Error boxcox_sp: x <= 0'
-    if (lmbda == 0.0_sp) then
+    if (abs(lmbda) .lt. tiny(0.0_sp)) then
        where (maske)
           boxcox_sp = log(x)
        elsewhere
@@ -302,7 +302,7 @@ CONTAINS
     if (any((x <= 0.0_dp) .and. maske)) then
        stop 'Error boxcox_dp: x <= 0'
     end if
-    if (lmbda == 0.0_dp) then
+    if (abs(lmbda) .lt. tiny(0.0_dp)) then
        where (maske)
           boxcox_dp = log(x)
        elsewhere
@@ -406,12 +406,15 @@ CONTAINS
           else
              b = u
           end if
-          if (fu <= fw .or. w == x) then
+          if ( ((fw-fu) .gt. -tiny(1.0_sp)) .or. &
+               (abs(w-x) .lt. tiny(1.0_sp)) ) then
              v  = w
              fv = fw
              w  = u
              fw = fu
-          else if (fu <= fv .or. v == x .or. v == w) then
+          else if ( ((fv-fu) .gt. -tiny(1.0_sp)) .or. &
+               (abs(v-x) .lt. tiny(1.0_sp)) .or. &
+               (abs(v-w) .lt. tiny(1.0_sp)) ) then
              v  = u
              fv = fu
           end if
@@ -505,12 +508,15 @@ CONTAINS
           else
              b = u
           end if
-          if (fu <= fw .or. w == x) then
+          if ( ((fw-fu) .gt. -tiny(1.0_sp)) .or. &
+               (abs(w-x) .lt. tiny(1.0_sp)) ) then
              v  = w
              fv = fw
              w  = u
              fw = fu
-          else if (fu <= fv .or. v == x .or. v == w) then
+          else if ( ((fv-fu) .gt. -tiny(1.0_dp)) .or. &
+               (abs(v-x) .lt. tiny(1.0_dp)) .or. &
+               (abs(v-w) .lt. tiny(1.0_dp)) ) then
              v  = u
              fv = fu
           end if
@@ -612,7 +618,7 @@ CONTAINS
        if (size(mask) /= size(x)) stop 'Error invboxcox_1d_sp: size(mask) /= size(x)'
        maske = mask
     endif
-    if (lmbda == 0.0_sp) then
+    if (abs(lmbda) .lt. tiny(0.0_sp)) then
        where (maske)
           invboxcox_1d_sp = exp(x)
        elsewhere
@@ -649,7 +655,7 @@ CONTAINS
        if (size(mask) /= size(x)) stop 'Error invboxcox_1d_dp: size(mask) /= size(x)'
        maske = mask
     endif
-    if (lmbda == 0.0_dp) then
+    if (abs(lmbda) .lt. tiny(0.0_dp)) then
        where (maske)
           invboxcox_1d_dp = exp(x)
        elsewhere
@@ -679,7 +685,7 @@ CONTAINS
     REAL(sp)                       :: lmbda1
     REAL(sp)                       :: temp
 
-    if (lmbda .eq. 0.0_sp) then
+    if (abs(lmbda) .lt. tiny(0.0_sp)) then
        invboxcox_0d_sp = exp(x)
     else
        lmbda1    = 1.0_sp / lmbda
@@ -705,7 +711,7 @@ CONTAINS
     REAL(dp)                       :: lmbda1
     REAL(dp)                       :: temp
 
-    if (lmbda .eq. 0.0_dp) then
+    if (abs(lmbda) .lt. tiny(0.0_dp)) then
        invboxcox_0d_dp = exp(x)
     else
        lmbda1    = 1.0_dp / lmbda

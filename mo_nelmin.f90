@@ -253,7 +253,7 @@ CONTAINS
        y0 = func(pstart)
        do i=1, size(pstart)
           p0 = pstart
-          if (p0(i) /= 0.0_dp) then
+          if ( abs(p0(i)) .gt. tiny(0.0_dp) ) then
              p0(i) = 1.01_dp*p0(i)
           else
              p0(i) = 0.01_dp
@@ -596,7 +596,7 @@ CONTAINS
        y0 = func(pstart, xx, yy)
        do i=1, size(pstart)
           p0 = pstart
-          if (p0(i) /= 0.0_dp) then
+          if ( abs(p0(i)) .gt. tiny(0.0_dp) ) then
              p0(i) = 1.01_dp*p0(i)
           else
              p0(i) = 0.01_dp
@@ -935,7 +935,7 @@ CONTAINS
        y0 = func(pstart)
        do i=1, size(pstart)
           p0 = pstart
-          if (p0(i) /= 0.0_dp) then
+          if ( abs(p0(i)) .gt. tiny(0.0_dp) ) then
              ! bound to range
              p0(i) = min( prange(i,2) , max( prange(i,1) , 1.01_dp*p0(i) ) )
           else
@@ -1292,7 +1292,7 @@ CONTAINS
        y0 = func(pstart)
        do i=1, size(pstart)
           p0 = pstart
-          if (p0(i) /= 0.0_sp) then
+          if ( abs(p0(i)) .gt. tiny(0.0_sp) ) then
              ! bound to range
              p0(i) = min( prange(i,2) , max( prange(i,1) , 1.01_sp*p0(i) ) )
           else

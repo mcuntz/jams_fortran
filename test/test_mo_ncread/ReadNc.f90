@@ -68,14 +68,14 @@ DimLen(3) = 2
 ! read data corresponding to dimesnion 3 ('time')
 allocate(DimData(DimLen(3)))
 call Get_NcVar(Filename, DimNames(3) ,DimData)
-isgood = isgood .and. (anint(sum(DimData)) == 8100_i4)
+isgood = isgood .and. (nint(sum(DimData)) == 8100_i4)
 deallocate(DimData)
 !
 call Get_NcVar(Filename, Varname, data)
 !
 ! The sum of the data should be 0.1174308 in single precision
 !write(*,*) 'sum of data: ', sum(data)
-isgood = isgood .and. (anint(1e7_sp*sum(data)) == 1174308_i4)
+isgood = isgood .and. (nint(1e7_sp*sum(data)) == 1174308_i4)
 data = -9999._sp
 !
 ! check dynamic read
@@ -87,7 +87,7 @@ end do
 !
 call NcClose(ncid)            ! close file
 !
-isgood = isgood .and. (anint(1e7_sp*sum(data)) == 1174308_i4)
+isgood = isgood .and. (nint(1e7_sp*sum(data)) == 1174308_i4)
 !
 #ifndef ABSOFT
 ! retrieving variables attributes

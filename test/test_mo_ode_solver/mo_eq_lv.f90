@@ -52,10 +52,11 @@ contains
         !
         ! y(1) --> predators
         ! y(2) --> preys
+        ! does not depend on time  --> 0.0 * x (to avoid warnings of unused variables)
         ! ============================================================================
 
-        dydx(1) = y(1) - epsilonn*mu*y(2)
-        dydx(2) = (mu/epsilonn)*y(1) + eta*y(2)
+        dydx(1) = y(1) - epsilonn*mu*y(2)        + 0.0_sp*x    
+        dydx(2) = (mu/epsilonn)*y(1) + eta*y(2)  + 0.0_sp*x
 
     end subroutine LV_eqn_sp
 
@@ -84,10 +85,11 @@ contains
         !
         ! y(1) --> predators
         ! y(2) --> preys
+        ! does not depend on time  --> 0.0 * x (to avoid warnings of unused variables)
         ! ============================================================================
 
-        dydx(1) = y(1) - epsilonn*mu*y(2)
-        dydx(2) = (mu/epsilonn)*y(1) + eta*y(2)
+        dydx(1) = y(1) - epsilonn*mu*y(2)        + 0.0_dp*x
+        dydx(2) = (mu/epsilonn)*y(1) + eta*y(2)  + 0.0_dp*x
 
     end subroutine LV_eqn_dp
 

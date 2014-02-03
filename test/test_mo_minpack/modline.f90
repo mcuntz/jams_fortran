@@ -194,10 +194,10 @@ contains
        write(*,*) " No. of data:  ",n
     endif
     isgood = .True.
-    isgood = isgood .and. (anint(1000._dp*t(1)) == 29223._dp)
-    isgood = isgood .and. (anint(1000._dp*t(2)) == -1913._dp)
-    isgood = isgood .and. (anint(1000._dp*dt(1)) == 1278._dp)
-    isgood = isgood .and. (anint(1000._dp*dt(2)) == 122._dp)
+    isgood = isgood .and. (nint(1000._dp*t(1)) == 29223)
+    isgood = isgood .and. (nint(1000._dp*t(2)) == -1913)
+    isgood = isgood .and. (nint(1000._dp*dt(1)) == 1278)
+    isgood = isgood .and. (nint(1000._dp*dt(2)) == 122)
 
     s0 = 0.0
     do i = 1, n

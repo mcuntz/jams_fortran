@@ -1660,11 +1660,14 @@ MODULE mo_nr
      END FUNCTION interp
   END INTERFACE
   INTERFACE
-     FUNCTION rank(indx)
+     ! original from NR --> "rank" überdeckt eingebaute Funktion mit gleichem Namen
+     ! FUNCTION rank(indx)
+     ! renamed
+     FUNCTION rank_nr(indx)
        USE mo_kind
        INTEGER(I4), DIMENSION(:), INTENT(IN) :: indx
-       INTEGER(I4), DIMENSION(size(indx)) :: rank
-     END FUNCTION rank
+       INTEGER(I4), DIMENSION(size(indx)) :: rank_nr
+     END FUNCTION rank_nr
   END INTERFACE
   INTERFACE
      FUNCTION irbit1(iseed)
@@ -2565,10 +2568,13 @@ MODULE mo_nr
      END SUBROUTINE quadvl
   END INTERFACE
   INTERFACE
-     FUNCTION ran(idum)
+     ! original from NR --> "ran" überdeckt eingebaute Funktion mit gleichem Namen
+     ! FUNCTION ran(idum)
+     ! renamed
+     FUNCTION ran_nr(idum)
        INTEGER(selected_int_kind(9)), INTENT(INOUT) :: idum
-       REAL :: ran
-     END FUNCTION ran
+       REAL :: ran_nr
+     END FUNCTION ran_nr
   END INTERFACE
   INTERFACE ran0
      SUBROUTINE ran0_s(harvest)

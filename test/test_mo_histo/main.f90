@@ -44,7 +44,7 @@ allocate(Has2Be_bincount(3), Has2Be_binx_dp(3))
 Has2Be_binx_dp  = (/2.717_dp, 5.750_dp, 8.783_dp/)
 Has2Be_bincount = (/4, 5, 1/)
 if ( all(bincount .eq. Has2Be_bincount) .and. &
-     all(anint(binx_dp*1000.0_dp) .eq. anint(Has2Be_binx_dp*1000.0_dp))) then
+     all(nint(binx_dp*1000.0_dp) .eq. nint(Has2Be_binx_dp*1000.0_dp))) then
    print*, 'mo_histo: default o.k.'
 else
    print*, 'failed '
@@ -69,7 +69,7 @@ allocate(Has2Be_bincount(n), Has2Be_binx_dp(n))
 Has2Be_binx_dp  = (/1.850_dp, 3.150_dp, 4.450_dp, 5.750_dp, 7.050_dp,9.650_dp/)
 Has2Be_bincount = (/3,1,1,3,1,1/)
 if ( all(bincount .eq. Has2Be_bincount) .and. &
-     all(anint(binx_dp*1000.0_dp) .eq. anint(Has2Be_binx_dp*1000.0_dp))) then
+     all(nint(binx_dp*1000.0_dp) .eq. nint(Has2Be_binx_dp*1000.0_dp))) then
    print*, 'mo_histo: fixed number of bins o.k.'
 else
    print*, 'mo_histo: fixed number of bins failed '
@@ -94,7 +94,7 @@ allocate(Has2Be_bincount(n), Has2Be_binx_dp(n))
 Has2Be_binx_dp  = (/1.950_dp, 3.450_dp, 4.950_dp, 6.450_dp, 7.950_dp,10.950_dp/)
 Has2Be_bincount = (/3,1,3,1,1,1/)
 if ( all(bincount .eq. Has2Be_bincount) .and. &
-     all(anint(binx_dp*1000.0_dp) .eq. anint(Has2Be_binx_dp*1000.0_dp))) then
+     all(nint(binx_dp*1000.0_dp) .eq. nint(Has2Be_binx_dp*1000.0_dp))) then
    print*, 'mo_histo: fixed width of bins o.k.'
 else
    print*, 'mo_histo: fixed width of bins failed '
@@ -124,7 +124,7 @@ allocate(Has2Be_bincount(n), Has2Be_binx_dp(n))
 Has2Be_binx_dp  = (/2.475_dp, 5.025_dp/)
 Has2Be_bincount = (/3,2/)
 if ( all(bincount .eq. Has2Be_bincount) .and. &
-     all(anint(binx_dp*1000.0_dp) .eq. anint(Has2Be_binx_dp*1000.0_dp))) then
+     all(nint(binx_dp*1000.0_dp) .eq. nint(Has2Be_binx_dp*1000.0_dp))) then
    print*, 'mo_histo: with mask o.k.'
 else
    print*, 'mo_histo: with mask failed '
@@ -173,7 +173,7 @@ Has2Be_binx_dp_2d(1,:)  = (/2.475_dp, 7.333_dp, 5.000_dp/)
 Has2Be_binx_dp_2d(2,:)  = (/5.025_dp, 3.000_dp, 3.500_dp/)
 Has2Be_bincount = (/3,2/)
 if ( all(bincount .eq. Has2Be_bincount) .and. &
-     all(anint(binx_dp_2d*1000.0_dp) .eq. anint(Has2Be_binx_dp_2d*1000.0_dp))) then
+     all(nint(binx_dp_2d*1000.0_dp) .eq. nint(Has2Be_binx_dp_2d*1000.0_dp))) then
 #endif
    print*, 'mo_histo: with averaging (default) o.k.'
 #ifndef ABSOFT

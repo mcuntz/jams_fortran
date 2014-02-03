@@ -18,7 +18,7 @@ PROGRAM main
   ! Double precision
   forall(ii=1:nn) dat(ii) = ii
   isgood = .true.
-  isgood = isgood .and. (anint(int_regular(dat)) == 40._dp)
+  isgood = isgood .and. (nint(int_regular(dat)) == 40)
 
   if (isgood) then
      write(*,*) 'mo_integrate double precision o.k.'
@@ -29,7 +29,7 @@ PROGRAM main
   ! Double precision
   forall(ii=1:nn) sat(ii) = ii
   isgood = .true.
-  isgood = isgood .and. (anint(int_regular(sat)) == 40._dp)
+  isgood = isgood .and. (nint(int_regular(sat)) == 40)
 
   if (isgood) then
      write(*,*) 'mo_integrate single precision o.k.'

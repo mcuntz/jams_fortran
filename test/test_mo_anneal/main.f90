@@ -108,7 +108,7 @@ PROGRAM anneal_test
 
   ! Is program running properly?   costbestAll = 3.1142480812726376E-02
   print*, '-----------------------------------'
-  if ( anint(costbestAll*100000) .eq. 3114._dp ) then
+  if ( nint(costbestAll*100000) .eq. 3114 ) then
      print*, 'mo_anneal: o.k.'
   else
      print*, 'mo_anneal: failed '

@@ -1118,7 +1118,7 @@ contains
     real(dp) x01
     real(dp) y(0:n)
 
-    if ( b - a == 0.0_dp ) then
+    if ( abs(b - a) .lt. tiny(0.0_dp) ) then
        write ( *, '(a)' ) ' '
        write ( *, '(a)' ) 'BEZ_VAL - Fatal error!'
        write ( *, '(a,g14.6)' ) '  Null interval, A = B = ', a
@@ -1318,7 +1318,7 @@ contains
     integer(i4) j
     real(dp) x
 
-    if ( b == a ) then
+    if ( abs(b - a) .lt. tiny(1.0_dp) ) then
        write ( *, '(a)' ) ' '
        write ( *, '(a)' ) 'BPAB - Fatal error!'
        write ( *, '(a,g14.6)' ) '  A = B = ', a
@@ -1543,7 +1543,7 @@ contains
 
     h = x2 - x1
 
-    if ( h == 0.0_dp ) then
+    if ( abs(h) .lt. tiny(0.0_dp) ) then
        ierr = -2
        write ( *, '(a)' ) ' '
        write ( *, '(a)' ) 'CHFEV - Fatal error!'
@@ -2595,7 +2595,7 @@ contains
 
     pchst = sign ( 1.0_dp, arg1 ) * sign ( 1.0_dp, arg2 )
 
-    if ( arg1 == 0.0_dp .or. arg2 == 0.0_dp ) then
+    if ( (abs(arg1) .lt. tiny(0.0_dp)) .or. (abs(arg2) .lt. tiny(0.0_dp)) ) then
        pchst = 0.0_dp
     end if
 
@@ -2825,7 +2825,7 @@ contains
     !  The diagonal entries can't be zero.
     !
     do i = 1, n
-       if ( a(2,i) == 0.0_dp ) then
+       if ( abs(a(2,i)) .lt. tiny(0.0_dp) ) then
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'R83_NP_FS - Fatal error!'
           write ( *, '(a,i8,a)' ) '  A(2,', i, ') = 0.'
@@ -2978,7 +2978,7 @@ contains
     real(dp) xmult
 
     do i = 1, n
-       if ( a(3,i) == 0.0_dp ) then
+       if ( abs(a(3,i)) .lt. tiny(0.0_dp) ) then
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'R85_NP_FS - Fatal error!'
           write ( *, '(a,i8,a)' ) '  A(3,', i, ') = 0.'
@@ -3287,7 +3287,7 @@ contains
           end if
        end do
 
-       if ( piv == 0.0_dp ) then
+       if ( abs(piv) .lt. tiny(0.0_dp) ) then
           info = jcol
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'R8GE_FS - Fatal error!'
@@ -3318,7 +3318,7 @@ contains
        !  Use the pivot row to eliminate lower entries in that column.
        !
        do i = jcol + 1, n
-          if ( a(i,jcol) /= 0.0_dp ) then
+          if ( abs(a(i,jcol)) .gt. tiny(0.0_dp) ) then
              temp = - a(i,jcol)
              a(i,jcol) = 0.0_dp
              a(i,jcol+1:n) = a(i,jcol+1:n) + temp * a(jcol,jcol+1:n)
@@ -3614,7 +3614,7 @@ contains
 
     do i = 2, n
        do j = 1, i - 1
-          if ( x(i) == x(j) ) then
+          if ( abs(x(i) - x(j)) .lt. tiny(1.0_dp) ) then
              return
           end if
        end do
@@ -3827,7 +3827,7 @@ contains
           if ( a(i) < a(i-1) ) then
              order = -1
              exit
-          else if ( a(i) == a(i-1) ) then
+          else if ( abs(a(i) - a(i-1)) .lt. tiny(1.0_dp) ) then
              order = 1
           end if
 
@@ -3843,7 +3843,7 @@ contains
           if ( a(i-1) < a(i) ) then
              order = -1
              exit
-          else if ( a(i) == a(i-1) ) then
+          else if ( abs(a(i) - a(i-1)) .lt. tiny(1.0_dp) ) then
              order = 3
           end if
 
@@ -5586,7 +5586,7 @@ contains
 
     int_val = 0.0_dp
 
-    if ( a == b ) then
+    if ( abs(a - b) .lt. tiny(1.0_dp) ) then
        return
     end if
 
@@ -6383,9 +6383,9 @@ contains
           !
           !  Count number of changes in direction of monotonicity.
           !
-       else if ( temp == 0.0_dp ) then
+       else if ( abs(temp) .lt. tiny(0.0_dp) ) then   ! temp == 0.0
 
-          if ( del2 /= 0.0_dp ) then
+          if ( abs(del2) .gt. tiny(0.0_dp) ) then     ! del2 /= 0.0
              if ( pchst ( dsave, del2 ) < 0.0_dp ) then
                 ierr = ierr + 1
              end if

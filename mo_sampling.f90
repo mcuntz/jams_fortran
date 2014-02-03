@@ -302,7 +302,9 @@ module mo_sampling
   ! Private Method
   ! Lower tail quantile for standard normal distribution function
   interface ltqnorm
-     module procedure ltqnorm_sp_d0, ltqnorm_sp_d1, ltqnorm_dp_d0, ltqnorm_dp_d1
+     module procedure &
+          ltqnorm_sp_d1, ltqnorm_dp_d1 
+          ! ltqnorm_sp_d0, ltqnorm_dp_d0, 
   end interface ltqnorm
 
 contains
@@ -825,55 +827,55 @@ contains
   ! ============================================================================
 
 
-  ! Lower tail quantile for standard normal distribution function SINGLE PRECISION D0
-  function ltqnorm_sp_d0( p )  result(ltqnorm)
+  ! ! Lower tail quantile for standard normal distribution function SINGLE PRECISION D0
+  ! function ltqnorm_sp_d0( p )  result(ltqnorm)
 
-    use mo_kind,            only    :   sp
+  !   use mo_kind,            only    :   sp
 
-    implicit none
+  !   implicit none
 
-    ! Intent IN
-    real(sp),       intent(in)  ::  p
+  !   ! Intent IN
+  !   real(sp),       intent(in)  ::  p
 
-    ! Results
-    real(sp)                    ::  ltqnorm
+  !   ! Results
+  !   real(sp)                    ::  ltqnorm
 
-    ! Internal variables
-    real(sp)                    ::  z,q,r
+  !   ! Internal variables
+  !   real(sp)                    ::  z,q,r
 
-    ! Parameters
-    real(sp),   parameter                   ::  p_low = 0.02425_sp
-    real(sp),   parameter                   ::  p_high = 1.0_sp - p_low
-    real(sp),   dimension(6),   parameter   ::  a = (/ -39.6968302866538_sp, 220.946098424521_sp, -275.928510446969_sp, &
-         138.357751867269_sp, -30.6647980661472_sp, 2.50662827745924_sp /)
-    real(sp),   dimension(5),   parameter   ::  b = (/ -54.4760987982241_sp, 161.585836858041_sp, -155.698979859887_sp, &
-         66.8013118877197_sp, -13.2806815528857_sp /)
-    real(sp),   dimension(6),   parameter   ::  c = (/ -0.00778489400243029_sp, -0.322396458041136_sp, -2.40075827716184_sp, &
-         -2.54973253934373_sp, 4.37466414146497_sp, 2.93816398269878_sp /)
-    real(sp),   dimension(4),   parameter   ::  d = (/ 0.00778469570904146_sp, 0.32246712907004_sp, &
-         2.445134137143_sp, 3.75440866190742_sp /)
+  !   ! Parameters
+  !   real(sp),   parameter                   ::  p_low = 0.02425_sp
+  !   real(sp),   parameter                   ::  p_high = 1.0_sp - p_low
+  !   real(sp),   dimension(6),   parameter   ::  a = (/ -39.6968302866538_sp, 220.946098424521_sp, -275.928510446969_sp, &
+  !        138.357751867269_sp, -30.6647980661472_sp, 2.50662827745924_sp /)
+  !   real(sp),   dimension(5),   parameter   ::  b = (/ -54.4760987982241_sp, 161.585836858041_sp, -155.698979859887_sp, &
+  !        66.8013118877197_sp, -13.2806815528857_sp /)
+  !   real(sp),   dimension(6),   parameter   ::  c = (/ -0.00778489400243029_sp, -0.322396458041136_sp, -2.40075827716184_sp, &
+  !        -2.54973253934373_sp, 4.37466414146497_sp, 2.93816398269878_sp /)
+  !   real(sp),   dimension(4),   parameter   ::  d = (/ 0.00778469570904146_sp, 0.32246712907004_sp, &
+  !        2.445134137143_sp, 3.75440866190742_sp /)
 
-    if ( p .lt. 0.0_sp .or. p .gt. 1.0_sp )   then
-       z = 0.0_sp          ! values out of domain
-    else if ( abs(p) .lt. epsilon(1.0_sp) )  then
-       z = -huge(1.0_sp)   ! out of range, minus "infinity"
-    else if ( abs(p-1.0_sp) .lt. epsilon(1.0_sp) )  then
-       z = huge(1.0_sp)    ! out of range, "infinity"
-    else if ( p .lt. p_low ) then
-       q = sqrt(-2.0_sp*log(p))
-       z = (((((c(1)*q+c(2))*q+c(3))*q+c(4))*q+c(5))*q+c(6))/((((d(1)*q+d(2))*q+d(3))*q+d(4))*q+1.0_sp)
-    else if ( p .gt. p_high ) then
-       q = sqrt(-2.0_sp*log(1.0_sp-p))
-       z = -(((((c(1)*q+c(2))*q+c(3))*q+c(4))*q+c(5))*q+c(6))/((((d(1)*q+d(2))*q+d(3))*q+d(4))*q+1.0_sp)
-    else
-       q = p - 0.5_sp
-       r = q*q
-       z = (((((a(1)*r+a(2))*r+a(3))*r+a(4))*r+a(5))*r+a(6))*q/(((((b(1)*r+b(2))*r+b(3))*r+b(4))*r+b(5))*r+1.0_sp)
-    end if
+  !   if ( p .lt. 0.0_sp .or. p .gt. 1.0_sp )   then
+  !      z = 0.0_sp          ! values out of domain
+  !   else if ( abs(p) .lt. epsilon(1.0_sp) )  then
+  !      z = -huge(1.0_sp)   ! out of range, minus "infinity"
+  !   else if ( abs(p-1.0_sp) .lt. epsilon(1.0_sp) )  then
+  !      z = huge(1.0_sp)    ! out of range, "infinity"
+  !   else if ( p .lt. p_low ) then
+  !      q = sqrt(-2.0_sp*log(p))
+  !      z = (((((c(1)*q+c(2))*q+c(3))*q+c(4))*q+c(5))*q+c(6))/((((d(1)*q+d(2))*q+d(3))*q+d(4))*q+1.0_sp)
+  !   else if ( p .gt. p_high ) then
+  !      q = sqrt(-2.0_sp*log(1.0_sp-p))
+  !      z = -(((((c(1)*q+c(2))*q+c(3))*q+c(4))*q+c(5))*q+c(6))/((((d(1)*q+d(2))*q+d(3))*q+d(4))*q+1.0_sp)
+  !   else
+  !      q = p - 0.5_sp
+  !      r = q*q
+  !      z = (((((a(1)*r+a(2))*r+a(3))*r+a(4))*r+a(5))*r+a(6))*q/(((((b(1)*r+b(2))*r+b(3))*r+b(4))*r+b(5))*r+1.0_sp)
+  !   end if
 
-    ltqnorm = z
+  !   ltqnorm = z
 
-  end function ltqnorm_sp_d0
+  ! end function ltqnorm_sp_d0
 
 
   ! Lower tail quantile for standard normal distribution function SINGLE PRECISION D1
@@ -931,55 +933,55 @@ contains
   end function ltqnorm_sp_d1
 
 
-  ! Lower tail quantile for standard normal distribution function DOUBLE PRECISION D0
-  function ltqnorm_dp_d0( p )  result(ltqnorm)
+  ! ! Lower tail quantile for standard normal distribution function DOUBLE PRECISION D0
+  ! function ltqnorm_dp_d0( p )  result(ltqnorm)
 
-    use mo_kind,            only    :   dp
+  !   use mo_kind,            only    :   dp
 
-    implicit none
+  !   implicit none
 
-    ! Intent IN
-    real(dp),       intent(in)  ::  p
+  !   ! Intent IN
+  !   real(dp),       intent(in)  ::  p
 
-    ! Results
-    real(dp)                    ::  ltqnorm
+  !   ! Results
+  !   real(dp)                    ::  ltqnorm
 
-    ! Internal variables
-    real(dp)                    ::  z,q,r
+  !   ! Internal variables
+  !   real(dp)                    ::  z,q,r
 
-    ! Parameters
-    real(dp),   parameter                   ::  p_low = 0.02425_dp
-    real(dp),   parameter                   ::  p_high = 1.0_dp - p_low
-    real(dp),   dimension(6),   parameter   ::  a = (/ -39.6968302866538_dp, 220.946098424521_dp, -275.928510446969_dp, &
-         138.357751867269_dp, -30.6647980661472_dp, 2.50662827745924_dp /)
-    real(dp),   dimension(5),   parameter   ::  b = (/ -54.4760987982241_dp, 161.585836858041_dp, -155.698979859887_dp, &
-         66.8013118877197_dp, -13.2806815528857_dp /)
-    real(dp),   dimension(6),   parameter   ::  c = (/ -0.00778489400243029_dp, -0.322396458041136_dp, -2.40075827716184_dp, &
-         -2.54973253934373_dp, 4.37466414146497_dp, 2.93816398269878_dp /)
-    real(dp),   dimension(4),   parameter   ::  d = (/ 0.00778469570904146_dp, 0.32246712907004_dp, &
-         2.445134137143_dp, 3.75440866190742_dp /)
+  !   ! Parameters
+  !   real(dp),   parameter                   ::  p_low = 0.02425_dp
+  !   real(dp),   parameter                   ::  p_high = 1.0_dp - p_low
+  !   real(dp),   dimension(6),   parameter   ::  a = (/ -39.6968302866538_dp, 220.946098424521_dp, -275.928510446969_dp, &
+  !        138.357751867269_dp, -30.6647980661472_dp, 2.50662827745924_dp /)
+  !   real(dp),   dimension(5),   parameter   ::  b = (/ -54.4760987982241_dp, 161.585836858041_dp, -155.698979859887_dp, &
+  !        66.8013118877197_dp, -13.2806815528857_dp /)
+  !   real(dp),   dimension(6),   parameter   ::  c = (/ -0.00778489400243029_dp, -0.322396458041136_dp, -2.40075827716184_dp, &
+  !        -2.54973253934373_dp, 4.37466414146497_dp, 2.93816398269878_dp /)
+  !   real(dp),   dimension(4),   parameter   ::  d = (/ 0.00778469570904146_dp, 0.32246712907004_dp, &
+  !        2.445134137143_dp, 3.75440866190742_dp /)
 
-    if ( p .lt. 0.0_dp .or. p .gt. 1.0_dp )   then
-       z = 0.0_dp          ! values out of domain
-    else if ( abs(p) .lt. epsilon(1.0_dp) )  then
-       z = -huge(1.0_dp)   ! out of range, minus "infinity"
-    else if ( abs(p-1.0_dp) .lt. epsilon(1.0_dp) )  then
-       z = huge(1.0_dp)    ! out of range, "infinity"
-    else if ( p .lt. p_low ) then
-       q = sqrt(-2.0_dp*log(p))
-       z = (((((c(1)*q+c(2))*q+c(3))*q+c(4))*q+c(5))*q+c(6))/((((d(1)*q+d(2))*q+d(3))*q+d(4))*q+1.0_dp)
-    else if ( p .gt. p_high ) then
-       q = sqrt(-2.0_dp*log(1.0_dp-p))
-       z = -(((((c(1)*q+c(2))*q+c(3))*q+c(4))*q+c(5))*q+c(6))/((((d(1)*q+d(2))*q+d(3))*q+d(4))*q+1.0_dp)
-    else
-       q = p - 0.5_dp
-       r = q*q
-       z = (((((a(1)*r+a(2))*r+a(3))*r+a(4))*r+a(5))*r+a(6))*q/(((((b(1)*r+b(2))*r+b(3))*r+b(4))*r+b(5))*r+1.0_dp)
-    end if
+  !   if ( p .lt. 0.0_dp .or. p .gt. 1.0_dp )   then
+  !      z = 0.0_dp          ! values out of domain
+  !   else if ( abs(p) .lt. epsilon(1.0_dp) )  then
+  !      z = -huge(1.0_dp)   ! out of range, minus "infinity"
+  !   else if ( abs(p-1.0_dp) .lt. epsilon(1.0_dp) )  then
+  !      z = huge(1.0_dp)    ! out of range, "infinity"
+  !   else if ( p .lt. p_low ) then
+  !      q = sqrt(-2.0_dp*log(p))
+  !      z = (((((c(1)*q+c(2))*q+c(3))*q+c(4))*q+c(5))*q+c(6))/((((d(1)*q+d(2))*q+d(3))*q+d(4))*q+1.0_dp)
+  !   else if ( p .gt. p_high ) then
+  !      q = sqrt(-2.0_dp*log(1.0_dp-p))
+  !      z = -(((((c(1)*q+c(2))*q+c(3))*q+c(4))*q+c(5))*q+c(6))/((((d(1)*q+d(2))*q+d(3))*q+d(4))*q+1.0_dp)
+  !   else
+  !      q = p - 0.5_dp
+  !      r = q*q
+  !      z = (((((a(1)*r+a(2))*r+a(3))*r+a(4))*r+a(5))*r+a(6))*q/(((((b(1)*r+b(2))*r+b(3))*r+b(4))*r+b(5))*r+1.0_dp)
+  !   end if
 
-    ltqnorm = z
+  !   ltqnorm = z
 
-  end function ltqnorm_dp_d0
+  ! end function ltqnorm_dp_d0
 
 
   ! Lower tail quantile for standard normal distribution function DOUBLE PRECISION D1

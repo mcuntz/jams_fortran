@@ -24,7 +24,7 @@ PROGRAM main
   isgood = .true.
   dl = get_boxcox(dx)
   write(*,*) 'Dlambda: ', dl
-  isgood = isgood .and. ((anint(1000._dp*dl)-389._dp) == 0._dp)
+  isgood = isgood .and. ((nint(1000._dp*dl)-389) == 0)
   dy  = boxcox(dx,dl)
   dyx = invboxcox(dy,dl)
   if (any(abs(dx-dyx) > 1000._dp*epsilon(1.0_dp))) isgood = .False.
