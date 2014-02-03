@@ -1,7 +1,5 @@
 !> \file mo_spline.f90
 
-!> \brief Module to generate Sobol sequences.
-
 !> \brief Module which defines and evaluates spline functions.
 
 !> \details SPLINE is a FORTRAN90 library which defines and evaluates spline functions.
