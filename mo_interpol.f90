@@ -74,6 +74,7 @@ MODULE mo_interpol
   ! informational and educational purposes but cannot be used.
 
   USE mo_kind, ONLY: i4, sp, dp
+  USE mo_utils, only: eq, ge
 
   Implicit NONE
 
@@ -418,23 +419,21 @@ CONTAINS
     LOGICAL     :: ascnd
 
     n = size(xx)
-    ! ascnd = (xx(n) >= xx(1))
-    ascnd = ((xx(n) - xx(1)) .gt. -tiny(1.0_dp))
+    ascnd = ge(xx(n),xx(1))
     jl = 0
     ju = n+1
     do
        if (ju-jl <= 1) exit
        jm = (ju+jl)/2
-       ! if (ascnd .eqv. (x >= xx(jm))) then
-       if (ascnd .eqv. ((x - xx(jm)) .gt. -tiny(1.0_sp))) then
+       if (ascnd .eqv. ge(x,xx(jm))) then
           jl = jm
        else
           ju = jm
        end if
     end do
-    if (abs(x - xx(1)) .lt. tiny(1.0_dp)) then
+    if (eq(x,xx(1))) then
        locate_0d_dp = 1
-    else if (abs(x - xx(n)) .lt. tiny(1.0_dp)) then
+    else if (eq(x,xx(n))) then
        locate_0d_dp = n-1
     else
        locate_0d_dp = jl
@@ -456,8 +455,7 @@ CONTAINS
     INTEGER(i4) :: nx, i
 
     n = size(xx)
-    ! ascnd = (xx(n) >= xx(1))
-    ascnd = ((xx(n) - xx(1)) .gt. -tiny(1.0_dp))
+    ascnd = ge(xx(n),xx(1))
 
     nx = size(x)
     do i=1, nx
@@ -466,16 +464,15 @@ CONTAINS
        do
           if (ju-jl <= 1) exit
           jm = (ju+jl)/2
-          ! if (ascnd .eqv. (x(i) >= xx(jm))) then
-          if (ascnd .eqv. ((x(i) - xx(jm)) .gt. -tiny(1.0_sp))) then
+          if (ascnd .eqv. ge(x(i),xx(jm))) then
              jl = jm
           else
              ju = jm
           end if
        end do
-       if (abs(x(i) - xx(1)) .lt. tiny(1.0_dp)) then
+       if (eq(x(i),xx(1))) then
           locate_1d_dp(i) = 1
-       else if (abs(x(i) - xx(n)) .lt. tiny(1.0_dp)) then
+       else if (eq(x(i),xx(n))) then
           locate_1d_dp(i) = n-1
        else
           locate_1d_dp(i) = jl
@@ -497,23 +494,21 @@ CONTAINS
     LOGICAL     :: ascnd
 
     n = size(xx)
-    ! ascnd = (xx(n) >= xx(1))
-    ascnd = ((xx(n) - xx(1)) .gt. -tiny(1.0_sp))
+    ascnd = ge(xx(n),xx(1))
     jl = 0
     ju = n+1
     do
        if (ju-jl <= 1) exit
        jm = (ju+jl)/2
-       ! if (ascnd .eqv. (x >= xx(jm))) then
-       if (ascnd .eqv. ((x - xx(jm)) .gt. -tiny(1.0_sp))) then
+       if (ascnd .eqv. ge(x,xx(jm))) then
           jl = jm
        else
           ju = jm
        end if
     end do
-    if (abs(x - xx(1)) .lt. tiny(1.0_sp)) then
+    if (eq(x,xx(1))) then
        locate_0d_sp = 1
-    else if (abs(x - xx(n)) .lt. tiny(1.0_sp)) then
+    else if (eq(x,xx(n))) then
        locate_0d_sp = n-1
     else
        locate_0d_sp = jl
@@ -535,8 +530,7 @@ CONTAINS
     INTEGER(i4) :: nx, i
 
     n = size(xx)
-    ! ascnd = (xx(n) >= xx(1))
-    ascnd = ((xx(n) - xx(1)) .gt. -tiny(1.0_sp))
+    ascnd = ge(xx(n),xx(1))
 
     nx = size(x)
     do i=1, nx
@@ -545,16 +539,15 @@ CONTAINS
        do
           if (ju-jl <= 1) exit
           jm = (ju+jl)/2
-          ! if (ascnd .eqv. (x(i) >= xx(jm))) then
-          if (ascnd .eqv. ((x(i) - xx(jm)) .gt. -tiny(1.0_sp))) then
+          if (ascnd .eqv. ge(x(i),xx(jm))) then
              jl = jm
           else
              ju = jm
           end if
        end do
-       if (abs(x(i) - xx(1)) .lt. tiny(1.0_sp)) then
+       if (eq(x(i),xx(1))) then
           locate_1d_sp(i) = 1
-       else if (abs(x(i) - xx(n)) .lt. tiny(1.0_sp)) then
+       else if (eq(x(i),xx(n))) then
           locate_1d_sp(i) = n-1
        else
           locate_1d_sp(i) = jl

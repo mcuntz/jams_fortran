@@ -442,6 +442,7 @@ CONTAINS
   function thin_pole(x)
 
     use mo_constants, only: pi_dp
+    use mo_utils,     only: eq
 
     implicit none
 
@@ -449,7 +450,7 @@ CONTAINS
     real(dp)                           :: thin_pole
 
     if (size(x,1) .gt. 1_i4) stop 'thin_pole: Input has to be array of size 1'
-    if ( abs(x(1) - pi_dp) .lt. tiny(1.0_dp) ) then
+    if ( eq(x(1),pi_dp) ) then
        thin_pole = - 10000.0_dp
     else
        thin_pole = 3.0_dp * x(1) * x(1) + 1.0_dp + ( log ( ( x(1) - pi_dp ) * ( x(1) - pi_dp ) ) ) / pi_dp**4
@@ -687,6 +688,7 @@ CONTAINS
   subroutine normal_01_sample ( x )
 
     use mo_constants, only: pi_dp
+    use mo_utils, only: le
 
     implicit none
 
@@ -705,7 +707,7 @@ CONTAINS
 
        call random_number ( harvest = v1 )
 
-       if ( v1 <= 0.0_dp ) then
+       if ( le(v1,0.0_dp) ) then
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'NORMAL_01_SAMPLE - Fatal error!'
           write ( *, '(a)' ) '  V1 <= 0.'
@@ -715,7 +717,7 @@ CONTAINS
 
        call random_number ( harvest = v2 )
 
-       if ( v2 <= 0.0_dp ) then
+       if ( le(v2,0.0_dp) ) then
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'NORMAL_01_SAMPLE - Fatal error!'
           write ( *, '(a)' ) '  V2 <= 0.'
@@ -2988,6 +2990,8 @@ CONTAINS
 
   function stuckman(x)
 
+    use mo_utils, only: eq, le
+
     implicit none
 
     !    integer(i4) :: n
@@ -3024,14 +3028,14 @@ CONTAINS
     a1 = r8_aint ( abs ( x(1) - r11 ) ) + r8_aint ( abs ( x(2) - r21 ) )
     a2 = r8_aint ( abs ( x(1) - r12 ) ) + r8_aint ( abs ( x(2) - r22 ) )
 
-    if ( x(1) <= b ) then
-       if ( abs(a1) .lt. tiny(0.0_dp) ) then
+    if ( le(x(1),b) ) then
+       if ( eq(a1,0.0_dp) ) then
           stuckman = r8_aint ( m1 )
        else
           stuckman = r8_aint ( m1 * sin ( a1 ) / a1 )
        end if
     else
-       if ( abs(a2) .lt. tiny(0.0_dp) ) then
+       if ( eq(a2,0.0_dp) ) then
           stuckman = r8_aint ( m2 )
        else
           stuckman = r8_aint ( m2 * sin ( a2 ) / a2 )
@@ -3331,6 +3335,7 @@ CONTAINS
   function powell3d(x)
 
     use mo_constants, only: pi_dp
+    use mo_utils, only: eq
 
     implicit none
 
@@ -3341,7 +3346,7 @@ CONTAINS
     real(dp) :: term
     real(dp), dimension(:), intent(in) :: x
 
-    if ( abs(x(2)) .lt. tiny(0.0_dp) ) then
+    if ( eq(x(2),0.0_dp) ) then
        term = 0.0_dp
     else
        !arg = ( x(1) + 2.0_dp * x(2) + x(3) ) / x(2)
@@ -4640,6 +4645,8 @@ CONTAINS
 
   function deceptive_2d(x)
 
+    use mo_utils, only: le
+
     implicit none
 
     real(dp), dimension(:,:), intent(in) :: x
@@ -4667,15 +4674,15 @@ CONTAINS
 
        do i = 1, m
 
-          if ( x(i,j) <= 0.0_dp ) then
+          if ( le(x(i,j),0.0_dp) ) then
              g = x(i,j)
-          else if ( x(i,j) <= 0.8_dp * alpha(i) ) then
+          else if ( le(x(i,j),0.8_dp * alpha(i)) ) then
              g = 0.8_dp - x(i,j) / alpha(i)
-          else if ( x(i,j) <= alpha(i) ) then
+          else if ( le(x(i,j),alpha(i)) ) then
              g = 5.0_dp * x(i,j) / alpha(i) - 4.0_dp
-          else if ( x(i,j) <= ( 1.0_dp + 4.0_dp * alpha(i) ) / 5.0_dp ) then
+          else if ( le(x(i,j),( 1.0_dp + 4.0_dp * alpha(i) ) / 5.0_dp) ) then
              g = 1.0_dp + 5.0_dp * ( x(i,j) - alpha(i) ) / ( alpha(i) - 1.0_dp )
-          else if ( x(i,j) <= 1.0_dp ) then
+          else if ( le(x(i,j),1.0_dp) ) then
              g = 0.8_dp + ( x(i,j) - 1.0_dp ) / ( 1.0_dp - alpha(i) )
           else
              g = x(i,j) - 1.0_dp

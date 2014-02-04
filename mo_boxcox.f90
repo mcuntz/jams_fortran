@@ -64,6 +64,7 @@ MODULE mo_boxcox
   ! informational and educational purposes but cannot be used.
 
   USE mo_kind, ONLY: i4, sp, dp
+  USE mo_utils, only: eq, le, ge
 
   IMPLICIT NONE
 
@@ -267,7 +268,7 @@ CONTAINS
        if (size(mask) /= size(x)) stop 'Error boxcox_sp: size(mask) /= size(x)'
        maske = mask
     endif
-    if (any((x <= 0.0_sp) .and. maske)) stop 'Error boxcox_sp: x <= 0'
+    if (any((le(x,0.0_sp)) .and. maske)) stop 'Error boxcox_sp: x <= 0'
     if (abs(lmbda) .lt. tiny(0.0_sp)) then
        where (maske)
           boxcox_sp = log(x)
@@ -299,7 +300,7 @@ CONTAINS
        if (size(mask) /= size(x)) stop 'Error boxcox_dp: size(mask) /= size(x)'
        maske = mask
     endif
-    if (any((x <= 0.0_dp) .and. maske)) then
+    if (any((le(x,0.0_dp)) .and. maske)) then
        stop 'Error boxcox_dp: x <= 0'
     end if
     if (abs(lmbda) .lt. tiny(0.0_dp)) then
@@ -364,7 +365,7 @@ CONTAINS
        xm   = 0.5_sp*(a+b)
        tol1 = tol*abs(x) + ZEPS
        tol2 = 2.0_sp*tol1
-       if (abs(x-xm) <= (tol2-0.5_sp*(b-a))) then
+       if (le(abs(x-xm),(tol2-0.5_sp*(b-a)))) then
           brent_sp = x
           return
        end if
@@ -377,9 +378,9 @@ CONTAINS
           q     = abs(q)
           etemp = e
           e     = d
-          if (abs(p) >= abs(0.5_sp*q*etemp) .or. &
-               p <= q*(a-x) .or. p >= q*(b-x)) then
-             e = merge(a-x, b-x, x>=xm)
+          if (ge(abs(p),abs(0.5_sp*q*etemp)) .or. &
+               le(p,q*(a-x)) .or. ge(p,q*(b-x))) then
+             e = merge(a-x, b-x, ge(x,xm))
              d = CGOLD*e
           else
              d = p/q
@@ -387,13 +388,13 @@ CONTAINS
              if (u-a < tol2 .or. b-u < tol2) d = sign(tol1,xm-x)
           end if
        else
-          e = merge(a-x, b-x, x>=xm)
+          e = merge(a-x, b-x, ge(x,xm))
           d = CGOLD*e
        end if
-       u  = merge(x+d, x+sign(tol1,d), abs(d)>=tol1)
+       u  = merge(x+d, x+sign(tol1,d), ge(abs(d),tol1))
        fu = func_sp(u, dat)
-       if (fu <= fx) then
-          if (u >= x) then
+       if (le(fu,fx)) then
+          if (ge(u,x)) then
              a = x
           else
              b = x
@@ -406,15 +407,12 @@ CONTAINS
           else
              b = u
           end if
-          if ( ((fw-fu) .gt. -tiny(1.0_sp)) .or. &
-               (abs(w-x) .lt. tiny(1.0_sp)) ) then
+          if (le(fu,fw) .or. eq(w,x)) then
              v  = w
              fv = fw
              w  = u
              fw = fu
-          else if ( ((fv-fu) .gt. -tiny(1.0_sp)) .or. &
-               (abs(v-x) .lt. tiny(1.0_sp)) .or. &
-               (abs(v-w) .lt. tiny(1.0_sp)) ) then
+          else if (le(fu,fv) .or. eq(v,x) .or. eq(v,w)) then
              v  = u
              fv = fu
           end if
@@ -466,7 +464,7 @@ CONTAINS
        xm   = 0.5_dp*(a+b)
        tol1 = tol*abs(x) + ZEPS
        tol2 = 2.0_dp*tol1
-       if (abs(x-xm) <= (tol2-0.5_dp*(b-a))) then
+       if (le(abs(x-xm),(tol2-0.5_dp*(b-a)))) then
           brent_dp = x
           return
        end if
@@ -479,9 +477,9 @@ CONTAINS
           q     = abs(q)
           etemp = e
           e     = d
-          if (abs(p) >= abs(0.5_dp*q*etemp) .or. &
-               p <= q*(a-x) .or. p >= q*(b-x)) then
-             e = merge(a-x, b-x, x>=xm)
+          if (ge(abs(p),abs(0.5_dp*q*etemp)) .or. &
+               le(p,q*(a-x)) .or. ge(p,q*(b-x))) then
+             e = merge(a-x, b-x, ge(x,xm))
              d = CGOLD*e
           else
              d = p/q
@@ -489,13 +487,13 @@ CONTAINS
              if (u-a < tol2 .or. b-u < tol2) d = sign(tol1,xm-x)
           end if
        else
-          e = merge(a-x, b-x, x>=xm)
+          e = merge(a-x, b-x, ge(x,xm))
           d = CGOLD*e
        end if
-       u  = merge(x+d, x+sign(tol1,d), abs(d)>=tol1)
+       u  = merge(x+d, x+sign(tol1,d), ge(abs(d),tol1))
        fu = func_dp(u, dat)
-       if (fu <= fx) then
-          if (u >= x) then
+       if (le(fu,fx)) then
+          if (ge(u,x)) then
              a = x
           else
              b = x
@@ -508,15 +506,12 @@ CONTAINS
           else
              b = u
           end if
-          if ( ((fw-fu) .gt. -tiny(1.0_sp)) .or. &
-               (abs(w-x) .lt. tiny(1.0_sp)) ) then
+          if (le(fu,fw) .or. eq(w,x)) then
              v  = w
              fv = fw
              w  = u
              fw = fu
-          else if ( ((fv-fu) .gt. -tiny(1.0_dp)) .or. &
-               (abs(v-x) .lt. tiny(1.0_dp)) .or. &
-               (abs(v-w) .lt. tiny(1.0_dp)) ) then
+          else if (le(fu,fv) .or. eq(v,x) .or. eq(v,w)) then
              v  = u
              fv = fu
           end if
@@ -588,7 +583,7 @@ CONTAINS
     if (allocated(xx)) deallocate(xx)
     allocate(xx(nn))
     xx = pack(x, mask=maske)
-    if (any(xx <= 0.0_dp)) then
+    if (any(le(xx,0.0_dp))) then
        stop 'Error get_boxcox_dp: x <= 0'
     end if
     ax = -5.0_dp
@@ -845,7 +840,7 @@ CONTAINS
              u  = cx + GOLD*(cx-bx)
              call shft_sp(fb,fc,fu,func_sp(u, dat))
           end if
-       else if ((u-ulim)*(ulim-cx) >= 0.0_sp) then
+       else if (ge((u-ulim)*(ulim-cx),0.0_sp)) then
           u  = ulim
           fu = func_sp(u, dat)
        else
@@ -919,7 +914,7 @@ CONTAINS
              u  = cx + GOLD*(cx-bx)
              call shft_dp(fb,fc,fu,func_dp(u, dat))
           end if
-       else if ((u-ulim)*(ulim-cx) >= 0.0_dp) then
+       else if (ge((u-ulim)*(ulim-cx),0.0_dp)) then
           u  = ulim
           fu = func_dp(u, dat)
        else

@@ -4836,17 +4836,17 @@ subroutine test235 ( )
   use mo_spline
   implicit none
   integer(i4), parameter :: n = 21
-  integer(i4), parameter :: ne = 101
+  integer(i4), parameter :: nne = 101
 
   real(dp) d(n)
   real(dp) diff
   real(dp) f(n)
-  !  real(dp) fd(ne)
-  real(dp) fe(ne)
+  !  real(dp) fd(nne)
+  real(dp) fe(nne)
   integer(i4) i
   real(dp), external :: frunge
   real(dp) x(n)
-  real(dp) xe(ne)
+  real(dp) xe(nne)
 
   write(30, '(a)' ) ' '
   write(30, '(a)' ) 'TEST235'
@@ -4869,15 +4869,15 @@ subroutine test235 ( )
   !
   !  Evaluate the interpolant and derivative at NE points from -1 to 0.
   !
-  do i = 1, ne
-     xe(i) = -1.0D+00 + real ( i - 1, kind=dp ) / real ( ne - 1, kind=dp )
+  do i = 1, nne
+     xe(i) = -1.0D+00 + real ( i - 1, kind=dp ) / real ( nne - 1, kind=dp )
   end do
 
-  call spline_pchip_val ( n, x, f, d, ne, xe, fe )
+  call spline_pchip_val ( n, x, f, d, nne, xe, fe )
   !
   !  Print the table of X, F(exact) and F(interpolated)
   !
-  do i = 1, ne
+  do i = 1, nne
      diff = fe(i) - frunge ( xe(i) )
      write(30, '(2x,f8.4,2x,f10.6,2x,f10.6,2x,g14.6)' ) &
           xe(i), frunge ( xe(i) ), fe(i), diff

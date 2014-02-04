@@ -3,6 +3,7 @@ PROGRAM main
   USE mo_kind,        ONLY: dp, sp, i4
   USE mo_percentile,  ONLY: ksmallest, median, percentile, qmedian
   USE mo_sort,        ONLY: sort
+  USE mo_utils,       ONLY: eq, ne
   
   IMPLICIT NONE
   
@@ -26,13 +27,13 @@ PROGRAM main
   ! Double precision
   isgood = .true.
   dat = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
-  isgood = isgood .and. (abs(median(dat) - 5.5_dp) .lt. tiny(1.0_dp))
-  isgood = isgood .and. (abs(median(dat,mask=(abs(dat - 10._dp) .gt. tiny(1.0_dp))) - 5._dp) .lt. tiny(1.0_dp))
-  isgood = isgood .and. (abs(ksmallest(dat,4) - 4._dp) .lt. tiny(1.0_dp))
-  isgood = isgood .and. (abs(percentile(dat,95._dp) - 10._dp) .lt. tiny(1.0_dp))
+  isgood = isgood .and. eq(median(dat),5.5_dp)
+  isgood = isgood .and. eq(median(dat,mask=ne(dat,10._dp)),5._dp)
+  isgood = isgood .and. eq(ksmallest(dat,4),4._dp)
+  isgood = isgood .and. eq(percentile(dat,95._dp),10._dp)
   dqua = percentile(dat,(/50._dp,95._dp/))
-  isgood = isgood .and. (abs(dqua(1) - 5._dp) .lt. tiny(1.0_dp))
-  isgood = isgood .and. (abs(dqua(2) - 10._dp) .lt. tiny(1.0_dp))
+  isgood = isgood .and. eq(dqua(1),5._dp)
+  isgood = isgood .and. eq(dqua(2),10._dp)
   dqua = percentile(dat,(/50._dp,75._dp/),mode_in=1_i4)
   dqua = percentile(dat,(/50._dp,75._dp/),mode_in=3_i4)
   dqua = percentile(dat,(/50._dp,75._dp/),mode_in=4_i4)
@@ -41,8 +42,8 @@ PROGRAM main
   dqua = percentile(dat,(/50._dp,75._dp/),mode_in=7_i4)
   dqua = percentile(dat,(/50._dp,75._dp/),mode_in=8_i4)
   dqua = percentile(dat,(/50._dp,75._dp/),mode_in=2_i4)
-  isgood = isgood .and. (abs(dqua(1) - 5._dp) .lt. tiny(1.0_dp))
-  isgood = isgood .and. (abs(dqua(2) - 7.5_dp) .lt. tiny(1.0_dp))
+  isgood = isgood .and. eq(dqua(1),5._dp)
+  isgood = isgood .and. eq(dqua(2),7.5_dp)
 
   if (isgood) then
      write(*,*) 'mo_percentile double precision o.k.'
@@ -53,16 +54,16 @@ PROGRAM main
   ! Single precision
   isgood = .true.
   sat = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
-  isgood = isgood .and. (abs(median(sat) - 5.5_sp) .lt. tiny(1.0_sp))
-  isgood = isgood .and. (abs(median(sat,mask=(abs(sat - 10._dp) .gt. tiny(1.0_dp))) - 5._sp) .lt. tiny(1.0_sp))
-  isgood = isgood .and. (abs(ksmallest(sat,4) - 4._sp) .lt. tiny(1.0_sp))
-  isgood = isgood .and. (abs(percentile(sat,95._sp) - 10._sp) .lt. tiny(1.0_sp))
+  isgood = isgood .and. eq(median(sat),5.5_sp)
+  isgood = isgood .and. eq(median(sat,mask=ne(sat,10._sp)),5._sp)
+  isgood = isgood .and. eq(ksmallest(sat,4),4._sp)
+  isgood = isgood .and. eq(percentile(sat,95._sp),10._sp)
   squa = percentile(sat,(/50._sp,95._sp/))
-  isgood = isgood .and. (abs(squa(1) - 5._sp) .lt. tiny(1.0_sp))
-  isgood = isgood .and. (abs(squa(2) - 10._sp) .lt. tiny(1.0_sp))
+  isgood = isgood .and. eq(squa(1),5._sp)
+  isgood = isgood .and. eq(squa(2),10._sp)
   squa = percentile(sat,(/50._sp,75._sp/),mode_in=2_i4)
-  isgood = isgood .and. (abs(squa(1) - 5._sp) .lt. tiny(1.0_sp))
-  isgood = isgood .and. (abs(squa(2) - 7.5_sp) .lt. tiny(1.0_sp))
+  isgood = isgood .and. eq(squa(1),5._sp)
+  isgood = isgood .and. eq(squa(2),7.5_sp)
 
   if (isgood) then
      write(*,*) 'mo_percentile single precision o.k.'

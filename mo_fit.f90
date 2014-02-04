@@ -1065,7 +1065,7 @@ CONTAINS
     if (absa > absb) then
        pythag_dp = absa*sqrt(1.0_dp+(absb/absa)**2)
     else
-       if (abs(absb) .lt. tiny(0.0_dp)) then
+       if (absb < tiny(1.0_dp)) then
           pythag_dp = 0.0_dp
        else
           pythag_dp = absb*sqrt(1.0_dp+(absa/absb)**2)
@@ -1089,7 +1089,7 @@ CONTAINS
     if (absa > absb) then
        pythag_sp = absa*sqrt(1.0_sp+(absb/absa)**2)
     else
-       if (abs(absb) .lt. tiny(0.0_sp)) then
+       if (absb < tiny(1.0_sp)) then
           pythag_sp = 0.0_sp
        else
           pythag_sp = absb*sqrt(1.0_sp+(absa/absb)**2)
@@ -1305,6 +1305,8 @@ CONTAINS
   ! transpose VT) is output as v(1:n,1:n).
   SUBROUTINE svdcmp_dp(a,w,v)
 
+    use mo_utils, only: eq
+
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:,:), INTENT(INOUT) :: a
@@ -1312,7 +1314,7 @@ CONTAINS
     REAL(dp), DIMENSION(:,:), INTENT(OUT)   :: v
 
     INTEGER(i4) :: i, its, j, k, l, m, n, nm
-    REAL(dp)    :: c, f, g, h, s, scale, x, y, z !, anorm
+    REAL(dp)    :: c, f, g, h, s, scale, x, y, z, anorm
     REAL(dp), DIMENSION(size(a,1)) :: tempm
     REAL(dp), DIMENSION(size(a,2)) :: rv1, tempn
 
@@ -1330,7 +1332,7 @@ CONTAINS
        scale = 0.0_dp
        if (i <= m) then
           scale = sum(abs(a(i:m,i)))
-          if (abs(scale) .gt. tiny(0.0_dp)) then
+          if (abs(scale) > 0.0_dp) then
              a(i:m,i) = a(i:m,i)/scale
              s = dot_product(a(i:m,i),a(i:m,i))
              f = a(i,i)
@@ -1347,7 +1349,7 @@ CONTAINS
        scale = 0.0_dp
        if ((i <= m) .and. (i /= n)) then
           scale = sum(abs(a(i,l:n)))
-          if (abs(scale) .gt. tiny(0.0_dp)) then
+          if (abs(scale) > 0.0_dp) then
              a(i,l:n) = a(i,l:n)/scale
              s = dot_product(a(i,l:n),a(i,l:n))
              f = a(i,l)
@@ -1361,10 +1363,10 @@ CONTAINS
           end if
        end if
     end do
-    ! anorm = maxval(abs(w)+abs(rv1))
+    anorm = maxval(abs(w)+abs(rv1))
     do i=n, 1, -1
        if (i < n) then
-          if (abs(g) .gt. tiny(0.0_dp)) then
+          if (abs(g) > 0.0_dp) then
              v(l:n,i)   = (a(i,l:n)/a(i,l))/g
              tempn(l:n) = matmul(a(i,l:n),v(l:n,l:n))
              v(l:n,l:n) = v(l:n,l:n)+outerprod(v(l:n,i),tempn(l:n))
@@ -1380,7 +1382,7 @@ CONTAINS
        l = i+1
        g = w(i)
        a(i,l:n) = 0.0_dp
-       if (abs(g) .gt. tiny(0.0_dp)) then
+       if (abs(g) > 0.0_dp) then
           g = 1.0_dp/g
           tempn(l:n) = (matmul(a(l:m,i),a(l:m,l:n))/a(i,i))*g
           a(i:m,l:n) = a(i:m,l:n)+outerprod(a(i:m,i),tempn(l:n))
@@ -1394,14 +1396,17 @@ CONTAINS
        do its=1, 30
           do l=k, 1, -1
              nm = l-1
-             if ( abs(rv1(l)) .lt. tiny(1.0_dp) ) exit
-             if ( abs(w(nm))  .lt. tiny(1.0_dp) ) then
+             ! if ((abs(rv1(l))+anorm) == anorm) exit
+             ! if ((abs(w(nm))+anorm) == anorm) then
+             if (eq(abs(rv1(l))+anorm, anorm)) exit
+             if (eq(abs(w(nm))+anorm, anorm)) then
                 c = 0.0_dp
                 s = 1.0_dp
                 do i=l, k
                    f = s*rv1(i)
                    rv1(i) = c*rv1(i)
-                   if ( abs(f) .lt. tiny(1.0_dp) ) exit
+                   ! if ((abs(f)+anorm) == anorm) exit
+                   if (eq(abs(f)+anorm, anorm)) exit
                    g = w(i)
                    h = pythag(f,g)
                    w(i) = h
@@ -1453,7 +1458,7 @@ CONTAINS
              v(1:n,i)   = -tempn(1:n)*s+v(1:n,i)*c
              z = pythag(f,h)
              w(j) = z
-             if (abs(z) .gt. tiny(1.0_dp)) then
+             if (abs(z) > 0.0_dp) then
                 z = 1.0_dp/z
                 c = f*z
                 s = h*z
@@ -1475,6 +1480,8 @@ CONTAINS
 
   SUBROUTINE svdcmp_sp(a,w,v)
 
+    use mo_utils, only: eq
+
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:,:), INTENT(INOUT) :: a
@@ -1482,7 +1489,7 @@ CONTAINS
     REAL(sp), DIMENSION(:,:), INTENT(OUT)   :: v
 
     INTEGER(i4) :: i, its, j, k, l, m, n, nm
-    REAL(sp)    :: c, f, g, h, s, scale, x, y, z, ! anorm
+    REAL(sp)    :: c, f, g, h, s, scale, x, y, z, anorm
     REAL(sp), DIMENSION(size(a,1)) :: tempm
     REAL(sp), DIMENSION(size(a,2)) :: rv1, tempn
 
@@ -1500,7 +1507,7 @@ CONTAINS
        scale = 0.0_sp
        if (i <= m) then
           scale = sum(abs(a(i:m,i)))
-          if (abs(scale) .gt. tiny(0.0_sp)) then
+          if (abs(scale) > 0.0_sp) then
              a(i:m,i) = a(i:m,i)/scale
              s = dot_product(a(i:m,i),a(i:m,i))
              f = a(i,i)
@@ -1517,7 +1524,7 @@ CONTAINS
        scale = 0.0_sp
        if ((i <= m) .and. (i /= n)) then
           scale = sum(abs(a(i,l:n)))
-          if (abs(scale) .gt. tiny(0.0_sp)) then
+          if (abs(scale) > 0.0_sp) then
              a(i,l:n) = a(i,l:n)/scale
              s = dot_product(a(i,l:n),a(i,l:n))
              f = a(i,l)
@@ -1531,10 +1538,10 @@ CONTAINS
           end if
        end if
     end do
-    ! anorm = maxval(abs(w)+abs(rv1))
+    anorm = maxval(abs(w)+abs(rv1))
     do i=n, 1, -1
        if (i < n) then
-          if (abs(g) .gt. tiny(0.0_sp)) then
+          if (abs(g) > 0.0_sp) then
              v(l:n,i)   = (a(i,l:n)/a(i,l))/g
              tempn(l:n) = matmul(a(i,l:n),v(l:n,l:n))
              v(l:n,l:n) = v(l:n,l:n)+outerprod(v(l:n,i),tempn(l:n))
@@ -1550,7 +1557,7 @@ CONTAINS
        l = i+1
        g = w(i)
        a(i,l:n) = 0.0_sp
-       if (abs(g) .gt. tiny(0.0_sp)) then
+       if (abs(g) > 0.0_sp) then
           g = 1.0_sp/g
           tempn(l:n) = (matmul(a(l:m,i),a(l:m,l:n))/a(i,i))*g
           a(i:m,l:n) = a(i:m,l:n)+outerprod(a(i:m,i),tempn(l:n))
@@ -1564,14 +1571,17 @@ CONTAINS
        do its=1, 30
           do l=k, 1, -1
              nm = l-1
-             if ( abs(rv1(l)) .lt. tiny(1.0_sp)) exit
-             if ( abs(w(nm))  .lt. tiny(1.0_sp)) then
+             ! if ((abs(rv1(l))+anorm) == anorm) exit
+             ! if ((abs(w(nm))+anorm) == anorm) then
+             if (eq(abs(rv1(l))+anorm, anorm)) exit
+             if (eq(abs(w(nm))+anorm, anorm)) then
                 c = 0.0_sp
                 s = 1.0_sp
                 do i=l, k
                    f = s*rv1(i)
                    rv1(i) = c*rv1(i)
-                   if ( abs(f) .lt. tiny(1.0_sp) ) exit
+                   ! if ((abs(f)+anorm) == anorm) exit
+                   if (eq(abs(f)+anorm, anorm)) exit
                    g = w(i)
                    h = pythag(f,g)
                    w(i) = h
@@ -1623,7 +1633,7 @@ CONTAINS
              v(1:n,i)   = -tempn(1:n)*s+v(1:n,i)*c
              z = pythag(f,h)
              w(j) = z
-             if (abs(z) .gt. tiny(0.0_sp)) then
+             if (abs(z) > 0.0_sp) then
                 z = 1.0_sp/z
                 c = f*z
                 s = h*z

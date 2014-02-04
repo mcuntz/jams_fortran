@@ -1,5 +1,7 @@
 !> \file mo_spline.f90
 
+!> \brief Module to generate Sobol sequences.
+
 !> \brief Module which defines and evaluates spline functions.
 
 !> \details SPLINE is a FORTRAN90 library which defines and evaluates spline functions.
@@ -60,6 +62,7 @@ module mo_spline
   ! Copyright 2013 Matthias Cuntz
 
   use mo_kind, only: dp, i4
+  use mo_utils, only: eq, le, ne
 
   implicit none
 
@@ -125,7 +128,7 @@ contains
     real(dp) u
     real(dp) yval
 
-    if ( tval <= tdata(1) .or. tdata(ndata) <= tval ) then
+    if ( le(tval,tdata(1)) .or. le(tdata(ndata),tval) ) then
        yval = 0.0_dp
        return
     end if
@@ -233,7 +236,7 @@ contains
     real(dp) u
     real(dp) yval
 
-    if ( tval <= tdata(1) .or. tdata(ndata) <= tval ) then
+    if ( le(tval,tdata(1)) .or. le(tdata(ndata),tval) ) then
        yval = 0.0_dp
        return
     end if
@@ -1116,7 +1119,7 @@ contains
     real(dp) x01
     real(dp) y(0:n)
 
-    if ( abs(b - a) .lt. tiny(0.0_dp) ) then
+    if ( eq(b - a, 0.0_dp) ) then
        write ( *, '(a)' ) ' '
        write ( *, '(a)' ) 'BEZ_VAL - Fatal error!'
        write ( *, '(a,g14.6)' ) '  Null interval, A = B = ', a
@@ -1316,7 +1319,7 @@ contains
     integer(i4) j
     real(dp) x
 
-    if ( abs(b - a) .lt. tiny(1.0_dp) ) then
+    if ( eq(b,a) ) then
        write ( *, '(a)' ) ' '
        write ( *, '(a)' ) 'BPAB - Fatal error!'
        write ( *, '(a,g14.6)' ) '  A = B = ', a
@@ -1541,7 +1544,7 @@ contains
 
     h = x2 - x1
 
-    if ( abs(h) .lt. tiny(0.0_dp) ) then
+    if ( eq(h,0.0_dp) ) then
        ierr = -2
        write ( *, '(a)' ) ' '
        write ( *, '(a)' ) 'CHFEV - Fatal error!'
@@ -1864,7 +1867,7 @@ contains
     !  Check that the abscissas are strictly increasing.
     !
     do i = 1, ntab-1
-       if ( xtab(i+1) <= xtab(i) ) then
+       if ( le(xtab(i+1),xtab(i)) ) then
           ierror = 1
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'LEAST_SET_OLD - Fatal error!'
@@ -2146,7 +2149,7 @@ contains
     !  Make sure all W entries are positive.
     !
     do i = 1, point_num
-       if ( w(i) <= 0.0_dp ) then
+       if ( le(w(i),0.0_dp) ) then
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'LEAST_SET - Fatal error!'
           write ( *, '(a)' ) '  All weights W must be positive,'
@@ -2517,7 +2520,7 @@ contains
     t2 = tdata(left+1)
     t3 = tdata(left+2)
 
-    if ( t2 <= t1 .or. t3 <= t2 ) then
+    if ( le(t2,t1) .or. le(t3,t2) ) then
        write ( *, '(a)' ) ' '
        write ( *, '(a)' ) 'PARABOLA_VAL2 - Fatal error!'
        write ( *, '(a)' ) '  T2 <= T1 or T3 <= T2.'
@@ -2593,7 +2596,7 @@ contains
 
     pchst = sign ( 1.0_dp, arg1 ) * sign ( 1.0_dp, arg2 )
 
-    if ( (abs(arg1) .lt. tiny(0.0_dp)) .or. (abs(arg2) .lt. tiny(0.0_dp)) ) then
+    if ( eq(arg1,0.0_dp) .or. eq(arg2,0.0_dp) ) then
        pchst = 0.0_dp
     end if
 
@@ -2823,7 +2826,7 @@ contains
     !  The diagonal entries can't be zero.
     !
     do i = 1, n
-       if ( abs(a(2,i)) .lt. tiny(0.0_dp) ) then
+       if ( eq(a(2,i),0.0_dp) ) then
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'R83_NP_FS - Fatal error!'
           write ( *, '(a,i8,a)' ) '  A(2,', i, ') = 0.'
@@ -2976,7 +2979,7 @@ contains
     real(dp) xmult
 
     do i = 1, n
-       if ( abs(a(3,i)) .lt. tiny(0.0_dp) ) then
+       if ( eq(a(3,i),0.0_dp) ) then
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'R85_NP_FS - Fatal error!'
           write ( *, '(a,i8,a)' ) '  A(3,', i, ') = 0.'
@@ -3285,7 +3288,7 @@ contains
           end if
        end do
 
-       if ( abs(piv) .lt. tiny(0.0_dp) ) then
+       if ( eq(piv,0.0_dp) ) then
           info = jcol
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'R8GE_FS - Fatal error!'
@@ -3316,7 +3319,7 @@ contains
        !  Use the pivot row to eliminate lower entries in that column.
        !
        do i = jcol + 1, n
-          if ( abs(a(i,jcol)) .gt. tiny(0.0_dp) ) then
+          if ( ne(a(i,jcol),0.0_dp) ) then
              temp = - a(i,jcol)
              a(i,jcol) = 0.0_dp
              a(i,jcol+1:n) = a(i,jcol+1:n) + temp * a(jcol,jcol+1:n)
@@ -3489,10 +3492,10 @@ contains
        else if ( left == 2 ) then
           left = 1
           return
-       else if ( t(left-1) <= tval ) then
+       else if ( le(t(left-1),tval) ) then
           left = left - 1
           return
-       else if ( tval <= t(2) ) then
+       else if ( le(tval,t(2)) ) then
           left = 1
           return
        end if
@@ -3511,7 +3514,7 @@ contains
 
           mid = ( low + high + 1 ) / 2
 
-          if ( t(mid) <= tval ) then
+          if ( le(t(mid),tval) ) then
              low = mid
           else
              high = mid - 1
@@ -3529,10 +3532,10 @@ contains
        else if ( left == n - 2 ) then
           left = left + 1
           return
-       else if ( tval <= t(left+2) ) then
+       else if ( le(tval,t(left+2)) ) then
           left = left + 1
           return
-       else if ( t(n-1) <= tval ) then
+       else if ( le(t(n-1),tval) ) then
           left = n - 1
           return
        end if
@@ -3551,7 +3554,7 @@ contains
 
           mid = ( low + high + 1 ) / 2
 
-          if ( t(mid) <= tval ) then
+          if ( le(t(mid),tval) ) then
              low = mid
           else
              high = mid - 1
@@ -3612,7 +3615,7 @@ contains
 
     do i = 2, n
        do j = 1, i - 1
-          if ( abs(x(i) - x(j)) .lt. tiny(1.0_dp) ) then
+          if ( eq(x(i),x(j)) ) then
              return
           end if
        end do
@@ -3825,7 +3828,7 @@ contains
           if ( a(i) < a(i-1) ) then
              order = -1
              exit
-          else if ( abs(a(i) - a(i-1)) .lt. tiny(1.0_dp) ) then
+          else if ( eq(a(i),a(i-1)) ) then
              order = 1
           end if
 
@@ -3841,7 +3844,7 @@ contains
           if ( a(i-1) < a(i) ) then
              order = -1
              exit
-          else if ( abs(a(i) - a(i-1)) .lt. tiny(1.0_dp) ) then
+          else if ( eq(a(i),a(i-1)) ) then
              order = 3
           end if
 
@@ -4076,7 +4079,7 @@ contains
 
        do j = 1, i - 1
 
-          if ( abs ( a(i) - a(j) ) <= tol ) then
+          if ( le(abs( a(i) - a(j) ),tol) ) then
              unique_num = unique_num - 1
              exit
           end if
@@ -4512,7 +4515,7 @@ contains
     end if
 
     do i = 1, ndata-1
-       if ( tval <= tdata(i) ) then
+       if ( le(tval,tdata(i)) ) then
           yval = ydata(i)
           return
        end if
@@ -4672,7 +4675,7 @@ contains
     end if
 
     do i = 1, n - 1
-       if ( t(i+1) <= t(i) ) then
+       if ( le(t(i+1),t(i)) ) then
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'SPLINE_CUBIC_SET - Fatal error!'
           write ( *, '(a)' ) '  The knots must be strictly increasing, but'
@@ -4920,7 +4923,7 @@ contains
     end if
 
     do i = 1, n - 1
-       if ( t(i+1) <= t(i) ) then
+       if ( le(t(i+1),t(i)) ) then
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'SPLINE_CUBIC_SET - Fatal error!'
           write ( *, '(a)' ) '  The knots must be strictly increasing, but'
@@ -5584,7 +5587,7 @@ contains
 
     int_val = 0.0_dp
 
-    if ( abs(a - b) .lt. tiny(1.0_dp) ) then
+    if ( eq(a,b) ) then
        return
     end if
 
@@ -6304,7 +6307,7 @@ contains
     end if
 
     do i = 2, n
-       if ( x(i) <= x(i-1) ) then
+       if ( le(x(i),x(i-1)) ) then
           ierr = -3
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'SPLINE_PCHIP_SET - Fatal error!'
@@ -6340,7 +6343,7 @@ contains
     w2 = -h1 / hsum
     d(1) = w1 * del1 + w2 * del2
 
-    if ( pchst ( d(1), del1 ) <= 0.0_dp ) then
+    if ( le(pchst( d(1), del1 ), 0.0_dp) ) then
 
        d(1) = 0.0_dp
        !
@@ -6381,9 +6384,9 @@ contains
           !
           !  Count number of changes in direction of monotonicity.
           !
-       else if ( abs(temp) .lt. tiny(0.0_dp) ) then   ! temp == 0.0
+       else if ( eq(temp,0.0_dp) ) then
 
-          if ( abs(del2) .gt. tiny(0.0_dp) ) then     ! del2 /= 0.0
+          if ( ne(del2,0.0_dp) ) then
              if ( pchst ( dsave, del2 ) < 0.0_dp ) then
                 ierr = ierr + 1
              end if
@@ -6414,7 +6417,7 @@ contains
     w2 = ( h2 + hsum ) / hsum
     d(n) = w1 * del1 + w2 * del2
 
-    if ( pchst ( d(n), del2 ) <= 0.0_dp ) then
+    if ( le(pchst( d(n), del2 ), 0.0_dp) ) then
        d(n) = 0.0_dp
     else if ( pchst ( del1, del2 ) < 0.0_dp ) then
        !
@@ -6542,7 +6545,7 @@ contains
     end if
 
     do i = 2, n
-       if ( x(i) <= x(i-1) ) then
+       if ( le(x(i),x(i-1)) ) then
           ierr = -3
           write ( *, '(a)' ) ' '
           write ( *, '(a)' ) 'SPLINE_PCHIP_VAL - Fatal error!'
@@ -6581,7 +6584,7 @@ contains
        j_save = ne + 1
 
        do j = j_first, ne
-          if ( x(ir) <= xe(j) ) then
+          if ( le(x(ir),xe(j)) ) then
              j_save = j
              if ( ir == n ) then
                 j_save = ne + 1
@@ -6786,7 +6789,7 @@ contains
     t2 = tdata(left+1)
     t3 = tdata(left+2)
 
-    if ( t2 <= t1 .or. t3 <= t2 ) then
+    if ( le(t2,t1) .or. le(t3,t2) ) then
        write ( *, '(a)' ) ' '
        write ( *, '(a)' ) 'SPLINE_QUADRATIC_VAL - Fatal error!'
        write ( *, '(a)' ) '  T2 <= T1 or T3 <= T2.'

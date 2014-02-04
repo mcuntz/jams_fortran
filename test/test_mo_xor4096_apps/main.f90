@@ -22,8 +22,8 @@ program xor4096_apps
   integer(i8), dimension(2)              :: seed3
   real(dp),    dimension(20,2)           :: rn_mvn
   integer(i8), dimension(2,n_save_state) :: save_state3
-  real(dp),    dimension(2,2)            :: cov  ! covariance matrix
-  real(dp),    dimension(2,2)            :: lcho ! lower cholesky factor
+  real(dp), dimension(2,2)               :: cov  ! covariance matrix
+  real(dp), dimension(2,2)               :: lcho ! lower cholesky factor
 
   integer(i4) :: i
   logical     :: isgood
