@@ -77,7 +77,7 @@ MODULE mo_sort
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
 
-  USE mo_kind,   ONLY: i4, sp, dp, spc, dpc
+  USE mo_kind,   ONLY: i4, sp, dp
 
   IMPLICIT NONE
 

@@ -1312,7 +1312,7 @@ CONTAINS
     REAL(dp), DIMENSION(:,:), INTENT(OUT)   :: v
 
     INTEGER(i4) :: i, its, j, k, l, m, n, nm
-    REAL(dp)    :: anorm, c, f, g, h, s, scale, x, y, z
+    REAL(dp)    :: c, f, g, h, s, scale, x, y, z !, anorm
     REAL(dp), DIMENSION(size(a,1)) :: tempm
     REAL(dp), DIMENSION(size(a,2)) :: rv1, tempn
 
@@ -1361,7 +1361,7 @@ CONTAINS
           end if
        end if
     end do
-    anorm = maxval(abs(w)+abs(rv1))
+    ! anorm = maxval(abs(w)+abs(rv1))
     do i=n, 1, -1
        if (i < n) then
           if (abs(g) .gt. tiny(0.0_dp)) then
@@ -1482,7 +1482,7 @@ CONTAINS
     REAL(sp), DIMENSION(:,:), INTENT(OUT)   :: v
 
     INTEGER(i4) :: i, its, j, k, l, m, n, nm
-    REAL(sp)    :: anorm, c, f, g, h, s, scale, x, y, z
+    REAL(sp)    :: c, f, g, h, s, scale, x, y, z, ! anorm
     REAL(sp), DIMENSION(size(a,1)) :: tempm
     REAL(sp), DIMENSION(size(a,2)) :: rv1, tempn
 
@@ -1531,7 +1531,7 @@ CONTAINS
           end if
        end if
     end do
-    anorm = maxval(abs(w)+abs(rv1))
+    ! anorm = maxval(abs(w)+abs(rv1))
     do i=n, 1, -1
        if (i < n) then
           if (abs(g) .gt. tiny(0.0_sp)) then

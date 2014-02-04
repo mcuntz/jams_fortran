@@ -1072,6 +1072,7 @@ CONTAINS
           bounds(2) = 5.0_dp * h
           call allocate_globals(x)
           fmin = golden(bounds(1),h,bounds(2),cross_valid_density_1d_dp, 0.0001_dp,hmin)
+          fmin = fmin * 1.0_dp  ! just to avoid warnings of "Variable FMIN set but never referenced"
           h = hmin
           call deallocate_globals()
        end if
@@ -1122,6 +1123,7 @@ CONTAINS
           bounds(2) = 5.0_sp * h
           call allocate_globals(x)
           fmin = golden(bounds(1),h,bounds(2),cross_valid_density_1d_sp, 0.0001_sp,hmin)
+          fmin = fmin * 1.0_sp  ! just to avoid warnings of "Variable FMIN set but never referenced"
           h = hmin
           call deallocate_globals()
        end if
