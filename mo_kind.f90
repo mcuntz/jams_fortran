@@ -1,4 +1,3 @@
-
 !> \file mo_kind.f90
 
 !> \brief Define number representations
