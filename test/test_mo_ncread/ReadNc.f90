@@ -5,7 +5,7 @@
 ! author: Stephan Thober
 !
 ! created: 04.11.2011
-! last update: 06.10.2012
+! last update: 22.03.2014
 !
 ! ------------------------------------------------------------------------------
 program ReadNc
@@ -17,6 +17,7 @@ use mo_NcRead, only: Get_NcDimAtt, Get_NcVarAtt
 #endif
 !
 real(sp)      , dimension(:,:,:), allocatable :: data
+real(sp)      , dimension(:,:)  , allocatable :: tmp
 character(256), dimension(:)    , allocatable :: DimNames
 integer(i4)   , dimension(:)    , allocatable :: DimLen
 real(dp)      , dimension(:)    , allocatable :: DimData
@@ -82,7 +83,10 @@ data = -9999._sp
 ncid = NcOpen(trim(Filename)) ! open file and get file handle
 !
 do i = 1, size(data,3)
-   call Get_NcVar(Filename, Varname, data(:,:,i), (/1,1,i/),(/dl(1),dl(2),1/), ncid)
+   ! tmp is allocated within Get_NcVar
+   call Get_NcVar(Filename, Varname, tmp, (/1,1,i/),(/dl(1),dl(2),1/), ncid)
+   data(:,:,i) = tmp
+   if ( allocated( tmp ) ) deallocate( tmp )
 end do
 !
 call NcClose(ncid)            ! close file
