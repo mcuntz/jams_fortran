@@ -1047,13 +1047,13 @@ CONTAINS
     !(3) generate new parameter value + check inbound
     parGenNorm_dp = old_scaled + RN_scale
     !    Parameter is bounded between Max and Min.
-    if (parGenNorm_dp < 0.0_dp) then
-       parGenNorm_dp = 0.0_dp
-       inbound2 = .false.
-    elseif(parGenNorm_dp > 1.0_dp)then
-       parGenNorm_dp = 1.0_dp
-       inbound2 = .false.
-    end if
+    ! if (parGenNorm_dp < 0.0_dp) then
+    !    parGenNorm_dp = 0.0_dp
+    !    inbound2 = .false.
+    ! elseif(parGenNorm_dp > 1.0_dp)then
+    !    parGenNorm_dp = 1.0_dp
+    !    inbound2 = .false.
+    ! end if
 
     if (present(inbound)) inbound = inbound2
 
@@ -1111,8 +1111,8 @@ CONTAINS
        inbound = .false.
        call xor4096g(0_i8,RN3, save_state=save_state_3)
        paranew(iPar) = parGenNorm_dp( paraold(iPar), stepsize(iPar), rangePar(iPar,1), rangePar(iPar,2),RN3,inbound)
-! print*, 'p_old(',iPar,') = ',paraold(iPar)
-! print*, 'p_new(',iPar,') = ',paranew(iPar)
+ ! print*, 'p_old(',iPar,') = ',paraold(iPar)
+ ! print*, 'p_new(',iPar,') = ',paranew(iPar)
        ChangePara(iPar) = .True.
 
     case(3_i4)    ! change all
