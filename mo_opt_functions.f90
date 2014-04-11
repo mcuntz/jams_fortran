@@ -807,6 +807,7 @@ CONTAINS
   !
   ! The Biggs EXP6 function, N = 6.
   ! Solution: x(1:6) = (/ 1.0_dp, 10.0_dp, 1.0_dp, 5.0_dp, 4.0_dp, 3.0_dp /)
+  !           at f(x*) = 0.0
   !
   !  Licensing:
   !
@@ -860,6 +861,7 @@ CONTAINS
   ! Search domain: -Pi <= xi <= Pi, i = 1, 2, 3.
   ! Solution:
   !     x(1:n) = (/ 0.39895613783875655_dp, 1.0000190844878036_dp, 0.0_dp /)
+  !     at f(x*) = 0.0
   !     found with Mathematica
   !
   !  Licensing:
