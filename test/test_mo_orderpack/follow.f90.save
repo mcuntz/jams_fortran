@@ -1,0 +1,113 @@
+Program follow
+
+  use mo_kind,      only: dp
+  use mo_orderpack, only: mrgrnk
+
+  !  Question From Colin Thefleau:
+  ! 
+  ! I have a small problem that my cloudy brain can't solve:
+  ! Say I have a bunch of coordinates (realx(i), realy(i)) that form a circle 
+  ! (or any closed form) if every point is plotted. I have to sort them so that 
+  ! they "ride" the circle in one direction. For example beginning at one point 
+  ! (the highest point for example), and go in the clock drive direction.
+  ! Has someone an idea how this is to be done?  Or where can I find a sample 
+  ! code for inspiration? I am really new to fortran and really can't find a 
+  ! solution.
+  ! --------------------------------------------------------------------------
+  ! The following program is an attempt to answer that question for a
+  ! "reasonable" profile. From the current point, it finds the "nearest"
+  ! point in the set of remaining ones according to some weighted distance,
+  ! weights penalizing the direction that one is coming from.
+  !
+  integer, parameter :: nmax = 200
+  real(dp), dimension (nmax) :: xptst, yptst, xtmpt, ytmpt, xrndt
+  integer,  dimension (nmax) :: irndt
+  real(dp) :: t, xtmp, ytmp, xunt, yunt, xori, yori, xvec, yvec, wdst, wdst0, &
+       xlen, xang, xunt1, yunt1
+  integer :: imin, imax, ipnt, inxt, itst
+  !
+  !  take a continuous curve and make the order random
+  !
+  call random_number(xrndt)
+  call mrgrnk(xrndt, irndt)
+  !
+  do ipnt = 1, nmax
+     t = 6.28318 * real(ipnt,dp) / real(nmax,dp)
+     xtmpt (ipnt) = (5.+ 2 * cos (4.*t))*cos(t)
+     ytmpt (ipnt) = -(5.+ 2 * cos (4.*t))*sin(t)
+  enddo
+  xptst = xtmpt (irndt)
+  yptst = ytmpt (irndt)
+  !
+  ! Bring starting point (Northmost) to first position
+  !
+  imin = sum (maxloc(yptst))
+  xtmp = xptst (1)
+  ytmp = yptst (1)
+  xptst (1) = xptst (imin)
+  yptst (1) = yptst (imin)
+  xptst (imin) = xtmp
+  yptst (imin) = ytmp
+  !
+  ! unit vector in the current direction (east)
+  !
+  xunt = 1.
+  yunt = 0.
+  !
+  ! Find next point in line
+  !
+  nextpoint: do inxt = 2, nmax-1
+     xori = xptst (inxt-1)
+     yori = yptst (inxt-1)
+     wdst0 = huge(wdst)
+     do itst = inxt, nmax
+        xvec = xptst (itst) - xori
+        yvec = yptst (itst) - yori
+        xlen = sqrt (xvec*xvec+yvec*yvec)
+        if (xlen < epsilon(1.0)) then
+           imin = itst
+           xunt1 = xunt
+           yunt1 = xunt
+           exit
+        endif
+        !
+        !  Compute distance, weighted by a cosine function of the angle
+        !  with the last segment. Weight is 1 when straight ahead,
+        !  3 when going backwards, 2 if transverse. By using some
+        !  power of the cosine, one may increase or decrease the pressure
+        !  to go straight ahead with respect to transverse directions.
+        !
+        xang = acos (0.9999*(xvec*xunt+yvec*yunt)/xlen)
+        wdst = xlen * (3.0 - 2.0*cos(0.5*xang))
+        !
+        !  Retain minimum distance
+        !
+        if (wdst <= wdst0) then
+           wdst0 = wdst
+           imin = itst
+           xunt1 = xvec / xlen
+           yunt1 = yvec / xlen
+        endif
+     enddo
+     !
+     !  Exchange retained point with current one
+     !
+     xtmp = xptst (inxt)
+     ytmp = yptst (inxt)
+     xptst (inxt) = xptst (imin)
+     yptst (inxt) = yptst (imin)
+     xptst (imin) = xtmp
+     yptst (imin) = ytmp
+     xunt = xunt1
+     yunt = yunt1
+  enddo nextpoint
+  !
+  ! Output
+  !
+  imax = sum (maxloc(ytmpt))
+  do ipnt = 1, nmax
+     write (*,*) ipnt, xptst(ipnt), yptst(ipnt), xtmpt(imax), ytmpt(imax)
+     imax = mod(imax, nmax) + 1
+  enddo
+
+end Program follow
