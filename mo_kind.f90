@@ -17,7 +17,7 @@
 !          CRAY:        -            precision =   13
 !                                    exponent  = 2465
 
-! Written  Juliane Mai, Nov 2011
+! Written  Juliane Mai, Matthias Cuntz, Nov 2011
 ! Modified Matthias Cuntz, Nov 2011 - private/public
 !                                   - documentation
 !                                   - removed tab characters

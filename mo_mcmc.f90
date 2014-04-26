@@ -4,7 +4,7 @@
 
 !> \details This module is Monte Carlo Markov Chain sampling of a posterior parameter distribution.
 
-!> \authors Maren Goehler & Juliane Mai
+!> \authors Maren Goehler, Juliane Mai
 !> \date Aug 2012
 
 MODULE mo_mcmc
@@ -26,7 +26,7 @@ MODULE mo_mcmc
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2012
+  ! Copyright 2012 Maren Goehler, Juliane Mai
 
   USE mo_kind,    only: i4, i8, dp
   USE mo_xor4096, only: xor4096, xor4096g, get_timeseed, n_save_state

@@ -1,12 +1,12 @@
 PROGRAM main
-  
+
   USE mo_kind,        ONLY: dp, sp, i4
   USE mo_percentile,  ONLY: ksmallest, median, percentile, qmedian
   USE mo_sort,        ONLY: sort
   USE mo_utils,       ONLY: eq, ne
-  
+
   IMPLICIT NONE
-  
+
   REAL(dp), DIMENSION(10) :: dat
   REAL(dp), DIMENSION(2)  :: dqua
   REAL(sp), DIMENSION(10) :: sat
@@ -20,7 +20,7 @@ PROGRAM main
 #endif
 
   LOGICAL :: isgood
-  
+
   Write(*,*) ''
   Write(*,*) 'Test mo_percentile.f90'
 
