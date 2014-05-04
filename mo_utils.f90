@@ -10,6 +10,7 @@ MODULE mo_utils
 
   ! Written  Matthias Cuntz, Juliane Mai, Feb 2014
   ! Modified Matthias Cuntz, Juliane Mai, Feb 2014 - equal, notequal
+  ! Modified Matthias Cuntz,              May 2014 - swap
 
   ! License
   ! -------
@@ -30,7 +31,7 @@ MODULE mo_utils
 
   ! Copyright 2014 Matthias Cuntz, Juliane Mai
 
-  USE mo_kind, ONLY: sp, dp
+  USE mo_kind, ONLY: sp, dp, i4
 
   IMPLICIT NONE
 
@@ -38,10 +39,11 @@ MODULE mo_utils
   PUBLIC :: notequal     ! a /= b, a .ne. b
   PUBLIC :: greaterequal ! a >= b, a .ge. b
   PUBLIC :: lesserequal  ! a <= b, a .le. b
-  PUBLIC :: eq ! a == b, a .eq. b
-  PUBLIC :: ne ! a /= b, a .ne. b
-  PUBLIC :: ge ! a >= b, a .ge. b
-  PUBLIC :: le ! a <= b, a .le. b
+  PUBLIC :: eq           ! a == b, a .eq. b
+  PUBLIC :: ne           ! a /= b, a .ne. b
+  PUBLIC :: ge           ! a >= b, a .ge. b
+  PUBLIC :: le           ! a <= b, a .le. b
+  PUBLIC :: swap         ! swaps arrays or elements of an array
 
   ! ------------------------------------------------------------------
 
@@ -125,6 +127,67 @@ MODULE mo_utils
   INTERFACE le
      MODULE PROCEDURE lesserequal_sp, lesserequal_dp
   END INTERFACE le
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         swap
+
+  !     PURPOSE
+  !         Swap to values/arrays or two elements in 1D-array.
+  !
+  !>        \brief Swap to values or two elements in array.
+  !
+  !>        \details Swaps either two entities, i.e. scalars, vectors, matrices,
+  !>                 or two elements in a vector.
+  !>                 The call is either \n
+  !>                   call swap(x,y) \n
+  !>                 or \n
+  !>                   call swap(vec,i,j)
+  !
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4)    :: i"               Index of first element to be swapped with second [case swap(vec,i,j)]
+  !>        \param[in] "integer(i4)    :: j"               Index of second element to be swapped with first [case swap(vec,i,j)]
+  !
+  !     INTENT(INOUT)
+  !>        \param[inout] "real(sp/dp/i4) :: x[(:,...)]"   First scalar or array to swap with second [case swap(x,y)]
+  !>        \param[inout] "real(sp/dp/i4) :: y[(:[,:])]"   Second scalar or array to swap with first [case swap(x,y)]
+  !>
+  !>        \param[inout] "real(sp/dp/i4) :: x(:)"         Vector of which to elements are swapped [case swap(vec,i,j)]
+
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RESTRICTIONS
+  !         No mask or undef.
+  !
+  !     EXAMPLE
+  !         vec1 = (/ 1., 2., 3., -999., 5., 6. /)
+  !         vec2 = (/ 1., 1., 3., -999., 10., 6. /)
+  !         call swap(vec1, vec2)
+  !         call swap(vec1, 1, 3)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date May 2014
+  INTERFACE swap
+     MODULE PROCEDURE &
+          swap_xy_dp, swap_xy_sp, swap_xy_i4, &
+          swap_vec_dp, swap_vec_sp, swap_vec_i4
+  END INTERFACE swap
 
   ! ------------------------------------------------------------------
 
@@ -265,5 +328,101 @@ CONTAINS
     endif
 
   END FUNCTION notequal_sp
+
+  ! ------------------------------------------------------------------
+
+  elemental pure subroutine swap_xy_dp(x,y)
+
+    implicit none
+
+    real(dp), intent(inout) :: x
+    real(dp), intent(inout) :: y
+
+    real(dp) :: z
+
+    z = x
+    x = y
+    y = z
+
+  end subroutine swap_xy_dp
+
+  elemental pure subroutine swap_xy_sp(x,y)
+
+    implicit none
+
+    real(sp), intent(inout) :: x
+    real(sp), intent(inout) :: y
+
+    real(sp) :: z
+
+    z = x
+    x = y
+    y = z
+
+  end subroutine swap_xy_sp
+
+  elemental pure subroutine swap_xy_i4(x,y)
+
+    implicit none
+
+    integer(i4), intent(inout) :: x
+    integer(i4), intent(inout) :: y
+
+    integer(i4) :: z
+
+    z = x
+    x = y
+    y = z
+
+  end subroutine swap_xy_i4
+
+
+  subroutine swap_vec_dp(x,i1,i2)
+
+    implicit none
+
+    real(dp),    dimension(:), intent(inout) :: x
+    integer(i4),               intent(in)    :: i1
+    integer(i4),               intent(in)    :: i2
+
+    real(dp) :: z
+
+    z     = x(i1)
+    x(i1) = x(i2)
+    x(i2) = z
+
+  end subroutine swap_vec_dp
+
+  subroutine swap_vec_sp(x,i1,i2)
+
+    implicit none
+
+    real(sp),    dimension(:), intent(inout) :: x
+    integer(i4),               intent(in)    :: i1
+    integer(i4),               intent(in)    :: i2
+
+    real(sp) :: z
+
+    z     = x(i1)
+    x(i1) = x(i2)
+    x(i2) = z
+
+  end subroutine swap_vec_sp
+
+  subroutine swap_vec_i4(x,i1,i2)
+
+    implicit none
+
+    integer(i4),    dimension(:), intent(inout) :: x
+    integer(i4),               intent(in)    :: i1
+    integer(i4),               intent(in)    :: i2
+
+    integer(i4) :: z
+
+    z     = x(i1)
+    x(i1) = x(i2)
+    x(i2) = z
+
+  end subroutine swap_vec_i4
 
 END MODULE mo_utils
