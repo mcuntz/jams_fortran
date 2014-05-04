@@ -1,7 +1,7 @@
 program test_utils
 
-  use mo_kind,  only: sp, dp
-  use mo_utils, only: eq, ge, le, ne
+  use mo_kind,  only: sp, dp, i4
+  use mo_utils, only: eq, ge, le, ne, swap
 
   implicit none
 
@@ -9,6 +9,11 @@ program test_utils
   real(dp) :: b_dp
   real(sp) :: a_sp
   real(sp) :: b_sp
+
+  integer(i4), parameter :: nn = 100
+  real(dp), dimension(nn) :: dat1, dat2, dat3
+  real(sp), dimension(nn) :: sat1, sat2, sat3
+  integer(i4), dimension(nn) :: iat1, iat2, iat3
 
   logical  :: isgood
   logical  :: compare
@@ -206,6 +211,41 @@ program test_utils
   compare = ge(a_sp, b_sp)
   write(*,'(E14.8,A4,E14.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
   isgood = isgood .and. (.not. compare)
+
+  ! -----------------------------------------------------
+  ! Swap
+
+  call random_number(dat1)
+  call random_number(dat2)
+  dat3 = dat1
+  call swap(dat1, dat2)
+  isgood = isgood .and. all(dat2 == dat3)
+
+  call swap(dat2, 1, nn)
+  call swap(dat2, nn, 1)
+  isgood = isgood .and. all(dat2 == dat3)
+  
+  call random_number(sat1)
+  call random_number(sat2)
+  sat3 = sat1
+  call swap(sat1, sat2)
+  isgood = isgood .and. all(sat2 == sat3)
+
+  call swap(sat2, 1, nn)
+  call swap(sat2, nn, 1)
+  isgood = isgood .and. all(sat2 == sat3)
+
+  call random_number(dat1)
+  call random_number(dat2)
+  iat1 = int(dat1, i4)
+  iat2 = int(dat2, i4)
+  iat3 = iat1
+  call swap(iat1, iat2)
+  isgood = isgood .and. all(iat2 == iat3)
+
+  call swap(iat2, 1, nn)
+  call swap(iat2, nn, 1)
+  isgood = isgood .and. all(iat2 == iat3)
 
   write(*,*) ''
   if (isgood) then
