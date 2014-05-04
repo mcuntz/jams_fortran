@@ -12,7 +12,8 @@ MODULE mo_sce
 
   ! This module is the Shuffled Complex Evolution optimization algorithm.
 
-  ! Written Juliane Mai, Feb 2013
+  ! Written Juliane Mai,     Feb 2013
+  ! Modified Matthias Cuntz, May 2014 - sort -> qsort
 
   ! License
   ! -------
@@ -31,7 +32,7 @@ MODULE mo_sce
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011-2013 Juliane Mai, Matthias Cuntz
+  ! Copyright 2011-2014 Juliane Mai, Matthias Cuntz
 
   IMPLICIT NONE
 
@@ -196,6 +197,7 @@ MODULE mo_sce
   !                  Matthias Cuntz,              Nov 2013 - progress dots
   !                                                        - use iso_fortran_env
   !                                                        - treat functn=NaN as worse function value in cce
+  !                  Matthias Cuntz,              May 2014 - sort -> qsort
 
   ! ------------------------------------------------------------------
 
@@ -221,7 +223,7 @@ CONTAINS
        ) result(bestx)
 
     use mo_kind,         only: i4, i8, dp
-    use mo_sort,         only: sort
+    use mo_quicksort,    only: qsort
     use mo_string_utils, only: num2str, compress
     use mo_xor4096,      only: get_timeseed, n_save_state, xor4096, xor4096g
     !$ use omp_lib,      only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
@@ -734,7 +736,7 @@ CONTAINS
 
     end if
 
-    call sort(history_tmp(1:npt1))
+    call qsort(history_tmp(1:npt1))
     icall = int(npt1,i8)
     !
     !  arrange the points in order of increasing function value
@@ -890,7 +892,7 @@ CONTAINS
                    end do
                    !
                    !  arrange the sub-complex in order of increasing function value
-                   call sort(lcs(1:nps))
+                   call qsort(lcs(1:nps))
                 end if
                 !
                 !  create the sub-complex arrays
@@ -1024,7 +1026,7 @@ CONTAINS
                    end do
                    !
                    !  arrange the sub-complex in order of increasing function value
-                   call sort(lcs(1:nps))
+                   call qsort(lcs(1:nps))
                 end if
                 !
                 !  create the sub-complex arrays
@@ -1461,8 +1463,8 @@ CONTAINS
     !
     ! This subroutine is adapted from "Numerical Recipes" by Press et al., pp. 233-234
     !
-    use mo_sort, only: sort_index
-    use mo_kind, only: i4, dp
+    use mo_kind,      only: i4, dp
+    use mo_quicksort, only: qsort_index
 
     implicit none    
 
@@ -1479,7 +1481,7 @@ CONTAINS
     m = size(rb,2)
 
     ! indexes of sorted reference vector
-    iwk(:) = sort_index(ra(1:n))
+    iwk(:) = qsort_index(ra(1:n))
 
     ! sort reference vector
     ra(1:n) = ra(iwk)

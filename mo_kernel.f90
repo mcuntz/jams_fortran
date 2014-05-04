@@ -24,6 +24,7 @@ MODULE mo_kernel
   ! Written  Juliane Mai,    Mar 2013
   ! Modified Stephan Thober, Mar 2013
   !          Matthias Cuntz, Mar 2013
+  !          Matthias Cuntz, May 2014 - sort -> qsort
 
   ! License
   ! -------
@@ -42,14 +43,14 @@ MODULE mo_kernel
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2013 Juliane Mai, Stephan Thober, Matthias Cuntz
+  ! Copyright 2013-2014 Juliane Mai, Stephan Thober, Matthias Cuntz
 
   USE mo_kind,      ONLY: i4, sp, dp
   USE mo_constants, ONLY: twopi_sp, twopi_dp
   USE mo_moment,    ONLY: stddev
   USE mo_nelmin,    ONLY: nelminrange      ! ND optimization
   USE mo_nr,        ONLY: golden           ! 1D optimization
-  USE mo_sort,      ONLY: sort_index
+  USE mo_quicksort, ONLY: qsort_index
   USE mo_integrate, ONLY: int_regular
 
   IMPLICIT NONE
@@ -157,6 +158,7 @@ MODULE mo_kernel
   !>        \author Juliane Mai
   !>        \date Mar 2013
   !         Modified, Matthias Cuntz, Mar 2013
+  !                   Matthias Cuntz, May 2014 - sort -> qsort
 
   INTERFACE kernel_cumdensity
      MODULE PROCEDURE kernel_cumdensity_1d_dp, kernel_cumdensity_1d_sp
@@ -634,7 +636,7 @@ CONTAINS
        xxout = x
     end if
     ! sort the x
-    xindx = sort_index(xxout)
+    xindx = qsort_index(xxout)
     xxout = xxout(xindx)
 
     ! should be (n*4 + 1) for int_regular
@@ -764,7 +766,7 @@ CONTAINS
        xxout = x
     end if
     ! sort the x
-    xindx = sort_index(xxout)
+    xindx = qsort_index(xxout)
     xxout = xxout(xindx)
 
     ! should be (n*4 + 1) for int_regular

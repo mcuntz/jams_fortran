@@ -6,7 +6,7 @@
 !>          and one routine for interpolation with cubic B splines.
 
 !> \authors Matthias Cuntz
-!> \date 2011-2013
+!> \date 2011-2014
 MODULE mo_interpol
 
   ! This module provides a linear interpolation routine for irregular grids
@@ -20,8 +20,9 @@ MODULE mo_interpol
   !   and IDL routine interpol.pro Copyright (C) 1982-2004, Research Systems, Inc.
   !   The cubic B spline is Fortran 90 version of the Fortran 77 version of John Burkardt.
 
-  ! Written March 2011, Matthias Cuntz - only linear interpolation
-  ! Modified July 2013, Matthias Cuntz - added cubi B splines
+  ! Written  Mar 2011, Matthias Cuntz - only linear interpolation
+  ! Modified Jul 2013, Matthias Cuntz - added cubi B splines
+  !          May 2014, Matthias Cuntz - removed numerical recipes
 
   ! License
   ! -------
@@ -40,38 +41,7 @@ MODULE mo_interpol
   ! You should have received a copy of the GNU Lesser General Public License
   ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011-2013 Matthias Cuntz
-
-
-  ! Note on Numerical Recipes License
-  ! ---------------------------------
-  ! Be aware that some code is under the Numerical Recipes License 3rd
-  ! edition <http://www.nr.com/aboutNR3license.html>
-
-  ! The Numerical Recipes Personal Single-User License lets you personally
-  ! use Numerical Recipes code ("the code") on any number of computers,
-  ! but only one computer at a time. You are not permitted to allow anyone
-  ! else to access or use the code. You may, under this license, transfer
-  ! precompiled, executable applications incorporating the code to other,
-  ! unlicensed, persons, providing that (i) the application is
-  ! noncommercial (i.e., does not involve the selling or licensing of the
-  ! application for a fee), and (ii) the application was first developed,
-  ! compiled, and successfully run by you, and (iii) the code is bound
-  ! into the application in such a manner that it cannot be accessed as
-  ! individual routines and cannot practicably be unbound and used in
-  ! other programs. That is, under this license, your application user
-  ! must not be able to use Numerical Recipes code as part of a program
-  ! library or "mix and match" workbench.
-
-  ! Businesses and organizations that purchase the disk or code download,
-  ! and that thus acquire one or more Numerical Recipes Personal
-  ! Single-User Licenses, may permanently assign those licenses, in the
-  ! number acquired, to individual employees. Such an assignment must be
-  ! made before the code is first used and, once made, it is irrevocable
-  ! and can not be transferred.
-
-  ! If you do not hold a Numerical Recipes License, this code is only for
-  ! informational and educational purposes but cannot be used.
+  ! Copyright 2011-2014 Matthias Cuntz
 
   USE mo_kind, ONLY: i4, sp, dp
   USE mo_utils, only: eq, ge
@@ -210,9 +180,9 @@ MODULE mo_interpol
      MODULE PROCEDURE bracket_dp, bracket_sp
   END INTERFACE bracket
 
-  ! From numerical recipes
+  ! Similar to numerical recipes
   INTERFACE locate
-     MODULE PROCEDURE locate_0d_sp, locate_1d_sp, locate_0d_dp, locate_1d_dp
+     MODULE PROCEDURE locate_dp, locate_sp
   END INTERFACE locate
 
   ! ------------------------------------------------------------------
@@ -403,158 +373,74 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  ! From numerical recipes documentation
-  ! Given an array xx(1:N), and given a value x, returns a value j such that x is between
-  !  xx(j) and xx(j+1). xx must be monotonic, either increasing or decreasing. j=0 or
-  ! j=N is returned to indicate that x is out of range.
-  FUNCTION locate_0d_dp(xx,x)
+  ! Given an array x(1:N), and given a value y, returns a value j such that y is between
+  !  x(j) and x(j+1). x must be monotonically increasing.
+  !  j=0 or j=N is returned to indicate that x is out of range.
+  ! Adapted from "Numerical Recipes" by Press et al.
+
+  FUNCTION locate_dp(x,y)
 
     IMPLICIT NONE
 
-    REAL(dp), DIMENSION(:), INTENT(IN) :: xx
-    REAL(dp),               INTENT(IN) :: x
-    INTEGER(i4)                        :: locate_0d_dp
-
-    INTEGER(i4) :: n, jl, jm, ju
-    LOGICAL     :: ascnd
-
-    n = size(xx)
-    ascnd = ge(xx(n),xx(1))
-    jl = 0
-    ju = n+1
-    do
-       if (ju-jl <= 1) exit
-       jm = (ju+jl)/2
-       if (ascnd .eqv. ge(x,xx(jm))) then
-          jl = jm
-       else
-          ju = jm
-       end if
-    end do
-    if (eq(x,xx(1))) then
-       locate_0d_dp = 1
-    else if (eq(x,xx(n))) then
-       locate_0d_dp = n-1
-    else
-       locate_0d_dp = jl
-    end if
-
-  END FUNCTION locate_0d_dp
-
-
-  FUNCTION locate_1d_dp(xx,x)
-
-    IMPLICIT NONE
-
-    REAL(dp), DIMENSION(:), INTENT(IN) :: xx
     REAL(dp), DIMENSION(:), INTENT(IN) :: x
-    INTEGER(i4), DIMENSION(size(x))    :: locate_1d_dp
+    REAL(dp), DIMENSION(:), INTENT(IN) :: y
+    INTEGER(i4), DIMENSION(size(y))    :: locate_dp
 
-    INTEGER(i4) :: n, jl, jm, ju
-    LOGICAL     :: ascnd
-    INTEGER(i4) :: nx, i
+    INTEGER(i4) :: n, l, r, m
+    INTEGER(i4) :: ny, i
 
-    n = size(xx)
-    ascnd = ge(xx(n),xx(1))
-
-    nx = size(x)
-    do i=1, nx
-       jl = 0
-       ju = n+1
+    n  = size(x)
+    ny = size(y)
+    do i=1, ny
+       l = 0
+       r = n+1
        do
-          if (ju-jl <= 1) exit
-          jm = (ju+jl)/2
-          if (ascnd .eqv. ge(x(i),xx(jm))) then
-             jl = jm
+          if (r <= l+1) exit
+          m = l + (r-l)/2
+          if (ge(y(i),x(m))) then
+             l = m
           else
-             ju = jm
-          end if
+             r = m
+          endif
        end do
-       if (eq(x(i),xx(1))) then
-          locate_1d_dp(i) = 1
-       else if (eq(x(i),xx(n))) then
-          locate_1d_dp(i) = n-1
-       else
-          locate_1d_dp(i) = jl
-       end if
+       locate_dp(i) = l
+       if (eq(y(i),x(n))) locate_dp(i) = n-1
+       if (eq(y(i),x(1))) locate_dp(i) = 1
     end do
 
-  END FUNCTION locate_1d_dp
+  END FUNCTION locate_dp
 
-
-  FUNCTION locate_0d_sp(xx,x)
+  FUNCTION locate_sp(x,y)
 
     IMPLICIT NONE
 
-    REAL(sp), DIMENSION(:), INTENT(IN) :: xx
-    REAL(sp),               INTENT(IN) :: x
-    INTEGER(i4)                        :: locate_0d_sp
-
-    INTEGER(i4) :: n, jl, jm, ju
-    LOGICAL     :: ascnd
-
-    n = size(xx)
-    ascnd = ge(xx(n),xx(1))
-    jl = 0
-    ju = n+1
-    do
-       if (ju-jl <= 1) exit
-       jm = (ju+jl)/2
-       if (ascnd .eqv. ge(x,xx(jm))) then
-          jl = jm
-       else
-          ju = jm
-       end if
-    end do
-    if (eq(x,xx(1))) then
-       locate_0d_sp = 1
-    else if (eq(x,xx(n))) then
-       locate_0d_sp = n-1
-    else
-       locate_0d_sp = jl
-    end if
-
-  END FUNCTION locate_0d_sp
-
-
-  FUNCTION locate_1d_sp(xx,x)
-
-    IMPLICIT NONE
-
-    REAL(sp), DIMENSION(:), INTENT(IN) :: xx
     REAL(sp), DIMENSION(:), INTENT(IN) :: x
-    INTEGER(i4), DIMENSION(size(x))    :: locate_1d_sp
+    REAL(sp), DIMENSION(:), INTENT(IN) :: y
+    INTEGER(i4), DIMENSION(size(y))    :: locate_sp
 
-    INTEGER(i4) :: n, jl, jm, ju
-    LOGICAL     :: ascnd
-    INTEGER(i4) :: nx, i
+    INTEGER(i4) :: n, l, r, m
+    INTEGER(i4) :: ny, i
 
-    n = size(xx)
-    ascnd = ge(xx(n),xx(1))
-
-    nx = size(x)
-    do i=1, nx
-       jl = 0
-       ju = n+1
+    n  = size(x)
+    ny = size(y)
+    do i=1, ny
+       l = 0
+       r = n+1
        do
-          if (ju-jl <= 1) exit
-          jm = (ju+jl)/2
-          if (ascnd .eqv. ge(x(i),xx(jm))) then
-             jl = jm
+          if (r <= l+1) exit
+          m = l + (r-l)/2
+          if (ge(y(i),x(m))) then
+             l = m
           else
-             ju = jm
-          end if
+             r = m
+          endif
        end do
-       if (eq(x(i),xx(1))) then
-          locate_1d_sp(i) = 1
-       else if (eq(x(i),xx(n))) then
-          locate_1d_sp(i) = n-1
-       else
-          locate_1d_sp(i) = jl
-       end if
+       locate_sp(i) = l
+       if (eq(y(i),x(n))) locate_sp(i) = n-1
+       if (eq(y(i),x(1))) locate_sp(i) = 1
     end do
 
-  END FUNCTION locate_1d_sp
+  END FUNCTION locate_sp
 
   ! ------------------------------------------------------------------
 
