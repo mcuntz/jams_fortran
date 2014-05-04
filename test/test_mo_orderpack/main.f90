@@ -1,8 +1,8 @@
 PROGRAM main
 
   USE mo_kind,      ONLY: i4, dp, sp
-  USE mo_utils,     ONLY: eq, ne
-  USE mo_orderpack, ONLY: inssor, mrgrnk, median
+  USE mo_utils,     ONLY: eq
+  USE mo_orderpack, ONLY: refsor, mrgrnk, median
 
   IMPLICIT NONE
 
@@ -20,7 +20,7 @@ PROGRAM main
   dat1 = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
   isgood = .true.
   dat2 = dat1(10:1:-1)
-  call inssor(dat2)
+  call refsor(dat2)
   if (any(abs(dat1-dat2) > 0._dp)) isgood = .false.
   dat2 = dat1(10:1:-1)
   call mrgrnk(dat2, ii)
@@ -40,7 +40,7 @@ PROGRAM main
   sat1 = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
   isgood = .true.
   sat2 = sat1(10:1:-1)
-  call inssor(sat2)
+  call refsor(sat2)
   if (any(abs(sat1-sat2) > 0._sp)) isgood = .false.
   sat2 = sat1(10:1:-1)
   call mrgrnk(sat2, ii)
