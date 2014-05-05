@@ -38,6 +38,12 @@ MODULE mo_quicksort
 
   IMPLICIT NONE
 
+  ! Aliases/wrapper
+  PUBLIC :: sort         ! qsort
+  PUBLIC :: sort_index   ! qsort_index
+  PUBLIC :: sortmp       ! qsortmp
+  PUBLIC :: sortmp_index ! wrapper for qsortmp
+
   ! Standard
   PUBLIC :: qsort        ! Non-recursive quicksort from Wikibooks
   PUBLIC :: qsort_index  ! Same but returning indexes
@@ -231,11 +237,122 @@ MODULE mo_quicksort
      MODULE PROCEDURE qsortmp_dp, qsortmp_sp, qsortmp_i4
   END INTERFACE qsortmp
 
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         sortmp_index
+
+  !     PURPOSE
+  !>        \brief Gives the indeces that would sort an array in ascending order.
+  !
+  !>        \details Wrapper for recursive quicksort of David Bal with OpenMP support.
+
+  !     CALLING SEQUENCE
+  !         ii = sortmp_index(arr)
+  
+  !     INDENT(IN)
+  !>        \param[in] "real(sp/dp) :: arr(:)"     Unsorted 1D-array
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         None
+
+  !     INDENT(IN), OPTIONAL
+  !         None
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURNS
+  !>       \return integer(i4) :: indices(:) &mdash; Indices that would sort arr in ascending order
+
+  !     RESTRICTIONS
+  !         No mask or undefined value provided.
+
+  !     EXAMPLE
+  !         vec = (/ 3., 2, 1., 4., 6., 5. /)
+  !         ii = sortmp_index(arr)
+  !         arr = arr(ii)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         David Bal
+  !             Quicksort - http://balfortran.org/
+  !             Multithreaded Quicksort - http://balfortran.org/multithreaded_sort.html
+
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date May 2014
+  INTERFACE sortmp_index
+     MODULE PROCEDURE sortmp_index_i4, sortmp_index_sp, sortmp_index_dp
+  END INTERFACE sortmp_index
+
+  ! aliases
+  INTERFACE sort
+     MODULE PROCEDURE qsort_dp, qsort_sp, qsort_i4
+  END INTERFACE sort
+  INTERFACE sort_index
+     MODULE PROCEDURE qsort_index_dp, qsort_index_sp, qsort_index_i4
+  END INTERFACE sort_index
+  INTERFACE sortmp
+     MODULE PROCEDURE qsortmp_dp, qsortmp_sp, qsortmp_i4
+  END INTERFACE sortmp
+
   PRIVATE
 
   ! ------------------------------------------------------------------
 
 CONTAINS
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION sortmp_index_dp(arr)
+
+    IMPLICIT NONE
+
+    REAL(dp),    DIMENSION(:), INTENT(IN) :: arr
+    INTEGER(i4), DIMENSION(size(arr))     :: sortmp_index_dp
+
+    REAL(dp), DIMENSION(size(arr)) :: iarr
+
+    iarr = arr
+    call qsortmp(iarr, sortmp_index_dp)
+
+  END FUNCTION sortmp_index_dp
+
+  FUNCTION sortmp_index_sp(arr)
+
+    IMPLICIT NONE
+
+    REAL(sp),    DIMENSION(:), INTENT(IN) :: arr
+    INTEGER(i4), DIMENSION(size(arr))     :: sortmp_index_sp
+
+    REAL(sp), DIMENSION(size(arr)) :: iarr
+
+    iarr = arr
+    call qsortmp(iarr, sortmp_index_sp)
+
+  END FUNCTION sortmp_index_sp
+
+  FUNCTION sortmp_index_i4(arr)
+
+    IMPLICIT NONE
+
+    integer(i4), DIMENSION(:), INTENT(IN) :: arr
+    INTEGER(i4), DIMENSION(size(arr))     :: sortmp_index_i4
+
+    integer(i4), DIMENSION(size(arr)) :: iarr
+
+    iarr = arr
+    call qsortmp(iarr, sortmp_index_i4)
+
+  END FUNCTION sortmp_index_i4
 
   ! ------------------------------------------------------------------
   ! http://en.wikibooks.org/wiki/Algorithm_Implementation/Sorting/Quicksort#FORTRAN_90.2F95

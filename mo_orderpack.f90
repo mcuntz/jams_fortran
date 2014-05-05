@@ -36,6 +36,9 @@ MODULE mo_orderpack
   IMPLICIT NONE
 
   ! Public routines
+  public :: sort       ! alias for refsor
+  public :: sort_index ! wrapper for mrgrnk
+
   public :: ctrper
   public :: fndnth
   public :: indmed
@@ -57,7 +60,6 @@ MODULE mo_orderpack
   public :: unista
   public :: valmed
   public :: valnth
-
 
   !> Unconditional ranking
   !> 
@@ -272,6 +274,13 @@ MODULE mo_orderpack
   !> initial set only those entries that are unique, packing the array, and
   !> leaving the order of the retained values unchanged.
 
+  ! aliases/wrapper
+  interface sort
+     module procedure d_refsor, r_refsor, i_refsor
+  end interface sort
+  interface sort_index
+     module procedure sort_index_dp, sort_index_sp, sort_index_i4
+  end interface sort_index
   
   interface ctrper
      module procedure d_ctrper, r_ctrper, i_ctrper
@@ -370,6 +379,44 @@ MODULE mo_orderpack
   Integer(kind=i4), Allocatable, Dimension(:), Save :: IDONT
 
 CONTAINS
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION sort_index_dp(arr)
+
+    IMPLICIT NONE
+
+    REAL(dp),    DIMENSION(:), INTENT(IN) :: arr
+    INTEGER(i4), DIMENSION(size(arr))     :: sort_index_dp
+
+    call mrgrnk(arr, sort_index_dp)
+
+  END FUNCTION sort_index_dp
+
+  FUNCTION sort_index_sp(arr)
+
+    IMPLICIT NONE
+
+    REAL(sp),    DIMENSION(:), INTENT(IN) :: arr
+    INTEGER(i4), DIMENSION(size(arr))     :: sort_index_sp
+
+    call mrgrnk(arr, sort_index_sp)
+
+  END FUNCTION sort_index_sp
+
+  FUNCTION sort_index_i4(arr)
+
+    IMPLICIT NONE
+
+    integer(i4), DIMENSION(:), INTENT(IN) :: arr
+    INTEGER(i4), DIMENSION(size(arr))     :: sort_index_i4
+
+    call mrgrnk(arr, sort_index_i4)
+
+  END FUNCTION sort_index_i4
+
+
+  ! ------------------------------------------------------------------
 
   Subroutine D_ctrper (XDONT, PCLS)
     !   Permute array XVALT randomly, but leaving elements close

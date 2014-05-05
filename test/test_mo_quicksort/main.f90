@@ -4,7 +4,9 @@ PROGRAM main
   use mo_timer,     only: timers_init, timer_start, timer_stop, timer_print, timer_clear
   USE mo_sort,      ONLY: sort, sort_index
   USE mo_orderpack, ONLY: mrgrnk, refsor
+  use mo_orderpack, only: osort => sort, osort_index => sort_index
   use mo_quicksort, only: qsort, qsort_index, qsortc, quick_sort, qsortb, qsortmp
+  use mo_quicksort, only: isort => sort, isort_index => sort_index, sortmp, sortmp_index
 
   IMPLICIT NONE
   
@@ -59,6 +61,38 @@ PROGRAM main
   call sort(sat)
   if (any(sat2(ii) /= sat)) isgood = .false.
 
+  Write(*,*) 'Orderpack'
+  call timer_start(1)
+  do i=1, nloop
+     sat = real(new_data(nn),sp)
+     call osort(sat)
+  end do
+  call timer_stop(1)
+  call timer_print(1)
+  call timer_clear(1)
+  do i=1, nn-1
+     if (sat(i) > sat(i+1)) isgood= .false.
+  end do
+
+  call timer_start(2)
+  do i=1, nloop
+     sat = real(new_data(nn),sp)
+     ii = osort_index(sat)
+  end do
+  call timer_stop(2)
+  call timer_print(2)
+  call timer_clear(2)
+  sat = sat(ii)
+  do i=1, nn-1
+     if (sat(i) > sat(i+1)) isgood= .false.
+  end do
+
+  sat = real(new_data(nn),sp)
+  sat2 = sat
+  ii = osort_index(sat)
+  call osort(sat)
+  if (any(sat2(ii) /= sat)) isgood = .false.
+
   Write(*,*) 'Wikibooks'
   call timer_start(1)
   do i=1, nloop
@@ -96,6 +130,37 @@ PROGRAM main
   call qsort(sat)
   if (any(sat2(ii) /= sat)) isgood = .false.
 
+  call timer_start(1)
+  do i=1, nloop
+     sat = real(new_data(nn),sp)
+     call isort(sat)
+  end do
+  call timer_stop(1)
+  call timer_print(1)
+  call timer_clear(1)
+  do i=1, nn-1
+     if (sat(i) > sat(i+1)) isgood= .false.
+  end do
+
+  call timer_start(2)
+  do i=1, nloop
+     sat = real(new_data(nn),sp)
+     ii = isort_index(sat)
+  end do
+  call timer_stop(2)
+  call timer_print(2)
+  call timer_clear(2)
+  sat = sat(ii)
+  do i=1, nn-1
+     if (sat(i) > sat(i+1)) isgood= .false.
+  end do
+
+  sat = real(new_data(nn),sp)
+  sat2 = sat
+  ii = isort_index(sat)
+  call isort(sat)
+  if (any(sat2(ii) /= sat)) isgood = .false.
+
   Write(*,*) 'David Bal - OpenMP'
   call timer_start(1)
   do i=1, nloop
@@ -129,6 +194,37 @@ PROGRAM main
   sat = real(new_data(nn),sp)
   sat2 = sat
   call qsortmp(sat, ii)
+  if (any(sat2(ii) /= sat)) isgood = .false.
+
+  call timer_start(1)
+  do i=1, nloop
+     sat = real(new_data(nn),sp)
+     call sortmp(sat)
+  end do
+  call timer_stop(1)
+  call timer_print(1)
+  call timer_clear(1)
+  do i=1, nn-1
+     if (sat(i) > sat(i+1)) isgood= .false.
+  end do
+
+  call timer_start(2)
+  do i=1, nloop
+     sat = real(new_data(nn),sp)
+     ii = sortmp_index(sat)
+  end do
+  call timer_stop(2)
+  call timer_print(2)
+  call timer_clear(2)
+  sat = sat(ii)
+  do i=1, nn-1
+     if (sat(i) > sat(i+1)) isgood= .false.
+  end do
+
+  sat = real(new_data(nn),sp)
+  sat2 = sat
+  ii = sortmp_index(sat)
+  call sortmp(sat)
   if (any(sat2(ii) /= sat)) isgood = .false.
 
   if (isgood) then
@@ -172,6 +268,38 @@ PROGRAM main
   call sort(iat)
   if (any(iat2(ii) /= iat)) isgood = .false.
 
+  Write(*,*) 'Orderpack'
+  call timer_start(1)
+  do i=1, nloop
+     iat = int(new_data(nn)*real(nn,dp),i4)
+     call osort(iat)
+  end do
+  call timer_stop(1)
+  call timer_print(1)
+  call timer_clear(1)
+  do i=1, nn-1
+     if (iat(i) > iat(i+1)) isgood= .false.
+  end do
+
+  call timer_start(2)
+  do i=1, nloop
+     iat = int(new_data(nn)*real(nn,dp),i4)
+     ii = osort_index(iat)
+  end do
+  call timer_stop(2)
+  call timer_print(2)
+  call timer_clear(2)
+  iat = iat(ii)
+  do i=1, nn-1
+     if (iat(i) > iat(i+1)) isgood= .false.
+  end do
+
+  iat = int(new_data(nn)*real(nn,dp),i4)
+  iat2 = iat
+  ii = osort_index(iat)
+  call osort(iat)
+  if (any(iat2(ii) /= iat)) isgood = .false.
+
   Write(*,*) 'Wikibooks'
   call timer_start(1)
   do i=1, nloop
@@ -209,6 +337,37 @@ PROGRAM main
   call qsort(iat)
   if (any(iat2(ii) /= iat)) isgood = .false.
 
+  call timer_start(1)
+  do i=1, nloop
+     iat = int(new_data(nn)*real(nn,dp),i4)
+     call isort(iat)
+  end do
+  call timer_stop(1)
+  call timer_print(1)
+  call timer_clear(1)
+  do i=1, nn-1
+     if (iat(i) > iat(i+1)) isgood= .false.
+  end do
+
+  call timer_start(2)
+  do i=1, nloop
+     iat = int(new_data(nn)*real(nn,dp),i4)
+     ii = isort_index(iat)
+  end do
+  call timer_stop(2)
+  call timer_print(2)
+  call timer_clear(2)
+  iat = iat(ii)
+  do i=1, nn-1
+     if (iat(i) > iat(i+1)) isgood= .false.
+  end do
+
+  iat = int(new_data(nn)*real(nn,dp),i4)
+  iat2 = iat
+  ii = isort_index(iat)
+  call isort(iat)
+  if (any(iat2(ii) /= iat)) isgood = .false.
+
   Write(*,*) 'David Bal - OpenMP'
   call timer_start(1)
   do i=1, nloop
@@ -237,6 +396,37 @@ PROGRAM main
   iat = int(new_data(nn)*real(nn,dp),i4)
   iat2 = iat
   call qsortmp(iat, ii)
+  if (any(iat2(ii) /= iat)) isgood = .false.
+
+  call timer_start(1)
+  do i=1, nloop
+     iat = int(new_data(nn)*real(nn,dp),i4)
+     call sortmp(iat)
+  end do
+  call timer_stop(1)
+  call timer_print(1)
+  call timer_clear(1)
+  do i=1, nn-1
+     if (iat(i) > iat(i+1)) isgood= .false.
+  end do
+
+  call timer_start(2)
+  do i=1, nloop
+     iat = int(new_data(nn)*real(nn,dp),i4)
+     ii = sortmp_index(iat)
+  end do
+  call timer_stop(2)
+  call timer_print(2)
+  call timer_clear(2)
+  iat = iat(ii)
+  do i=1, nn-1
+     if (iat(i) > iat(i+1)) isgood= .false.
+  end do
+
+  iat = int(new_data(nn)*real(nn,dp),i4)
+  iat2 = iat
+  ii = sortmp_index(iat)
+  call sortmp(iat)
   if (any(iat2(ii) /= iat)) isgood = .false.
 
   if (isgood) then
@@ -278,6 +468,69 @@ PROGRAM main
   dat2 = dat
   ii = sort_index(dat)
   call sort(dat)
+  if (any(dat2(ii) /= dat)) isgood = .false.
+
+  Write(*,*) 'Orderpack'
+  call timer_start(1)
+  do i=1, nloop
+     dat = new_data(nn)
+     call refsor(dat)
+  end do
+  call timer_stop(1)
+  call timer_print(1)
+  call timer_clear(1)
+  do i=1, nn-1
+     if (dat(i) > dat(i+1)) isgood= .false.
+  end do
+
+  call timer_start(2)
+  do i=1, nloop
+     dat = new_data(nn)
+     call mrgrnk(dat, ii)
+  end do
+  call timer_stop(2)
+  call timer_print(2)
+  call timer_clear(2)
+  dat = dat(ii)
+  do i=1, nn-1
+     if (dat(i) > dat(i+1)) isgood= .false.
+  end do
+
+  dat = new_data(nn)
+  dat2 = dat
+  call mrgrnk(dat, ii)
+  call refsor(dat)
+  if (any(dat2(ii) /= dat)) isgood = .false.
+
+  call timer_start(1)
+  do i=1, nloop
+     dat = new_data(nn)
+     call osort(dat)
+  end do
+  call timer_stop(1)
+  call timer_print(1)
+  call timer_clear(1)
+  do i=1, nn-1
+     if (dat(i) > dat(i+1)) isgood= .false.
+  end do
+
+  call timer_start(2)
+  do i=1, nloop
+     dat = new_data(nn)
+     ii = osort_index(dat)
+  end do
+  call timer_stop(2)
+  call timer_print(2)
+  call timer_clear(2)
+  dat = dat(ii)
+  do i=1, nn-1
+     if (dat(i) > dat(i+1)) isgood= .false.
+  end do
+
+  dat = new_data(nn)
+  dat2 = dat
+  ii = osort_index(dat)
+  call osort(dat)
   if (any(dat2(ii) /= dat)) isgood = .false.
 
   Write(*,*) 'Wikibooks'
@@ -329,11 +582,10 @@ PROGRAM main
   call qsort(dat)
   if (any(dat2(ii) /= dat)) isgood = .false.
 
-  Write(*,*) 'Orderpack'
   call timer_start(1)
   do i=1, nloop
      dat = new_data(nn)
-     call refsor(dat)
+     call isort(dat)
   end do
   call timer_stop(1)
   call timer_print(1)
@@ -345,7 +597,7 @@ PROGRAM main
   call timer_start(2)
   do i=1, nloop
      dat = new_data(nn)
-     call mrgrnk(dat, ii)
+     ii = isort_index(dat)
   end do
   call timer_stop(2)
   call timer_print(2)
@@ -357,8 +609,8 @@ PROGRAM main
 
   dat = new_data(nn)
   dat2 = dat
-  call mrgrnk(dat, ii)
-  call refsor(dat)
+  ii = isort_index(dat)
+  call isort(dat)
   if (any(dat2(ii) /= dat)) isgood = .false.
 
   ! Fails with sorted arrays
@@ -435,6 +687,37 @@ PROGRAM main
   dat = real(new_data(nn),sp)
   dat2 = dat
   call qsortmp(dat, ii)
+  if (any(dat2(ii) /= dat)) isgood = .false.
+
+  call timer_start(1)
+  do i=1, nloop
+     dat = new_data(nn)
+     call sortmp(dat)
+  end do
+  call timer_stop(1)
+  call timer_print(1)
+  call timer_clear(1)
+  do i=1, nn-1
+     if (dat(i) > dat(i+1)) isgood= .false.
+  end do
+
+  call timer_start(2)
+  do i=1, nloop
+     dat = new_data(nn)
+     ii = sortmp_index(dat)
+  end do
+  call timer_stop(2)
+  call timer_print(2)
+  call timer_clear(2)
+  dat = dat(ii)
+  do i=1, nn-1
+     if (dat(i) > dat(i+1)) isgood= .false.
+  end do
+
+  dat = new_data(nn)
+  dat2 = dat
+  ii = sortmp_index(dat)
+  call sortmp(dat)
   if (any(dat2(ii) /= dat)) isgood = .false.
 
 
