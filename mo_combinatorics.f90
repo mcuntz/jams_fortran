@@ -10,7 +10,7 @@
 MODULE mo_combinatorics
 
   ! Written  Matthias Cuntz, Giovanni Dalmasso, Juliane Mai, Stephan Thober Feb 2013
-  ! Modified Matthias Cuntz, May 2014 - removed numerical recipes
+  ! Modified Matthias Cuntz, May 2014 - removed numerical recipes, use mo_functions
 
   ! License
   ! -------
@@ -32,11 +32,11 @@ MODULE mo_combinatorics
   ! Copyright 2011-2014 Matthias Cuntz, Giovanni Dalmasso, Juliane Mai, Stephan Thober
 
   USE mo_kind, ONLY: i4, i8, sp, dp
+  USE mo_functions, only: gammln, factln, factorial
 
   IMPLICIT NONE
 
   PUBLIC :: binomcoeffi         ! Binomial coefficient (n choose k)
-  PUBLIC :: factorial           ! Factorial (n!)
   PUBLIC :: random_kofn         ! Random selection of k of n
   PUBLIC :: next_kofn           ! Next selection of k of n to a given one
   PUBLIC :: all_kofn            ! All selections of k of n
@@ -99,60 +99,6 @@ MODULE mo_combinatorics
   INTERFACE binomcoeffi
      MODULE PROCEDURE binomcoeffi_i4_d0, binomcoeffi_i8_d0, binomcoeffi_i4_d1, binomcoeffi_i8_d1
   END INTERFACE binomcoeffi
-
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         factorial
-
-  !     PURPOSE
-  !
-  !>        \brief The factorial.
-  !
-  !>        \details Calculates the factorial F:
-  !>                     \f[ F(n) = n! = 1 \dot 2 \dot ... \dot n \f], 
-  !>                 i.e. the number of possible permutations of n integers 1..n
-  !
-  !     INTENT(IN)
-  !>        \param[in] "integer(i4/i8) :: n/n(:)"       n
-  !
-  !     INTENT(INOUT)
-  !         None
-
-  !     INTENT(OUT)
-  !         None
-  !
-  !     INTENT(IN), OPTIONAL
-  !         None
-  !
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-  !
-  !     INTENT(OUT), OPTIONAL
-  !         None
-  !
-  !     RETURN
-  !>        \return     integer(i4/i8) :: factorial/factorial(:) &mdash; Factorial (n!)
-  !
-  !     RESTRICTIONS
-  !         None
-  !
-  !     EXAMPLE
-  !         fact = factorial(5)
-  !         fact --> 120
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !         
-
-  !     HISTORY
-  !>        \author Matthias Cuntz, Juliane Mai
-  !>        \date Feb 2013
-  !         Modified, 
-  
-  INTERFACE factorial
-     MODULE PROCEDURE factorial_i4_d0, factorial_i8_d0, factorial_i4_d1, factorial_i8_d1
-  END INTERFACE factorial
 
   ! ------------------------------------------------------------------
 
@@ -560,14 +506,6 @@ MODULE mo_combinatorics
 
   PRIVATE
 
-  INTERFACE factln
-     MODULE PROCEDURE factln_i4, factln_i8
-  END INTERFACE factln
-
-  INTERFACE gammln
-     MODULE PROCEDURE gammln_sp, gammln_dp
-  END INTERFACE gammln
-
   ! ------------------------------------------------------------------
 
 CONTAINS
@@ -619,52 +557,6 @@ CONTAINS
     binomcoeffi_i8_d1 = nint(exp(factln(n)-factln(k)-factln(n-k)))
 
   END FUNCTION binomcoeffi_i8_d1
-
-  ! ------------------------------------------------------------------
-
-  FUNCTION factorial_i4_d0(n)
-    ! Returns the factorial n!
-    IMPLICIT NONE
-
-    INTEGER(i4), INTENT(IN) :: n
-    INTEGER(i4)             :: factorial_i4_d0
-
-    factorial_i4_d0 = nint(exp(factln(n)))
-
-  END FUNCTION factorial_i4_d0
-
-  FUNCTION factorial_i8_d0(n)
-    ! Returns the factorial n!
-    IMPLICIT NONE
-
-    INTEGER(i8), INTENT(IN) :: n
-    INTEGER(i8)             :: factorial_i8_d0
-
-    factorial_i8_d0 = nint(exp(factln(n)))
-
-  END FUNCTION factorial_i8_d0
-
-  FUNCTION factorial_i4_d1(n)
-    ! Returns the factorial n!
-    IMPLICIT NONE
-
-    INTEGER(i4), DIMENSION(:), INTENT(IN) :: n
-    INTEGER(i4), DIMENSION(size(n))       :: factorial_i4_d1
-
-    factorial_i4_d1 = nint(exp(factln(n)))
-
-  END FUNCTION factorial_i4_d1
-
-  FUNCTION factorial_i8_d1(n)
-    ! Returns the factorial n!
-    IMPLICIT NONE
-
-    INTEGER(i8), DIMENSION(:), INTENT(IN) :: n
-    INTEGER(i8), DIMENSION(size(n))       :: factorial_i8_d1
-
-    factorial_i8_d1 = nint(exp(factln(n)))
-
-  END FUNCTION factorial_i8_d1
 
   ! ------------------------------------------------------------------
 
@@ -1482,121 +1374,5 @@ CONTAINS
     endif
 
   END FUNCTION random_index_permut_i8
-
-  ! ------------------------------------------------------------------
-  ! PRIVATE
-  ! ------------------------------------------------------------------
-
-  ELEMENTAL PURE FUNCTION factln_i4(n)
-
-    IMPLICIT NONE
-
-    INTEGER(i4), INTENT(IN) :: n
-    REAL(dp)                :: factln_i4
-
-    factln_i4 = gammln(real(n,dp)+1.0_dp)
-
-  end function factln_i4
-
-  ELEMENTAL PURE FUNCTION factln_i8(n)
-
-    IMPLICIT NONE
-
-    INTEGER(i8), INTENT(IN) :: n
-    REAL(dp)                :: factln_i8
-
-    factln_i8 = gammln(real(n,dp)+1.0_dp)
-
-  end function factln_i8
-
-  ! ------------------------------------------------------------------
-
-  ELEMENTAL PURE FUNCTION gammln_sp(z)
-    !  Uses Lanczos-type approximation to ln(gamma) for z > 0.
-    !  Reference:
-    !       Lanczos, C. ''A precision approximation of the gamma
-    !               function'', J. SIAM Numer. Anal., B, 1, 86-96, 1964.
-    !  Accuracy: About 14 significant digits except for small regions
-    !            in the vicinity of 1 and 2.
-    !  Programmer: Alan Miller
-    !              1 Creswick Street, Brighton, Vic. 3187, Australia
-    !  e-mail: amiller @ bigpond.net.au
-    !  Latest revision - 14 October 1996
-
-    IMPLICIT NONE
-
-    REAL(sp), INTENT(IN) :: z
-    REAL(sp)             :: gammln_sp
-
-    ! Local variables
-    REAL(sp), parameter :: a(9) = (/ 0.9999999999995183_sp, 676.5203681218835_sp, &
-         -1259.139216722289_sp, 771.3234287757674_sp, &
-         -176.6150291498386_sp, 12.50734324009056_sp, &
-         -0.1385710331296526_sp, 0.9934937113930748E-05_sp, &
-         0.1659470187408462E-06_sp /)
-    REAL(sp), parameter :: zero = 0.0_sp,   &
-         one = 1.0_sp, &
-         lnsqrt2pi =  0.9189385332046727_sp, &
-         half = 0.5_sp, &
-         sixpt5 = 6.5_sp, &
-         seven = 7.0_sp
-    REAL(sp)  :: tmp
-    INTEGER   :: j
-
-    ! if (z <= 0.0_sp) stop 'Error gammln_sp: z <= 0'
-    gammln_sp = zero
-    tmp = z + seven
-    DO j = 9, 2, -1
-       gammln_sp = gammln_sp + a(j)/tmp
-       tmp = tmp - one
-    END DO
-    gammln_sp = gammln_sp + a(1)
-    gammln_sp = LOG(gammln_sp) + lnsqrt2pi - (z + sixpt5) + (z - half)*LOG(z + sixpt5)
-
-  END FUNCTION gammln_sp
-
-  ELEMENTAL PURE FUNCTION gammln_dp(z)
-    !  Uses Lanczos-type approximation to ln(gamma) for z > 0.
-    !  Reference:
-    !       Lanczos, C. ''A precision approximation of the gamma
-    !               function'', J. SIAM Numer. Anal., B, 1, 86-96, 1964.
-    !  Accuracy: About 14 significant digits except for small regions
-    !            in the vicinity of 1 and 2.
-    !  Programmer: Alan Miller
-    !              1 Creswick Street, Brighton, Vic. 3187, Australia
-    !  e-mail: amiller @ bigpond.net.au
-    !  Latest revision - 14 October 1996
-
-    IMPLICIT NONE
-
-    REAL(dp), INTENT(IN) :: z
-    REAL(dp)             :: gammln_dp
-
-    ! Local variables
-    REAL(dp), parameter :: a(9) = (/ 0.9999999999995183_dp, 676.5203681218835_dp, &
-         -1259.139216722289_dp, 771.3234287757674_dp, &
-         -176.6150291498386_dp, 12.50734324009056_dp, &
-         -0.1385710331296526_dp, 0.9934937113930748E-05_dp, &
-         0.1659470187408462E-06_dp /)
-    REAL(dp), parameter :: zero = 0.0_dp,   &
-         one = 1.0_dp, &
-         lnsqrt2pi =  0.9189385332046727_dp, &
-         half = 0.5_dp, &
-         sixpt5 = 6.5_dp, &
-         seven = 7.0_dp
-    REAL(dp)  :: tmp
-    INTEGER   :: j
-
-    ! if (z <= 0.0_dp) stop 'Error gammln_dp: z <= 0'
-    gammln_dp = zero
-    tmp = z + seven
-    DO j = 9, 2, -1
-       gammln_dp = gammln_dp + a(j)/tmp
-       tmp = tmp - one
-    END DO
-    gammln_dp = gammln_dp + a(1)
-    gammln_dp = LOG(gammln_dp) + lnsqrt2pi - (z + sixpt5) + (z - half)*LOG(z + sixpt5)
-
-  END FUNCTION gammln_dp
 
 END MODULE mo_combinatorics

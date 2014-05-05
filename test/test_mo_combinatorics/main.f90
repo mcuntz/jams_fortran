@@ -6,7 +6,8 @@
 program combinatorics
 
   use mo_kind,          only: i4, sp
-  use mo_combinatorics, only: binomcoeffi, factorial
+  use mo_combinatorics, only: binomcoeffi!, factorial
+  use mo_functions,     only: factorial
   use mo_combinatorics, only: next_kofn,   all_kofn,   random_kofn
   use mo_combinatorics, only: next_index_permut, all_index_permut, random_index_permut, random_permut
   use mo_xor4096,       only: xor4096, n_save_state
