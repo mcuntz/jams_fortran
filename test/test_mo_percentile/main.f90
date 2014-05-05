@@ -1,8 +1,8 @@
 PROGRAM main
 
   USE mo_kind,        ONLY: dp, sp, i4
-  USE mo_percentile,  ONLY: ksmallest, median, percentile, qmedian
-  USE mo_sort,        ONLY: sort
+  USE mo_percentile,  ONLY: median, percentile, qmedian, n_element
+  USE mo_orderpack,   ONLY: sort
   USE mo_utils,       ONLY: eq, ne
 
   IMPLICIT NONE
@@ -29,7 +29,7 @@ PROGRAM main
   dat = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
   isgood = isgood .and. eq(median(dat),5.5_dp)
   isgood = isgood .and. eq(median(dat,mask=ne(dat,10._dp)),5._dp)
-  isgood = isgood .and. eq(ksmallest(dat,4),4._dp)
+  isgood = isgood .and. eq(n_element(dat,4),4._dp)
   isgood = isgood .and. eq(percentile(dat,95._dp),10._dp)
   dqua = percentile(dat,(/50._dp,95._dp/))
   isgood = isgood .and. eq(dqua(1),5._dp)
@@ -56,7 +56,7 @@ PROGRAM main
   sat = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
   isgood = isgood .and. eq(median(sat),5.5_sp)
   isgood = isgood .and. eq(median(sat,mask=ne(sat,10._sp)),5._sp)
-  isgood = isgood .and. eq(ksmallest(sat,4),4._sp)
+  isgood = isgood .and. eq(n_element(sat,4),4._sp)
   isgood = isgood .and. eq(percentile(sat,95._sp),10._sp)
   squa = percentile(sat,(/50._sp,95._sp/))
   isgood = isgood .and. eq(squa(1),5._sp)
@@ -88,9 +88,9 @@ PROGRAM main
 
   buf = big
   call system_clock(istart)
-  med =  ksmallest(buf,nele/2+1)
+  med =  n_element(buf,nele/2+1)
   call system_clock(istop)
-  write(*,*) "ksmallest: ", med, istop - istart
+  write(*,*) "n_element: ", med, istop - istart
 
   buf = big
   call system_clock(istart)
