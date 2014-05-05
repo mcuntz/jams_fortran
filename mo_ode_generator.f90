@@ -337,6 +337,9 @@ contains
         integer(i4)     ::  j, k    ! counters
         integer(i4)     ::  nVar    ! number of equations
 
+        !! dummy line
+        dydx(1) = x
+        dydx(:) = huge(1.0_dp)
 
         !! number of equations & checkin dimension
         nVar = assert_eq( size(y), size(alpha,1), size(beta,1), 'get_odes_dp')
@@ -443,8 +446,8 @@ contains
         integer(i8),    dimension(:),   allocatable :: get_binary_i8    ! binary number
 
         !! Internal variables
-        integer(i4)                     :: j            ! counters
-        integer(i4)                     :: decimalIn
+        integer(i8)                     :: j            ! counters
+        integer(i8)                     :: decimalIn
 
         !! checking the nuber of digits required for the binary
         if ( decimal .ne. 0_i8 .and.    &
@@ -459,8 +462,8 @@ contains
             get_binary_i8 = 0_i8
         else
             decimalIn = decimal
-            do j=1, nDigits
-                get_binary_i8(j) = mod(decimalIn,2)
+            do j=1_i8, nDigits
+                get_binary_i8(j) = mod(decimalIn,2_i8)
                 decimalIn = decimalIn/2_i8
             end do
             !! inverting array
@@ -485,7 +488,7 @@ contains
         real(dp),   dimension(nVar, nVar)  :: get_binaryPer_dp    ! binary number
 
         !! Internal variables
-        integer(i4), dimension(:), allocatable  ::  get_binTemp
+        real(dp), dimension(:), allocatable  ::  get_binTemp
 
         get_binTemp = real( get_binary(line, nVar*nVar), dp )
         get_binaryPer_dp(:,:) = reshape( get_binTemp(:), (/ nVar, nVar /) )
