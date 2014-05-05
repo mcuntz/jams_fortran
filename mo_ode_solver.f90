@@ -128,23 +128,16 @@ module mo_ode_solver
     !>       \note The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives $dydx$ at $x$.
 
     !     EXAMPLE
-    !           call Euler( vstart, x1, x2, h, derivs, xout, yout )
-    !           --> see example in test directory --> test/test_mo_ode_solver
+    !         call Euler( vstart, x1, x2, h, derivs, xout, yout )
+    !         --> see example in test directory --> test/test_mo_ode_solver
 
     !     LITERATURE
-    !        1) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 77 -
-    !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 1 of Fortran Numerical Recipes,
-    !             Cambridge University Press, UK, 1992
-    !        2) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
-    !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
-    !             Cambridge University Press, UK, 1996
+    !         http://en.wikipedia.org/wiki/Euler_method
 
     !     HISTORY
     !>        \author Giovanni Dalmasso
     !>        \date Jul 2012
     !         Modified, Giovanni Dalmasso, Mar 2013
-
-    ! Interfaces for single and double precision routines
     interface Euler
         module procedure Euler_sp, Euler_dp
     end interface Euler
@@ -216,8 +209,6 @@ module mo_ode_solver
     !>        \author Giovanni Dalmasso
     !>        \date Jul 2012
     !         Modified, Giovanni Dalmasso, Mar 2013
-
-    ! Interfaces for single and double precision routines
     interface RK4
         module procedure RK4_sp, RK4_dp
     end interface RK4
@@ -293,8 +284,6 @@ module mo_ode_solver
     !>        \author Giovanni Dalmasso
     !>        \date Jul 2012
     !         Modified, Giovanni Dalmasso, Mar 2013
-
-    ! Interfaces for single and double precision routines
     interface RK4as
         module procedure RK4as_sp, RK4as_dp
     end interface RK4as
@@ -423,8 +412,9 @@ contains
 
     end subroutine Euler_dp
 
+    ! ------------------------------------------------------------------
 
-      ! SINGLE PRECISION 4th order RUNGE-KUTTA
+    ! SINGLE PRECISION 4th order RUNGE-KUTTA
     subroutine RK4_sp( ystart, x1, x2, h, derivs, xout, yout )    ! all obligatory
 
         use mo_kind, only: i4, sp
@@ -559,9 +549,7 @@ contains
 
     end subroutine RK4_dp
 
-
     ! ------------------------------------------------------------------
-
 
     ! SINGLE PRECISION 4th order RUNGE-KUTTA Adaptive Step-size
     subroutine RK4as_sp( ystart, x1, x2, h, derivs, xout, yout, &   ! obligatory
@@ -843,10 +831,9 @@ contains
 
     end subroutine RK4as_dp
 
-
-    ! ============================================================================
+    ! ------------------------------------------------------------------
     !   PRIVATE METHODS
-    ! ============================================================================
+    ! ------------------------------------------------------------------
 
     ! SINGLE PRECISION CASH-KARP RUNGE-KUTTA step
     subroutine CashKarpRK_sp( y, dydx, x, h, yout, yerr, derivs )
@@ -970,5 +957,7 @@ contains
         yerr = h*(DC1*dydx+DC3*ak3+DC4*ak4+DC5*ak5+DC6*ak6)
 
     end subroutine CashKarpRK_dp
+
+    ! ------------------------------------------------------------------
 
 end module mo_ode_solver
