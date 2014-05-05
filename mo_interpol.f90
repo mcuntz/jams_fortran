@@ -18,7 +18,7 @@ MODULE mo_interpol
   !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
   !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
   !   and IDL routine interpol.pro Copyright (C) 1982-2004, Research Systems, Inc.
-  !   The cubic B spline is Fortran 90 version of the Fortran 77 version of John Burkardt.
+  !   The cubic B spline is a Fortran 90 version of the Fortran 77 version of John Burkardt.
 
   ! Written  Mar 2011, Matthias Cuntz - only linear interpolation
   ! Modified Jul 2013, Matthias Cuntz - added cubi B splines
@@ -44,7 +44,7 @@ MODULE mo_interpol
   ! Copyright 2011-2014 Matthias Cuntz
 
   USE mo_kind, ONLY: i4, sp, dp
-  USE mo_utils, only: eq, ge
+  USE mo_utils, only: eq, ge, le
 
   Implicit NONE
 
@@ -180,7 +180,7 @@ MODULE mo_interpol
      MODULE PROCEDURE bracket_dp, bracket_sp
   END INTERFACE bracket
 
-  ! Similar to numerical recipes
+  ! Find closest values in monotonic series
   INTERFACE locate
      MODULE PROCEDURE locate_dp, locate_sp
   END INTERFACE locate
@@ -376,7 +376,6 @@ CONTAINS
   ! Given an array x(1:N), and given a value y, returns a value j such that y is between
   !  x(j) and x(j+1). x must be monotonically increasing.
   !  j=0 or j=N is returned to indicate that x is out of range.
-  ! Adapted from "Numerical Recipes" by Press et al.
 
   FUNCTION locate_dp(x,y)
 
@@ -386,26 +385,17 @@ CONTAINS
     REAL(dp), DIMENSION(:), INTENT(IN) :: y
     INTEGER(i4), DIMENSION(size(y))    :: locate_dp
 
-    INTEGER(i4) :: n, l, r, m
     INTEGER(i4) :: ny, i
+    INTEGER(i4), dimension(1) :: c
 
-    n  = size(x)
     ny = size(y)
     do i=1, ny
-       l = 0
-       r = n+1
-       do
-          if (r <= l+1) exit
-          m = l + (r-l)/2
-          if (ge(y(i),x(m))) then
-             l = m
-          else
-             r = m
-          endif
-       end do
-       locate_dp(i) = l
-       if (eq(y(i),x(n))) locate_dp(i) = n-1
-       if (eq(y(i),x(1))) locate_dp(i) = 1
+       c = minloc(abs(x-y(i)))
+       if (le(x(c(1)),y(i))) then
+          locate_dp(i) = c(1)
+       else
+          locate_dp(i) = c(1)-1
+       endif
     end do
 
   END FUNCTION locate_dp
@@ -418,26 +408,17 @@ CONTAINS
     REAL(sp), DIMENSION(:), INTENT(IN) :: y
     INTEGER(i4), DIMENSION(size(y))    :: locate_sp
 
-    INTEGER(i4) :: n, l, r, m
     INTEGER(i4) :: ny, i
+    INTEGER(i4), dimension(1) :: c
 
-    n  = size(x)
     ny = size(y)
     do i=1, ny
-       l = 0
-       r = n+1
-       do
-          if (r <= l+1) exit
-          m = l + (r-l)/2
-          if (ge(y(i),x(m))) then
-             l = m
-          else
-             r = m
-          endif
-       end do
-       locate_sp(i) = l
-       if (eq(y(i),x(n))) locate_sp(i) = n-1
-       if (eq(y(i),x(1))) locate_sp(i) = 1
+       c = minloc(abs(x-y(i)))
+       if (le(x(c(1)),y(i))) then
+          locate_sp(i) = c(1)
+       else
+          locate_sp(i) = c(1)-1
+       endif
     end do
 
   END FUNCTION locate_sp
