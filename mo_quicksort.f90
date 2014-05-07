@@ -2372,7 +2372,8 @@ CONTAINS
   subroutine Merge8a_mt_dp(A,nA,B,nB,C,nC,iA,iB,iC,nt)
 
     ! USED MODULES
-    use mo_kind, only: i4, dp
+    use mo_kind,  only: i4, dp
+    use mo_utils, only: eq
     !$ use omp_lib, only: omp_get_thread_num
 
     ! DUMMY ARGUMENTS
@@ -2413,7 +2414,7 @@ CONTAINS
     !$ t = omp_get_thread_num() + 1  ! add 1 to make first thread 1 instead of 0
     dividerA(t) = nA * t / nt   ! starting value for dividerA.  Will change if not last in group.
     if (t < nt) then
-       if (a(dividerA(t)) == a(dividerA(t)-1)) then
+       if (eq(a(dividerA(t)),a(dividerA(t)-1))) then
           ! Get new DividerA because starting value is in group, and not the last in the group.
           dividerA(t) = LookupAscending_dp(a,nA,a(dividerA(t))) - 1
        end if
@@ -2996,7 +2997,8 @@ CONTAINS
   subroutine Merge8a_mt_sp(A,nA,B,nB,C,nC,iA,iB,iC,nt)
 
     ! USED MODULES
-    use mo_kind, only: i4, sp
+    use mo_kind,  only: i4, sp
+    use mo_utils, only: eq
     !$ use omp_lib, only: omp_get_thread_num
 
     ! DUMMY ARGUMENTS
@@ -3037,7 +3039,7 @@ CONTAINS
     !$ t = omp_get_thread_num() + 1  ! add 1 to make first thread 1 instead of 0
     dividerA(t) = nA * t / nt   ! starting value for dividerA.  Will change if not last in group.
     if (t < nt) then
-       if (a(dividerA(t)) == a(dividerA(t)-1)) then
+       if (eq(a(dividerA(t)),a(dividerA(t)-1))) then
           ! Get new DividerA because starting value is in group, and not the last in the group.
           dividerA(t) = LookupAscending_sp(a,nA,a(dividerA(t))) - 1
        end if

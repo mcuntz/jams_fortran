@@ -593,8 +593,10 @@ contains
 
         ! parameters
         integer(i4),    parameter   :: MAXstp = 1000000_i4  ! max number of steps
-        real(sp),       parameter   :: safety = 0.9_sp, pgrow = -0.2_sp, pshrnk = -0.25_sp, &
-            errcon = exp( (1._sp/pgrow)*log(5._sp/safety) )
+        real(sp),       parameter   :: safety = 0.9_sp, pgrow = -0.2_sp, pshrnk = -0.25_sp
+        real(sp) :: errcon
+
+        errcon = exp( (1._sp/pgrow)*log(5._sp/safety) )
 
         if( present(hmin) ) then
             hminIN = hmin
@@ -734,8 +736,10 @@ contains
 
         ! parameters
         integer(i4),    parameter   :: MAXstp = 1000000_i4  ! max nuber of steps
-        real(dp),       parameter   :: safety = 0.9_dp, pgrow = -0.2_dp, pshrnk = -0.25_dp, &
-            errcon = exp( (1._dp/pgrow)*log(5._dp/safety) )
+        real(dp),       parameter   :: safety = 0.9_dp, pgrow = -0.2_dp, pshrnk = -0.25_dp
+        real(dp) :: errcon
+
+        errcon = exp( (1._dp/pgrow)*log(5._dp/safety) )
 
         if( present(hmin) ) then
             hminIN = hmin

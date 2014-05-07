@@ -1,4 +1,3 @@
-
 !> \file mo_ode_generator.f90
 
 !> \brief Generating and solving systems of ODE.
@@ -366,6 +365,12 @@ contains
         integer(i4),    intent(in)                  :: nVar     ! number of variables
         integer(i8),    intent(in)                  :: line     ! line of set_alpha_dp
 
+        if (.not. allocated(alpha)) then
+           allocate(alpha(nVar,nVar))
+        else
+           deallocate(alpha)
+           allocate(alpha(nVar,nVar))
+        endif
         alpha =  get_binaryPer(nVar, line)
 
     end subroutine set_alpha_dp
@@ -488,7 +493,8 @@ contains
         real(dp),   dimension(nVar, nVar)  :: get_binaryPer_dp    ! binary number
 
         !! Internal variables
-        real(dp), dimension(:), allocatable  ::  get_binTemp
+        !real(dp), dimension(:), allocatable  ::  get_binTemp
+        real(dp), dimension(nVar*nVar) ::  get_binTemp
 
         get_binTemp = real( get_binary(line, nVar*nVar), dp )
         get_binaryPer_dp(:,:) = reshape( get_binTemp(:), (/ nVar, nVar /) )

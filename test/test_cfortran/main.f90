@@ -1,6 +1,7 @@
 PROGRAM main
 
   USE mo_kind,     ONLY: dp, i4
+  USE mo_utils,    ONLY: ne
   USE mo_cfortran, ONLY: fctest ! sums between two elements in first dimension (multiply with constant)
 
   IMPLICIT NONE
@@ -16,6 +17,9 @@ PROGRAM main
 
   INTEGER(i4) :: i, j
   CHARACTER(LEN=30) :: form1
+  logical :: isgood
+
+  isgood = .true.
 
   forall(i=1:d1, j=1:d2) A(i,j) = real(i**j,dp)
 
@@ -28,5 +32,15 @@ PROGRAM main
   ! Also C is colunm-major so that one wants to transpose A, perhaps
   write(*,'(A,2f6.1)') 'sum(A(2+1:3+1,1)*2 = (3+4)*2 = 14: ', fctest(A, n1, n2, c), sum(A(n1+1:n2+1,1)*c)
   write(*,'(A,2f6.1)') 'sum(A(1,2+1:3+1)*2 = (1+1)*2 =  4: ', fctest(transpose(A), n1, n2, c), sum(A(1,n1+1:n2+1)*c)
+
+  if (ne(fctest(A, n1, n2, c), 14.0_dp)) isgood = .false.
+
+  if (isgood) then
+     write(*,*) 'cfortran o.k.'
+  else
+     write(*,*) 'cfortran failed!'
+  endif
+
+
 
 END PROGRAM main

@@ -27,7 +27,7 @@ PROGRAM main
   if (any(abs(dsoll-dyout) > 0._dp)) isgood = .false.
 
   dyout = spline_b(pack(dyin,mask), pack(dx,mask), dx)
-  if (abs(dsoll(5)-dyout(5)) > 0._dp) isgood = .false.
+  if ((nint(dsoll(5))-nint(dyout(5))) > 0) isgood = .false.
 
   if (isgood) then
      write(*,*) 'mo_interpol double precision o.k.'
@@ -48,7 +48,7 @@ PROGRAM main
   if (any(abs(ssoll-syout) > 0._sp)) isgood = .false.
 
   syout = spline_b(pack(syin,mask), pack(sx,mask), sx)
-  if (abs(ssoll(5)-syout(5)) > 0._sp) isgood = .false.
+  if ((nint(ssoll(5))-nint(syout(5))) > 0) isgood = .false.
 
   if (isgood) then
      write(*,*) 'mo_interpol single precision o.k.'

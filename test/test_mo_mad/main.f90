@@ -55,18 +55,18 @@ PROGRAM main
        4.64,5.34,5.42,8.01 /)
   sollmask(:) = .true.
   mask        = mad(sat)
-  if (any(mask .neqv. sollmask)) isgood = .false.
+  if (.not. all(mask .eqv. sollmask)) isgood = .false.
   sollmask(26) = .false.
   mask         = mad(sat,z=4._sp)
-  if (any(mask .neqv. sollmask)) isgood = .false.
+  if (.not. all(mask .eqv. sollmask)) isgood = .false.
   sollmask(25) = .false.
   sollmask(1)  = .false.
   mask         = mad(sat,z=3._sp)
-  if (any(mask .neqv. sollmask)) isgood = .false.
+  if (.not. all(mask .eqv. sollmask)) isgood = .false.
   sollmask(:)  = .true.
   sollmask(25) = .false.
   mask         = mad(sat,z=4._sp,deriv=2)
-  if (any(mask .neqv. sollmask)) isgood = .false.
+  if (.not. all(mask .eqv. sollmask)) isgood = .false.
   sollmask(:)  = .true.
   sollmask(1)  = .false.
   sollmask(25) = .false.
@@ -74,7 +74,7 @@ PROGRAM main
   mask(:)      = .true.
   mask(1)      = .false.
   mask         = mask .and. mad(sat,z=3._sp)
-  if (any(mask .neqv. sollmask)) isgood = .false.
+  if (.not. all(mask .eqv. sollmask)) isgood = .false.
 
   if (isgood) then
      write(*,*) 'mo_mad single precision o.k.'

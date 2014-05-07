@@ -61,7 +61,7 @@ program test_kernel
 
   write(*,*) '   x1        x2        y approx.   y input  '
   do ii=1,nn
-     write(*,'(A4,F6.4,A3,F7.4,A3,F7.4,A5,F7.4)') '    ',x(ii,1), '   ',x(ii,2), '   ', ysmooth(ii), '     ', y(ii)
+     write(*,'(A4,F7.4,A3,F7.4,A3,F7.4,A5,F7.4)') '    ',x(ii,1), '   ',x(ii,2), '   ', ysmooth(ii), '     ', y(ii)
   end do
   write(*,*) ' '
 
@@ -97,7 +97,7 @@ program test_kernel
 
   write(*,'(A4,A7,A4,A7)') '    ','x      ','    ','pdf(x) '
   do ii=1,size(yin_1d)
-     write(*,'(A4,F7.4,A4,F7.5)') '    ', xin_1d(ii), '    ',yin_1d(ii)
+     write(*,'(A4,F7.4,A4,F8.5)') '    ', xin_1d(ii), '    ',yin_1d(ii)
   end do
 
   test1 = (/ 1260_i4, 4713_i4, 3900_i4, 4713_i4, 4443_i4, 4773_i4, 1498_i4, 3494_i4, 3035_i4, 2214_i4 /)
@@ -114,7 +114,7 @@ program test_kernel
 
   write(*,'(A4,A7,A4,A7)') '    ','x      ','    ','cdf(x) '
   do ii=1,size(yin_1d)
-     write(*,'(A4,F7.4,A4,F7.5)') '    ', xin_1d(ii), '    ',yin_1d(ii)
+     write(*,'(A4,F7.4,A4,F8.5)') '    ', xin_1d(ii), '    ',yin_1d(ii)
   end do
 
   ! With normalisation: test1 = (/ 8847_i4, 4544_i4, 6062_i4, 4544_i4, 2363_i4, 3437_i4, 9332_i4, 6490_i4, 0607_i4, 0_i4 /)

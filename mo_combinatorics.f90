@@ -31,8 +31,8 @@ MODULE mo_combinatorics
 
   ! Copyright 2011-2014 Matthias Cuntz, Giovanni Dalmasso, Juliane Mai, Stephan Thober
 
-  USE mo_kind, ONLY: i4, i8, sp, dp
-  USE mo_functions, only: gammln, factln, factorial
+  USE mo_kind,      ONLY: i4, i8, sp, dp
+  USE mo_functions, only: factln, factorial
 
   IMPLICIT NONE
 

@@ -43,7 +43,7 @@ isgood = .true.
 dl = get_ncdim(Filename, Varname, ndims=NoDims)
 !
 allocate(data(dl(1),dl(2),dl(3)))
-!
+
 #ifndef ABSOFT
 ! get Dimesnion information - name & lenght (size)
 call Get_NcDimAtt(Filename, Varname, DimNames, DimLen)
@@ -75,8 +75,8 @@ deallocate(DimData)
 call Get_NcVar(Filename, Varname, data)
 !
 ! The sum of the data should be 0.1174308 in single precision
-!write(*,*) 'sum of data: ', sum(data)
-isgood = isgood .and. (nint(1e7_sp*sum(data)) == 1174308_i4)
+! sun with aggresive optimisation calculates 0.117430955
+isgood = isgood .and. (nint(1e6_sp*sum(data)) == 117431_i4)
 data = -9999._sp
 !
 ! check dynamic read
@@ -91,7 +91,7 @@ end do
 !
 call NcClose(ncid)            ! close file
 !
-isgood = isgood .and. (nint(1e7_sp*sum(data)) == 1174308_i4)
+isgood = isgood .and. (nint(1e6_sp*sum(data)) == 117431_i4)
 !
 #ifndef ABSOFT
 ! retrieving variables attributes

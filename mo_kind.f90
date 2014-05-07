@@ -44,17 +44,17 @@
 
 MODULE mo_kind
 
-  use, intrinsic :: iso_fortran_env, only: &
-       int8!, int16,   int32, int64,  real32,  real64
+  ! Does not work with compilers intel v11 and sun v12.2
+  ! use, intrinsic :: iso_fortran_env, only: &
+  !      int8!, int16,   int32, int64,  real32,  real64
   use, intrinsic :: iso_c_binding,   only: &
              c_short, c_int, c_long, c_float, c_double, c_float_complex, c_double_complex, c_bool
 
   IMPLICIT NONE
 
   !> 1 Byte Integer Kind
-  ! INTEGER, PARAMETER :: i1  = SELECTED_INT_KIND(2)
-  ! INTEGER, PARAMETER :: i1  = int8
-  INTEGER, PARAMETER :: i1  = int8 ! c_word does not exist; should be c_bool, probably
+  INTEGER, PARAMETER :: i1  = SELECTED_INT_KIND(2)
+  ! INTEGER, PARAMETER :: i1  = int8 ! c_word does not exist; should be c_bool, probably; but see above
   !> 2 Byte Integer Kind
   ! INTEGER, PARAMETER :: i2  = SELECTED_INT_KIND(4)
   ! INTEGER, PARAMETER :: i2  = int16

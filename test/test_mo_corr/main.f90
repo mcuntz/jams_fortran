@@ -41,7 +41,7 @@ PROGRAM main
   forall(i=1:n) sat1(i) = real(i,sp)
   sat2 = sat1 + sin(sat1)
   isgood = .true.
-  if (abs(variance(sat2)*real(n-1,sp)/real(n,sp) - autocoeffk(sat2,0)) > epsilon(1.0_sp)) &
+  if (nint(variance(sat2)*real(n-1,sp)/real(n,sp)) /= nint(autocoeffk(sat2,0))) &
        isgood =.false.
   if (abs(autocorr(sat2,0) - 1.0_sp) > epsilon(1.0_sp)) isgood =.false.
   if (abs(covariance(sat1,sat2) - crosscoeffk(sat1,sat2,0))> epsilon(1.0_sp)) isgood =.false.

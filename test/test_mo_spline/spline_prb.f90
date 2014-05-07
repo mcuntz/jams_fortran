@@ -21,12 +21,14 @@ program main
   !    John Burkardt
   !
   use mo_kind
+  use mo_utils, only: ne
   use mo_spline
 
   implicit none
 
   logical :: isok
   character(len=100) :: line1, line2, line11, line22
+  real(sp) :: tmp1, tmp2, tmp11, tmp22
 
   !  call timestamp ( )
 
@@ -95,8 +97,8 @@ program main
   close(30)
 
   ! Check against standard output
-  open(unit=30, file="../FORTRAN_chs_lib/test/test_mo_spline/spline_prb_std_output.txt",  action="read", status="old")
-  open(unit=31, file="spline_make_check_test_file",      action="read", status="old")
+  open(unit=30, file="../FORTRAN_chs_lib/test/test_mo_spline/spline_prb_std_output.txt", action="read", status="old")
+  open(unit=31, file="spline_make_check_test_file", action="read", status="old")
 
   ! If you do diff, you see small differences in the last digits with some compiler,
   ! i.e. different between gfortran and nag. -> Compare only the first six charachters.
@@ -104,10 +106,20 @@ program main
   do
      read(30,*,end=99) line1, line11
      read(31,*,end=99) line2, line22
-     if ((trim(line1) /= trim(line2)) .or. (trim(line11(1:6)) /= trim(line22(1:6))))then
-        write(*,*) 'Line 1: ', trim(line1), ' ', trim(line11)
-        write(*,*) 'Line 2: ', trim(line2), ' ', trim(line22)
-        isok = .false.
+     if ((trim(line1) /= trim(line2)) .or. (trim(line11(1:6)) /= trim(line22(1:6)))) then
+        ! Intel 13 has a different output format than Intel 12 or gFortran
+        !   so convert to real and redo the test
+        ! sun with aggressive optimisation has very, very little differences
+        !   so check only to the 7th digit
+        read(line1,*)  tmp1
+        read(line2,*)  tmp2
+        read(line11,*) tmp11
+        read(line22,*) tmp22
+        if ((abs(tmp1-tmp2) > epsilon(1.0_sp)) .or. (abs(tmp11-tmp22) > epsilon(1.0_sp))) then
+           write(*,*) 'Line 1: ', trim(line1), ' ', trim(line11)
+           write(*,*) 'Line 2: ', trim(line2), ' ', trim(line22)
+           isok = .false.
+        endif
      endif
   end do
 
