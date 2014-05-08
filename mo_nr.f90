@@ -920,12 +920,17 @@ MODULE mo_nr
        INTEGER(I4), DIMENSION(n) :: eclazz
      END FUNCTION eclazz
   END INTERFACE
-  INTERFACE
-     FUNCTION ei(x)
+  INTERFACE ei
+     FUNCTION ei_sp(x)
        USE mo_kind
        REAL(SP), INTENT(IN) :: x
-       REAL(SP) :: ei
-     END FUNCTION ei
+       REAL(SP) :: ei_sp
+     END FUNCTION ei_sp
+     FUNCTION ei_dp(x)
+       USE mo_kind
+       REAL(dp), INTENT(IN) :: x
+       REAL(dp) :: ei_dp
+     END FUNCTION ei_dp
   END INTERFACE
   INTERFACE
      SUBROUTINE eigsrt(d,v)
@@ -1045,13 +1050,20 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:), INTENT(OUT) :: harvest
      END SUBROUTINE expdev_v
   END INTERFACE
-  INTERFACE
-     FUNCTION expint(n,x)
+  INTERFACE expint
+     FUNCTION expint_sp(n,x)
        USE mo_kind
        INTEGER(I4), INTENT(IN) :: n
        REAL(SP), INTENT(IN) :: x
-       REAL(SP) :: expint
-     END FUNCTION expint
+       REAL(SP) :: expint_sp
+     END FUNCTION expint_sp
+     !MC
+     FUNCTION expint_dp(n,x)
+       USE mo_kind
+       INTEGER(I4), INTENT(IN) :: n
+       REAL(DP), INTENT(IN) :: x
+       REAL(DP) :: expint_dp
+     END FUNCTION expint_dp
   END INTERFACE
   INTERFACE factln
      FUNCTION factln_s(n)
