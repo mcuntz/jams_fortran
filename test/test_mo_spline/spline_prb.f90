@@ -21,7 +21,6 @@ program main
   !    John Burkardt
   !
   use mo_kind
-  use mo_utils, only: ne
   use mo_spline
 
   implicit none
