@@ -84,8 +84,8 @@ MODULE mo_kind
   ! INTEGER, PARAMETER :: dpc = dp
   INTEGER, PARAMETER :: dpc = c_double_complex
   !> Logical Kind
-  ! INTEGER, PARAMETER :: lgt = KIND(.true.)
-  INTEGER, PARAMETER :: lgt = c_bool
+  INTEGER, PARAMETER :: lgt = KIND(.true.)
+  !INTEGER, PARAMETER :: lgt = c_bool
   ! Types have to be in a public section for doxygen
 
   !> Single Precision Numerical Recipes types for sparse arrays
