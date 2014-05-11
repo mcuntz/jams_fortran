@@ -3679,13 +3679,13 @@ MODULE mo_nr
        USE mo_kind
        COMPLEX(SPC), DIMENSION(:), INTENT(IN) :: a
        COMPLEX(SPC), DIMENSION(:), INTENT(OUT) :: roots
-       LOGICAL, INTENT(IN) :: polish
+       LOGICAL(lgt), INTENT(IN) :: polish
      END SUBROUTINE zroots_sp
      SUBROUTINE zroots_dp(a,roots,polish)
        USE mo_kind
        COMPLEX(DPC), DIMENSION(:), INTENT(IN) :: a
        COMPLEX(DPC), DIMENSION(:), INTENT(OUT) :: roots
-       LOGICAL, INTENT(IN) :: polish
+       LOGICAL(lgt), INTENT(IN) :: polish
      END SUBROUTINE zroots_dp
   END INTERFACE zroots
 END MODULE mo_nr

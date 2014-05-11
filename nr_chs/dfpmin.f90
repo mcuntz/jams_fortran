@@ -1,5 +1,5 @@
 SUBROUTINE dfpmin_sp(p,gtol,iter,fret,func,dfunc)
-  use mo_kind,   only: i4, sp
+  use mo_kind,   only: i4, sp, lgt
   use mo_nrutil, only: nrerror,outerprod,unit_matrix,vabs
   use mo_nr,     only: lnsrch
 
@@ -30,7 +30,7 @@ SUBROUTINE dfpmin_sp(p,gtol,iter,fret,func,dfunc)
   INTEGER(I4), PARAMETER               :: ITMAX=200
   REAL(SP),    PARAMETER               :: STPMX=100.0_sp,EPS=epsilon(p),TOLX=4.0_sp*EPS
   INTEGER(I4)                          :: its
-  LOGICAL                              :: check
+  LOGICAL(lgt)                         :: check
   REAL(SP)                             :: den,fac,fad,fae,fp,stpmax,sumdg,sumxi
   REAL(SP), DIMENSION(size(p))         :: dg,g,hdg,pnew,xi
   REAL(SP), DIMENSION(size(p),size(p)) :: hessin
@@ -70,7 +70,7 @@ SUBROUTINE dfpmin_sp(p,gtol,iter,fret,func,dfunc)
 END SUBROUTINE dfpmin_sp
 
 SUBROUTINE dfpmin_dp(p,gtol,iter,fret,func,dfunc)
-  use mo_kind,   only: i4, dp
+  use mo_kind,   only: i4, dp, lgt
   use mo_nrutil, only: nrerror,outerprod,unit_matrix,vabs
   use mo_nr,     only: lnsrch
 
@@ -101,7 +101,7 @@ SUBROUTINE dfpmin_dp(p,gtol,iter,fret,func,dfunc)
   INTEGER(I4), PARAMETER               :: ITMAX=200
   REAL(DP),    PARAMETER               :: STPMX=100.0_dp,EPS=epsilon(p),TOLX=4.0_dp*EPS
   INTEGER(I4)                          :: its
-  LOGICAL                              :: check
+  LOGICAL(lgt)                         :: check
   REAL(DP)                             :: den,fac,fad,fae,fp,stpmax,sumdg,sumxi
   REAL(DP), DIMENSION(size(p))         :: dg,g,hdg,pnew,xi
   REAL(DP), DIMENSION(size(p),size(p)) :: hessin

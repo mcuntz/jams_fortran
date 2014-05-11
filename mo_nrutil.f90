@@ -618,7 +618,7 @@ CONTAINS
   !BL
   SUBROUTINE assert1(n1,string)
     CHARACTER(LEN=*), INTENT(IN) :: string
-    LOGICAL, INTENT(IN) :: n1
+    LOGICAL(lgt), INTENT(IN) :: n1
     if (.not. n1) then
        write (*,*) 'nrerror: an assertion failed with this tag:', &
             string
@@ -628,7 +628,7 @@ CONTAINS
   !BL
   SUBROUTINE assert2(n1,n2,string)
     CHARACTER(LEN=*), INTENT(IN) :: string
-    LOGICAL, INTENT(IN) :: n1,n2
+    LOGICAL(lgt), INTENT(IN) :: n1,n2
     if (.not. (n1 .and. n2)) then
        write (*,*) 'nrerror: an assertion failed with this tag:', &
             string
@@ -638,7 +638,7 @@ CONTAINS
   !BL
   SUBROUTINE assert3(n1,n2,n3,string)
     CHARACTER(LEN=*), INTENT(IN) :: string
-    LOGICAL, INTENT(IN) :: n1,n2,n3
+    LOGICAL(lgt), INTENT(IN) :: n1,n2,n3
     if (.not. (n1 .and. n2 .and. n3)) then
        write (*,*) 'nrerror: an assertion failed with this tag:', &
             string
@@ -648,7 +648,7 @@ CONTAINS
   !BL
   SUBROUTINE assert4(n1,n2,n3,n4,string)
     CHARACTER(LEN=*), INTENT(IN) :: string
-    LOGICAL, INTENT(IN) :: n1,n2,n3,n4
+    LOGICAL(lgt), INTENT(IN) :: n1,n2,n3,n4
     if (.not. (n1 .and. n2 .and. n3 .and. n4)) then
        write (*,*) 'nrerror: an assertion failed with this tag:', &
             string
@@ -658,7 +658,7 @@ CONTAINS
   !BL
   SUBROUTINE assert_v(n,string)
     CHARACTER(LEN=*), INTENT(IN) :: string
-    LOGICAL, DIMENSION(:), INTENT(IN) :: n
+    LOGICAL(lgt), DIMENSION(:), INTENT(IN) :: n
     if (.not. all(n)) then
        write (*,*) 'nrerror: an assertion failed with this tag:', &
             string

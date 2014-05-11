@@ -1,5 +1,5 @@
 subroutine zroots_sp(a,roots,polish)
-  use mo_kind,   only : i4, spc, sp 
+  use mo_kind,   only : i4, spc, sp, lgt
   use mo_nrutil, only : assert_eq, poly_term
   use mo_nr,     only : laguer
   use mo_sort,   only : sort_index 
@@ -8,7 +8,7 @@ subroutine zroots_sp(a,roots,polish)
 
   complex(spc), dimension(:), intent(in)  :: a
   complex(spc), dimension(:), intent(out) :: roots
-  logical,                    intent(in)  :: polish
+  logical(lgt),               intent(in)  :: polish
   real(sp), parameter                     :: eps=1.0e-6_sp
   integer(i4)                             :: j,its,m
   integer(i4),  dimension(size(roots))    :: indx
@@ -36,7 +36,7 @@ subroutine zroots_sp(a,roots,polish)
 end subroutine zroots_sp
 
 subroutine zroots_dp(a,roots,polish)
-  use mo_kind,   only : i4, dpc, dp 
+  use mo_kind,   only : i4, dpc, dp, lgt
   use mo_nrutil, only : assert_eq, poly_term
   use mo_nr,     only : laguer
   use mo_sort,   only : sort_index 
@@ -45,7 +45,7 @@ subroutine zroots_dp(a,roots,polish)
 
   complex(dpc), dimension(:), intent(in)  :: a
   complex(dpc), dimension(:), intent(out) :: roots
-  logical,                    intent(in)  :: polish
+  logical(lgt),               intent(in)  :: polish
   real(dp), parameter                     :: eps=1.0e-6_dp
   integer(i4)                             :: j,its,m
   integer(i4),  dimension(size(roots))    :: indx

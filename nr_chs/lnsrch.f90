@@ -1,6 +1,6 @@
 SUBROUTINE lnsrch_sp(xold,fold,g,p,x,f,stpmax,check,func)
 
-  use mo_kind,   only: sp, i4
+  use mo_kind,   only: sp, i4, lgt
   use mo_nrutil, only: assert_eq,nrerror,vabs
 
   IMPLICIT NONE
@@ -10,7 +10,7 @@ SUBROUTINE lnsrch_sp(xold,fold,g,p,x,f,stpmax,check,func)
   REAL(SP),               INTENT(IN)    :: fold,stpmax
   REAL(SP), DIMENSION(:), INTENT(OUT)   :: x
   REAL(SP),               INTENT(OUT)   :: f
-  LOGICAL,                INTENT(OUT)   :: check
+  LOGICAL(lgt),           INTENT(OUT)   :: check
 
   INTERFACE
      FUNCTION func(x)
@@ -70,7 +70,7 @@ END SUBROUTINE lnsrch_sp
 
 SUBROUTINE lnsrch_dp(xold,fold,g,p,x,f,stpmax,check,func)
 
-  use mo_kind,   only: dp, i4
+  use mo_kind,   only: dp, i4, lgt
   use mo_nrutil, only: assert_eq,nrerror,vabs
 
   IMPLICIT NONE
@@ -80,7 +80,7 @@ SUBROUTINE lnsrch_dp(xold,fold,g,p,x,f,stpmax,check,func)
   REAL(DP),               INTENT(IN)    :: fold,stpmax
   REAL(DP), DIMENSION(:), INTENT(OUT)   :: x
   REAL(DP),               INTENT(OUT)   :: f
-  LOGICAL,                INTENT(OUT)   :: check
+  LOGICAL(lgt),           INTENT(OUT)   :: check
 
   INTERFACE
      FUNCTION func(x)
