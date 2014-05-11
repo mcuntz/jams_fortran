@@ -12,8 +12,7 @@ MODULE mo_sce
 
   ! This module is the Shuffled Complex Evolution optimization algorithm.
 
-  ! Written Juliane Mai,     Feb 2013
-  ! Modified Matthias Cuntz, May 2014 - sort -> qsort
+  ! Written Juliane Mai, Feb 2013
 
   ! License
   ! -------
@@ -144,6 +143,7 @@ MODULE mo_sce
   !>                                                                    # of headlines: 1 \n
   !>                                                                    format: #_evolution_loop, xf(i), (x(i,j),j=1,nn)\n
   !>                                                                    total number of lines written <= neval <= mymaxn\n
+  !>        \param[in]  "logical, optional  :: popul_file_append"    if true, append to existing population file (default: false)\n
   !>        \param[in]  "logical, optional  :: parallel"    sce runs in parallel (true) or not (false)
   !>                                                             parallel sce should only be used if model/ objective 
   !>                                                             is not parallel
@@ -197,7 +197,8 @@ MODULE mo_sce
   !                  Matthias Cuntz,              Nov 2013 - progress dots
   !                                                        - use iso_fortran_env
   !                                                        - treat functn=NaN as worse function value in cce
-  !                  Matthias Cuntz,              May 2014 - sort -> qsort
+  !                  Matthias Cuntz,              May 2014 - sort -> orderpack
+  !                  Matthias Cuntz,              May 2014 - popul_file_append
 
   ! ------------------------------------------------------------------
 
@@ -218,12 +219,13 @@ CONTAINS
        myngs,mynpg,mynps,mynspl,mymings,myiniflg,myprint, & ! Optional IN
        mymask,myalpha, mybeta,                            & ! Optional IN
        tmp_file, popul_file,                              & ! Optional IN
+       popul_file_append,                                 & ! Optional IN
        parallel,                                          & ! OPTIONAL IN
        bestf,neval,history                                & ! Optional OUT
        ) result(bestx)
 
     use mo_kind,         only: i4, i8, dp
-    use mo_quicksort,    only: qsort
+    use mo_orderpack,    only: sort
     use mo_string_utils, only: num2str, compress
     use mo_xor4096,      only: get_timeseed, n_save_state, xor4096, xor4096g
     !$ use omp_lib,      only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
@@ -296,6 +298,7 @@ CONTAINS
     !                                                               !     # of headlines: 1
     !                                                               !     format: #_evolution_loop, xf(i), (x(i,j),j=1,nn)
     !                                                               !     total number of lines written <= neval <= mymaxn
+    logical,          optional,          intent(in)  :: popul_file_append ! if true, append to popul_file
     logical,     optional,               intent(in)  :: parallel    ! sce runs in parallel (true) or not (false)
     !                                                               !     parallel sce should only be used if model/ objective 
     !                                                               !     is not parallel
@@ -389,6 +392,7 @@ CONTAINS
     real(dp),    dimension(:,:), allocatable         :: xtmp          ! tmp array for complex reduction
     real(dp),    dimension(:),   allocatable         :: ftmp          !            %
     real(dp)                                         :: large         ! for treating NaNs
+    logical                                          :: ipopul_file_append
 
     if (present(parallel)) then
        parall = parallel
@@ -540,6 +544,12 @@ CONTAINS
        beta = 0.45_dp
     end if
 
+    if (present(popul_file_append)) then
+       ipopul_file_append = popul_file_append
+    else
+       ipopul_file_append = .false.
+    endif
+
     if(present(tmp_file)) then
        open(unit=999,file=trim(adjustl(tmp_file)), action='write', status = 'unknown')
        write(999,*) '# settings :: general'
@@ -552,7 +562,7 @@ CONTAINS
        close(999)
     end if
 
-    if(present(popul_file)) then
+    if (present(popul_file) .and. (.not. ipopul_file_append)) then
        open(unit=999,file=trim(adjustl(popul_file)), action='write', status = 'unknown')
        write(999,*) '#   xf(i)   (x(i,j),j=1,nn)'
        close(999)
@@ -736,7 +746,8 @@ CONTAINS
 
     end if
 
-    call qsort(history_tmp(1:npt1))
+print*, npt1, history_tmp(1:npt1)
+    call sort(history_tmp(1:npt1))
     icall = int(npt1,i8)
     !
     !  arrange the points in order of increasing function value
@@ -892,7 +903,7 @@ CONTAINS
                    end do
                    !
                    !  arrange the sub-complex in order of increasing function value
-                   call qsort(lcs(1:nps))
+                   call sort(lcs(1:nps))
                 end if
                 !
                 !  create the sub-complex arrays
@@ -1026,7 +1037,7 @@ CONTAINS
                    end do
                    !
                    !  arrange the sub-complex in order of increasing function value
-                   call qsort(lcs(1:nps))
+                   call sort(lcs(1:nps))
                 end if
                 !
                 !  create the sub-complex arrays
@@ -1464,7 +1475,7 @@ CONTAINS
     ! This subroutine is adapted from "Numerical Recipes" by Press et al., pp. 233-234
     !
     use mo_kind,      only: i4, dp
-    use mo_quicksort, only: qsort_index
+    use mo_orderpack, only: sort_index
 
     implicit none    
 
@@ -1481,7 +1492,7 @@ CONTAINS
     m = size(rb,2)
 
     ! indexes of sorted reference vector
-    iwk(:) = qsort_index(ra(1:n))
+    iwk(:) = sort_index(ra(1:n))
 
     ! sort reference vector
     ra(1:n) = ra(iwk)
