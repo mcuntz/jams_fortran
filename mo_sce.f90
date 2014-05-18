@@ -1472,8 +1472,6 @@ print*, npt1, history_tmp(1:npt1)
 
   subroutine sort_matrix(rb,ra)
     !
-    ! This subroutine is adapted from "Numerical Recipes" by Press et al., pp. 233-234
-    !
     use mo_kind,      only: i4, dp
     use mo_orderpack, only: sort_index
 
