@@ -25,7 +25,8 @@ MODULE mo_nelmin
 
   ! Copyright 2012 Matthias Cuntz
 
-  USE mo_kind, ONLY: i4, sp, dp
+  USE mo_kind,  ONLY: i4, sp, dp
+  USE mo_utils, ONLY: ne
 
   IMPLICIT NONE
 
@@ -253,7 +254,7 @@ CONTAINS
        y0 = func(pstart)
        do i=1, size(pstart)
           p0 = pstart
-          if ( abs(p0(i)) .gt. tiny(0.0_dp) ) then
+          if (ne(p0(i),0.0_dp)) then
              p0(i) = 1.01_dp*p0(i)
           else
              p0(i) = 0.01_dp
@@ -596,7 +597,7 @@ CONTAINS
        y0 = func(pstart, xx, yy)
        do i=1, size(pstart)
           p0 = pstart
-          if ( abs(p0(i)) .gt. tiny(0.0_dp) ) then
+          if (ne(p0(i),0.0_dp)) then
              p0(i) = 1.01_dp*p0(i)
           else
              p0(i) = 0.01_dp
@@ -935,7 +936,7 @@ CONTAINS
        y0 = func(pstart)
        do i=1, size(pstart)
           p0 = pstart
-          if ( abs(p0(i)) .gt. tiny(0.0_dp) ) then
+          if (ne(p0(i),0.0_dp)) then
              ! bound to range
              p0(i) = min( prange(i,2) , max( prange(i,1) , 1.01_dp*p0(i) ) )
           else
@@ -1292,7 +1293,7 @@ CONTAINS
        y0 = func(pstart)
        do i=1, size(pstart)
           p0 = pstart
-          if ( abs(p0(i)) .gt. tiny(0.0_sp) ) then
+          if (ne(p0(i),0.0_sp)) then
              ! bound to range
              p0(i) = min( prange(i,2) , max( prange(i,1) , 1.01_sp*p0(i) ) )
           else
