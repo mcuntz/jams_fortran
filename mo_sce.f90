@@ -199,6 +199,7 @@ MODULE mo_sce
   !                                                        - treat functn=NaN as worse function value in cce
   !                  Matthias Cuntz,              May 2014 - sort -> orderpack
   !                  Matthias Cuntz,              May 2014 - popul_file_append
+  !                  Matthias Cuntz,              May 2014 - sort with NaNs
 
   ! ------------------------------------------------------------------
 
@@ -231,7 +232,7 @@ CONTAINS
     !$ use omp_lib,      only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
     use iso_fortran_env, only: output_unit, error_unit
 #ifndef GFORTRAN
-    use ieee_arithmetic, only: ieee_is_finite
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite, ieee_value, IEEE_QUIET_NAN
 #endif
 
     implicit none
@@ -393,6 +394,9 @@ CONTAINS
     real(dp),    dimension(:),   allocatable         :: ftmp          !            %
     real(dp)                                         :: large         ! for treating NaNs
     logical                                          :: ipopul_file_append
+    integer(i4)                                      :: nonan         ! # of non-NaN in history_tmp
+    real(dp), dimension(:), allocatable              :: htmp          ! tmp storage for history_tmp
+    real(dp)                                         :: NaN           ! NaN value
 
     if (present(parallel)) then
        parall = parallel
@@ -746,8 +750,6 @@ CONTAINS
 
     end if
 
-print*, npt1, history_tmp(1:npt1)
-    call sort(history_tmp(1:npt1))
     icall = int(npt1,i8)
     !
     !  arrange the points in order of increasing function value
@@ -760,11 +762,66 @@ print*, npt1, history_tmp(1:npt1)
     endif
 #ifndef GFORTRAN
     xf(1:npt1) = merge(xf(1:npt1), large, ieee_is_finite(xf(1:npt1))) ! NaN and Infinite
+    ! sort does not work with NaNs
+    ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
+    nonan = size(pack(history_tmp(1:npt1), mask=ieee_is_finite(history_tmp(1:npt1))))
+    if (nonan /= npt1) then
+       allocate(htmp(nonan))
+       htmp(1:nonan) = pack(history_tmp(1:npt1), mask=ieee_is_finite(history_tmp(1:npt1)))
+       call sort(htmp(1:nonan))
+       history_tmp(1:nonan) = htmp(1:nonan)
+       history_tmp(nonan+1:npt1) = ieee_value(1.0_dp, IEEE_QUIET_NAN)
+       deallocate(htmp)
+    else
+       call sort(history_tmp(1:npt1))
+    endif
 #else
 #ifdef GFORTRAN41
     xf(1:npt1) = merge(xf(1:npt1), large, xf(1:npt1) == xf(1:npt1))   ! only NaN
+    ! sort does not work with NaNs
+    ! -> get the NaN value
+    ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
+    nonan = size(pack(history_tmp(1:npt1), mask=(xf(1:npt1)==xf(1:npt1))))
+    if (nonan /= npt1) then
+       NaN = large
+       do ii=1, npt1
+          if (xf(ii) /= xf(ii)) then
+             NaN = xf(ii)
+             exit
+          endif
+       end do
+       allocate(htmp(nonan))
+       htmp(1:nonan) = pack(history_tmp(1:npt1), mask=(xf(1:npt1)==xf(1:npt1)))
+       call sort(htmp(1:nonan))
+       history_tmp(1:nonan) = htmp(1:nonan)
+       history_tmp(nonan+1:npt1) = NaN
+       deallocate(htmp)
+    else
+       call sort(history_tmp(1:npt1))
+    endif
 #else
     xf(1:npt1) = merge(xf(1:npt1), large, .not. isnan(xf(1:npt1)))   ! only NaN
+    ! sort does not work with NaNs
+    ! -> get the NaN value
+    ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
+    nonan = size(pack(history_tmp(1:npt1), mask=(.not. isnan(xf(1:npt1)))))
+    if (nonan /= npt1) then
+       NaN = large
+       do ii=1, npt1
+          if (isnan(xf(ii))) then
+             NaN = xf(ii)
+             exit
+          endif
+       end do
+       allocate(htmp(nonan))
+       htmp(1:nonan) = pack(history_tmp(1:npt1), mask=(.not. isnan(xf(1:npt1))))
+       call sort(htmp(1:nonan))
+       history_tmp(1:nonan) = htmp(1:nonan)
+       history_tmp(nonan+1:npt1) = NaN
+       deallocate(htmp)
+    else
+       call sort(history_tmp(1:npt1))
+    endif
 #endif
 #endif
     call sort_matrix(x(1:npt1,1:nn),xf(1:npt1))
