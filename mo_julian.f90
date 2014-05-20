@@ -125,7 +125,7 @@ CONTAINS
   !         http://de.wikipedia.org/wiki/Julianisches_Datum
   !         which is different to the english Wiki
   !             http://en.wikipedia.org/wiki/Julian_day
-  !         It is esential the same as Numerical Recipes but use astronomical instead of historical units.
+  !         It is essentially the same as Numerical Recipes but uses astronomical instead of historical units.
 
   !     HISTORY
   !>        \author Written, Matthias Cuntz - modified julday from Numerical Recipes
@@ -240,7 +240,7 @@ CONTAINS
   !         http://de.wikipedia.org/wiki/Julianisches_Datum
   !         which is different to the english Wiki
   !             http://en.wikipedia.org/wiki/Julian_day
-  !         It is esential the same as Numerical Recipes but use astronomical instead of historical units.
+  !         It is essentially the same as Numerical Recipes but uses astronomical instead of historical units.
   !         Numerical regulation of fractions is after
   !             IDL routine julday.pro. Copyright (c) 1988-2011, ITT Visual Information Solutions.
 
@@ -379,7 +379,7 @@ CONTAINS
   !         http://de.wikipedia.org/wiki/Julianisches_Datum
   !         which is different to the english Wiki
   !             http://en.wikipedia.org/wiki/Julian_day
-  !         It is esential the same as Numerical Recipes but use astronomical instead of historical units.
+  !         It is essentially the same as Numerical Recipes but uses astronomical instead of historical units.
   !         Here the sometimes 60 sec as output are corrected at the end.
 
   !     HISTORY
@@ -535,7 +535,7 @@ CONTAINS
   !         http://de.wikipedia.org/wiki/Julianisches_Datum
   !         which is different to the english Wiki
   !             http://en.wikipedia.org/wiki/Julian_day
-  !         It is esential the same as Numerical Recipes but use astronomical instead of historical units.
+  !         It is essentially the same as Numerical Recipes but uses astronomical instead of historical units.
 
   !     HISTORY
   !>        \author Written, Matthias Cuntz - modified julday from Numerical Recipes
