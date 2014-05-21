@@ -2,7 +2,7 @@ PROGRAM main
   
   USE mo_kind,           ONLY: i4, i8, dp, sp
   USE mo_utils,          ONLY: ne
-  USE mo_linear_algebra, ONLY: diag, rank, inverse, solve_linear_equations, solve_linear_equations_svd
+  USE mo_linear_algebra, ONLY: diag, inverse, solve_linear_equations, solve_linear_equations_svd
   
   IMPLICIT NONE
   
@@ -46,16 +46,6 @@ PROGRAM main
   i8at = int(dat, i8)
   allgood = .true.
 
-  ! rank
-  isgood = .true.
-  if (rank(dat) /= nn)  isgood = .false.
-  if (rank(sat) /= nn)  isgood = .false.
-  if (rank(i4at) /= nn) isgood = .false.
-  if (rank(i8at) /= nn) isgood = .false.
-
-  allgood = allgood .and. isgood
-  if (.not. isgood) write(*,*) 'mo_linear_algebra rank failed!'
-
   ! diag
   isgood = .true.
   ddat  = diag(dat)
@@ -81,15 +71,15 @@ PROGRAM main
   idat = inverse(dat)
   isat = inverse(sat)
   ! allow eps in each element of diag -> very close but can be slightly higher -> *100
-  ! print*, 'Inv ', abs(sum(diag(matmul(dat,idat))) - real(rank(dat),dp)), (real(rank(dat),dp)*epsilon(1.0_dp))*100._dp
-  ! print*, 'Inv ', abs(sum(diag(matmul(sat,isat))) - real(rank(sat),sp)), (real(rank(sat),sp)*epsilon(1.0_sp))*100._dp
-  ! print*, 'Inv ', abs(sum(matmul(dat,idat)) - real(rank(dat),dp)), (real(rank(dat),dp)**2*epsilon(1.0_dp))*100._dp
-  ! print*, 'Inv ', abs(sum(matmul(sat,isat)) - real(rank(sat),sp)), (real(rank(sat),sp)**2*epsilon(1.0_sp))*100._dp
-  if (abs(sum(diag(matmul(dat,idat))) - real(rank(dat),dp)) > (real(rank(dat),dp)*epsilon(1.0_dp))*100._dp) isgood = .false.
-  if (abs(sum(diag(matmul(sat,isat))) - real(rank(sat),sp)) > (real(rank(sat),sp)*epsilon(1.0_sp))*100._sp) isgood = .false.
+  ! print*, 'Inv ', abs(sum(diag(matmul(dat,idat))) - real(size(dat,1),dp)), (real(size(dat,1),dp)*epsilon(1.0_dp))*100._dp
+  ! print*, 'Inv ', abs(sum(diag(matmul(sat,isat))) - real(size(sat,1),sp)), (real(size(sat,1),sp)*epsilon(1.0_sp))*100._dp
+  ! print*, 'Inv ', abs(sum(matmul(dat,idat)) - real(size(dat,1),dp)), (real(size(dat,1),dp)**2*epsilon(1.0_dp))*100._dp
+  ! print*, 'Inv ', abs(sum(matmul(sat,isat)) - real(size(sat,1),sp)), (real(size(sat,1),sp)**2*epsilon(1.0_sp))*100._dp
+  if (abs(sum(diag(matmul(dat,idat))) - real(size(dat,1),dp)) > (real(size(dat,1),dp)*epsilon(1.0_dp))*100._dp) isgood = .false.
+  if (abs(sum(diag(matmul(sat,isat))) - real(size(sat,1),sp)) > (real(size(sat,1),sp)*epsilon(1.0_sp))*100._sp) isgood = .false.
   ! allow eps in each element of matrix -> very close but can be slightly higher -> *10
-  if (abs(sum(matmul(dat,idat)) - real(rank(dat),dp)) > (real(rank(dat),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
-  if (abs(sum(matmul(sat,isat)) - real(rank(sat),sp)) > (real(rank(sat),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
+  if (abs(sum(matmul(dat,idat)) - real(size(dat,1),dp)) > (real(size(dat,1),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
+  if (abs(sum(matmul(sat,isat)) - real(size(sat,1),sp)) > (real(size(sat,1),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
 
   allgood = allgood .and. isgood
   if (.not. isgood) write(*,*) 'mo_linear_algebra inverse failed!'
@@ -101,14 +91,14 @@ PROGRAM main
   xdat = solve_linear_equations(dat, bdat)
   xsat = solve_linear_equations(sat, bsat)
   ! allow eps in each element of matrix -> very close but can be slightly higher -> *100
-  ! print*, 'LU  ', sum(abs(xdat-ddat)), (real(rank(dat),dp)**2*epsilon(1.0_dp))*100._dp
-  ! print*, 'LU  ', sum(abs(xsat-dsat)), (real(rank(sat),sp)**2*epsilon(1.0_sp))*100._sp
-  ! print*, 'LU  ', sum(matmul(dat,xdat)-bdat), (real(rank(dat),dp)**2*epsilon(1.0_dp))*100._dp
-  ! print*, 'LU  ', sum(matmul(sat,xsat)-bsat), (real(rank(sat),sp)**2*epsilon(1.0_sp))*100._sp
-  if (sum(abs(xdat-ddat)) > (real(rank(dat),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
-  if (sum(abs(xsat-dsat)) > (real(rank(sat),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
-  if (sum(matmul(dat,xdat)-bdat) > (real(rank(dat),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
-  if (sum(matmul(sat,xsat)-bsat) > (real(rank(sat),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
+  ! print*, 'LU  ', sum(abs(xdat-ddat)), (real(size(dat,1),dp)**2*epsilon(1.0_dp))*100._dp
+  ! print*, 'LU  ', sum(abs(xsat-dsat)), (real(size(sat,1),sp)**2*epsilon(1.0_sp))*100._sp
+  ! print*, 'LU  ', sum(matmul(dat,xdat)-bdat), (real(size(dat,1),dp)**2*epsilon(1.0_dp))*100._dp
+  ! print*, 'LU  ', sum(matmul(sat,xsat)-bsat), (real(size(sat,1),sp)**2*epsilon(1.0_sp))*100._sp
+  if (sum(abs(xdat-ddat)) > (real(size(dat,1),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
+  if (sum(abs(xsat-dsat)) > (real(size(sat,1),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
+  if (sum(matmul(dat,xdat)-bdat) > (real(size(dat,1),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
+  if (sum(matmul(sat,xsat)-bsat) > (real(size(sat,1),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
 
   allgood = allgood .and. isgood
   if (.not. isgood) write(*,*) 'mo_linear_algebra solve_linear_equations failed!'
@@ -120,14 +110,14 @@ PROGRAM main
   xdat = solve_linear_equations_svd(dat, bdat)!, condition=.false.)
   xsat = solve_linear_equations_svd(sat, bsat)!, condition=.false.)
   ! allow eps in each element of matrix -> very close but can be slightly higher -> *100
-  ! print*, 'SVD ', sum(abs(xdat-ddat)), (real(rank(dat),dp)**2*epsilon(1.0_dp))*100._dp
-  ! print*, 'SVD ', sum(abs(xsat-dsat)), (real(rank(sat),sp)**2*epsilon(1.0_sp))*100._sp
-  ! print*, 'SVD ', sum(matmul(dat,xdat)-bdat), (real(rank(dat),dp)**2*epsilon(1.0_dp))*100._dp
-  ! print*, 'SVD ', sum(matmul(sat,xsat)-bsat), (real(rank(sat),sp)**2*epsilon(1.0_sp))*100._sp
-  if (sum(abs(xdat-ddat)) > (real(rank(dat),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
-  if (sum(abs(xsat-dsat)) > (real(rank(sat),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
-  if (sum(matmul(dat,xdat)-bdat) > (real(rank(dat),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
-  if (sum(matmul(sat,xsat)-bsat) > (real(rank(sat),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
+  ! print*, 'SVD ', sum(abs(xdat-ddat)), (real(size(dat,1),dp)**2*epsilon(1.0_dp))*100._dp
+  ! print*, 'SVD ', sum(abs(xsat-dsat)), (real(size(sat,1),sp)**2*epsilon(1.0_sp))*100._sp
+  ! print*, 'SVD ', sum(matmul(dat,xdat)-bdat), (real(size(dat,1),dp)**2*epsilon(1.0_dp))*100._dp
+  ! print*, 'SVD ', sum(matmul(sat,xsat)-bsat), (real(size(sat,1),sp)**2*epsilon(1.0_sp))*100._sp
+  if (sum(abs(xdat-ddat)) > (real(size(dat,1),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
+  if (sum(abs(xsat-dsat)) > (real(size(sat,1),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
+  if (sum(matmul(dat,xdat)-bdat) > (real(size(dat,1),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
+  if (sum(matmul(sat,xsat)-bsat) > (real(size(sat,1),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
 
   allgood = allgood .and. isgood
   if (.not. isgood) write(*,*) 'mo_linear_algebra solve_linear_equations_svd failed!'

@@ -38,7 +38,6 @@ MODULE mo_linear_algebra
 
   PUBLIC :: diag                       ! diagonal of matrix
   PUBLIC :: inverse                    ! inverse of matrix
-  PUBLIC :: rank                       ! rank of a squared matrix
   PUBLIC :: solve_linear_equations     ! solve linear system of equations with LU decomposition
   PUBLIC :: solve_linear_equations_svd ! solve linear system of equations with SVD
 
@@ -145,58 +144,6 @@ MODULE mo_linear_algebra
   INTERFACE inverse
      MODULE PROCEDURE inverse_dp, inverse_sp
   END INTERFACE inverse
-
-
-  ! ------------------------------------------------------------------
-  !
-  !     NAME
-  !         rank
-  !
-  !     PURPOSE
-  !         Rank of a square 2D-array.
-  !
-  !>        \brief Rank of a squared matrix.
-  !
-  !>        \details Returns the rank of a squared 2D-array.
-  !>                 \f[ rank(M) = size(M,1) = size(M,2) \f]
-  !
-  !     INTENT(IN)
-  !>        \param[in] "real(sp/dp)/integer(i4/i8)/logical :: matrix(:,:)"    Squared 2D-array
-  !
-  !     INTENT(INOUT)
-  !         None
-  !
-  !     INTENT(OUT)
-  !         None
-  !
-  !     INTENT(IN), OPTIONAL
-  !         None
-  !
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-  !
-  !     INTENT(OUT), OPTIONAL
-  !         None
-  !
-  !     RETURNS
-  !>       \return     integer(i4) :: rank &mdash; Rank of matrix
-  !
-  !     RESTRICTIONS
-  !         None
-  !
-  !     EXAMPLE
-  !         m = rank(matrix)
-  !         -> see also example in test directory
-  !
-  !     LITERATURE
-  !         None
-  !
-  !     HISTORY
-  !>        \author Matthias Cuntz
-  !>        \date May 2014
-  INTERFACE rank
-     MODULE PROCEDURE rank_sp, rank_dp, rank_i4, rank_i8, rank_lgt
-  END INTERFACE rank
 
 
   ! ------------------------------------------------------------------
@@ -535,73 +482,6 @@ CONTAINS
     deallocate(ipiv)
 
   END FUNCTION inverse_sp
-
-  ! ------------------------------------------------------------------
-
-  FUNCTION rank_dp(matrix)
-
-    IMPLICIT NONE
-
-    REAL(dp), DIMENSION(:,:), INTENT(IN) :: matrix
-    INTEGER(i4)                          :: rank_dp
-
-    if (size(matrix,1) /= size(matrix,2)) stop 'rank_dp: array must be squared matrix.'
-
-    rank_dp = size(matrix,1)
-
-  END FUNCTION rank_dp
-
-  FUNCTION rank_sp(matrix)
-
-    IMPLICIT NONE
-
-    REAL(sp), DIMENSION(:,:), INTENT(IN) :: matrix
-    INTEGER(i4)                          :: rank_sp
-
-    if (size(matrix,1) /= size(matrix,2)) stop 'rank_sp: array must be squared matrix.'
-
-    rank_sp = size(matrix,1)
-
-  END FUNCTION rank_sp
-
-  FUNCTION rank_i4(matrix)
-
-    IMPLICIT NONE
-
-    INTEGER(i4), DIMENSION(:,:), INTENT(IN) :: matrix
-    INTEGER(i4)                             :: rank_i4
-
-    if (size(matrix,1) /= size(matrix,2)) stop 'rank_i4: array must be squared matrix.'
-
-    rank_i4 = size(matrix,1)
-
-  END FUNCTION rank_i4
-
-  FUNCTION rank_i8(matrix)
-
-    IMPLICIT NONE
-
-    INTEGER(i8), DIMENSION(:,:), INTENT(IN) :: matrix
-    INTEGER(i4)                             :: rank_i8
-
-    if (size(matrix,1) /= size(matrix,2)) stop 'rank_i8: array must be squared matrix.'
-
-    rank_i8 = size(matrix,1)
-
-  END FUNCTION rank_i8
-
-  FUNCTION rank_lgt(matrix)
-
-    IMPLICIT NONE
-
-    LOGICAL, DIMENSION(:,:), INTENT(IN) :: matrix
-    INTEGER(i4)                         :: rank_lgt
-
-    if (size(matrix,1) /= size(matrix,2)) stop 'rank_lgt: array must be squared matrix.'
-
-    rank_lgt = size(matrix,1)
-
-  END FUNCTION rank_lgt
 
   ! ------------------------------------------------------------------
 
