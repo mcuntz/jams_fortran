@@ -82,7 +82,7 @@ MODULE mo_constants
   !> Seconds per day [s] in single precision
   REAL(sp), PARAMETER :: secday_sp = 86400._sp
   !> Psychrometric constant [kPa K^-1] in double precision
-  REAL(dp), PARAMETER :: Psychro_dp      = 0.0646_dp                 ! psychrometric constant [kPa C-1]  
+  REAL(dp), PARAMETER :: Psychro_dp      = 0.0646_dp                 ! psychrometric constant [kPa C-1]
   !> Psychrometric constant [kPa K^-1] in sibgle precision
   REAL(sp), PARAMETER :: Psychro_sp      = 0.0646_sp
   !> Gravity accelaration [m^2 s^-1] in double precision
@@ -109,6 +109,10 @@ MODULE mo_constants
   REAL(dp), PARAMETER :: sigma_dp     = 5.67e-08_dp                  ! Stefan-Boltzmann constant [W/m^2/K^4]
   !> Stefan-Boltzmann constant [W m^-2 K^-4] in single precision
   REAL(sp), PARAMETER :: sigma_sp     = 5.67e-08_sp
+  ! Earth radius [m] in single precision
+  REAL(sp), PARAMETER   :: RadiusEarth_sp  = 6371228._sp
+  ! Earth radius [m] in double precision
+  REAL(dp), PARAMETER   :: RadiusEarth_dp  = 6371228._dp
 
   ! Numerical Recipes
   !> Pi in double precision
