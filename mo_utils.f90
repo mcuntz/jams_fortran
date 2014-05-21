@@ -43,6 +43,7 @@ MODULE mo_utils
   PUBLIC :: ne           ! a /= b, a .ne. b
   PUBLIC :: ge           ! a >= b, a .ge. b
   PUBLIC :: le           ! a <= b, a .le. b
+  PUBLIC :: locate       ! Find closest values in a monotonic series
   PUBLIC :: swap         ! swaps arrays or elements of an array
 
   ! ------------------------------------------------------------------
@@ -189,6 +190,69 @@ MODULE mo_utils
           swap_vec_dp, swap_vec_sp, swap_vec_i4
   END INTERFACE swap
 
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         locate
+
+  !     PURPOSE
+  !         Find closest values in a monotonic series
+  !
+  !>         \brief Find closest values in a monotonic series, returns the indexes.
+  !
+  !>         \details Given an array x(1:n), and given a value y,
+  !>         returns a value j such that y is between
+  !>         x(j) and x(j+1).\n
+  !
+  !>         x must be monotonically increasing.\n
+  !>         j=0 or j=N is returned to indicate that x is out of range.
+  !
+  !     INTENT(IN)
+  !>        \param[in] "real(dp/sp)    :: x(:)"            Sorted array
+  !>        \param[in] "real(dp/sp)    :: y[(:)]"          Value(s) of which the closest match in x(:) is wanted
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !>       \return     integer(i4) :: index[(:)] &mdash; index(es) of x so that y is between x(index) and x(index+1)
+  !
+  !     RESTRICTIONS
+  !>       \note x must be monotonically increasing.\n
+  !
+  !     EXAMPLE
+  !         x = (/ 1., 2., 3., -999., 5., 6. /)
+  !         y = (/ 1.1, 5.6 /)
+  !         ii = locate(x, y)
+  !         -> ii == (/ 1, 5 /)
+  !         y = 1.1
+  !         ii = locate(x, y)
+  !         -> ii == 1
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Matthias Cuntz
+  !>        \date May 2014
+  INTERFACE locate
+     MODULE PROCEDURE locate_0d_dp, locate_0d_sp, locate_1d_dp, locate_1d_sp
+  END INTERFACE locate
+
   ! ------------------------------------------------------------------
 
   PRIVATE
@@ -328,6 +392,102 @@ CONTAINS
     endif
 
   END FUNCTION notequal_sp
+
+  ! ------------------------------------------------------------------
+
+  ! Given an array x(1:N), and given a value y, returns a value j such that y is between
+  !  x(j) and x(j+1). x must be monotonically increasing.
+  !  j=0 or j=N is returned to indicate that x is out of range.
+
+  FUNCTION locate_0d_dp(x,y)
+
+    IMPLICIT NONE
+
+    REAL(dp), DIMENSION(:), INTENT(IN) :: x
+    REAL(dp),               INTENT(IN) :: y
+    INTEGER(i4)                        :: locate_0d_dp
+
+    INTEGER(i4), dimension(1) :: c
+
+    c = minloc(abs(x-y))
+    if (le(x(c(1)),y)) then
+       locate_0d_dp = c(1)
+    else
+       locate_0d_dp = c(1)-1
+    endif
+
+  END FUNCTION locate_0d_dp
+
+  FUNCTION locate_0d_sp(x,y)
+
+    IMPLICIT NONE
+
+    REAL(sp), DIMENSION(:), INTENT(IN) :: x
+    REAL(sp),               INTENT(IN) :: y
+    INTEGER(i4)                        :: locate_0d_sp
+
+    INTEGER(i4), dimension(1) :: c
+
+    c = minloc(abs(x-y))
+    if (le(x(c(1)),y)) then
+       locate_0d_sp = c(1)
+    else
+       locate_0d_sp = c(1)-1
+    endif
+
+  END FUNCTION locate_0d_sp
+
+  FUNCTION locate_1d_dp(x,y)
+
+    IMPLICIT NONE
+
+    REAL(dp), DIMENSION(:), INTENT(IN) :: x
+    REAL(dp), DIMENSION(:), INTENT(IN) :: y
+    INTEGER(i4), DIMENSION(:), allocatable :: locate_1d_dp
+
+    INTEGER(i4) :: ny, i
+    INTEGER(i4), dimension(1) :: c
+
+
+    ny = size(y)
+    if (.not. allocated(locate_1d_dp)) allocate(locate_1d_dp(ny))
+
+    do i=1, ny
+       c = minloc(abs(x-y(i)))
+       if (le(x(c(1)),y(i))) then
+          locate_1d_dp(i) = c(1)
+       else
+          locate_1d_dp(i) = c(1)-1
+       endif
+    end do
+
+  END FUNCTION locate_1d_dp
+
+  FUNCTION locate_1d_sp(x,y)
+
+    IMPLICIT NONE
+
+    REAL(sp), DIMENSION(:), INTENT(IN) :: x
+    REAL(sp), DIMENSION(:), INTENT(IN) :: y
+    INTEGER(i4), DIMENSION(:), allocatable :: locate_1d_sp
+
+    INTEGER(i4) :: ny, i
+    INTEGER(i4), dimension(1) :: c
+
+
+    ny = size(y)
+    if (.not. allocated(locate_1d_sp)) allocate(locate_1d_sp(ny))
+
+    do i=1, ny
+       c = minloc(abs(x-y(i)))
+       if (le(x(c(1)),y(i))) then
+          locate_1d_sp(i) = c(1)
+       else
+          locate_1d_sp(i) = c(1)-1
+       endif
+    end do
+
+  END FUNCTION locate_1d_sp
 
   ! ------------------------------------------------------------------
 

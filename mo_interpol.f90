@@ -44,7 +44,7 @@ MODULE mo_interpol
   ! Copyright 2011-2014 Matthias Cuntz
 
   USE mo_kind,  ONLY: i4, sp, dp
-  USE mo_utils, only: le
+  USE mo_utils, only: le, locate
 
   Implicit NONE
 
@@ -179,11 +179,6 @@ MODULE mo_interpol
   INTERFACE bracket
      MODULE PROCEDURE bracket_dp, bracket_sp
   END INTERFACE bracket
-
-  ! Find closest values in monotonic series
-  INTERFACE locate
-     MODULE PROCEDURE locate_dp, locate_sp
-  END INTERFACE locate
 
   ! ------------------------------------------------------------------
 
@@ -370,58 +365,6 @@ CONTAINS
 #endif
 
   END FUNCTION interpol_sp
-
-  ! ------------------------------------------------------------------
-
-  ! Given an array x(1:N), and given a value y, returns a value j such that y is between
-  !  x(j) and x(j+1). x must be monotonically increasing.
-  !  j=0 or j=N is returned to indicate that x is out of range.
-
-  FUNCTION locate_dp(x,y)
-
-    IMPLICIT NONE
-
-    REAL(dp), DIMENSION(:), INTENT(IN) :: x
-    REAL(dp), DIMENSION(:), INTENT(IN) :: y
-    INTEGER(i4), DIMENSION(size(y))    :: locate_dp
-
-    INTEGER(i4) :: ny, i
-    INTEGER(i4), dimension(1) :: c
-
-    ny = size(y)
-    do i=1, ny
-       c = minloc(abs(x-y(i)))
-       if (le(x(c(1)),y(i))) then
-          locate_dp(i) = c(1)
-       else
-          locate_dp(i) = c(1)-1
-       endif
-    end do
-
-  END FUNCTION locate_dp
-
-  FUNCTION locate_sp(x,y)
-
-    IMPLICIT NONE
-
-    REAL(sp), DIMENSION(:), INTENT(IN) :: x
-    REAL(sp), DIMENSION(:), INTENT(IN) :: y
-    INTEGER(i4), DIMENSION(size(y))    :: locate_sp
-
-    INTEGER(i4) :: ny, i
-    INTEGER(i4), dimension(1) :: c
-
-    ny = size(y)
-    do i=1, ny
-       c = minloc(abs(x-y(i)))
-       if (le(x(c(1)),y(i))) then
-          locate_sp(i) = c(1)
-       else
-          locate_sp(i) = c(1)-1
-       endif
-    end do
-
-  END FUNCTION locate_sp
 
   ! ------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 program test_utils
 
   use mo_kind,  only: sp, dp, i4
-  use mo_utils, only: eq, ge, le, ne, swap
+  use mo_utils, only: eq, ge, le, ne, swap, locate
 
   implicit none
 
@@ -15,6 +15,14 @@ program test_utils
   real(sp), dimension(nn) :: sat1, sat2, sat3
   integer(i4), dimension(nn) :: iat1, iat2, iat3
 
+  real(dp) :: d1
+  real(dp), dimension(5) :: d5
+  real(sp) :: s1
+  real(sp), dimension(5) :: s5
+  integer(i4) :: ii1
+  integer(i4), dimension(5) :: ii5
+
+  integer(i4) :: i
   logical  :: isgood
   logical  :: compare
 
@@ -246,6 +254,31 @@ program test_utils
   call swap(iat2, 1, nn)
   call swap(iat2, nn, 1)
   isgood = isgood .and. all(iat2 == iat3)
+
+  ! -----------------------------------------------------
+  ! Locate
+
+  ! double precision
+  forall(i=1:nn) dat1(i) = real(i,dp)
+  ! 0d
+  d1 = 1.1_dp
+  ii1 = locate(dat1, d1)
+  isgood = isgood .and. (ii1 == 1)
+  ! 1d
+  d5 = (/ 0.1_dp, 5.5_dp, 10.1_dp, 50.5_dp, 200.1_dp /)
+  ii5 = locate(dat1, d5)
+  isgood = isgood .and. all(ii5 == (/0, 5, 10, 50, 100/))
+
+  ! single precision
+  forall(i=1:nn) sat1(i) = real(i,sp)
+  ! 0d
+  s1 = 1.1_sp
+  ii1 = locate(sat1, s1)
+  isgood = isgood .and. (ii1 == 1)
+  ! 1d
+  s5 = (/ 0.1_sp, 5.5_sp, 10.1_sp, 50.5_sp, 200.1_sp /)
+  ii5 = locate(sat1, s5)
+  isgood = isgood .and. all(ii5 == (/0, 5, 10, 50, 100/))
 
   write(*,*) ''
   if (isgood) then
