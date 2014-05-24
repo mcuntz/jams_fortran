@@ -16,6 +16,11 @@ MODULE mo_groundwater
   ! -------
   ! This file is part of the UFZ Fortran library.
 
+  ! If you use this routine in your work, you should cite the following reference
+  ! Zech A, C L Schneider, and S Attinger (2012)
+  !     The Extended Thiem’s solution: Including the impact of heterogeneity,
+  !     Water Resources Research 48, W10535, doi:10.1029/2012WR011852
+
   ! The UFZ Fortran library is free software: you can redistribute it and/or modify
   ! it under the terms of the GNU Lesser General Public License as published by
   ! the Free Software Foundation, either version 3 of the License, or
@@ -27,7 +32,8 @@ MODULE mo_groundwater
   ! GNU Lesser General Public License for more details.
 
   ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+  ! along with the UFZ makefile project (cf. gpl.txt and lgpl.txt).
+  ! If not, see <http://www.gnu.org/licenses/>.
 
   ! Copyright 2014 Sebastian Mueller
 

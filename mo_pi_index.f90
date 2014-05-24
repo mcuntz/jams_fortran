@@ -10,12 +10,16 @@
 !> \date Jul 2013
 MODULE mo_pi_index
 
-  ! Written  Juliane Mai,    Jul 2013
-  ! Modified 
+  ! Written  Juliane Mai, Jul 2013
 
   ! License
   ! -------
   ! This file is part of the UFZ Fortran library.
+
+  ! If you use this routine in your work, you should cite the following reference
+  ! Goehler M, J Mai, and M Cuntz (2013)
+  !     Use of eigendecomposition in a parameter sensitivity analysis of the Community Land Model,
+  !     J Geophys Res 188, 904-921, doi:10.1002/jgrg.20072
 
   ! The UFZ Fortran library is free software: you can redistribute it and/or modify
   ! it under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +32,8 @@ MODULE mo_pi_index
   ! GNU Lesser General Public License for more details.
 
   ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+  ! along with the UFZ makefile project (cf. gpl.txt and lgpl.txt).
+  ! If not, see <http://www.gnu.org/licenses/>.
 
   ! Copyright 2013 Juliane Mai
 

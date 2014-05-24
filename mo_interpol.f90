@@ -21,25 +21,16 @@ MODULE mo_interpol
   !   The cubic B spline is a Fortran 90 version of the Fortran 77 version of John Burkardt.
 
   ! Written  Mar 2011, Matthias Cuntz - only linear interpolation
-  ! Modified Jul 2013, Matthias Cuntz - added cubi B splines
+  ! Modified Jul 2013, Matthias Cuntz - added cubic B splines
   !          May 2014, Matthias Cuntz - removed numerical recipes
 
   ! License
   ! -------
   ! This file is part of the UFZ Fortran library.
 
-  ! The UFZ Fortran library is free software: you can redistribute it and/or modify
-  ! it under the terms of the GNU Lesser General Public License as published by
-  ! the Free Software Foundation, either version 3 of the License, or
-  ! (at your option) any later version.
+  ! It is NOT released under the GNU Lesser General Public License, yet.
 
-  ! The UFZ Fortran library is distributed in the hope that it will be useful,
-  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  ! GNU Lesser General Public License for more details.
-
-  ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+  ! If you use this routine, please contact Matthias Cuntz.
 
   ! Copyright 2011-2014 Matthias Cuntz
 

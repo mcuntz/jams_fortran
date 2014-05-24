@@ -2,25 +2,18 @@ MODULE mo_percentile
 
   ! This module provides routines for median and percentiles.
 
-  ! Written  Mar 2011, Matthias Cuntz
-  ! Modified May 2014, Matthias Cuntz - removed numerical recipes
+  ! Written   Matthias Cuntz,              Mar 2011
+  ! Modified, Juliane Mai,                 Jul 2012 - different interpolation schemes in percentiles
+  !           Matthias Cuntz, Juliane Mai, Jul 2012 - uses previous of ksmallest to half execution time
+  !           Matthias Cuntz,              May 2014 - removed numerical recipes
 
   ! License
   ! -------
   ! This file is part of the UFZ Fortran library.
 
-  ! The UFZ Fortran library is free software: you can redistribute it and/or modify
-  ! it under the terms of the GNU Lesser General Public License as published by
-  ! the Free Software Foundation, either version 3 of the License, or
-  ! (at your option) any later version.
+  ! It is NOT released under the GNU Lesser General Public License, yet.
 
-  ! The UFZ Fortran library is distributed in the hope that it will be useful,
-  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  ! GNU Lesser General Public License for more details.
-
-  ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+  ! If you use this routine, please contact Matthias Cuntz or Juliane Mai.
 
   ! Copyright 2011-2014 Matthias Cuntz, Juliane Mai, Stephan Thober
 

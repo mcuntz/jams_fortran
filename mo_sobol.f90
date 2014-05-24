@@ -13,8 +13,7 @@ MODULE mo_sobol
 
   ! This module part of the UFZ CHS Fortran library.
 
-  ! Written  Juliane Mai, May 2013
-  ! Modified 
+  ! Written Juliane Mai, May 2013
 
   ! License
   ! -------
@@ -31,7 +30,8 @@ MODULE mo_sobol
   ! GNU Lesser General Public License for more details.
 
   ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+  ! along with the UFZ makefile project (cf. gpl.txt and lgpl.txt).
+  ! If not, see <http://www.gnu.org/licenses/>.
 
   ! Copyright 2011-2013 Juliane Mai
 
