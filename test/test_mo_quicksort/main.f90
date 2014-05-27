@@ -7,6 +7,7 @@ PROGRAM main
   use mo_orderpack, only: osort => sort, osort_index => sort_index
   use mo_quicksort, only: qsort, qsort_index, qsortc, quick_sort, qsortb, qsortmp
   use mo_quicksort, only: isort => sort, isort_index => sort_index, sortmp, sortmp_index
+  use mo_utils,     only: ne
 
   IMPLICIT NONE
   
@@ -59,7 +60,7 @@ PROGRAM main
   sat2 = sat
   ii = sort_index(sat)
   call sort(sat)
-  if (any(sat2(ii) /= sat)) isgood = .false.
+  if (any(ne(sat2(ii),sat))) isgood = .false.
 
   Write(*,*) 'Orderpack'
   call timer_start(1)
@@ -91,7 +92,7 @@ PROGRAM main
   sat2 = sat
   ii = osort_index(sat)
   call osort(sat)
-  if (any(sat2(ii) /= sat)) isgood = .false.
+  if (any(ne(sat2(ii),sat))) isgood = .false.
 
   Write(*,*) 'Wikibooks'
   call timer_start(1)
@@ -128,7 +129,7 @@ PROGRAM main
   sat2 = sat
   ii = qsort_index(sat)
   call qsort(sat)
-  if (any(sat2(ii) /= sat)) isgood = .false.
+  if (any(ne(sat2(ii),sat))) isgood = .false.
 
   call timer_start(1)
   do i=1, nloop
@@ -159,7 +160,7 @@ PROGRAM main
   sat2 = sat
   ii = isort_index(sat)
   call isort(sat)
-  if (any(sat2(ii) /= sat)) isgood = .false.
+  if (any(ne(sat2(ii),sat))) isgood = .false.
 
   Write(*,*) 'David Bal - OpenMP'
   call timer_start(1)
@@ -194,7 +195,7 @@ PROGRAM main
   sat = real(new_data(nn),sp)
   sat2 = sat
   call qsortmp(sat, ii)
-  if (any(sat2(ii) /= sat)) isgood = .false.
+  if (any(ne(sat2(ii),sat))) isgood = .false.
 
   call timer_start(1)
   do i=1, nloop
@@ -225,7 +226,7 @@ PROGRAM main
   sat2 = sat
   ii = sortmp_index(sat)
   call sortmp(sat)
-  if (any(sat2(ii) /= sat)) isgood = .false.
+  if (any(ne(sat2(ii),sat))) isgood = .false.
 
   if (isgood) then
      write(*,*) 'mo_quicksort single precision o.k.'
@@ -468,7 +469,7 @@ PROGRAM main
   dat2 = dat
   ii = sort_index(dat)
   call sort(dat)
-  if (any(dat2(ii) /= dat)) isgood = .false.
+  if (any(ne(dat2(ii),dat))) isgood = .false.
 
   Write(*,*) 'Orderpack'
   call timer_start(1)
@@ -500,7 +501,7 @@ PROGRAM main
   dat2 = dat
   call mrgrnk(dat, ii)
   call refsor(dat)
-  if (any(dat2(ii) /= dat)) isgood = .false.
+  if (any(ne(dat2(ii),dat))) isgood = .false.
 
   call timer_start(1)
   do i=1, nloop
@@ -531,7 +532,7 @@ PROGRAM main
   dat2 = dat
   ii = osort_index(dat)
   call osort(dat)
-  if (any(dat2(ii) /= dat)) isgood = .false.
+  if (any(ne(dat2(ii),dat))) isgood = .false.
 
   Write(*,*) 'Wikibooks'
   call timer_start(1)
@@ -580,7 +581,7 @@ PROGRAM main
   dat2 = dat
   ii = qsort_index(dat)
   call qsort(dat)
-  if (any(dat2(ii) /= dat)) isgood = .false.
+  if (any(ne(dat2(ii),dat))) isgood = .false.
 
   call timer_start(1)
   do i=1, nloop
@@ -611,7 +612,7 @@ PROGRAM main
   dat2 = dat
   ii = isort_index(dat)
   call isort(dat)
-  if (any(dat2(ii) /= dat)) isgood = .false.
+  if (any(ne(dat2(ii),dat))) isgood = .false.
 
   ! Fails with sorted arrays
   Write(*,*) 'Cormen et al. (1997)'
@@ -687,7 +688,7 @@ PROGRAM main
   dat = real(new_data(nn),sp)
   dat2 = dat
   call qsortmp(dat, ii)
-  if (any(dat2(ii) /= dat)) isgood = .false.
+  if (any(ne(dat2(ii),dat))) isgood = .false.
 
   call timer_start(1)
   do i=1, nloop
@@ -718,7 +719,7 @@ PROGRAM main
   dat2 = dat
   ii = sortmp_index(dat)
   call sortmp(dat)
-  if (any(dat2(ii) /= dat)) isgood = .false.
+  if (any(ne(dat2(ii),dat))) isgood = .false.
 
 
   if (isgood) then

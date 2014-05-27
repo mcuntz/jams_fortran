@@ -2,6 +2,7 @@ FUNCTION expint_sp(n,x)
     USE mo_kind,            ONLY : i4, sp
     USE mo_nrutil,          ONLY : arth,assert,nrerror
     USE mo_constants,       ONLY : EULER
+    USE mo_utils,           ONLY : eq
 
     IMPLICIT NONE
 
@@ -23,7 +24,7 @@ FUNCTION expint_sp(n,x)
 
     nm1=n-1_i4
 
-    if (x == 0.0_sp) then
+    if (eq(x,0.0_sp)) then
         expint_sp=1.0_sp/nm1
 
     else if (x > 1.0_sp) then
@@ -75,6 +76,7 @@ FUNCTION expint_dp(n,x)
     USE mo_kind,            ONLY : i4, dp
     USE mo_nrutil,          ONLY : arth,assert,nrerror
     USE mo_constants,       ONLY : EULER_D
+    USE mo_utils,           ONLY : eq
 
     IMPLICIT NONE
 
@@ -96,7 +98,7 @@ FUNCTION expint_dp(n,x)
 
     nm1=n-1_i4
 
-    if (x == 0.0_dp) then
+    if (eq(x,0.0_dp)) then
         expint_dp=1.0_dp/nm1
 
     else if (x > 1.0_dp) then

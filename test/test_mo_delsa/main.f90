@@ -3,7 +3,7 @@ PROGRAM main
   ! This programs produces the 2-parameter toy model presented in Rakovec et al (2014, WRR)
   ! which calculates first-order DELSA method shown in bottom Figure 5.
 
-  USE mo_kind,     ONLY: dp, sp, i8, i4
+  USE mo_kind,  ONLY: dp, i4
   USE mo_delsa, ONLY: delsa
 
   IMPLICIT NONE

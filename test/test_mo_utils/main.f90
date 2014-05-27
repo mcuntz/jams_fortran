@@ -227,21 +227,21 @@ program test_utils
   call random_number(dat2)
   dat3 = dat1
   call swap(dat1, dat2)
-  isgood = isgood .and. all(dat2 == dat3)
+  isgood = isgood .and. all(eq(dat2,dat3))
 
   call swap(dat2, 1, nn)
   call swap(dat2, nn, 1)
-  isgood = isgood .and. all(dat2 == dat3)
+  isgood = isgood .and. all(eq(dat2,dat3))
   
   call random_number(sat1)
   call random_number(sat2)
   sat3 = sat1
   call swap(sat1, sat2)
-  isgood = isgood .and. all(sat2 == sat3)
+  isgood = isgood .and. all(eq(sat2,sat3))
 
   call swap(sat2, 1, nn)
   call swap(sat2, nn, 1)
-  isgood = isgood .and. all(sat2 == sat3)
+  isgood = isgood .and. all(eq(sat2,sat3))
 
   call random_number(dat1)
   call random_number(dat2)
@@ -288,5 +288,3 @@ program test_utils
   endif
 
 end program test_utils
-
-

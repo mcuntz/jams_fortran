@@ -257,8 +257,8 @@ CONTAINS
           ssigb = sqrt(abs(syx2)/sx2)
           if (present(sigb)) sigb = ssigb
           if (present(siga)) then
-             ! siga = sqrt(syx2*(1.0_dp/nX+mx*mx/sx2))
-             siga = sqrt(abs(syx2)*(1.0_dp/nX+mx*mx/sx2))
+             ! siga = sqrt(syx2*(1.0_sp/nX+mx*mx/sx2))
+             siga = sqrt(abs(syx2)*(1.0_sp/nX+mx*mx/sx2))
              ! Add Extra Term for Error in xmean which is not in Sokal & Rohlf.
              ! They take the error estimate of the chi-squared error for a.
              ! siga = sqrt(siga*siga + bb*bb*sxy2/nx)
