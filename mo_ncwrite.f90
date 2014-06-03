@@ -22,7 +22,7 @@ module mo_ncwrite
 
   ! Copyright 2011-2012 Luis Samaniego, Stephan Thober, Matthias Cuntz
 
-  use mo_kind,         only: i4, sp, dp
+  use mo_kind,         only: i1, i4, sp, dp
   use mo_string_utils, only: nonull
 
   ! functions and constants of netcdf4 library
@@ -80,11 +80,11 @@ module mo_ncwrite
      integer(i4), dimension(nMaxDim)        :: start               ! starting indices for netcdf
      integer(i4), dimension(nMaxDim)        :: count               ! counter          for netcdf
      logical                                :: wFlag               ! write flag
-     integer(1),                      pointer :: G0_b              ! array pointing model variables
-     integer(1),  dimension(:      ), pointer :: G1_b              ! array pointing model variables
-     integer(1),  dimension(:,:    ), pointer :: G2_b              ! array pointing model variables
-     integer(1),  dimension(:,:,:  ), pointer :: G3_b              ! array pointing model variables
-     integer(1),  dimension(:,:,:,:), pointer :: G4_b              ! array pointing model variables
+     integer(i1),                     pointer :: G0_b              ! array pointing model variables
+     integer(i1), dimension(:      ), pointer :: G1_b              ! array pointing model variables
+     integer(i1), dimension(:,:    ), pointer :: G2_b              ! array pointing model variables
+     integer(i1), dimension(:,:,:  ), pointer :: G3_b              ! array pointing model variables
+     integer(i1), dimension(:,:,:,:), pointer :: G4_b              ! array pointing model variables
      integer(i4),                     pointer :: G0_i              ! array pointing model variables
      integer(i4), dimension(:      ), pointer :: G1_i              ! array pointing model variables
      integer(i4), dimension(:,:    ), pointer :: G2_i              ! array pointing model variables
