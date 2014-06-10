@@ -8,13 +8,14 @@
 ! last update: 30.11.2012
 !
 ! ------------------------------------------------------------------------------
-program ReadNc
+program write_netcdf
 
 use mo_kind,    only: i4, sp, dp
 use mo_NcRead,  only: Get_NcVar, Get_NcDim
 use mo_setnc,   only: setnc
-use mo_NcWrite, only: create_netcdf, close_netcdf, write_static_netcdf, write_dynamic_netcdf, V, dump_netcdf
+use mo_NcWrite, only: create_netcdf, close_netcdf, write_static_netcdf, write_dynamic_netcdf, V, dump_netcdf, var2nc
 use mo_mainvar, only: lat, lon, data, t
+use mo_utils,   only: notequal
 
 implicit none
 
@@ -22,6 +23,8 @@ integer(i4)                             :: ncid, i, j
 integer(i4), dimension(5)               :: dimlen
 character(256)                          :: Filename
 character(256)                          :: Varname
+character(256), dimension(5)            :: dimname
+character(256), dimension(1)            :: tname
 LOGICAL :: isgood
 real(sp), dimension(:,:,:),     allocatable :: data1, data2, data11, data12
 real(sp), dimension(:,:,:,:),   allocatable :: data3, data4
@@ -29,6 +32,7 @@ real(sp), dimension(:,:),       allocatable :: data5, data6, data13, data14
 real(sp), dimension(:),         allocatable :: data7, data8
 real(sp), dimension(:,:,:,:,:), allocatable :: data9, data10
 real(dp), dimension(:,:,:),     allocatable :: ddata2
+real(dp), dimension(:,:),       allocatable :: ddata5
 integer(i4), dimension(:,:,:),  allocatable :: idata2
 
 isgood   = .true.
@@ -102,6 +106,141 @@ Varname  = 'pr'
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data1)
 if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+
+! var2nc file --------------------------------------------------------
+Filename = 'ncwrite_make_check_test_file'
+dimname(1) = 'lat'
+dimname(2) = 'lon'
+dimname(3) = 'time'
+dimname(4) = 'xx'
+dimname(5) = 'yy'
+tname(1)   = 'time'
+! write static data
+call var2nc( Filename, data(:,:,1), dimname(1:2), 'pre_static', &
+     longname = 'precipitation', units = '[mm/d]', fill_value = -9999. )
+Varname = 'pre_static'
+call Get_NcVar(Filename,Varname,data1)
+if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+
+! write time - 1d unlimit
+call var2nc( Filename, int(t,i4), tname, 'time', dim_unlimit = 1_i4, &
+     units = 'days since 1984-08-28', fill_value=-9999, is_dim = .True. )
+! write variable
+call var2nc( Filename, data(14,14,:), tname, 'pre_1d', dim_unlimit = 1_i4 , &
+     longname = 'precipitation', units = '[mm/d]' )
+! read again
+Varname = 'pre_1d'
+dimlen  = Get_NcDim(Filename,Varname)
+allocate( data7( dimlen(1) ) )
+call Get_NcVar(Filename,Varname,data7)
+if (any(abs(data(14,14,:)-data7) > epsilon(1.0_sp))) isgood = .false.
+
+! write 2d - dp
+call var2nc( Filename, real(data(14,:,:),dp), dimname(2:3), 'pre_2d', dim_unlimit = 2,  &
+     longname = 'precipitation', units = '[mm/d]' )
+Varname = 'pre_2d'
+allocate( ddata5( size( data, 2), size( data, 3) ) )
+call Get_NcVar( Filename, Varname, ddata5 )
+if (any(notequal(ddata5,real(data(14,:,:), dp)))) isgood = .false.
+deallocate( ddata5 )
+
+! write 3d - sp - specify append, if save variable should not be used
+call var2nc( Filename, data, dimname(1:3), 'pre_3d', dim_unlimit = 3_i4 , &
+     longname = 'precipitation', units = '[mm/d]', f_exists = .true. )
+Varname = 'pre_3d'
+call Get_NcVar(Filename,Varname,data1)
+if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+
+! write 4d - sp
+allocate(data3(size(data,1),size(data,2),size(data,3),10))
+do i=1, 10
+   data3(:,:,:,i) = data
+end do
+call var2nc( Filename, data3, dimname(1:4), 'pre_4d', dim_unlimit = 3_i4 , &
+     longname = 'precipitation', units = '[mm/d]' )
+allocate( data4( size( data3,1), size(data3,2), size(data3,3), size(data3,4) ) )
+call Get_NcVar(Filename,'pre_4d',data4)
+if (any(notequal(data3,data4))) isgood = .false.
+
+! write 5d - sp
+allocate(data9(size(data,1),size(data,2),size(data,3),10,8))
+do i=1, 10
+   do j=1, 8
+      data9(:,:,:,i,j) = data
+   end do
+end do
+call var2nc( Filename, data9, dimname, 'pre_5d', dim_unlimit = 3_i4 , &
+     longname = 'precipitation', units = '[mm/d]' )
+Varname = 'pre_5d'
+dimlen = Get_NcDim(Filename,Varname)
+allocate(data10(dimlen(1),dimlen(2),dimlen(3),dimlen(4),dimlen(5)))
+call Get_NcVar(Filename,Varname,data10)
+if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+
+! clean up
+deallocate( data3, data4, data7, data9, data10 )
+
+! append time - 1d unlimit
+call var2nc( Filename, int(t,i4)+2_i4, tname, 'time', dim_unlimit = 1_i4, &
+     units = 'days since 1984-08-28', is_dim = .True. )
+
+ ! append 1d - sp
+call var2nc( Filename, data(14,14,:), tname, 'pre_1d', dim_unlimit = 1_i4 , &
+     longname = 'precipitation', units = '[mm/d]', f_exists = .true. )
+! check
+Varname = 'pre_1d'
+dimlen  = Get_NcDim(Filename,Varname)
+allocate( data7( dimlen(1) ) )
+call Get_NcVar(Filename,Varname,data7)
+if (any(abs(data(14,14,:)-data7(3:)) > epsilon(1.0_sp))) isgood = .false.
+
+! append 2d - dp
+call var2nc( Filename, real(data(14,:,:),dp), dimname(2:3), 'pre_2d', dim_unlimit = 2, &
+     longname = 'precipitation', units = '[mm/d]' )
+Varname = 'pre_2d'
+allocate( ddata5( size( data, 2), 2 * size( data, 3) ) )
+call Get_NcVar( Filename, Varname, ddata5 )
+if (any(notequal(ddata5(:,3:),real(data(14,:,:), dp)))) isgood = .false.
+
+! append 3d
+call var2nc( Filename, data, dimname(1:3), 'pre_3d', dim_unlimit = 3_i4, &
+     longname = 'precipitation', units = '[mm/d]'  )
+deallocate( data1 )
+allocate( data1( size(data,1), size(data,2), 2*size(data,3) ) )
+Varname = 'pre_3d'
+call Get_NcVar(Filename,Varname,data1)
+if (any(abs(data-data1(:,:,3:)) > epsilon(1.0_sp))) isgood = .false.
+deallocate( data1 )
+allocate( data1( size( data, 1), size( data, 2 ), size( data, 3 ) ) )
+
+! append 4d
+allocate(data3(size(data,1),size(data,2),size(data,3),10))
+do i=1, 10
+   data3(:,:,:,i) = data
+end do
+call var2nc( Filename, data3, dimname(1:4), 'pre_4d', dim_unlimit = 3_i4 , &
+     longname = 'precipitation', units = '[mm/d]' )
+allocate( data4( size( data3,1), size(data3,2), 2*size(data3,3), size(data3,4) ) )
+call Get_NcVar(Filename,'pre_4d',data4)
+if (any(notequal(data3,data4(:,:,3:,:)))) isgood = .false.
+
+! append 5d
+allocate(data9(size(data,1),size(data,2),size(data,3),10,8))
+do i=1, 10
+   do j=1, 8
+      data9(:,:,:,i,j) = data
+   end do
+end do
+call var2nc( Filename, data9, dimname, 'pre_5d', dim_unlimit = 3_i4 , &
+     longname = 'precipitation', units = '[mm/d]', f_exists = .true. )
+Varname = 'pre_5d'
+dimlen = Get_NcDim(Filename,Varname)
+allocate(data10(dimlen(1),dimlen(2),dimlen(3),dimlen(4),dimlen(5)))
+call Get_NcVar(Filename,Varname,data10)
+if (any(abs(data9-data10(:,:,3:,:,:)) > epsilon(1.0_sp))) isgood = .false.
+
+! cleanup
+deallocate( data7, data9, data10, ddata5, data3, data4 )
 
 ! Dump nc file -------------------------------------------------------
 Filename = 'ncwrite_make_check_test_file'
@@ -300,4 +439,4 @@ else
    write(*,*) 'mo_ncwrite failed!'
 endif
 
-end program ReadNc
+end program Write_netcdf
