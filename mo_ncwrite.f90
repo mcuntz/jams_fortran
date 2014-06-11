@@ -130,7 +130,7 @@ module mo_ncwrite
   !
   !     CALLING SEQUENCE
   !>        call var2nc( f_name, arr, dnames, v_name, dim_unlimit,
-  !>        longname, units, fill_value, is_dim)
+  !>        longname, units, fill_value, is_dim, f_exists)
   !
   !     INTENT(IN)
   !>        \param[in] "character(256) :: f_name" filename
