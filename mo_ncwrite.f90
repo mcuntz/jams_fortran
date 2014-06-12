@@ -801,7 +801,7 @@ contains
     integer(i4),      optional,         intent(in) :: dim_unlimit
     character(len=*), optional,         intent(in) :: longname
     character(len=*), optional,         intent(in) :: units
-    real(sp),         optional,         intent(in) :: fill_value
+    integer(i4),      optional,         intent(in) :: fill_value
     logical,          optional,         intent(in) :: is_dim
     logical,          optional,         intent(in) :: f_exists
     ! local variables
@@ -1113,7 +1113,7 @@ contains
     integer(i4),      optional,         intent(in) :: dim_unlimit
     character(len=*), optional,         intent(in) :: longname
     character(len=*), optional,         intent(in) :: units
-    real(sp),         optional,         intent(in) :: fill_value
+    integer(i4),      optional,         intent(in) :: fill_value
     logical,          optional,         intent(in) :: is_dim
     logical,          optional,         intent(in) :: f_exists
     ! local variables
@@ -1425,7 +1425,7 @@ contains
     integer(i4),      optional,           intent(in) :: dim_unlimit
     character(len=*), optional,           intent(in) :: longname
     character(len=*), optional,           intent(in) :: units
-    real(sp),         optional,           intent(in) :: fill_value
+    integer(i4),      optional,           intent(in) :: fill_value
     logical,          optional,           intent(in) :: is_dim
     logical,          optional,           intent(in) :: f_exists
     ! local variables
@@ -1737,7 +1737,7 @@ contains
     integer(i4),      optional,             intent(in) :: dim_unlimit
     character(len=*), optional,             intent(in) :: longname
     character(len=*), optional,             intent(in) :: units
-    real(sp),         optional,             intent(in) :: fill_value
+    integer(i4),      optional,             intent(in) :: fill_value
     logical,          optional,             intent(in) :: is_dim
     logical,          optional,             intent(in) :: f_exists
     ! local variables
