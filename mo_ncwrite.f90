@@ -197,7 +197,7 @@ module mo_ncwrite
   !    HISTORY
   !>       \author Stephan Thober & Matthias Cuntz
   !>       \date May 2014
-  !        Modified ...
+  !        Modified Stephan Thober - Jun 2014 added deflate, shuffle, and chunksizes
 
   interface var2nc
      module procedure var2nc_1d_i4, var2nc_1d_sp, var2nc_1d_dp, &
@@ -485,6 +485,8 @@ contains
     ! local variables
     logical                        :: is_dim_loc
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -497,6 +499,8 @@ contains
     integer(i4), dimension(ndim+1) :: varid ! dimension variables and var id
     integer(i4)                    :: i, j  ! loop indices
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1
     counter(:)   = dims
@@ -549,13 +553,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1)))
-
+       call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1),&
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
+       !
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! inquire dimensions
     do i=1, ndim
@@ -593,6 +598,8 @@ contains
     ! local variables
     logical                        :: is_dim_loc
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -605,6 +612,8 @@ contains
     integer(i4), dimension(ndim+1) :: varid ! dimension variables and var id
     integer(i4)                    :: i, j  ! loop indices
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1
     counter(:)   = dims
@@ -657,12 +666,13 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1),&
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! inquire dimensions
     do i=1, ndim
@@ -700,6 +710,8 @@ contains
     ! local variables
     logical                        :: is_dim_loc
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -712,6 +724,8 @@ contains
     integer(i4), dimension(ndim+1) :: varid ! dimension variables and var id
     integer(i4)                    :: i, j  ! loop indices
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1
     counter(:)   = dims
@@ -764,12 +778,13 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1),&
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! inquire dimensions
     do i=1, ndim
@@ -806,6 +821,8 @@ contains
     logical,          optional,         intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -820,6 +837,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_2d_i4: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -867,13 +886,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1),&
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
@@ -910,6 +930,8 @@ contains
     logical,          optional,         intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -924,6 +946,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_2d_sp: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -971,13 +995,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1),&
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
@@ -1014,6 +1039,8 @@ contains
     logical,          optional,         intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -1028,6 +1055,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_2d_dp: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -1075,13 +1104,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1), &
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att(f_handle, varid(ndim+1), '_FillValue',fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
@@ -1118,6 +1148,8 @@ contains
     logical,          optional,         intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -1132,6 +1164,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_3d_i4: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -1179,13 +1213,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1), &
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
@@ -1222,6 +1257,8 @@ contains
     logical,          optional,         intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -1236,6 +1273,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_3d_sp: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -1283,13 +1322,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1), &
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
@@ -1326,6 +1366,8 @@ contains
     logical,          optional,         intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -1340,6 +1382,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_3d_dp: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -1387,13 +1431,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1), &
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att(f_handle, varid(ndim+1), '_FillValue',fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
@@ -1430,6 +1475,8 @@ contains
     logical,          optional,           intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -1444,6 +1491,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_4d_i4: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3), size( arr, 4) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -1491,13 +1540,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1), &
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
@@ -1534,6 +1584,8 @@ contains
     logical,          optional,           intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -1548,6 +1600,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_4d_sp: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3), size( arr, 4) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -1595,13 +1649,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1), &
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
@@ -1638,6 +1693,8 @@ contains
     logical,          optional,           intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -1652,6 +1709,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_4d_dp: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3), size( arr, 4) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -1699,13 +1758,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1), &
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att(f_handle, varid(ndim+1), '_FillValue',fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
@@ -1742,6 +1802,8 @@ contains
     logical,          optional,             intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -1756,6 +1818,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_5d_i4: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3), size( arr, 4), size( arr, 5) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -1803,13 +1867,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1), &
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
@@ -1846,6 +1911,8 @@ contains
     logical,          optional,             intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -1860,6 +1927,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_5d_sp: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3), size( arr, 4), size( arr, 5) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -1907,13 +1976,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1), &
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
@@ -1950,6 +2020,8 @@ contains
     logical,          optional,             intent(in) :: f_exists
     ! local variables
     character(256)                 :: dummy_name
+    integer(i4)                    :: deflate
+    integer(i4), dimension(ndim)   :: chunksizes
     integer(i4), dimension(ndim)   :: start    ! start array for write
     integer(i4), dimension(ndim)   :: counter  ! length array for write
     integer(i4)                    :: idim     ! read dimension on append
@@ -1964,6 +2036,8 @@ contains
     ! check for is dim
     if ( present( is_dim ) ) stop 'var2nc_5d_dp: is_dim only available for 1 d calls'
     ! initialize
+    deflate      = 1
+    chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3), size( arr, 4), size( arr, 5) /)
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -2011,13 +2085,14 @@ contains
           end if
        end do
        ! define variable
-       call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1)))
+       call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1), &
+            chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
        if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att(f_handle, varid(ndim+1), '_FillValue',fill_value ) )
        ! end definition
-       call check(nf90_enddef(f_handle))
+       !call check(nf90_enddef(f_handle))
     end if
     ! check dimensions before writing
     do i=1, ndim
