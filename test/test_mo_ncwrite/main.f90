@@ -11,7 +11,7 @@
 program write_netcdf
 
 use mo_kind,    only: i4, sp, dp
-use mo_NcRead,  only: Get_NcVar, Get_NcDim
+use mo_NcRead,  only: Get_NcVar, Get_NcDim, Get_ncVarAtt
 use mo_setnc,   only: setnc
 use mo_NcWrite, only: create_netcdf, close_netcdf, write_static_netcdf, write_dynamic_netcdf, V, dump_netcdf, var2nc
 use mo_mainvar, only: lat, lon, data, t
@@ -34,11 +34,18 @@ real(sp), dimension(:,:,:,:,:), allocatable :: data9, data10
 real(dp), dimension(:,:,:),     allocatable :: ddata2
 real(dp), dimension(:,:),       allocatable :: ddata5
 integer(i4), dimension(:,:,:),  allocatable :: idata2
+real(dp),    dimension(:,:),       allocatable :: lon1, lat1
+integer(i4), dimension(:),         allocatable :: x1, y1
+real(dp),    dimension(:),         allocatable :: time1
+character(256)                                 :: att1, att2, oriFilename
 
 isgood   = .true.
 Filename = '../FORTRAN_chs_lib/test/test_mo_ncwrite/pr_1961-2000.nc'
+oriFilename = trim(Filename)
 
-! read all variables -------------------------------------------------
+
+! --------------------------------------------------------------------
+! read all variables
 
 Varname  = 'pr'
 dimlen = Get_NcDim(Filename,Varname)
@@ -60,7 +67,12 @@ call Get_NcVar(Filename, Varname, lon)
 Varname = 'time'
 call Get_NcVar(Filename, Varname, t)
 
-! WRITE nc file -------------------------------------------------------
+
+
+! --------------------------------------------------------------------
+! write nc file
+!
+
 Filename = 'ncwrite_make_check_test_file'
 
 ! 1st set netcdf structure V
@@ -88,9 +100,15 @@ Varname  = 'pr'
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data1(size(data,1),size(data,2),size(data,3)))
 call Get_NcVar(Filename,Varname,data1)
-if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data,data1))) isgood = .false.
 
-! WRITE nc4 file -------------------------------------------------------
+
+
+! --------------------------------------------------------------------
+! write nc4 file
+!
+
 Filename = 'ncwrite_make_check_test_file'
 call create_netcdf(Filename, ncid, netcdf4=.true.)
 call write_static_netcdf(ncid)
@@ -105,22 +123,29 @@ call close_netcdf(ncid)
 Varname  = 'pr'
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data1)
-if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data,data1))) isgood = .false.
 
-! var2nc file --------------------------------------------------------
+
+
+! --------------------------------------------------------------------
+! var2nc file
+!
+
 Filename = 'ncwrite_make_check_test_file'
 dimname(1) = 'lat'
 dimname(2) = 'lon'
 dimname(3) = 'time'
-dimname(4) = 'xx'
-dimname(5) = 'yy'
-tname(1)   = 'time'
+dimname(4) = 'tile'
+dimname(5) = 'depth'
+tname(1)   = 'time' ! tname must be array
 ! write static data
 call var2nc( Filename, data(:,:,1), dimname(1:2), 'pre_static', &
      longname = 'precipitation', units = '[mm/d]', fill_value = -9999. )
 Varname = 'pre_static'
 call Get_NcVar(Filename,Varname,data1)
-if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data,data1))) isgood = .false.
 
 ! write time - 1d unlimit
 call var2nc( Filename, int(t,i4), tname, 'time', dim_unlimit = 1_i4, &
@@ -133,7 +158,8 @@ Varname = 'pre_1d'
 dimlen  = Get_NcDim(Filename,Varname)
 allocate( data7( dimlen(1) ) )
 call Get_NcVar(Filename,Varname,data7)
-if (any(abs(data(14,14,:)-data7) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data(14,14,:)-data7) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data(14,14,:),data7))) isgood = .false.
 
 ! write 2d - dp
 call var2nc( Filename, real(data(14,:,:),dp), dimname(2:3), 'pre_2d', dim_unlimit = 2,  &
@@ -149,7 +175,8 @@ call var2nc( Filename, data, dimname(1:3), 'pre_3d', dim_unlimit = 3_i4 , &
      longname = 'precipitation', units = '[mm/d]', f_exists = .true. )
 Varname = 'pre_3d'
 call Get_NcVar(Filename,Varname,data1)
-if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data,data1))) isgood = .false.
 
 ! write 4d - sp
 allocate(data3(size(data,1),size(data,2),size(data,3),10))
@@ -175,7 +202,8 @@ Varname = 'pre_5d'
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data10(dimlen(1),dimlen(2),dimlen(3),dimlen(4),dimlen(5)))
 call Get_NcVar(Filename,Varname,data10)
-if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data9,data10))) isgood = .false.
 
 ! clean up
 deallocate( data3, data4, data7, data9, data10 )
@@ -192,7 +220,8 @@ Varname = 'pre_1d'
 dimlen  = Get_NcDim(Filename,Varname)
 allocate( data7( dimlen(1) ) )
 call Get_NcVar(Filename,Varname,data7)
-if (any(abs(data(14,14,:)-data7(3:)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data(14,14,:)-data7(3:)) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data(14,14,:),data7(3:)))) isgood = .false.
 
 ! append 2d - dp
 call var2nc( Filename, real(data(14,:,:),dp), dimname(2:3), 'pre_2d', dim_unlimit = 2, &
@@ -209,7 +238,8 @@ deallocate( data1 )
 allocate( data1( size(data,1), size(data,2), 2*size(data,3) ) )
 Varname = 'pre_3d'
 call Get_NcVar(Filename,Varname,data1)
-if (any(abs(data-data1(:,:,3:)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data-data1(:,:,3:)) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data,data1(:,:,3:)))) isgood = .false.
 deallocate( data1 )
 allocate( data1( size( data, 1), size( data, 2 ), size( data, 3 ) ) )
 
@@ -237,12 +267,99 @@ Varname = 'pre_5d'
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data10(dimlen(1),dimlen(2),dimlen(3),dimlen(4),dimlen(5)))
 call Get_NcVar(Filename,Varname,data10)
-if (any(abs(data9-data10(:,:,3:,:,:)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data9-data10(:,:,3:,:,:)) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data9,data10(:,:,3:,:,:)))) isgood = .false.
 
 ! cleanup
 deallocate( data7, data9, data10, ddata5, data3, data4 )
 
-! Dump nc file -------------------------------------------------------
+! !MC!
+! ! Try to reproduce exactly input file
+! Filename = 'ncwrite_make_check_test_file'
+! dimname(1) = 'x'
+! dimname(2) = 'y'
+! dimname(3) = 'time'
+! allocate(x1(size(lon,1)), y1(size(lon,2)))
+! forall(i=1:size(lon,1)) x1(i) = i
+! forall(i=1:size(lon,2)) y1(i) = i
+! ! write dimensions
+! call var2nc(Filename, x1, dimname(1), dimname(1), is_dim=.true., f_exists=.false.)
+! call var2nc(Filename, y1, dimname(2), dimname(2), is_dim=.true., f_exists=.true.)
+! call var2nc(Filename, 1_i4, dimname(3), dimname(3), is_dim=.true., f_exists=.true., dim_unlimit=1_i4)
+! ! write static data
+! call Get_NcVarAtt(oriFileName, 'lon', 'long_name', att1)
+! call Get_NcVarAtt(oriFileName, 'lon', 'units', att2)
+! call var2nc(Filename, lon, dimname(1:2), 'lon', f_exists=.true., longname=trim(att1), units=trim(att2))
+! call Get_NcVarAtt(oriFileName, 'lat', 'long_name', att1)
+! call Get_NcVarAtt(oriFileName, 'lat', 'units', att2)
+! call var2nc(Filename, lat, dimname(1:2), 'lat', f_exists=.true., longname=trim(att1), units=trim(att2))
+! ! write first time step - time
+! call Get_NcVarAtt(oriFileName, 'time', 'units', att2)
+! call var2nc(Filename, t(1), dimname(3), dimname(3), f_exists=.true., &
+!      dim_unlimit=1_i4, units=trim(att2))
+! ! write first time step - data
+! call Get_NcVarAtt(oriFileName, 'pr', 'long_name', att1)
+! call Get_NcVarAtt(oriFileName, 'pr', 'units', att2)
+! call var2nc(Filename, data(:,:,1), dimname(1:3), 'pr', f_exists=.true., &
+!      dim_unlimit=3_i4, longname=trim(att1), units=trim(att2))
+! ! write second to last time step - time and data
+! do i=2, size(t,1)
+!    call var2nc(Filename, t(i), dimname(3), dimname(3), is_dim=.true., f_exists=.true., dim_unlimit=1_i4)
+!    call var2nc(Filename, data(:,:,i), dimname(1:3), 'pr', f_exists=.true., dim_unlimit=3_i4)
+! end do
+! !
+! ! Check variables and attributes
+! dimlen = Get_NcDim(Filename,'lon')
+! allocate(lon1(dimlen(1),dimlen(2)))
+! call Get_NcVar(Filename,'lon',lon1)
+! if (any(notequal(lon,lon1))) isgood = .false.
+! call Get_NcVarAtt(oriFileName, 'lon', 'long_name', att1)
+! call Get_NcVarAtt(FileName, 'lon', 'long_name', att2)
+! if (trim(att1) /= trim(att2)) isgood = .false.
+! call Get_NcVarAtt(oriFileName, 'lon', 'units', att1)
+! call Get_NcVarAtt(FileName, 'lon', 'units', att2)
+! if (trim(att1) /= trim(att2)) isgood = .false.
+! !
+! dimlen = Get_NcDim(Filename,'lat')
+! allocate(lat1(dimlen(1),dimlen(2)))
+! call Get_NcVar(Filename,'lat',lat1)
+! if (any(notequal(lon,lon1))) isgood = .false.
+! call Get_NcVarAtt(oriFileName, 'lat', 'long_name', att1)
+! call Get_NcVarAtt(FileName, 'lat', 'long_name', att2)
+! if (trim(att1) /= trim(att2)) isgood = .false.
+! call Get_NcVarAtt(oriFileName, 'lat', 'units', att1)
+! call Get_NcVarAtt(FileName, 'lat', 'units', att2)
+! if (trim(att1) /= trim(att2)) isgood = .false.
+! !
+! dimlen = Get_NcDim(Filename,'time')
+! allocate(time1(dimlen(1)))
+! call Get_NcVar(Filename,'time',time1)
+! if (any(notequal(t,time1))) isgood = .false.
+! call Get_NcVarAtt(oriFileName, 'time', 'units', att1)
+! call Get_NcVarAtt(FileName, 'time', 'units', att2)
+! if (trim(att1) /= trim(att2)) isgood = .false.
+! !
+! dimlen = Get_NcDim(Filename,'pr')
+! allocate(data2(dimlen(1),dimlen(2),dimlen(3)))
+! call Get_NcVar(Filename,'pr',data2)
+! if (any(notequal(data,data2))) isgood = .false.
+! call Get_NcVarAtt(oriFileName, 'pr', 'long_name', att1)
+! call Get_NcVarAtt(FileName, 'pr', 'long_name', att2)
+! if (trim(att1) /= trim(att2)) isgood = .false.
+! call Get_NcVarAtt(oriFileName, 'pr', 'units', att1)
+! call Get_NcVarAtt(FileName, 'pr', 'units', att2)
+! if (trim(att1) /= trim(att2)) isgood = .false.
+! !
+! ! cleanup
+! deallocate(x1, y1, lon1, lat1, time1, data2)
+! !MC!
+
+
+
+! --------------------------------------------------------------------
+! Dump nc file
+!
+
 Filename = 'ncwrite_make_check_test_file'
 Varname  = 'var'
 ! 1D
@@ -252,11 +369,13 @@ call dump_netcdf(Filename, data7)
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data8(dimlen(1)))
 call Get_NcVar(Filename,Varname,data8)
-if (any(abs(data7-data8) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data7-data8) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data7,data8))) isgood = .false.
 
 allocate(data14(dimlen(1),dimlen(2)))
 call Get_NcVar(Filename,Varname,data14)
-if (any(abs(data7-data14(:,1)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data7-data14(:,1)) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data7,data14(:,1)))) isgood = .false.
 
 ! 2D
 allocate(data5(size(data,1),size(data,2)))
@@ -265,14 +384,16 @@ call dump_netcdf(Filename, data5)
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data6(dimlen(1),dimlen(2)))
 call Get_NcVar(Filename,Varname,data6)
-if (any(abs(data5-data6) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data5-data6) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data5,data6))) isgood = .false.
 
 ! 3D
 call dump_netcdf(Filename, data)
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data2(dimlen(1),dimlen(2),dimlen(3)))
 call Get_NcVar(Filename,Varname,data2)
-if (any(abs(data-data2) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data-data2) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data,data2))) isgood = .false.
 
 ! 4D
 allocate(data3(size(data,1),size(data,2),10,size(data,3)))
@@ -284,7 +405,8 @@ call dump_netcdf(Filename, data3)
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data4(dimlen(1),dimlen(2),dimlen(3),dimlen(4)))
 call Get_NcVar(Filename,Varname,data4)
-if (any(abs(data3-data4) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data3-data4) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data3,data4))) isgood = .false.
 
 ! 5D
 allocate(data9(size(data,1),size(data,2),10,8,size(data,3)))
@@ -297,14 +419,16 @@ call dump_netcdf(Filename, data9)
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data10(dimlen(1),dimlen(2),dimlen(3),dimlen(4),dimlen(5)))
 call Get_NcVar(Filename,Varname,data10)
-if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data9,data10))) isgood = .false.
 
 ! 3D - dp
 call dump_netcdf(Filename, real(data,dp))
 dimlen = Get_NcDim(Filename,Varname)
 allocate(ddata2(dimlen(1),dimlen(2),dimlen(3)))
 call Get_NcVar(Filename,Varname,ddata2)
-if (any(abs(real(data,dp)-ddata2) > epsilon(1.0_dp))) isgood = .false.
+! if (any(abs(real(data,dp)-ddata2) > epsilon(1.0_dp))) isgood = .false.
+if (any(notequal(real(data,dp),ddata2))) isgood = .false.
 
 ! 3D - i4
 call dump_netcdf(Filename, int(data,i4))
@@ -320,9 +444,12 @@ call dump_netcdf(Filename, data7, append=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data13(dimlen(1),dimlen(2)))
 call Get_NcVar(Filename,Varname,data13)
-if (any(abs(data7-data13(:,1)) > epsilon(1.0_sp))) isgood = .false.
-if (any(abs(data7-data13(:,2)) > epsilon(1.0_sp))) isgood = .false.
-if (any(abs(data7-data13(:,3)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data7-data13(:,1)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data7-data13(:,2)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data7-data13(:,3)) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data7,data13(:,1)))) isgood = .false.
+if (any(notequal(data7,data13(:,2)))) isgood = .false.
+if (any(notequal(data7,data13(:,3)))) isgood = .false.
 
 ! 2D - append
 call dump_netcdf(Filename, data5)
@@ -330,8 +457,10 @@ call dump_netcdf(Filename, data5, append=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data12(dimlen(1),dimlen(2),dimlen(3)))
 call Get_NcVar(Filename,Varname,data12)
-if (any(abs(data5-data12(:,:,1)) > epsilon(1.0_sp))) isgood = .false.
-if (any(abs(data5-data12(:,:,2)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data5-data12(:,:,1)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data5-data12(:,:,2)) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data5,data12(:,:,1)))) isgood = .false.
+if (any(notequal(data5,data12(:,:,2)))) isgood = .false.
 
 ! 3D - append
 call dump_netcdf(Filename, data(:,:,1:size(data,3)/2))
@@ -339,63 +468,74 @@ call dump_netcdf(Filename, data(:,:,size(data,3)/2+1:), append=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data11(dimlen(1),dimlen(2),dimlen(3)))
 call Get_NcVar(Filename,Varname,data11)
-if (any(abs(data-data11) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data-data11) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data,data11))) isgood = .false.
 
 ! 5D - large file support
 call dump_netcdf(Filename, data9, lfs=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data10)
-if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data9,data10))) isgood = .false.
 
 ! 5D - netcdf4, deflate=default
 call dump_netcdf(Filename, data9, netcdf4=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data10)
-if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data9,data10))) isgood = .false.
 
 ! 5D - netcdf4, deflate=0
 call dump_netcdf(Filename, data9, netcdf4=.true., deflate_level=0)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data10)
-if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data9,data10))) isgood = .false.
 
 ! 5D - netcdf4, deflate=9
 call dump_netcdf(Filename, data9, netcdf4=.true., deflate_level=9)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data10)
-if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data9,data10))) isgood = .false.
 
 
 ! 1D - netcdf4
 call dump_netcdf(Filename, data7, netcdf4=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data8)
-if (any(abs(data7-data8) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data7-data8) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data7,data8))) isgood = .false.
 ! 2D - netcdf4
 call dump_netcdf(Filename, data5, netcdf4=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data6)
-if (any(abs(data5-data6) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data5-data6) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data5,data6))) isgood = .false.
 ! 3D - netcdf4
 call dump_netcdf(Filename, data, netcdf4=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data2)
-if (any(abs(data-data2) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data-data2) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data,data2))) isgood = .false.
 ! 4D - netcdf4
 call dump_netcdf(Filename, data3, netcdf4=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data4)
-if (any(abs(data3-data4) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data3-data4) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data3,data4))) isgood = .false.
 ! 5D - netcdf4
 call dump_netcdf(Filename, data9, netcdf4=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data10)
-if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data9-data10) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data9,data10))) isgood = .false.
 ! 3D - dp - netcdf4
 call dump_netcdf(Filename, real(data,dp), netcdf4=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,ddata2)
-if (any(abs(real(data,dp)-ddata2) > epsilon(1.0_dp))) isgood = .false.
+! if (any(abs(real(data,dp)-ddata2) > epsilon(1.0_dp))) isgood = .false.
+if (any(notequal(real(data,dp),ddata2))) isgood = .false.
 ! 3D - i4 - netcdf4
 call dump_netcdf(Filename, int(data,i4), netcdf4=.true.)
 dimlen = Get_NcDim(Filename,Varname)
@@ -407,22 +547,28 @@ call dump_netcdf(Filename, data7, append=.true.)
 call dump_netcdf(Filename, data7, append=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data13)
-if (any(abs(data7-data13(:,1)) > epsilon(1.0_sp))) isgood = .false.
-if (any(abs(data7-data13(:,2)) > epsilon(1.0_sp))) isgood = .false.
-if (any(abs(data7-data13(:,3)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data7-data13(:,1)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data7-data13(:,2)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data7-data13(:,3)) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data7,data13(:,1)))) isgood = .false.
+if (any(notequal(data7,data13(:,2)))) isgood = .false.
+if (any(notequal(data7,data13(:,3)))) isgood = .false.
 ! 2D - append - netcdf4
 call dump_netcdf(Filename, data5, netcdf4=.true.)
 call dump_netcdf(Filename, data5, append=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data12)
-if (any(abs(data5-data12(:,:,1)) > epsilon(1.0_sp))) isgood = .false.
-if (any(abs(data5-data12(:,:,2)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data5-data12(:,:,1)) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data5-data12(:,:,2)) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data5,data12(:,:,1)))) isgood = .false.
+if (any(notequal(data5,data12(:,:,2)))) isgood = .false.
 ! 3D - append - netcdf4
 call dump_netcdf(Filename, data(:,:,1:size(data,3)/2), netcdf4=.true.)
 call dump_netcdf(Filename, data(:,:,size(data,3)/2+1:), append=.true.)
 dimlen = Get_NcDim(Filename,Varname)
 call Get_NcVar(Filename,Varname,data11)
-if (any(abs(data-data11) > epsilon(1.0_sp))) isgood = .false.
+! if (any(abs(data-data11) > epsilon(1.0_sp))) isgood = .false.
+if (any(notequal(data,data11))) isgood = .false.
 
 ! ! 3D - netcdf4, deflate=0
 ! Filename = 'ncwrite_make_check_test_file'
