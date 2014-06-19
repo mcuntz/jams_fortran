@@ -179,13 +179,13 @@ module mo_ncwrite
   !>        \brief Extended dump_netcdf for multiple variables
   !
   !>        \details Write different variables including attributes to netcdf
-  !>        file. The attributes are restricted to longname, units,
+  !>        file. The attributes are restricted to long_name, units,
   !>        and _FillValue. It is also possible to append variables
   !>        when an unlimited dimension is specified.
   !
   !     CALLING SEQUENCE
-  !>        call var2nc(f_name, arr, dnames, v_name, dim_unlimit,
-  !>                    longname, units, fill_value, is_dim, f_exists)
+  !>        call var2nc(f_name, arr, dnames, v_name, dim_unlimited,
+  !>                    long_name, units, fill_value, is_dim, f_exists)
   !
   !     INTENT(IN)
   !>        \param[in] "character(*) :: f_name"                             filename
@@ -194,8 +194,8 @@ module mo_ncwrite
   !>        \param[in] "character(*) :: v_name"                             variable name
   !
   !     INTENT(IN), OPTIONAL
-  !>        \param[in] "integer(i4),             optional :: dim_unlimit"   index of unlimited dimension
-  !>        \param[in] "character(*),            optional :: longname"      attribute
+  !>        \param[in] "integer(i4),             optional :: dim_unlimited"   index of unlimited dimension
+  !>        \param[in] "character(*),            optional :: long_name"      attribute
   !>        \param[in] "character(*),            optional :: units"         attribute
   !>        \param[in] "integer(i4)/real(sp,dp), optional :: fill_value"    attribute
   !>        \param[in] "logical,                 optional :: is_dim"        flag - specify
@@ -226,21 +226,21 @@ module mo_ncwrite
   !
   !         With attributes it looks like
   !           call var2nc('test.nc', field, dnames, 'h', &
-  !                       longname = 'height', units = '[m]', fill_value = -9999)
+  !                       long_name = 'height', units = '[m]', fill_value = -9999)
   !
   !         To be able to append something to <field>, an unlimited dimension
   !         needs to be specified, but first the unlimited dimension needs to be
   !         written
   !           call var2nc('test.nc', (/10/), (/dnames(3)/), 'time',
-  !                       dim_unlimit = 1, units = 'days since 1990-01-17',
+  !                       dim_unlimited = 1, units = 'days since 1990-01-17',
   !                       is_dim = .true.)
   !         Then the variable using the unlimited dimension can be written
-  !           call var2nc('test.nc', field(:,:,1:1), dnames, 'h', dim_unlimit=3)
+  !           call var2nc('test.nc', field(:,:,1:1), dnames, 'h', dim_unlimited=3)
   !         Now one can append an arbitrary number of time steps, e.g., the next 9
   !         and the time has to be added again before
   !           call var2nc('test.nc', (/20,...,100/), dnames(3:3), 'time',
-  !                       dim_unlimit = 1, is_dim = .true.)
-  !           call var2nc('test.nc', field(:,:,2:10, dnames, 'h', dim_unlimit=3)
+  !                       dim_unlimited = 1, is_dim = .true.)
+  !           call var2nc('test.nc', field(:,:,2:10, dnames, 'h', dim_unlimited=3)
   !
   !         You can also write another variable sharing the same dimensions
   !           call var2nc('test.nc', field_2, dnames(1:2), 'h_2')
@@ -2714,8 +2714,8 @@ contains
 
   ! ------------------------------------------------------------------
 
-  subroutine var2nc_1d_i4( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_1d_i4( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -2726,8 +2726,8 @@ contains
     character(len=*),                  intent(in) :: v_name
     character(len=*), dimension(ndim), intent(in) :: dnames
     ! attributes
-    integer(i4),      optional,      intent(in) :: dim_unlimit
-    character(len=*), optional,      intent(in) :: longname
+    integer(i4),      optional,      intent(in) :: dim_unlimited
+    character(len=*), optional,      intent(in) :: long_name
     character(len=*), optional,      intent(in) :: units
     integer(i4),      optional,      intent(in) :: fill_value
     logical,          optional,      intent(in) :: is_dim
@@ -2755,7 +2755,7 @@ contains
     start(:)     = 1
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     is_dim_loc = .false.
     if ( present( is_dim ) ) is_dim_loc = is_dim
     ! open the netcdf file
@@ -2797,16 +2797,18 @@ contains
                 call check(nf90_def_dim(f_handle, trim(dnames(i)), dims(i), dimid(i) ))
              end if
              ! define variable for dimension if 1d var is not a dimension itself
-             if ( .not. is_dim_loc ) call check(nf90_def_var(f_handle, trim(dnames(i)), NF90_INT, dimid(i), varid(i) ) )
-             ! write dimension when not unlimited
-             if ( i .ne. d_unlimit ) call check(nf90_put_var(f_handle, varid(i), (/ (j, j=1,dims(i)) /)))
+             if ( .not. is_dim_loc ) then
+                call check(nf90_def_var(f_handle, trim(dnames(i)), NF90_INT, dimid(i), varid(i) ) )
+                ! write dimension when not unlimited
+                if ( i .ne. d_unlimit ) call check(nf90_put_var(f_handle, varid(i), (/ (j, j=1,dims(i)) /)))
+             end if
           end if
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1),&
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        !
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
@@ -2827,8 +2829,8 @@ contains
     !
   end subroutine var2nc_1d_i4
 
-  subroutine var2nc_1d_sp( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_1d_sp( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -2839,8 +2841,8 @@ contains
     character(len=*), dimension(ndim), intent(in) :: dnames
     character(len=*),                  intent(in) :: v_name
     ! attributes
-    integer(i4),      optional,      intent(in) :: dim_unlimit
-    character(len=*), optional,      intent(in) :: longname
+    integer(i4),      optional,      intent(in) :: dim_unlimited
+    character(len=*), optional,      intent(in) :: long_name
     character(len=*), optional,      intent(in) :: units
     real(sp),         optional,      intent(in) :: fill_value
     logical,          optional,      intent(in) :: is_dim
@@ -2868,7 +2870,7 @@ contains
     start(:)     = 1
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     is_dim_loc = .false.
     if ( present( is_dim ) ) is_dim_loc = is_dim
     ! open the netcdf file
@@ -2910,15 +2912,17 @@ contains
                 call check(nf90_def_dim(f_handle, trim(dnames(i)), dims(i), dimid(i) ))
              end if
              ! define variable for dimension if 1d var is not a dimension itself
-             if ( .not. is_dim_loc ) call check(nf90_def_var(f_handle, trim(dnames(i)), NF90_INT, dimid(i), varid(i) ) )
-             ! write dimension when not unlimited
-             if ( i .ne. d_unlimit ) call check(nf90_put_var(f_handle, varid(i), (/ (j, j=1,dims(i)) /)))
+             if ( .not. is_dim_loc ) then
+                call check(nf90_def_var(f_handle, trim(dnames(i)), NF90_INT, dimid(i), varid(i) ) )
+                ! write dimension when not unlimited
+                if ( i .ne. d_unlimit ) call check(nf90_put_var(f_handle, varid(i), (/ (j, j=1,dims(i)) /)))
+             end if
           end if
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1),&
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
@@ -2939,8 +2943,8 @@ contains
     !
   end subroutine var2nc_1d_sp
 
-  subroutine var2nc_1d_dp( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_1d_dp( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -2951,8 +2955,8 @@ contains
     character(len=*),                  intent(in) :: v_name
     character(len=*), dimension(ndim), intent(in) :: dnames
     ! attributes
-    integer(i4),      optional,      intent(in) :: dim_unlimit
-    character(len=*), optional,      intent(in) :: longname
+    integer(i4),      optional,      intent(in) :: dim_unlimited
+    character(len=*), optional,      intent(in) :: long_name
     character(len=*), optional,      intent(in) :: units
     real(dp),         optional,      intent(in) :: fill_value
     logical,          optional,      intent(in) :: is_dim
@@ -2980,7 +2984,7 @@ contains
     start(:)     = 1
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     is_dim_loc = .false.
     if ( present( is_dim ) ) is_dim_loc = is_dim
     ! open the netcdf file
@@ -3022,15 +3026,17 @@ contains
                 call check(nf90_def_dim(f_handle, trim(dnames(i)), dims(i), dimid(i) ))
              end if
              ! define variable for dimension if 1d var is not a dimension itself
-             if ( .not. is_dim_loc ) call check(nf90_def_var(f_handle, trim(dnames(i)), NF90_INT, dimid(i), varid(i) ) )
-             ! write dimension when not unlimited
-             if ( i .ne. d_unlimit ) call check(nf90_put_var(f_handle, varid(i), (/ (j, j=1,dims(i)) /)))
+             if ( .not. is_dim_loc ) then
+                call check(nf90_def_var(f_handle, trim(dnames(i)), NF90_INT, dimid(i), varid(i) ) )
+                ! write dimension when not unlimited
+                if ( i .ne. d_unlimit ) call check(nf90_put_var(f_handle, varid(i), (/ (j, j=1,dims(i)) /)))
+             end if
           end if
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1),&
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
@@ -3051,8 +3057,8 @@ contains
     !
   end subroutine var2nc_1d_dp
 
-  subroutine var2nc_2d_i4( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_2d_i4( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -3063,8 +3069,8 @@ contains
     character(len=*),                   intent(in) :: v_name
     character(len=*), dimension(ndim),  intent(in) :: dnames
     ! optional
-    integer(i4),      optional,         intent(in) :: dim_unlimit
-    character(len=*), optional,         intent(in) :: longname
+    integer(i4),      optional,         intent(in) :: dim_unlimited
+    character(len=*), optional,         intent(in) :: long_name
     character(len=*), optional,         intent(in) :: units
     integer(i4),      optional,         intent(in) :: fill_value
     logical,          optional,         intent(in) :: is_dim
@@ -3093,7 +3099,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -3139,7 +3145,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1),&
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
@@ -3160,8 +3166,8 @@ contains
     !
   end subroutine var2nc_2d_i4
 
-  subroutine var2nc_2d_sp( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_2d_sp( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -3172,8 +3178,8 @@ contains
     character(len=*),                   intent(in) :: v_name
     character(len=*), dimension(ndim),  intent(in) :: dnames
     ! optional
-    integer(i4),      optional,         intent(in) :: dim_unlimit
-    character(len=*), optional,         intent(in) :: longname
+    integer(i4),      optional,         intent(in) :: dim_unlimited
+    character(len=*), optional,         intent(in) :: long_name
     character(len=*), optional,         intent(in) :: units
     real(sp),         optional,         intent(in) :: fill_value
     logical,          optional,         intent(in) :: is_dim
@@ -3202,7 +3208,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -3248,7 +3254,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1),&
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
@@ -3269,8 +3275,8 @@ contains
     !
   end subroutine var2nc_2d_sp
 
-  subroutine var2nc_2d_dp( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_2d_dp( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -3281,8 +3287,8 @@ contains
     character(len=*),                   intent(in) :: v_name
     character(len=*), dimension(ndim),  intent(in) :: dnames
     ! optional
-    integer(i4),      optional,         intent(in) :: dim_unlimit
-    character(len=*), optional,         intent(in) :: longname
+    integer(i4),      optional,         intent(in) :: dim_unlimited
+    character(len=*), optional,         intent(in) :: long_name
     character(len=*), optional,         intent(in) :: units
     real(dp),         optional,         intent(in) :: fill_value
     logical,          optional,         intent(in) :: is_dim
@@ -3311,7 +3317,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -3357,7 +3363,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1), &
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att(f_handle, varid(ndim+1), '_FillValue',fill_value ) )
        ! end definition
@@ -3378,8 +3384,8 @@ contains
     !
   end subroutine var2nc_2d_dp
 
-  subroutine var2nc_3d_i4( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_3d_i4( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -3390,8 +3396,8 @@ contains
     character(len=*),                   intent(in) :: v_name
     character(len=*), dimension(ndim),  intent(in) :: dnames
     ! optional
-    integer(i4),      optional,         intent(in) :: dim_unlimit
-    character(len=*), optional,         intent(in) :: longname
+    integer(i4),      optional,         intent(in) :: dim_unlimited
+    character(len=*), optional,         intent(in) :: long_name
     character(len=*), optional,         intent(in) :: units
     integer(i4),      optional,         intent(in) :: fill_value
     logical,          optional,         intent(in) :: is_dim
@@ -3420,7 +3426,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -3466,7 +3472,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1), &
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
@@ -3487,8 +3493,8 @@ contains
     !
   end subroutine var2nc_3d_i4
 
-  subroutine var2nc_3d_sp( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_3d_sp( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -3499,8 +3505,8 @@ contains
     character(len=*),                   intent(in) :: v_name
     character(len=*), dimension(ndim),  intent(in) :: dnames
     ! optional
-    integer(i4),      optional,         intent(in) :: dim_unlimit
-    character(len=*), optional,         intent(in) :: longname
+    integer(i4),      optional,         intent(in) :: dim_unlimited
+    character(len=*), optional,         intent(in) :: long_name
     character(len=*), optional,         intent(in) :: units
     real(sp),         optional,         intent(in) :: fill_value
     logical,          optional,         intent(in) :: is_dim
@@ -3529,7 +3535,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -3575,7 +3581,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1), &
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
@@ -3596,8 +3602,8 @@ contains
     !
   end subroutine var2nc_3d_sp
 
-  subroutine var2nc_3d_dp( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_3d_dp( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -3608,8 +3614,8 @@ contains
     character(len=*),                   intent(in) :: v_name
     character(len=*), dimension(ndim),  intent(in) :: dnames
     ! optional
-    integer(i4),      optional,         intent(in) :: dim_unlimit
-    character(len=*), optional,         intent(in) :: longname
+    integer(i4),      optional,         intent(in) :: dim_unlimited
+    character(len=*), optional,         intent(in) :: long_name
     character(len=*), optional,         intent(in) :: units
     real(dp),         optional,         intent(in) :: fill_value
     logical,          optional,         intent(in) :: is_dim
@@ -3638,7 +3644,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -3684,7 +3690,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1), &
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att(f_handle, varid(ndim+1), '_FillValue',fill_value ) )
        ! end definition
@@ -3705,8 +3711,8 @@ contains
     !
   end subroutine var2nc_3d_dp
 
-  subroutine var2nc_4d_i4( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_4d_i4( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -3717,8 +3723,8 @@ contains
     character(len=*),                     intent(in) :: v_name
     character(len=*), dimension(ndim),    intent(in) :: dnames
     ! optional
-    integer(i4),      optional,           intent(in) :: dim_unlimit
-    character(len=*), optional,           intent(in) :: longname
+    integer(i4),      optional,           intent(in) :: dim_unlimited
+    character(len=*), optional,           intent(in) :: long_name
     character(len=*), optional,           intent(in) :: units
     integer(i4),      optional,           intent(in) :: fill_value
     logical,          optional,           intent(in) :: is_dim
@@ -3747,7 +3753,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -3793,7 +3799,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1), &
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
@@ -3814,8 +3820,8 @@ contains
     !
   end subroutine var2nc_4d_i4
 
-  subroutine var2nc_4d_sp( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_4d_sp( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -3826,8 +3832,8 @@ contains
     character(len=*),                     intent(in) :: v_name
     character(len=*), dimension(ndim),    intent(in) :: dnames
     ! optional
-    integer(i4),      optional,           intent(in) :: dim_unlimit
-    character(len=*), optional,           intent(in) :: longname
+    integer(i4),      optional,           intent(in) :: dim_unlimited
+    character(len=*), optional,           intent(in) :: long_name
     character(len=*), optional,           intent(in) :: units
     real(sp),         optional,           intent(in) :: fill_value
     logical,          optional,           intent(in) :: is_dim
@@ -3856,7 +3862,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -3902,7 +3908,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1), &
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
@@ -3923,8 +3929,8 @@ contains
     !
   end subroutine var2nc_4d_sp
 
-  subroutine var2nc_4d_dp( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_4d_dp( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -3935,8 +3941,8 @@ contains
     character(len=*),                     intent(in) :: v_name
     character(len=*), dimension(ndim),    intent(in) :: dnames
     ! optional
-    integer(i4),      optional,           intent(in) :: dim_unlimit
-    character(len=*), optional,           intent(in) :: longname
+    integer(i4),      optional,           intent(in) :: dim_unlimited
+    character(len=*), optional,           intent(in) :: long_name
     character(len=*), optional,           intent(in) :: units
     real(dp),         optional,           intent(in) :: fill_value
     logical,          optional,           intent(in) :: is_dim
@@ -3965,7 +3971,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -4011,7 +4017,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1), &
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att(f_handle, varid(ndim+1), '_FillValue',fill_value ) )
        ! end definition
@@ -4032,8 +4038,8 @@ contains
     !
   end subroutine var2nc_4d_dp
 
-  subroutine var2nc_5d_i4( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_5d_i4( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -4044,8 +4050,8 @@ contains
     character(len=*),                       intent(in) :: v_name
     character(len=*), dimension(ndim),      intent(in) :: dnames
     ! optional
-    integer(i4),      optional,             intent(in) :: dim_unlimit
-    character(len=*), optional,             intent(in) :: longname
+    integer(i4),      optional,             intent(in) :: dim_unlimited
+    character(len=*), optional,             intent(in) :: long_name
     character(len=*), optional,             intent(in) :: units
     integer(i4),      optional,             intent(in) :: fill_value
     logical,          optional,             intent(in) :: is_dim
@@ -4074,7 +4080,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -4120,7 +4126,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1), &
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
@@ -4141,8 +4147,8 @@ contains
     !
   end subroutine var2nc_5d_i4
 
-  subroutine var2nc_5d_sp( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_5d_sp( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -4153,8 +4159,8 @@ contains
     character(len=*),                       intent(in) :: v_name
     character(len=*), dimension(ndim),      intent(in) :: dnames
     ! optional
-    integer(i4),      optional,             intent(in) :: dim_unlimit
-    character(len=*), optional,             intent(in) :: longname
+    integer(i4),      optional,             intent(in) :: dim_unlimited
+    character(len=*), optional,             intent(in) :: long_name
     character(len=*), optional,             intent(in) :: units
     real(sp),         optional,             intent(in) :: fill_value
     logical,          optional,             intent(in) :: is_dim
@@ -4183,7 +4189,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -4229,7 +4235,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1), &
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att (f_handle, varid(ndim+1), '_FillValue', fill_value ) )
        ! end definition
@@ -4250,8 +4256,8 @@ contains
     !
   end subroutine var2nc_5d_sp
 
-  subroutine var2nc_5d_dp( f_name, arr, dnames, v_name, dim_unlimit, &
-       longname, units, fill_value, is_dim, f_exists )
+  subroutine var2nc_5d_dp( f_name, arr, dnames, v_name, dim_unlimited, &
+       long_name, units, fill_value, is_dim, f_exists )
     !
     implicit none
     !
@@ -4262,8 +4268,8 @@ contains
     character(len=*),                       intent(in) :: v_name
     character(len=*), dimension(ndim),      intent(in) :: dnames
     ! optional
-    integer(i4),      optional,             intent(in) :: dim_unlimit
-    character(len=*), optional,             intent(in) :: longname
+    integer(i4),      optional,             intent(in) :: dim_unlimited
+    character(len=*), optional,             intent(in) :: long_name
     character(len=*), optional,             intent(in) :: units
     real(dp),         optional,             intent(in) :: fill_value
     logical,          optional,             intent(in) :: is_dim
@@ -4292,7 +4298,7 @@ contains
     start(:)     = 1_i4
     counter(:)   = dims
     d_unlimit    = 0_i4
-    if ( present( dim_unlimit ) ) d_unlimit = dim_unlimit
+    if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
     ! open the netcdf file
     if ( present( f_exists ) ) then
        f_handle = open_netcdf( f_name, exists = f_exists )
@@ -4338,7 +4344,7 @@ contains
        call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1), &
             chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
        ! add attributes
-       if ( present( longname   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'longname', longname ) )
+       if ( present( long_name   ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'long_name', long_name ) )
        if ( present( units      ) ) call check(nf90_put_att (f_handle, varid(ndim+1), 'units', units ) )
        if ( present( fill_value ) ) call check(nf90_put_att(f_handle, varid(ndim+1), '_FillValue',fill_value ) )
        ! end definition

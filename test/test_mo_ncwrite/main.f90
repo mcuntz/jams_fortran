@@ -141,18 +141,18 @@ dimname(5) = 'depth'
 tname(1)   = 'time' ! tname must be array
 ! write static data
 call var2nc( Filename, data(:,:,1), dimname(1:2), 'pre_static', &
-     longname = 'precipitation', units = '[mm/d]', fill_value = -9999. )
+     long_name = 'precipitation', units = '[mm/d]', fill_value = -9999. )
 Varname = 'pre_static'
 call Get_NcVar(Filename,Varname,data1)
 ! if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
 if (any(notequal(data,data1))) isgood = .false.
 
 ! write time - 1d unlimit
-call var2nc( Filename, int(t,i4), tname, 'time', dim_unlimit = 1_i4, &
+call var2nc( Filename, int(t,i4), tname, 'time', dim_unlimited = 1_i4, &
      units = 'days since 1984-08-28', fill_value=-9999, is_dim = .True. )
 ! write variable
-call var2nc( Filename, data(14,14,:), tname, 'pre_1d', dim_unlimit = 1_i4 , &
-     longname = 'precipitation', units = '[mm/d]' )
+call var2nc( Filename, data(14,14,:), tname, 'pre_1d', dim_unlimited = 1_i4 , &
+     long_name = 'precipitation', units = '[mm/d]' )
 ! read again
 Varname = 'pre_1d'
 dimlen  = Get_NcDim(Filename,Varname)
@@ -162,8 +162,8 @@ call Get_NcVar(Filename,Varname,data7)
 if (any(notequal(data(14,14,:),data7))) isgood = .false.
 
 ! write 2d - dp
-call var2nc( Filename, real(data(14,:,:),dp), dimname(2:3), 'pre_2d', dim_unlimit = 2,  &
-     longname = 'precipitation', units = '[mm/d]' )
+call var2nc( Filename, real(data(14,:,:),dp), dimname(2:3), 'pre_2d', dim_unlimited = 2,  &
+     long_name = 'precipitation', units = '[mm/d]' )
 Varname = 'pre_2d'
 allocate( ddata5( size( data, 2), size( data, 3) ) )
 call Get_NcVar( Filename, Varname, ddata5 )
@@ -171,8 +171,8 @@ if (any(notequal(ddata5,real(data(14,:,:), dp)))) isgood = .false.
 deallocate( ddata5 )
 
 ! write 3d - sp - specify append, if save variable should not be used
-call var2nc( Filename, data, dimname(1:3), 'pre_3d', dim_unlimit = 3_i4 , &
-     longname = 'precipitation', units = '[mm/d]', f_exists = .true. )
+call var2nc( Filename, data, dimname(1:3), 'pre_3d', dim_unlimited = 3_i4 , &
+     long_name = 'precipitation', units = '[mm/d]', f_exists = .true. )
 Varname = 'pre_3d'
 call Get_NcVar(Filename,Varname,data1)
 ! if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
@@ -183,8 +183,8 @@ allocate(data3(size(data,1),size(data,2),size(data,3),10))
 do i=1, 10
    data3(:,:,:,i) = data
 end do
-call var2nc( Filename, data3, dimname(1:4), 'pre_4d', dim_unlimit = 3_i4 , &
-     longname = 'precipitation', units = '[mm/d]' )
+call var2nc( Filename, data3, dimname(1:4), 'pre_4d', dim_unlimited = 3_i4 , &
+     long_name = 'precipitation', units = '[mm/d]' )
 allocate( data4( size( data3,1), size(data3,2), size(data3,3), size(data3,4) ) )
 call Get_NcVar(Filename,'pre_4d',data4)
 if (any(notequal(data3,data4))) isgood = .false.
@@ -196,8 +196,8 @@ do i=1, 10
       data9(:,:,:,i,j) = data
    end do
 end do
-call var2nc( Filename, data9, dimname, 'pre_5d', dim_unlimit = 3_i4 , &
-     longname = 'precipitation', units = '[mm/d]' )
+call var2nc( Filename, data9, dimname, 'pre_5d', dim_unlimited = 3_i4 , &
+     long_name = 'precipitation', units = '[mm/d]' )
 Varname = 'pre_5d'
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data10(dimlen(1),dimlen(2),dimlen(3),dimlen(4),dimlen(5)))
@@ -209,12 +209,12 @@ if (any(notequal(data9,data10))) isgood = .false.
 deallocate( data3, data4, data7, data9, data10 )
 
 ! append time - 1d unlimit
-call var2nc( Filename, int(t,i4)+2_i4, tname, 'time', dim_unlimit = 1_i4, &
+call var2nc( Filename, int(t,i4)+2_i4, tname, 'time', dim_unlimited = 1_i4, &
      units = 'days since 1984-08-28', is_dim = .True. )
 
  ! append 1d - sp
-call var2nc( Filename, data(14,14,:), tname, 'pre_1d', dim_unlimit = 1_i4 , &
-     longname = 'precipitation', units = '[mm/d]', f_exists = .true. )
+call var2nc( Filename, data(14,14,:), tname, 'pre_1d', dim_unlimited = 1_i4 , &
+     long_name = 'precipitation', units = '[mm/d]', f_exists = .true. )
 ! check
 Varname = 'pre_1d'
 dimlen  = Get_NcDim(Filename,Varname)
@@ -224,16 +224,16 @@ call Get_NcVar(Filename,Varname,data7)
 if (any(notequal(data(14,14,:),data7(3:)))) isgood = .false.
 
 ! append 2d - dp
-call var2nc( Filename, real(data(14,:,:),dp), dimname(2:3), 'pre_2d', dim_unlimit = 2, &
-     longname = 'precipitation', units = '[mm/d]' )
+call var2nc( Filename, real(data(14,:,:),dp), dimname(2:3), 'pre_2d', dim_unlimited = 2, &
+     long_name = 'precipitation', units = '[mm/d]' )
 Varname = 'pre_2d'
 allocate( ddata5( size( data, 2), 2 * size( data, 3) ) )
 call Get_NcVar( Filename, Varname, ddata5 )
 if (any(notequal(ddata5(:,3:),real(data(14,:,:), dp)))) isgood = .false.
 
 ! append 3d
-call var2nc( Filename, data, dimname(1:3), 'pre_3d', dim_unlimit = 3_i4, &
-     longname = 'precipitation', units = '[mm/d]'  )
+call var2nc( Filename, data, dimname(1:3), 'pre_3d', dim_unlimited = 3_i4, &
+     long_name = 'precipitation', units = '[mm/d]'  )
 deallocate( data1 )
 allocate( data1( size(data,1), size(data,2), 2*size(data,3) ) )
 Varname = 'pre_3d'
@@ -248,8 +248,8 @@ allocate(data3(size(data,1),size(data,2),size(data,3),10))
 do i=1, 10
    data3(:,:,:,i) = data
 end do
-call var2nc( Filename, data3, dimname(1:4), 'pre_4d', dim_unlimit = 3_i4 , &
-     longname = 'precipitation', units = '[mm/d]' )
+call var2nc( Filename, data3, dimname(1:4), 'pre_4d', dim_unlimited = 3_i4 , &
+     long_name = 'precipitation', units = '[mm/d]' )
 allocate( data4( size( data3,1), size(data3,2), 2*size(data3,3), size(data3,4) ) )
 call Get_NcVar(Filename,'pre_4d',data4)
 if (any(notequal(data3,data4(:,:,3:,:)))) isgood = .false.
@@ -261,8 +261,8 @@ do i=1, 10
       data9(:,:,:,i,j) = data
    end do
 end do
-call var2nc( Filename, data9, dimname, 'pre_5d', dim_unlimit = 3_i4 , &
-     longname = 'precipitation', units = '[mm/d]', f_exists = .true. )
+call var2nc( Filename, data9, dimname, 'pre_5d', dim_unlimited = 3_i4 , &
+     long_name = 'precipitation', units = '[mm/d]', f_exists = .true. )
 Varname = 'pre_5d'
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data10(dimlen(1),dimlen(2),dimlen(3),dimlen(4),dimlen(5)))
@@ -273,88 +273,83 @@ if (any(notequal(data9,data10(:,:,3:,:,:)))) isgood = .false.
 ! cleanup
 deallocate( data7, data9, data10, ddata5, data3, data4 )
 
-! !MC!
-! ! Try to reproduce exactly input file
-! Filename = 'ncwrite_make_check_test_file'
-! dimname(1) = 'x'
-! dimname(2) = 'y'
-! dimname(3) = 'time'
-! allocate(x1(size(lon,1)), y1(size(lon,2)))
-! forall(i=1:size(lon,1)) x1(i) = i
-! forall(i=1:size(lon,2)) y1(i) = i
-! ! write dimensions
-! call var2nc(Filename, x1, dimname(1), dimname(1), is_dim=.true., f_exists=.false.)
-! call var2nc(Filename, y1, dimname(2), dimname(2), is_dim=.true., f_exists=.true.)
-! call var2nc(Filename, 1_i4, dimname(3), dimname(3), is_dim=.true., f_exists=.true., dim_unlimit=1_i4)
-! ! write static data
-! call Get_NcVarAtt(oriFileName, 'lon', 'long_name', att1)
-! call Get_NcVarAtt(oriFileName, 'lon', 'units', att2)
-! call var2nc(Filename, lon, dimname(1:2), 'lon', f_exists=.true., longname=trim(att1), units=trim(att2))
-! call Get_NcVarAtt(oriFileName, 'lat', 'long_name', att1)
-! call Get_NcVarAtt(oriFileName, 'lat', 'units', att2)
-! call var2nc(Filename, lat, dimname(1:2), 'lat', f_exists=.true., longname=trim(att1), units=trim(att2))
-! ! write first time step - time
-! call Get_NcVarAtt(oriFileName, 'time', 'units', att2)
-! call var2nc(Filename, t(1), dimname(3), dimname(3), f_exists=.true., &
-!      dim_unlimit=1_i4, units=trim(att2))
-! ! write first time step - data
-! call Get_NcVarAtt(oriFileName, 'pr', 'long_name', att1)
-! call Get_NcVarAtt(oriFileName, 'pr', 'units', att2)
-! call var2nc(Filename, data(:,:,1), dimname(1:3), 'pr', f_exists=.true., &
-!      dim_unlimit=3_i4, longname=trim(att1), units=trim(att2))
-! ! write second to last time step - time and data
-! do i=2, size(t,1)
-!    call var2nc(Filename, t(i), dimname(3), dimname(3), is_dim=.true., f_exists=.true., dim_unlimit=1_i4)
-!    call var2nc(Filename, data(:,:,i), dimname(1:3), 'pr', f_exists=.true., dim_unlimit=3_i4)
-! end do
-! !
-! ! Check variables and attributes
-! dimlen = Get_NcDim(Filename,'lon')
-! allocate(lon1(dimlen(1),dimlen(2)))
-! call Get_NcVar(Filename,'lon',lon1)
-! if (any(notequal(lon,lon1))) isgood = .false.
-! call Get_NcVarAtt(oriFileName, 'lon', 'long_name', att1)
-! call Get_NcVarAtt(FileName, 'lon', 'long_name', att2)
-! if (trim(att1) /= trim(att2)) isgood = .false.
-! call Get_NcVarAtt(oriFileName, 'lon', 'units', att1)
-! call Get_NcVarAtt(FileName, 'lon', 'units', att2)
-! if (trim(att1) /= trim(att2)) isgood = .false.
-! !
-! dimlen = Get_NcDim(Filename,'lat')
-! allocate(lat1(dimlen(1),dimlen(2)))
-! call Get_NcVar(Filename,'lat',lat1)
-! if (any(notequal(lon,lon1))) isgood = .false.
-! call Get_NcVarAtt(oriFileName, 'lat', 'long_name', att1)
-! call Get_NcVarAtt(FileName, 'lat', 'long_name', att2)
-! if (trim(att1) /= trim(att2)) isgood = .false.
-! call Get_NcVarAtt(oriFileName, 'lat', 'units', att1)
-! call Get_NcVarAtt(FileName, 'lat', 'units', att2)
-! if (trim(att1) /= trim(att2)) isgood = .false.
-! !
-! dimlen = Get_NcDim(Filename,'time')
-! allocate(time1(dimlen(1)))
-! call Get_NcVar(Filename,'time',time1)
-! if (any(notequal(t,time1))) isgood = .false.
-! call Get_NcVarAtt(oriFileName, 'time', 'units', att1)
-! call Get_NcVarAtt(FileName, 'time', 'units', att2)
-! if (trim(att1) /= trim(att2)) isgood = .false.
-! !
-! dimlen = Get_NcDim(Filename,'pr')
-! allocate(data2(dimlen(1),dimlen(2),dimlen(3)))
-! call Get_NcVar(Filename,'pr',data2)
-! if (any(notequal(data,data2))) isgood = .false.
-! call Get_NcVarAtt(oriFileName, 'pr', 'long_name', att1)
-! call Get_NcVarAtt(FileName, 'pr', 'long_name', att2)
-! if (trim(att1) /= trim(att2)) isgood = .false.
-! call Get_NcVarAtt(oriFileName, 'pr', 'units', att1)
-! call Get_NcVarAtt(FileName, 'pr', 'units', att2)
-! if (trim(att1) /= trim(att2)) isgood = .false.
-! !
-! ! cleanup
-! deallocate(x1, y1, lon1, lat1, time1, data2)
-! !MC!
-
-
+! Try to reproduce exactly input file
+Filename = 'ncwrite_make_check_test_file'
+dimname(1) = 'x'
+dimname(2) = 'y'
+dimname(3) = 'time'
+allocate(x1(size(lon,1)), y1(size(lon,2)))
+forall(i=1:size(lon,1)) x1(i) = i
+forall(i=1:size(lon,2)) y1(i) = i
+! write static dimensions
+call var2nc(Filename, x1, dimname(1:1), dimname(1), is_dim=.true., f_exists=.false.)
+call var2nc(Filename, y1, dimname(2:2), dimname(2), is_dim=.true. )
+! write static data
+call Get_NcVarAtt(oriFileName, 'lon', 'long_name', att1)
+call Get_NcVarAtt(oriFileName, 'lon', 'units', att2)
+call var2nc(Filename, lon, dimname(1:2), 'lon', long_name=trim(att1), units=trim(att2))
+call Get_NcVarAtt(oriFileName, 'lat', 'long_name', att1)
+call Get_NcVarAtt(oriFileName, 'lat', 'units', att2)
+call var2nc(Filename, lat, dimname(1:2), 'lat', long_name=trim(att1), units=trim(att2))
+! write first time step - time
+call Get_NcVarAtt(oriFileName, 'time', 'units', att2)
+call var2nc(Filename, t(1:1), dimname(3:3), dimname(3), &
+     dim_unlimited=1_i4, units=trim(att2), is_dim = .true.)
+! write first time step - data
+call Get_NcVarAtt(oriFileName, 'pr', 'long_name', att1)
+call Get_NcVarAtt(oriFileName, 'pr', 'units', att2)
+call var2nc(Filename, data(:,:,1:1), dimname(1:3), 'pr', &
+     dim_unlimited=3_i4, long_name=trim(att1), units=trim(att2))
+! write second to last time step - time and data
+do i=2, size(t,1)
+   call var2nc(Filename, t(i:i), dimname(3:3), dimname(3), is_dim=.true., dim_unlimited=1_i4)
+   call var2nc(Filename, data(:,:,i:i), dimname(1:3), 'pr', dim_unlimited=3_i4)
+end do
+!
+! Check variables and attributes
+dimlen = Get_NcDim(Filename,'lon')
+allocate(lon1(dimlen(1),dimlen(2)))
+call Get_NcVar(Filename,'lon',lon1)
+if (any(notequal(lon,lon1))) isgood = .false.
+call Get_NcVarAtt(oriFileName, 'lon', 'long_name', att1)
+call Get_NcVarAtt(FileName, 'lon', 'long_name', att2)
+if (trim(att1) /= trim(att2)) isgood = .false.
+call Get_NcVarAtt(oriFileName, 'lon', 'units', att1)
+call Get_NcVarAtt(FileName, 'lon', 'units', att2)
+if (trim(att1) /= trim(att2)) isgood = .false.
+!
+dimlen = Get_NcDim(Filename,'lat')
+allocate(lat1(dimlen(1),dimlen(2)))
+call Get_NcVar(Filename,'lat',lat1)
+if (any(notequal(lon,lon1))) isgood = .false.
+call Get_NcVarAtt(oriFileName, 'lat', 'long_name', att1)
+call Get_NcVarAtt(FileName, 'lat', 'long_name', att2)
+if (trim(att1) /= trim(att2)) isgood = .false.
+call Get_NcVarAtt(oriFileName, 'lat', 'units', att1)
+call Get_NcVarAtt(FileName, 'lat', 'units', att2)
+if (trim(att1) /= trim(att2)) isgood = .false.
+!
+dimlen = Get_NcDim(Filename,'time')
+allocate(time1(dimlen(1)))
+call Get_NcVar(Filename,'time',time1)
+if (any(notequal(t,time1))) isgood = .false.
+call Get_NcVarAtt(oriFileName, 'time', 'units', att1)
+call Get_NcVarAtt(FileName, 'time', 'units', att2)
+if (trim(att1) /= trim(att2)) isgood = .false.
+!
+dimlen = Get_NcDim(Filename,'pr')
+allocate(data2(dimlen(1),dimlen(2),dimlen(3)))
+call Get_NcVar(Filename,'pr',data2)
+if (any(notequal(data,data2))) isgood = .false.
+call Get_NcVarAtt(oriFileName, 'pr', 'long_name', att1)
+call Get_NcVarAtt(FileName, 'pr', 'long_name', att2)
+if (trim(att1) /= trim(att2)) isgood = .false.
+call Get_NcVarAtt(oriFileName, 'pr', 'units', att1)
+call Get_NcVarAtt(FileName, 'pr', 'units', att2)
+if (trim(att1) /= trim(att2)) isgood = .false.
+!
+! cleanup
+deallocate(x1, y1, lon1, lat1, time1, data2)
 
 ! --------------------------------------------------------------------
 ! Dump nc file
