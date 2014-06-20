@@ -141,18 +141,18 @@ dimname(5) = 'depth'
 tname(1)   = 'time' ! tname must be array
 ! write static data
 call var2nc( Filename, data(:,:,1), dimname(1:2), 'pre_static', &
-     long_name = 'precipitation', units = '[mm/d]', fill_value = -9999. )
+     long_name = 'precipitation', units = '[mm/d]', missing_value = -9999., create=.true. )
 Varname = 'pre_static'
 call Get_NcVar(Filename,Varname,data1)
-! if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
 if (any(notequal(data,data1))) isgood = .false.
 
 ! write time - 1d unlimit
 call var2nc( Filename, int(t,i4), tname, 'time', dim_unlimited = 1_i4, &
-     units = 'days since 1984-08-28', fill_value=-9999, is_dim = .True. )
+     units = 'days since 1984-08-28', missing_value=-9999 )
 ! write variable
 call var2nc( Filename, data(14,14,:), tname, 'pre_1d', dim_unlimited = 1_i4 , &
      long_name = 'precipitation', units = '[mm/d]' )
+
 ! read again
 Varname = 'pre_1d'
 dimlen  = Get_NcDim(Filename,Varname)
@@ -172,7 +172,7 @@ deallocate( ddata5 )
 
 ! write 3d - sp - specify append, if save variable should not be used
 call var2nc( Filename, data, dimname(1:3), 'pre_3d', dim_unlimited = 3_i4 , &
-     long_name = 'precipitation', units = '[mm/d]', f_exists = .true. )
+     long_name = 'precipitation', units = '[mm/d]' )
 Varname = 'pre_3d'
 call Get_NcVar(Filename,Varname,data1)
 ! if (any(abs(data-data1) > epsilon(1.0_sp))) isgood = .false.
@@ -210,11 +210,11 @@ deallocate( data3, data4, data7, data9, data10 )
 
 ! append time - 1d unlimit
 call var2nc( Filename, int(t,i4)+2_i4, tname, 'time', dim_unlimited = 1_i4, &
-     units = 'days since 1984-08-28', is_dim = .True. )
+     units = 'days since 1984-08-28' )
 
  ! append 1d - sp
 call var2nc( Filename, data(14,14,:), tname, 'pre_1d', dim_unlimited = 1_i4 , &
-     long_name = 'precipitation', units = '[mm/d]', f_exists = .true. )
+     long_name = 'precipitation', units = '[mm/d]' )
 ! check
 Varname = 'pre_1d'
 dimlen  = Get_NcDim(Filename,Varname)
@@ -262,14 +262,13 @@ do i=1, 10
    end do
 end do
 call var2nc( Filename, data9, dimname, 'pre_5d', dim_unlimited = 3_i4 , &
-     long_name = 'precipitation', units = '[mm/d]', f_exists = .true. )
+     long_name = 'precipitation', units = '[mm/d]' )
 Varname = 'pre_5d'
 dimlen = Get_NcDim(Filename,Varname)
 allocate(data10(dimlen(1),dimlen(2),dimlen(3),dimlen(4),dimlen(5)))
 call Get_NcVar(Filename,Varname,data10)
 ! if (any(abs(data9-data10(:,:,3:,:,:)) > epsilon(1.0_sp))) isgood = .false.
 if (any(notequal(data9,data10(:,:,3:,:,:)))) isgood = .false.
-
 ! cleanup
 deallocate( data7, data9, data10, ddata5, data3, data4 )
 
@@ -282,8 +281,8 @@ allocate(x1(size(lon,1)), y1(size(lon,2)))
 forall(i=1:size(lon,1)) x1(i) = i
 forall(i=1:size(lon,2)) y1(i) = i
 ! write static dimensions
-call var2nc(Filename, x1, dimname(1:1), dimname(1), is_dim=.true., f_exists=.false.)
-call var2nc(Filename, y1, dimname(2:2), dimname(2), is_dim=.true. )
+call var2nc(Filename, x1, dimname(1:1), dimname(1), create = .true.)
+call var2nc(Filename, y1, dimname(2:2), dimname(2) )
 ! write static data
 call Get_NcVarAtt(oriFileName, 'lon', 'long_name', att1)
 call Get_NcVarAtt(oriFileName, 'lon', 'units', att2)
@@ -294,7 +293,7 @@ call var2nc(Filename, lat, dimname(1:2), 'lat', long_name=trim(att1), units=trim
 ! write first time step - time
 call Get_NcVarAtt(oriFileName, 'time', 'units', att2)
 call var2nc(Filename, t(1:1), dimname(3:3), dimname(3), &
-     dim_unlimited=1_i4, units=trim(att2), is_dim = .true.)
+     dim_unlimited=1_i4, units=trim(att2) )
 ! write first time step - data
 call Get_NcVarAtt(oriFileName, 'pr', 'long_name', att1)
 call Get_NcVarAtt(oriFileName, 'pr', 'units', att2)
@@ -302,7 +301,7 @@ call var2nc(Filename, data(:,:,1:1), dimname(1:3), 'pr', &
      dim_unlimited=3_i4, long_name=trim(att1), units=trim(att2))
 ! write second to last time step - time and data
 do i=2, size(t,1)
-   call var2nc(Filename, t(i:i), dimname(3:3), dimname(3), is_dim=.true., dim_unlimited=1_i4)
+   call var2nc(Filename, t(i:i), dimname(3:3), dimname(3), dim_unlimited=1_i4)
    call var2nc(Filename, data(:,:,i:i), dimname(1:3), 'pr', dim_unlimited=3_i4)
 end do
 !
