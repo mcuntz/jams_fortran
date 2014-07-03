@@ -2054,7 +2054,7 @@ CONTAINS
        ! SORT PIECES
        !$omp parallel do &
        !$omp num_threads(nt1) &
-       !$omp private(t) &
+       ! !$omp private(t) &
        !$omp shared(A, A2, nA, indx, indx2, s, f, nt2, chunks, swap_flag)
        do i = 1, chunks
           s(i) = nA * (i-1) / chunks + 1     ! start
@@ -2679,7 +2679,7 @@ CONTAINS
        ! SORT PIECES
        !$omp parallel do &
        !$omp num_threads(nt1) &
-       !$omp private(t) &
+       ! !$omp private(t) &
        !$omp shared(A, A2, nA, indx, indx2, s, f, nt2, chunks, swap_flag)
        do i = 1, chunks
           s(i) = nA * (i-1) / chunks + 1     ! start
@@ -3304,7 +3304,7 @@ CONTAINS
        ! SORT PIECES
        !$omp parallel do &
        !$omp num_threads(nt1) &
-       !$omp private(t) &
+       ! !$omp private(t) &
        !$omp shared(A, A2, nA, indx, indx2, s, f, nt2, chunks, swap_flag)
        do i = 1, chunks
           s(i) = nA * (i-1) / chunks + 1     ! start
