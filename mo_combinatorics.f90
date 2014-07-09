@@ -4,7 +4,7 @@
 
 !> \details This package provides routines and functions for combinatorial calculations.
 
-!> \authors Matthias Cuntz, Giovanni Dalmasso, Juliane Mai, Stephan Thober
+!> \authors Matthias Cuntz, Giovanni Dalmasso, Juliane Mai, Stephan Thober, Sebastian Mueller
 !> \date Feb 2013
 
 MODULE mo_combinatorics
@@ -45,6 +45,9 @@ MODULE mo_combinatorics
   PUBLIC :: random_index_permut ! Random permutation of (1..n)
   PUBLIC :: next_index_permut   ! Next permutation of (1..n) to a given one
   PUBLIC :: all_index_permut    ! All permutations of (1..n)
+  PUBLIC :: nextpart            ! Next partition of n to a given one
+  PUBLIC :: prevpart            ! Previous partition of n to a given one
+  PUBLIC :: isgoodpart          ! checks if a given array is a partition of n
 
   ! ------------------------------------------------------------------
 
@@ -58,10 +61,11 @@ MODULE mo_combinatorics
   !>        \details Calculates the binomial coefficient (n choose k):
   !>                     \f[ C(n,k) = \frac{n!}{k! (n-k)!} \f], 
   !>                 i.e. the number of possibilities to select from n numbers k
-  !
+  !>                 for real input it also calculates the generalized binomial coefficient which is used for the binomial series
+  !>                     \f[ C(x,k) = \prod_{i=1}^k \frac{x+1-i}{i} \f],
   !     INTENT(IN)
-  !>        \param[in] "integer(i4/i8) :: n/n(:)"       from n numbers ...
-  !>        \param[in] "integer(i4/i8) :: k/k(:)"       ... k will be selected
+  !>        \param[in] "integer(i4/i8)/real(sp,dp) :: n/n(:)/x/x(:)"    from n numbers ...
+  !>        \param[in] "integer(i4/i8)             :: k/k(:)"           ... k will be selected
   !
   !     INTENT(INOUT)
   !         None
@@ -79,7 +83,7 @@ MODULE mo_combinatorics
   !         None
   !
   !     RETURN
-  !>        \return     integer(i4/i8) :: binomcoeffi/binomcoeffi(:) &mdash; Binomial coefficient (n choose k)
+  !>        \return     integer(i4/i8)/real(sp,dp) :: binomcoeffi/binomcoeffi(:) &mdash; Binomial coefficient (n choose k)
   !
   !     RESTRICTIONS
   !         None
@@ -87,6 +91,8 @@ MODULE mo_combinatorics
   !     EXAMPLE
   !         bico = binomcoeffi(5,2)
   !         bico --> 10
+  !         bico = binomcoeffi(1.5,2)
+  !         bico --> 0.375
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -95,10 +101,12 @@ MODULE mo_combinatorics
   !     HISTORY
   !>        \author Matthias Cuntz, Juliane Mai
   !>        \date Feb 2013
-  !         Modified, 
+  !         Modified, Sebastian Mueller June 2014
 
   INTERFACE binomcoeffi
-     MODULE PROCEDURE binomcoeffi_i4_d0, binomcoeffi_i8_d0, binomcoeffi_i4_d1, binomcoeffi_i8_d1
+     MODULE PROCEDURE binomcoeffi_i4_d0, binomcoeffi_i8_d0, binomcoeffi_i4_d1, binomcoeffi_i8_d1,&
+                      binomcoeffi_sp_d0, binomcoeffi_dp_d0, binomcoeffi_sp_d1, binomcoeffi_dp_d1,&
+                      binomcoeffi_dpi4_d0, binomcoeffi_dpi4_d1
   END INTERFACE binomcoeffi
 
   ! ------------------------------------------------------------------
@@ -505,6 +513,163 @@ MODULE mo_combinatorics
 
   ! ------------------------------------------------------------------
 
+  !     NAME
+  !         nextpart
+
+  !     PURPOSE
+  !         Calculates the next partition of n to a given one
+  !
+  !>        \brief next partition of n to a given one
+  !
+  !>        \details next greater partition of n to a given one where the partitions are sorted by inverse lexicographical ordering
+  !>                 for example: (2,0) > (0,1)
+  !
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4/i8), dimension(:), intent(in) :: part"   a given partition not equal to (n,0,..,0) [not last]
+  !
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !>        \return "integer(i4/i8), dimension(:)                :: nextpart"   next partition of n
+  !
+  !     RESTRICTIONS
+  !>        \note the given partiton should not be the greatest one i.e. not (n,0,..,0) 
+  !
+  !     EXAMPLE
+  !         nextpart((0,2,0,0)) = (2,1,0,0)
+
+  !     LITERATURE
+  !         none
+
+
+  !     HISTORY
+  !>        \author Sebastian Mueller
+  !>        \date June 2014
+
+  INTERFACE nextpart
+     MODULE PROCEDURE nextpart_i4, nextpart_i8
+  END INTERFACE nextpart
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         prevpart
+
+  !     PURPOSE
+  !         Calculates the previous partition of n to a given one
+  !
+  !>        \brief previous partition of n to a given one
+  !
+  !>        \details next smaller partition of n to a given one where the partitions are sorted by inverse lexicographical ordering
+  !>                 for example: (2,0) > (0,1)
+  !
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4/i8), dimension(:), intent(in) :: part"   a given partition not equal to (0,..,0,1) [not first]
+  !
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !>        \return "integer(i4/i8), dimension(:)                :: prevpart"   previous partition of n
+  !
+  !     RESTRICTIONS
+  !>        \note the given partiton should not be the smallest one i.e. not (0,..,0,1) 
+  !
+  !     EXAMPLE
+  !         prevpart((2,1,0,0)) = (0,2,0,0)
+
+  !     LITERATURE
+  !         none
+
+
+  !     HISTORY
+  !>        \author Sebastian Mueller
+  !>        \date July 2014
+
+  INTERFACE prevpart
+     MODULE PROCEDURE prevpart_i4, prevpart_i8
+  END INTERFACE prevpart
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         isgoodpart
+
+  !     PURPOSE
+  !         Checks if a given array is a partition of n
+  !
+  !>        \brief Checks if a given array is a partition of n
+  !
+  !>        \details Checks if a given array is a partition of n, where p=(p_1,..,p_n) is a partition of n iff
+  !>                 \f[ \sum_{i=1}^n p_i*i = p_1 + 2*p_2 + 3*p_3 + .. =n \f]
+  !
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4/i8), dimension(:), intent(in) :: part"   a given partition not equal to (n,0,..,0)
+  !
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !>        \return "logical                                     :: isgoodpart"
+  !
+  !     RESTRICTIONS
+  !>        \note the given array should be of dimension greater than one
+  !
+  !     EXAMPLE
+  !         isgoodpart((2,1,0)) = true
+  !         isgoodpart((0,2))   = false
+
+  !     LITERATURE
+  !         none
+
+
+  !     HISTORY
+  !>        \author Sebastian Mueller
+  !>        \date June 2014
+
+  INTERFACE isgoodpart
+     MODULE PROCEDURE isgoodpart_i4, isgoodpart_i8
+  END INTERFACE isgoodpart
+
+  ! ------------------------------------------------------------------
+
   PRIVATE
 
   ! ------------------------------------------------------------------
@@ -558,6 +723,130 @@ CONTAINS
     binomcoeffi_i8_d1 = nint(exp(factln(n)-factln(k)-factln(n-k)))
 
   END FUNCTION binomcoeffi_i8_d1
+
+!generalized binomial coefficient
+  FUNCTION binomcoeffi_sp_d0(x,k)
+    ! Returns the generalized binomial coefficient as a real number.
+    IMPLICIT NONE
+
+    real(sp),    INTENT(IN) :: x
+    INTEGER(i4), INTENT(IN) :: k
+    real(sp)                :: binomcoeffi_sp_d0
+
+    integer(i4)             :: i
+    
+    if (k>0_i4) then 
+        binomcoeffi_sp_d0       =   1.0_sp    
+        do i=1_i4,k
+            binomcoeffi_sp_d0   =   binomcoeffi_sp_d0*(x+1.0_sp-real(i,sp))/real(i,sp)
+        end do
+    else if (k<0_i4) then
+        binomcoeffi_sp_d0       =   0.0_sp
+    else
+        binomcoeffi_sp_d0       =   1.0_sp
+    endif
+    
+  END FUNCTION binomcoeffi_sp_d0
+
+  FUNCTION binomcoeffi_dp_d0(x,k)
+    ! Returns the generalized binomial coefficient as a real number.
+    IMPLICIT NONE
+
+    real(dp),    INTENT(IN) :: x
+    INTEGER(i8), INTENT(IN) :: k
+    real(dp)                :: binomcoeffi_dp_d0
+
+    integer(i8)             :: i
+    
+    if (k>0_i8) then 
+        binomcoeffi_dp_d0       =   1.0_sp    
+        do i=1_i8,k
+            binomcoeffi_dp_d0   =   binomcoeffi_dp_d0*(x+1.0_dp-real(i,dp))/real(i,dp)
+        end do
+    else if (k<0_i8) then
+        binomcoeffi_dp_d0       =   0.0_dp
+    else
+        binomcoeffi_dp_d0       =   1.0_dp
+    endif
+
+  END FUNCTION binomcoeffi_dp_d0
+
+  FUNCTION binomcoeffi_sp_d1(x,k)
+
+    IMPLICIT NONE
+
+    real(sp),    DIMENSION(:), INTENT(IN) :: x
+    INTEGER(i4), DIMENSION(:), INTENT(IN) :: k
+    real(sp),    DIMENSION(size(x))       :: binomcoeffi_sp_d1
+
+    integer(i4)             :: i
+
+    if (size(x) /= size(k)) stop 'Error binomcoeffi: size(n) /= size(k)'
+
+    do i=1_i4, size(x)
+        binomcoeffi_sp_d1(i) = binomcoeffi_sp_d0(x(i),k(i))
+    end do
+
+  END FUNCTION binomcoeffi_sp_d1
+
+  FUNCTION binomcoeffi_dp_d1(x,k)
+
+    IMPLICIT NONE
+
+    real(dp),    DIMENSION(:), INTENT(IN) :: x
+    INTEGER(i8), DIMENSION(:), INTENT(IN) :: k
+    real(dp),    DIMENSION(size(x))       :: binomcoeffi_dp_d1
+
+    integer(i8)             :: i
+
+    if (size(x) /= size(k)) stop 'Error binomcoeffi: size(n) /= size(k)'
+
+    do i=1_i8, size(x)
+        binomcoeffi_dp_d1(i) = binomcoeffi_dp_d0(x(i),k(i))
+    end do
+
+  END FUNCTION binomcoeffi_dp_d1
+
+  FUNCTION binomcoeffi_dpi4_d0(x,k)
+    ! Returns the generalized binomial coefficient as a real number.
+    IMPLICIT NONE
+
+    real(dp),    INTENT(IN) :: x
+    INTEGER(i4), INTENT(IN) :: k
+    real(dp)                :: binomcoeffi_dpi4_d0
+
+    integer(i4)             :: i
+    
+    if (k>0_i4) then 
+        binomcoeffi_dpi4_d0     =   1.0_sp    
+        do i=1_i4,k
+            binomcoeffi_dpi4_d0 =   binomcoeffi_dpi4_d0*(x+1.0_dp-real(i,dp))/real(i,dp)
+        end do
+    else if (k<0_i4) then
+        binomcoeffi_dpi4_d0     =   0.0_dp
+    else
+        binomcoeffi_dpi4_d0     =   1.0_dp
+    endif
+
+  END FUNCTION binomcoeffi_dpi4_d0
+
+  FUNCTION binomcoeffi_dpi4_d1(x,k)
+
+    IMPLICIT NONE
+
+    real(dp),    DIMENSION(:), INTENT(IN) :: x
+    INTEGER(i4), DIMENSION(:), INTENT(IN) :: k
+    real(dp),    DIMENSION(size(x))       :: binomcoeffi_dpi4_d1
+
+    integer(i4)             :: i
+
+    if (size(x) /= size(k)) stop 'Error binomcoeffi: size(n) /= size(k)'
+
+    do i=1_i4, size(x)
+        binomcoeffi_dpi4_d1(i) = binomcoeffi_dpi4_d0(x(i),k(i))
+    end do
+
+  END FUNCTION binomcoeffi_dpi4_d1
 
   ! ------------------------------------------------------------------
 
@@ -1376,4 +1665,230 @@ CONTAINS
 
   END FUNCTION random_index_permut_i8
 
+  ! ------------------------------------------------------------------
+
+  function nextpart_i4(part)
+
+    implicit none
+
+    integer(i4), dimension(:), intent(in) :: part   
+    integer(i4), dimension(size(part))    :: nextpart_i4
+    
+    integer(i4)                           :: n, firstindex, summ, temp
+
+
+    !Check if input is valid
+    if (.not. isgoodpart(part))     stop 'Not a valid input partition.'
+    if (part(1) .eq. size(part))    stop 'Input was the last possible partition.'
+
+    nextpart_i4             =   part    
+
+    !set the first entry to zero  and remember it
+    temp                    =   nextpart_i4(1)
+    nextpart_i4(1)          =   0_i4    
+
+    !search for the first index that is not equal to zero
+    firstindex  =   1_i4
+    do n = 2_i4, size(nextpart_i4)
+        if (nextpart_i4(n) .ne. 0_i4) then
+            firstindex      =   n
+            exit
+        endif
+    end do
+
+    !decrease the first entry that is not equal to zero by one
+    nextpart_i4(firstindex) =   nextpart_i4(firstindex)-1_i4
+
+    !calculate the actual sum of the partition
+    summ                    =   size(nextpart_i4)-firstindex-temp
+
+    !fill up the partition below the index from above, until the sum equals n again       
+    do n=firstindex-1_i4,1_i4,-1_i4
+        temp                =   nextpart_i4(n)
+        !set the next entry as big as possible
+        nextpart_i4(n)      =   FLOOR(real(size(nextpart_i4)-summ,sp)/real(n,sp))
+        !calculate the actual sum of the partition
+        summ                =   summ + n*(nextpart_i4(n) - temp) 
+        !if the sum is n we are done
+        if (summ == size(nextpart_i4)) exit
+    end do
+
+  end function nextpart_i4
+
+  function nextpart_i8(part)
+
+    implicit none
+
+    integer(i8), dimension(:), intent(in) :: part   
+    integer(i8), dimension(size(part))    :: nextpart_i8
+    
+    integer(i8)                           :: n, firstindex, summ, temp
+
+
+    !Check if input is valid
+    if (.not. isgoodpart(part))     stop 'Not a valid input partition.'
+    if (part(1) .eq. size(part))    stop 'Input was the last possible partition.'
+
+    nextpart_i8             =   part    
+
+    !set the first entry to zero  and remember it
+    temp                    =   nextpart_i8(1)
+    nextpart_i8(1)          =   0_i8    
+
+    !search for the first index that is not equal to zero
+    firstindex  =   1_i8
+    do n = 2_i8, size(nextpart_i8)
+        if (nextpart_i8(n) .ne. 0_i8) then
+            firstindex      =   n
+            exit
+        endif
+    end do
+
+    !decrease the first entry that is not equal to zero by one
+    nextpart_i8(firstindex) =   nextpart_i8(firstindex)-1_i8
+
+    !calculate the actual sum of the partition
+    summ                    =   size(nextpart_i8)-firstindex-temp
+
+    !fill up the partition below the index from above, until the sum equals n again       
+    do n=firstindex-1_i8,1_i8,-1_i8
+        temp                =   nextpart_i8(n)
+        !set the next entry as big as possible
+        nextpart_i8(n)      =   FLOOR(real(size(nextpart_i8)-summ,dp)/real(n,dp))
+        !calculate the actual sum of the partition
+        summ                =   summ + n*(nextpart_i8(n) - temp) 
+        !if the sum is n we are done
+        if (summ == size(nextpart_i8)) exit
+    end do
+
+  end function nextpart_i8
+
+  ! ------------------------------------------------------------------
+
+  function prevpart_i4(part)
+
+    implicit none
+
+    integer(i4), dimension(:), intent(in) :: part   
+    integer(i4), dimension(size(part))    :: prevpart_i4
+    
+    integer(i4)                           :: n, summ
+
+
+    !Check if input is valid
+    if (.not. isgoodpart(part))     stop 'Not a valid input partition.'
+    if (part(size(part)) .eq. 1_i4) stop 'Input was the first possible partition.'
+
+    prevpart_i4             =   part    
+
+    summ                    =   size(prevpart_i4)
+
+    do n = 1_i4, size(prevpart_i4)
+        if (summ + n .gt. size(prevpart_i4)) then
+            if (prevpart_i4(n) .ne. 0_i4) then
+                summ            =   summ - prevpart_i4(n)*n
+                prevpart_i4(n)  =   0_i4
+            endif
+        else
+            !increase the first entry that is increasable
+            prevpart_i4(n)  =   prevpart_i4(n)+1_i4
+            !correct the remainder by filling up 1's
+            prevpart_i4(1)  =   size(prevpart_i4) - summ - n
+            return
+        endif
+    end do
+
+  end function prevpart_i4
+
+  function prevpart_i8(part)
+
+    implicit none
+
+    integer(i8), dimension(:), intent(in) :: part   
+    integer(i8), dimension(size(part))    :: prevpart_i8
+    
+    integer(i8)                           :: n, summ
+
+
+    !Check if input is valid
+    if (.not. isgoodpart(part))     stop 'Not a valid input partition.'
+    if (part(size(part)) .eq. 1_i8) stop 'Input was the first possible partition.'
+
+    prevpart_i8             =   part    
+
+    summ                    =   size(prevpart_i8)
+
+    do n = 1_i8, size(prevpart_i8)
+        if (summ + n .gt. size(prevpart_i8)) then
+            if (prevpart_i8(n) .ne. 0_i8) then
+                summ            =   summ - prevpart_i8(n)*n
+                prevpart_i8(n)  =   0_i8
+            endif
+        else
+            !increase the first entry that is increasable
+            prevpart_i8(n)  =   prevpart_i8(n)+1_i8
+            !correct the remainder by filling up 1's
+            prevpart_i8(1)  =   size(prevpart_i8) - summ - n
+            return
+        endif
+    end do
+
+  end function prevpart_i8
+
+  ! ------------------------------------------------------------------
+
+  function isgoodpart_i4(part)
+
+    implicit none
+
+    integer(i4), dimension(:), intent(in) :: part    
+    logical                               :: isgoodpart_i4
+    
+    integer(i4)                           :: n, testn
+    
+    isgoodpart_i4   =   .false.
+    testn           =   0_i4
+
+    if (size(part) .le. 1_i4)    stop 'n must be at least 2'
+
+    !check if p_i >= 0
+    if (any(part<0_i4)) return
+
+    !Check if it is a partition: sum(i*p_i)=n
+    do n=size(part),1_i4,-1_i4
+        testn       =   testn+n*part(n)
+        if (testn > size(part)) return
+    end do
+    
+    if (testn==size(part))  isgoodpart_i4  =   .true.
+   
+  end function isgoodpart_i4
+  
+  function isgoodpart_i8(part)
+
+    implicit none
+
+    integer(i8), dimension(:), intent(in) :: part    
+    logical                               :: isgoodpart_i8
+    
+    integer(i8)                           :: n, testn
+    
+    isgoodpart_i8   =   .false.
+    testn           =   0_i8
+
+    if (size(part) .le. 1_i8)    stop 'n must be at least 2'
+
+    !check if p_i >= 0
+    if (any(part<0_i8)) return
+
+    !Check if it is a partition: sum(i*p_i)=n
+    do n=size(part),1_i8,-1_i8
+        testn       =   testn+n*part(n)
+        if (testn > size(part)) return
+    end do
+    
+    if (testn==size(part))  isgoodpart_i8  =   .true.
+   
+  end function isgoodpart_i8
+  
 END MODULE mo_combinatorics
