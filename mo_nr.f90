@@ -1673,7 +1673,7 @@ MODULE mo_nr
      END FUNCTION interp
   END INTERFACE
   INTERFACE
-     ! original from NR --> "rank" überdeckt eingebaute Funktion mit gleichem Namen
+     ! original from NR --> "rank" ueberdeckt eingebaute Funktion mit gleichem Namen
      ! FUNCTION rank(indx)
      ! renamed
      FUNCTION rank_nr(indx)
@@ -2581,7 +2581,7 @@ MODULE mo_nr
      END SUBROUTINE quadvl
   END INTERFACE
   INTERFACE
-     ! original from NR --> "ran" überdeckt eingebaute Funktion mit gleichem Namen
+     ! original from NR --> "ran" ueberdeckt eingebaute Funktion mit gleichem Namen
      ! FUNCTION ran(idum)
      ! renamed
      FUNCTION ran_nr(idum)

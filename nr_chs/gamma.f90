@@ -1,47 +1,47 @@
 FUNCTION gamma_s(xx)
-  USE mo_kind, only: sp, dp
+  USE mo_kind, only: sp
   USE mo_nrutil, ONLY : arth,assert
   IMPLICIT NONE
   REAL(SP), INTENT(IN) :: xx
   REAL(SP) :: gamma_s
-  REAL(DP) :: tmp,x
-  REAL(DP) :: stp = 2.5066282746310005_dp
-  REAL(DP), DIMENSION(6) :: coef = (/76.18009172947146_dp,&
-       -86.50532032941677_dp,24.01409824083091_dp,&
-       -1.231739572450155_dp,0.1208650973866179e-2_dp,&
-       -0.5395239384953e-5_dp/)
+  REAL(sp) :: tmp,x
+  REAL(sp) :: stp = 2.5066282746310005_sp
+  REAL(sp), DIMENSION(6) :: coef = (/76.18009172947146_sp,&
+       -86.50532032941677_sp,24.01409824083091_sp,&
+       -1.231739572450155_sp,0.1208650973866179e-2_sp,&
+       -0.5395239384953e-5_sp/)
   call assert(xx > 0.0, 'gamma_s arg')
   x=xx
-  tmp=x+5.5_dp
-  tmp=(x+0.5_dp)*log(tmp)-tmp
-  gamma_s=tmp+log(stp*(1.000000000190015_dp+&
-       sum(coef(:)/arth(x+1.0_dp,1.0_dp,size(coef))))/x)
+  tmp=x+5.5_sp
+  tmp=(x+0.5_sp)*log(tmp)-tmp
+  gamma_s=tmp+log(stp*(1.000000000190015_sp+&
+       sum(coef(:)/arth(x+1.0_sp,1.0_sp,size(coef))))/x)
   gamma_s=exp(gamma_s)
 END FUNCTION gamma_s
 
 
 FUNCTION gamma_v(xx)
-  USE mo_kind, only: sp, dp, i4
+  USE mo_kind, only: sp, i4
   USE mo_nrutil, ONLY: assert
   IMPLICIT NONE
   INTEGER(I4) :: i
   REAL(SP), DIMENSION(:), INTENT(IN) :: xx
   REAL(SP), DIMENSION(size(xx)) :: gamma_v
-  REAL(DP), DIMENSION(size(xx)) :: ser,tmp,x,y
-  REAL(DP) :: stp = 2.5066282746310005_dp
-  REAL(DP), DIMENSION(6) :: coef = (/76.18009172947146_dp,&
-       -86.50532032941677_dp,24.01409824083091_dp,&
-       -1.231739572450155_dp,0.1208650973866179e-2_dp,&
-       -0.5395239384953e-5_dp/)
+  REAL(sp), DIMENSION(size(xx)) :: ser,tmp,x,y
+  REAL(sp) :: stp = 2.5066282746310005_sp
+  REAL(sp), DIMENSION(6) :: coef = (/76.18009172947146_sp,&
+       -86.50532032941677_sp,24.01409824083091_sp,&
+       -1.231739572450155_sp,0.1208650973866179e-2_sp,&
+       -0.5395239384953e-5_sp/)
   if (size(xx) == 0) RETURN
   call assert(all(xx > 0.0), 'gamma_v arg')
   x=xx
-  tmp=x+5.5_dp
-  tmp=(x+0.5_dp)*log(tmp)-tmp
-  ser=1.000000000190015_dp
+  tmp=x+5.5_sp
+  tmp=(x+0.5_sp)*log(tmp)-tmp
+  ser=1.000000000190015_sp
   y=x
   do i=1,size(coef)
-     y=y+1.0_dp
+     y=y+1.0_sp
      ser=ser+coef(i)/y
   end do
   gamma_v=tmp+log(stp*ser/x)
