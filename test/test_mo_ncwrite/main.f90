@@ -38,6 +38,7 @@ real(dp),    dimension(:,:),       allocatable :: lon1, lat1
 integer(i4), dimension(:),         allocatable :: x1, y1
 real(dp),    dimension(:),         allocatable :: time1
 character(256)                                 :: att1, att2, oriFilename
+character(256), dimension(:,:), allocatable :: attributes
 
 isgood   = .true.
 Filename = '../FORTRAN_chs_lib/test/test_mo_ncwrite/pr_1961-2000.nc'
@@ -139,6 +140,17 @@ dimname(3) = 'time'
 dimname(4) = 'tile'
 dimname(5) = 'depth'
 tname(1)   = 'time' ! tname must be array
+! create attributes
+allocate( attributes(4,2) )
+attributes(1,1) = 'long_name'
+attributes(1,2) = 'precipitation'
+attributes(2,1) = 'units'
+attributes(2,2) = '[mm/d]'
+attributes(3,1) = 'missing_value'
+attributes(3,2) = '-9999.'
+attributes(4,1) = 'scale_factor'
+attributes(4,2) = '1.'
+
 ! write static data
 call var2nc( Filename, data(:,:,1), dimname(1:2), 'pre_static', &
      long_name = 'precipitation', units = '[mm/d]', missing_value = -9999., create=.true. )
@@ -151,7 +163,7 @@ call var2nc( Filename, int(t,i4), tname, 'time', dim_unlimited = 1_i4, &
      units = 'days since 1984-08-28', missing_value=-9999 )
 ! write variable
 call var2nc( Filename, data(14,14,:), tname, 'pre_1d', dim_unlimited = 1_i4 , &
-     long_name = 'precipitation', units = '[mm/d]' )
+     attributes = attributes(:2,:) )
 
 ! read again
 Varname = 'pre_1d'
