@@ -35,7 +35,7 @@ MODULE mo_interpol
   ! Copyright 2011-2014 Matthias Cuntz
 
   USE mo_kind,  ONLY: i4, sp, dp
-  USE mo_utils, only: le, locate
+  USE mo_utils, only: locate
 
   Implicit NONE
 
