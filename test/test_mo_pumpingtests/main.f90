@@ -11,8 +11,8 @@ use mo_utils,           ONLY: eq
 
 Implicit none
 
-REAL(sp)            :: Reftest, hreftest, Qwtest, Ktest, Ltest, Stest, TGtest, vartest, proptest, corrtest, anisotest
-REAL(dp)            :: Reftestd, hreftestd, Qwtestd, Ktestd, Ltestd, Stestd, TGtestd, vartestd, proptestd, corrtestd, anisotestd
+REAL(sp)            :: Reftest, hreftest, Qwtest, Ktest, Ltest, Stest, TGtest, vartest, corrtest, anisotest!, proptest
+REAL(dp)            :: Reftestd, hreftestd, Qwtestd, Ktestd, Ltestd, Stestd, TGtestd, vartestd, corrtestd, anisotestd!, proptestd
 LOGICAL             :: isgood
 
 real(dp), dimension(3,3)   :: fpoints_dp
@@ -32,7 +32,7 @@ Ltest           = 1.0_sp
 Stest           = 0.001_sp
 TGtest          = Ltest*Ktest
 vartest         = 1.0_sp
-proptest        = 0.8_sp
+!proptest        = 0.8_sp
 corrtest        = 10.0_sp
 anisotest       = 1.0_sp
 
@@ -44,7 +44,7 @@ Ltestd          = 1.0_dp
 Stestd          = 0.001_dp
 TGtestd         = Ltestd*Ktestd
 vartestd        = 1.0_dp
-proptestd       = 0.8_dp
+!proptestd       = 0.8_dp
 corrtestd       = 10.0_dp
 anisotestd      = 1.0_dp
 
