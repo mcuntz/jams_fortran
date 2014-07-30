@@ -714,8 +714,6 @@ CONTAINS
 
   FUNCTION theis_d1_sp(rad, time, params, inits)
 
-    USE mo_nr,                      ONLY: expint
-
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:),             INTENT(IN)  :: rad
@@ -749,8 +747,6 @@ CONTAINS
   END FUNCTION theis_d1_sp
 
   FUNCTION theis_d1_dp(rad, time, params, inits)
-
-    USE mo_nr,                      ONLY: expint
 
     IMPLICIT NONE
 
@@ -1486,7 +1482,7 @@ CONTAINS
     beta(3)         =   1.0_sp
 
     !Define the series expansion of beta by the rule of Faa di Bruno
-    do n=2_i4,min(2_i4*Floor(para(10)/2.0_sp), stdsiz-1_i4),2_i4
+    do n=2_i4,min(2_i4*Floor(para(10)/2.0_sp), stdsiz-1_i4)-2_i4,2_i4
        do
           prod=1.0_sp
           do m=1_i4, n
@@ -1752,7 +1748,7 @@ CONTAINS
     beta(3)         =   1.0_dp
 
     !Define the series expansion of beta by the rule of Faa di Bruno
-    do n=2_i4,min(2_i4*Floor(para(10)/2.0_dp), stdsiz-1_i4),2_i4
+    do n=2_i4,min(2_i4*Floor(para(10)/2.0_dp), stdsiz-1_i4)-2_i4,2_i4
        do
           prod=1.0_dp
           do m=1_i4, n
@@ -2028,7 +2024,7 @@ CONTAINS
     beta(3)         =   1.0_sp
 
     !Define the series expansion of beta by the rule of Faa di Bruno
-    do n=2_i4,min(2_i4*Floor(para(10)/2.0_sp), stdsiz-1_i4),2_i4
+    do n=2_i4,min(2_i4*Floor(para(10)/2.0_sp), stdsiz-1_i4)-2_i4,2_i4
        do
           prod=1.0_sp
           do m=1_i4, n
@@ -2311,7 +2307,7 @@ CONTAINS
     beta(3)         =   1.0_dp
 
     !Define the series expansion of beta by the rule of Faa di Bruno
-    do n=2_i4,min(2_i4*Floor(para(10)/2.0_dp), stdsiz-1_i4),2_i4
+    do n=2_i4,min(2_i4*Floor(para(10)/2.0_dp), stdsiz-1_i4)-2_i4,2_i4
        do
           prod=1.0_dp
           do m=1_i4, n
@@ -2542,7 +2538,7 @@ CONTAINS
     beta(3)         =   1.0_sp
 
     !Define the series expansion of beta by the rule of Faa di Bruno
-    do n=2_i4,min(2_i4*Floor(para(8)/2.0_sp), stdsiz-1_i4),2_i4
+    do n=2_i4,min(2_i4*Floor(para(8)/2.0_sp), stdsiz-1_i4)-2_i4,2_i4
        do
           prod=1.0_sp
           do m=1_i4, n
@@ -2765,7 +2761,7 @@ CONTAINS
     beta(3)         =   1.0_dp
 
     !Define the series expansion of beta by the rule of Faa di Bruno
-    do n=2_i4,min(2_i4*Floor(para(8)/2.0_dp), stdsiz-1_i4),2_i4
+    do n=2_i4,min(2_i4*Floor(para(8)/2.0_dp), stdsiz-1_i4)-2_i4,2_i4
        do
           prod=1.0_dp
           do m=1_i4, n
@@ -3004,7 +3000,7 @@ CONTAINS
     beta(3)         =   1.0_sp
 
     !Define the series expansion of beta by the rule of Faa di Bruno
-    do n=2_i4,min(2_i4*Floor(para(8)/2.0_sp), stdsiz-1_i4),2_i4
+    do n=2_i4,min(2_i4*Floor(para(8)/2.0_sp), stdsiz-1_i4)-2_i4,2_i4
        do
           prod=1.0_sp
           do m=1_i4, n
@@ -3251,7 +3247,7 @@ CONTAINS
     beta(3)         =   1.0_dp
 
     !Define the series expansion of beta by the rule of Faa di Bruno
-    do n=2_i4,min(2_i4*Floor(para(8)/2.0_dp), stdsiz-1_i4),2_i4
+    do n=2_i4,min(2_i4*Floor(para(8)/2.0_dp), stdsiz-1_i4)-2_i4,2_i4
        do
           prod=1.0_dp
           do m=1_i4, n
