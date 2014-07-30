@@ -72,7 +72,7 @@ MODULE mo_pumpingtests
   ! If you do not hold a Numerical Recipes License, this code is only for
   ! informational and educational purposes but cannot be used.
 
-  USE mo_kind,      ONLY: i4, sp, dp
+  USE mo_kind,      ONLY: i4, i8, sp, dp
   USE mo_constants, ONLY: PI_D, PI
   USE mo_utils,     ONLY: eq, le, ne
 
@@ -2773,7 +2773,7 @@ CONTAINS
              if ((partitions(((n-1)*n)/2+m) .ne. 0_i4)) then
                 if  (ne(innerfunc(m+1), 0.0_dp)) then
                    prod    =&
-                        prod*(innerfunc(m+1)**real(partitions(((n-1)*n)/2+m),dp))/real(factorial(partitions(((n-1)*n)/2+m)),dp)
+                        prod*(innerfunc(m+1)**partitions(((n-1)*n)/2+m))/real(factorial(int(partitions(((n-1)*n)/2+m),i8)),dp)
                 else
                    prod    =   0.0_dp
                    exit
@@ -3258,8 +3258,10 @@ CONTAINS
 
              if ((partitions(((n-1)*n)/2+m) .ne. 0_i4)) then
                 if  (ne(innerfunc(m+1), 0.0_dp)) then
+
                    prod    =&
-                        prod*(innerfunc(m+1)**real(partitions(((n-1)*n)/2+m),dp))/real(factorial(partitions(((n-1)*n)/2+m)),dp)
+                        prod*(innerfunc(m+1)**partitions(((n-1)*n)/2+m))/real(factorial(int(partitions(((n-1)*n)/2+m),i8)),dp)
+
                 else
                    prod    =   0.0_dp
                    exit
