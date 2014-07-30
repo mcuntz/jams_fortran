@@ -1433,6 +1433,9 @@ CONTAINS
     use mo_nrutil,          only: poly
     use mo_combinatorics,   only: binomcoeffi, nextpart
     use mo_nr,              only: bessk0
+#ifndef GFORTRAN
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
+#endif
 
     IMPLICIT NONE
 
@@ -1500,8 +1503,22 @@ CONTAINS
 
           end do
 
+#ifndef GFORTRAN
+          if (.not. (ieee_is_nan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
+#ifdef GFORTRAN41
+          if (.not. ((prod/=prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
           if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
                beta(n+3)=beta(n+3)+prod
+#endif
+#endif
+
+
+!          if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+!               beta(n+3)=beta(n+3)+prod
 
           if (partitions(((n-1)*n)/2+1)==n) exit
 
@@ -1682,6 +1699,9 @@ CONTAINS
     use mo_nrutil,          only: poly
     use mo_combinatorics,   only: binomcoeffi, nextpart
     use mo_nr,              only: bessk0
+#ifndef GFORTRAN
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
+#endif
 
     IMPLICIT NONE
 
@@ -1749,8 +1769,21 @@ CONTAINS
 
           end do
 
+#ifndef GFORTRAN
+          if (.not. (ieee_is_nan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
+#ifdef GFORTRAN41
+          if (.not. ((prod/=prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
           if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
                beta(n+3)=beta(n+3)+prod
+#endif
+#endif
+
+!          if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+!               beta(n+3)=beta(n+3)+prod
 
           if (partitions(((n-1)*n)/2+1)==n) exit
 
@@ -1942,6 +1975,9 @@ CONTAINS
     use mo_nrutil,          only: poly
     use mo_combinatorics,   only: binomcoeffi, nextpart
     use mo_nr,              only: bessk0
+#ifndef GFORTRAN
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
+#endif
 
     IMPLICIT NONE
 
@@ -2009,8 +2045,21 @@ CONTAINS
 
           end do
 
+#ifndef GFORTRAN
+          if (.not. (ieee_is_nan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
+#ifdef GFORTRAN41
+          if (.not. ((prod/=prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
           if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
                beta(n+3)=beta(n+3)+prod
+#endif
+#endif
+
+!          if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+!               beta(n+3)=beta(n+3)+prod
 
           if (partitions(((n-1)*n)/2+1)==n) exit
 
@@ -2209,6 +2258,9 @@ CONTAINS
     use mo_nrutil,          only: poly
     use mo_combinatorics,   only: binomcoeffi, nextpart
     use mo_nr,              only: bessk0
+#ifndef GFORTRAN
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
+#endif
 
     IMPLICIT NONE
 
@@ -2276,8 +2328,21 @@ CONTAINS
 
           end do
 
+#ifndef GFORTRAN
+          if (.not. (ieee_is_nan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
+#ifdef GFORTRAN41
+          if (.not. ((prod/=prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
           if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
                beta(n+3)=beta(n+3)+prod
+#endif
+#endif
+
+!          if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+!               beta(n+3)=beta(n+3)+prod
 
           if (partitions(((n-1)*n)/2+1)==n) exit
 
@@ -2424,6 +2489,9 @@ CONTAINS
     use mo_nrutil,          only: poly
     use mo_combinatorics,   only: nextpart
     use mo_nr,              only: bessk0
+#ifndef GFORTRAN
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
+#endif
 
     IMPLICIT NONE
 
@@ -2491,8 +2559,21 @@ CONTAINS
 
           end do
 
+#ifndef GFORTRAN
+          if (.not. (ieee_is_nan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
+#ifdef GFORTRAN41
+          if (.not. ((prod/=prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
           if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
                beta(n+3)=beta(n+3)+prod
+#endif
+#endif
+
+!          if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+!               beta(n+3)=beta(n+3)+prod
 
           if (partitions(((n-1)*n)/2+1)==n) exit
 
@@ -2631,6 +2712,9 @@ CONTAINS
     use mo_nrutil,          only: poly
     use mo_combinatorics,   only: nextpart
     use mo_nr,              only: bessk0
+#ifndef GFORTRAN
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
+#endif
 
     IMPLICIT NONE
 
@@ -2698,8 +2782,21 @@ CONTAINS
 
           end do
 
+#ifndef GFORTRAN
+          if (.not. (ieee_is_nan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
+#ifdef GFORTRAN41
+          if (.not. ((prod/=prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
           if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
                beta(n+3)=beta(n+3)+prod
+#endif
+#endif
+
+!          if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+!               beta(n+3)=beta(n+3)+prod
 
           if (partitions(((n-1)*n)/2+1)==n) exit
 
@@ -2854,6 +2951,9 @@ CONTAINS
     use mo_nrutil,          only: poly
     use mo_combinatorics,   only: nextpart
     use mo_nr,              only: bessk0
+#ifndef GFORTRAN
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
+#endif
 
     IMPLICIT NONE
 
@@ -2921,8 +3021,21 @@ CONTAINS
 
           end do
 
+#ifndef GFORTRAN
+          if (.not. (ieee_is_nan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
+#ifdef GFORTRAN41
+          if (.not. ((prod/=prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
           if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
                beta(n+3)=beta(n+3)+prod
+#endif
+#endif
+
+!          if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_sp)) .or. (abs(prod) < tiny(1.0_sp))))&
+!               beta(n+3)=beta(n+3)+prod
 
           if (partitions(((n-1)*n)/2+1)==n) exit
 
@@ -3085,6 +3198,9 @@ CONTAINS
     use mo_nrutil,          only: poly
     use mo_combinatorics,   only: nextpart
     use mo_nr,              only: bessk0
+#ifndef GFORTRAN
+    use, intrinsic :: ieee_arithmetic, only: ieee_is_nan
+#endif
 
     IMPLICIT NONE
 
@@ -3152,8 +3268,21 @@ CONTAINS
 
           end do
 
+#ifndef GFORTRAN
+          if (.not. (ieee_is_nan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
+#ifdef GFORTRAN41
+          if (.not. ((prod/=prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+               beta(n+3)=beta(n+3)+prod
+#else
           if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
                beta(n+3)=beta(n+3)+prod
+#endif
+#endif
+
+!          if (.not. (isnan(prod) .or. (abs(prod) > huge(1.0_dp)) .or. (abs(prod) < tiny(1.0_dp))))&
+!               beta(n+3)=beta(n+3)+prod
 
           if (partitions(((n-1)*n)/2+1)==n) exit
 
