@@ -1494,7 +1494,7 @@ CONTAINS
              if ((partitions(((n-1)*n)/2+m) .ne. 0_i4)) then
                 if  (ne(innerfunc(m+1), 0.0_sp)) then
                    prod    =&
-                        prod*(innerfunc(m+1)**real(partitions(((n-1)*n)/2+m),sp))/real(factorial(partitions(((n-1)*n)/2+m)),sp)
+                        prod*(innerfunc(m+1)**partitions(((n-1)*n)/2+m))/real(factorial(int(partitions(((n-1)*n)/2+m),i8)),sp)
                 else
                    prod    =   0.0_sp
                    exit
@@ -1760,7 +1760,7 @@ CONTAINS
              if ((partitions(((n-1)*n)/2+m) .ne. 0_i4)) then
                 if  (ne(innerfunc(m+1), 0.0_dp)) then
                    prod    =&
-                        prod*(innerfunc(m+1)**real(partitions(((n-1)*n)/2+m),dp))/real(factorial(partitions(((n-1)*n)/2+m)),dp)
+                        prod*(innerfunc(m+1)**partitions(((n-1)*n)/2+m))/real(factorial(int(partitions(((n-1)*n)/2+m),i8)),dp)
                 else
                    prod    =   0.0_dp
                    exit
@@ -2036,7 +2036,7 @@ CONTAINS
              if ((partitions(((n-1)*n)/2+m) .ne. 0_i4)) then
                 if  (ne(innerfunc(m+1), 0.0_sp)) then
                    prod    =&
-                        prod*(innerfunc(m+1)**real(partitions(((n-1)*n)/2+m),sp))/real(factorial(partitions(((n-1)*n)/2+m)),sp)
+                        prod*(innerfunc(m+1)**partitions(((n-1)*n)/2+m))/real(factorial(int(partitions(((n-1)*n)/2+m),i8)),sp)
                 else
                    prod    =   0.0_sp
                    exit
@@ -2319,7 +2319,7 @@ CONTAINS
              if ((partitions(((n-1)*n)/2+m) .ne. 0_i4)) then
                 if  (ne(innerfunc(m+1), 0.0_dp)) then
                    prod    =&
-                        prod*(innerfunc(m+1)**real(partitions(((n-1)*n)/2+m),dp))/real(factorial(partitions(((n-1)*n)/2+m)),dp)
+                        prod*(innerfunc(m+1)**partitions(((n-1)*n)/2+m))/real(factorial(int(partitions(((n-1)*n)/2+m),i8)),dp)
                 else
                    prod    =   0.0_dp
                    exit
@@ -2550,7 +2550,7 @@ CONTAINS
              if ((partitions(((n-1)*n)/2+m) .ne. 0_i4)) then
                 if  (ne(innerfunc(m+1), 0.0_sp)) then
                    prod    =&
-                        prod*(innerfunc(m+1)**real(partitions(((n-1)*n)/2+m),sp))/real(factorial(partitions(((n-1)*n)/2+m)),sp)
+                        prod*(innerfunc(m+1)**partitions(((n-1)*n)/2+m))/real(factorial(int(partitions(((n-1)*n)/2+m),i8)),sp)
                 else
                    prod    =   0.0_sp
                    exit
@@ -3012,7 +3012,7 @@ CONTAINS
              if ((partitions(((n-1)*n)/2+m) .ne. 0_i4)) then
                 if  (ne(innerfunc(m+1), 0.0_sp)) then
                    prod    =&
-                        prod*(innerfunc(m+1)**real(partitions(((n-1)*n)/2+m),sp))/real(factorial(partitions(((n-1)*n)/2+m)),sp)
+                        prod*(innerfunc(m+1)**partitions(((n-1)*n)/2+m))/real(factorial(int(partitions(((n-1)*n)/2+m),i8)),sp)
                 else
                    prod    =   0.0_sp
                    exit
@@ -3258,10 +3258,8 @@ CONTAINS
 
              if ((partitions(((n-1)*n)/2+m) .ne. 0_i4)) then
                 if  (ne(innerfunc(m+1), 0.0_dp)) then
-
                    prod    =&
                         prod*(innerfunc(m+1)**partitions(((n-1)*n)/2+m))/real(factorial(int(partitions(((n-1)*n)/2+m),i8)),dp)
-
                 else
                    prod    =   0.0_dp
                    exit
