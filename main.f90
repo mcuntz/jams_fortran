@@ -1,7 +1,9 @@
 PROGRAM main
 
   ! \ls mo_*.f90 | sed -e 's/mo_/  USE mo_/' -e 's/.f90//' | \
-  !    sed -e 's/USE mo_minpack/!USE mo_minpack/' -e 's/USE mo_template/!USE mo_template/'
+  !    sed -e 's/USE mo_minpack/!USE mo_minpack/' -e 's/USE mo_template/!USE mo_template/' \
+  !        -e 's/USE mo_nr$/!USE mo_nr/' -e 's/USE mo_pumpingtests/!USE mo_pumpingtests/'
+  ! make EXCLUDE_FILES='mo_minpack.f90 mo_nr.f90 mo_pumpingtests.f90 mo_template.f90' 
   USE mo_anneal
   USE mo_append
   USE mo_boxcox
@@ -16,13 +18,13 @@ PROGRAM main
   USE mo_finish
   USE mo_fit
   USE mo_functions
-  USE mo_groundwater
   USE mo_histo
   USE mo_integrate
   USE mo_interpol
   USE mo_julian
   USE mo_kernel
   USE mo_kind
+  USE mo_laplace_inversion
   USE mo_linear_algebra
   USE mo_linfit
   USE mo_mad
@@ -34,7 +36,7 @@ PROGRAM main
   USE mo_ncwrite
   USE mo_nelmin
   USE mo_nml
-  USE mo_nr
+  !USE mo_nr
   USE mo_nrutil
   USE mo_ode_generator
   USE mo_ode_solver
@@ -43,7 +45,9 @@ PROGRAM main
   USE mo_percentile
   USE mo_pi_index
   USE mo_poly
+  !USE mo_pumpingtests
   USE mo_quicksort
+  USE mo_random_field
   USE mo_remap
   USE mo_sampling
   USE mo_sce
