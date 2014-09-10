@@ -2,7 +2,7 @@ PROGRAM main
   
   USE mo_kind, ONLY: dp, sp
   USE mo_fit,  ONLY: fitfun, fpoly_dp, fpoly_sp, polyfit, svdfit
-  USE mo_fit,  ONLY: linfit
+  USE mo_fit,  ONLY: linfit, polyval
 
   IMPLICIT NONE
   
@@ -19,6 +19,9 @@ PROGRAM main
   real(dp)                               :: dchisq
   real(dp), dimension(2)                 :: dla
   real(dp)                               :: da1, db1
+  real(dp)                               :: xdp = 3
+  real(dp), dimension(4)                 :: xdpvec = (/ 0, 1, 2, 3 /)
+  real(dp), dimension(3)                 :: polydp = (/ 1, 2, 1 /)
 
   real(sp), dimension(11)                :: sx = (/ (i,i=0,10) /)
   real(sp), dimension(11)                :: sy = (/ 1,   6,  17,  34, 57,  86, 121, 162, 209, 262, 321 /)
@@ -28,6 +31,9 @@ PROGRAM main
   real(sp)                               :: schisq
   real(sp), dimension(2)                 :: sla
   real(sp)                               :: sa1, sb1
+  real(sp)                               :: xsp = 3
+  real(sp), dimension(4)                 :: xspvec = (/ 0, 1, 2, 3 /)
+  real(sp), dimension(3)                 :: polysp = (/ 1, 2, 1 /)
 
   Write(*,*) ''
   Write(*,*) 'Test mo_fit.f90'
@@ -56,7 +62,12 @@ PROGRAM main
   dsig = linfit(dx, dy, a=da1, b=db1)
   write(*,*) da1, db1
   isgood = isgood .and. all(nint((dla-(/da1, db1/))*1000._dp) == 0)
-  
+  Write(*,*) ''
+  Write(*,*) 'Output should read 16 & 1 4 9 16'
+  Write(*,*) ''
+  write(*,*) polyval( polydp, xdp)
+  write(*,*) polyval( polydp, xdpvec)
+  isgood = isgood .and. all((nint(1000._dp*polyval( polydp, xdpvec))-(/1000, 4000, 9000, 16000/)) == 0)
 
   if (isgood) then
      write(*,*) 'mo_fit double precision o.k.'
@@ -86,6 +97,12 @@ PROGRAM main
   ssig = linfit(sx, sy, a=sa1, b=sb1)
   write(*,*) sa1, sb1
   isgood = isgood .and. all(nint((sla-(/sa1, sb1/))*1000._sp) == 0)
+  Write(*,*) ''
+  Write(*,*) 'Output should read 16 & 1 4 9 16'
+  Write(*,*) ''
+  write(*,*) polyval( polysp, xsp)
+  write(*,*) polyval( polysp, xspvec)
+  isgood = isgood .and. all((nint(1000._sp*polyval( polysp, xspvec))-(/1000, 4000, 9000, 16000/)) == 0)
 
   if (isgood) then
      write(*,*) 'mo_fit single precision o.k.'

@@ -7,6 +7,7 @@ MODULE mo_fit
   !                     fpoly, fpoly_sp, fpoly_dp, & ! Polynomial base functions
   !                     linfit, &                    ! Linear fit (without errors), Model I and Model II
   !                     polyfit, &                   ! Polynomial fitting routine using Lapack
+  !                     polyval                      ! Calculates polynomial values for an vectorial input
   !                     svdfit, svdvar               ! fitting routines + errors
 
   ! Literature
@@ -25,8 +26,9 @@ MODULE mo_fit
   ! Written March 2011, Matthias Cuntz - copied and adapted numerical recipes subroutines
   !                                    - fitfun for easy use with mask
   !                                    - linfit Model II: geometric mean regression
-  ! Modified Matthias Cuntz,Nov 2011   - sp, dp
+  ! Modified Matthias Cuntz, Nov 2011  - sp, dp
   !                                    - documentation
+  !          Gregor Schuldt, Sep 2014  - polyval
 
   ! License
   ! -------
@@ -46,7 +48,7 @@ MODULE mo_fit
   ! along with the UFZ makefile project (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011 Matthias Cuntz
+  ! Copyright 2011-2014 Matthias Cuntz, Gregor Schuldt
 
 
   ! Note on Numerical Recipes License
@@ -87,6 +89,7 @@ MODULE mo_fit
   PUBLIC :: fpoly, fpoly_dp, fpoly_sp     ! Routine to fit polynomial with fitfun or svdfit
   PUBLIC :: linfit                        ! Fitting straight line (without error bars on input), Model I or Model II
   PUBLIC :: polyfit                       ! Fit a polynomial (with Lapack)
+  PUBLIC :: polyval                       ! Calculates polynomial-values for an vectorial input
   PUBLIC :: svdfit                        ! Parameter fitting with singular value decomposition
   PUBLIC :: svdvar                        ! Variance of fitted parameters with svdfit
 
@@ -343,6 +346,63 @@ MODULE mo_fit
   ! ------------------------------------------------------------------
 
   !     NAME
+  !         polyval
+
+  !     PURPOSE
+  !         Evaluates a polynomial for a given vector.
+
+  !         Input 'poly' must be an array containing the values for the coefficients of the polynomial.
+  !         For example 'poly' for the polynomial "1 + 2 * x + 3 * x**2" should be (/ 1, 2, 3 /)
+
+  !         Input 'xwert' can be scalar or 1D-array with values for which the user wants to evaluate the given polynomial.
+
+
+  !     CALLING SEQUENCE
+  !         vec = polyval(poly,xwert)
+
+  !     INTENT(IN)
+  !         real(sp/dp), dimension(:)   ::   poly                   polynomial-coefficients
+  !         real(sp/dp)[, dimension(:)] ::   xwert                  Evaluation-value(s)
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         real(sp/dp)[, dimension(size(xwert,1))] :: polyval        (vec with) polynomial-value(s) at xwert
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         For the polynom  "1 + 2 * x + 3 * x**2" and the values 1 and 2
+  !         poly  = (/ 1, 2, 3/)
+  !         xwert = (/ 1, 2 /)
+  !         Erg   = polyval(poly,xwert)
+  !         ----> Erg = (/ 6, 17 /)
+
+
+  !     LITERATURE
+  !
+
+  !     HISTORY
+  !         Written, Gregor Schuldt, Sep 2014
+
+  INTERFACE polyval
+     MODULE PROCEDURE polyval_0d_sp, polyval_1d_sp, polyval_0d_dp, polyval_1d_dp
+  END INTERFACE polyval
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
   !         svdfit
 
   !     PURPOSE
@@ -421,7 +481,7 @@ MODULE mo_fit
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         svdfit
+  !         svdvar
 
   !     PURPOSE
   !         Calculates the variance/covariance for the singular value decomposition estimates.
@@ -1242,6 +1302,76 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+  function polyval_0d_sp(poly, xwert)
+
+    implicit none
+
+    real(sp),              dimension(:),       INTENT(IN) :: poly              
+    real(sp),                                  INTENT(IN) :: xwert            
+    real(sp)                                              :: polyval_0d_sp  
+
+    integer(i4)                                           :: mm
+ 
+    mm = size(poly, 1)
+    polyval_0d_sp = dot_product( poly , fpoly(xwert, mm))
+
+  end function polyval_0d_sp
+
+
+  function polyval_0d_dp(poly, xwert)
+
+    implicit none
+
+    real(dp),              dimension(:),       INTENT(IN) :: poly             
+    real(dp),                                  INTENT(IN) :: xwert            
+    real(dp)                                              :: polyval_0d_dp 
+
+    integer(i4)                                           ::  mm
+
+    mm = size(poly, 1)
+    polyval_0d_dp = dot_product( poly , fpoly(xwert, mm))
+
+  end function polyval_0d_dp
+
+ function polyval_1d_sp(poly, xwert)
+
+    implicit none
+
+    real(sp),              dimension(:),       INTENT(IN) :: poly             
+    real(sp),              dimension(:),       INTENT(IN) :: xwert             
+    real(sp),              dimension(size(xwert,1))       :: polyval_1d_sp  
+
+    integer(i4)                                           :: ii, nn, mm
+
+    mm = size(poly,1)
+    nn = size(xwert,1)
+    do ii = 1, nn
+       polyval_1d_sp(ii) = dot_product( poly , fpoly(xwert(ii), mm))
+    end do
+
+  end function polyval_1d_sp
+
+
+ function polyval_1d_dp(poly, xwert)
+
+    implicit none
+
+    real(dp),              dimension(:),       INTENT(IN) :: poly              
+    real(dp),              dimension(:),       INTENT(IN) :: xwert            
+    real(dp),              dimension(size(xwert,1))       :: polyval_1d_dp  
+
+    integer(i4)                                           :: ii, nn, mm
+    
+    mm = size(poly,1)
+    nn = size(xwert,1)
+    do ii = 1, nn
+       polyval_1d_dp(ii) = dot_product( poly , fpoly(xwert(ii), mm))
+    end do
+
+  end function polyval_1d_dp
+
+  ! ------------------------------------------------------------------
+
   ! From Numerical Recipes in F77 book
   ! Solves A*X=B for a vector X, where A is specified by the arrays u, w, v as returned by
   ! svdcmp. m and n are the logical dimensions of a, and will be equal for square matrices. mp
@@ -1861,6 +1991,6 @@ CONTAINS
 
   END FUNCTION vabs_sp
 
-  ! ------------------------------------------------------------------
+ ! ------------------------------------------------------------------
 
 END MODULE mo_fit
