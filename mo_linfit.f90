@@ -27,7 +27,7 @@ MODULE mo_linfit
   ! GNU Lesser General Public License for more details.
 
   ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the UFZ makefile project (cf. gpl.txt and lgpl.txt).
+  ! along with the UFZ Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
   ! Copyright 2011 Matthias Cuntz

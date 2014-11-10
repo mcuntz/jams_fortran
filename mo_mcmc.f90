@@ -17,7 +17,7 @@ MODULE mo_mcmc
 
   ! If you use this routine, please contact Juliane Mai.
 
-  ! Copyright 2012 Maren Goehler, Juliane Mai
+  ! Copyright 2012 Juliane Mai, Maren Goehler
 
   USE mo_kind,    only: i4, i8, dp
   USE mo_xor4096, only: xor4096, xor4096g, get_timeseed, n_save_state
