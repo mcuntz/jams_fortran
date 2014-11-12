@@ -321,6 +321,7 @@ contains
 
   !     HISTORY
   !         Written,  Matthias Zink, Oct 2012
+  !         Modified, Matthias Cuntz & Juliane Mai, Nov 2014 - correct data type detection
 
   subroutine Get_NcVarAtt(FileName, VarName, AttName, AttValues, fid, dtype)
     !
@@ -356,7 +357,7 @@ contains
     select case (type)
     case (1) ! 1 = NF90_BYTE
        call check(nf90_get_att(ncid, varid, trim(AttName), avint))
-       write(AttValues,'(i4)')  avfloat
+       write(AttValues,'(i4)')  avint
        AttValues = adjustl(trim(AttValues))
        if (present(dtype)) dtype=type
     case (2) ! NF90_CHAR
@@ -365,12 +366,12 @@ contains
        if (present(dtype)) dtype=type
     case (3) ! NF90_SHORT
        call check(nf90_get_att(ncid, varid, trim(AttName), avint))
-       write(AttValues,'(i6)')  avfloat
+       write(AttValues,'(i6)')  avint
        AttValues = adjustl(trim(AttValues))
        if (present(dtype)) dtype=type
     case (4) ! NF90_INT
        call check(nf90_get_att(ncid, varid, trim(AttName), avint))
-       write(AttValues,'(i11)')  avfloat
+       write(AttValues,'(i11)')  avint
        AttValues = adjustl(trim(AttValues))
        if (present(dtype)) dtype=type
     case (5) ! NF90_FLOAT
