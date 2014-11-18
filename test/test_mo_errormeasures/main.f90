@@ -2,7 +2,7 @@ program test
 
   ! use mo_moment   
   USE mo_kind         , ONLY: i4, sp, dp
-  USE mo_errorMeasures, ONLY: BIAS, NSE, LNNSE, SAE, MAE, SSE, MSE, RMSE
+  USE mo_errorMeasures, ONLY: BIAS, KGE, LNNSE, MAE, MSE, NSE, RMSE, SAE, SSE
   !
   IMPLICIT NONE
   !
@@ -52,6 +52,13 @@ program test
   isgood = isgood .and. (nint(10000._dp*BIAS(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. 20813)
   isgood = isgood .and. (nint(10000._sp*BIAS(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 9097) 
   isgood = isgood .and. (nint(10000._dp*BIAS(arr1, arr2, mask=mask)) .EQ. 9097)
+  ! KGE
+  isgood = isgood .and. (nint(10000._sp*KGE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. 1783)
+  isgood = isgood .and. (nint(10000._dp*KGE(vec1, vec2, mask=maskvec)) .EQ. 1783)
+  isgood = isgood .and. (nint(10000._sp*KGE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. -4730)
+  isgood = isgood .and. (nint(10000._dp*KGE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. -4730)
+  isgood = isgood .and. (nint(10000._sp*KGE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 7631) 
+  isgood = isgood .and. (nint(10000._dp*KGE(arr1, arr2, mask=mask)) .EQ. 7631)
   ! MAE
   isgood = isgood .and. (nint(10000._sp*MAE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. 16123)
   isgood = isgood .and. (nint(10000._dp*MAE(vec1, vec2, mask=maskvec)) .EQ. 16123)
