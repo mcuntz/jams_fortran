@@ -852,14 +852,13 @@ CONTAINS
 
   FUNCTION KGE_dp_1d(x, y, mask)
 
-    USE mo_moment, ONLY: average
-
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
     REAL(dp)                                          :: KGE_dp_1d
 
+    ! local variables
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
     LOGICAL,  DIMENSION(size(x))                      :: maske
