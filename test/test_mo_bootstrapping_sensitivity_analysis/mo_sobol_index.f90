@@ -1,1 +1,0 @@
-/home/bruckert/FORTRAN_chs_lib/mo_sobol_index.f90

@@ -1,1 +1,0 @@
-/home/bruckert/FORTRAN_chs_lib/mo_kind.f90
