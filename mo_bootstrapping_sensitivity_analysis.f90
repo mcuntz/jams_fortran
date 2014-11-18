@@ -131,16 +131,16 @@ CONTAINS
 
     IMPLICIT NONE
 
-    real(dp),     dimension(:),                       intent(in)             :: ya               ! model output for parameter set A
-    real(dp),     dimension(:),                       intent(in)             :: yb               ! model output for parameter set B
-    real(dp),     dimension(:,:),                     intent(in)             :: yc               ! model output for parameter set C
-    integer(i4),                                      intent(in)             :: n                ! number of new data sets
+    real(dp),     dimension(:),            intent(in)             :: ya     ! model output for parameter set A
+    real(dp),     dimension(:),            intent(in)             :: yb     ! model output for parameter set B
+    real(dp),     dimension(:,:),          intent(in)             :: yc     ! model output for parameter set C
+    integer(i4),                           intent(in)             :: n      ! number of new data sets
 
-    real(dp),     dimension(n,size(yc,2)),            intent(out)            :: si               ! Sobol index (main effect)
-    real(dp),     dimension(n,size(yc,2)),            intent(out)            :: sti              ! Sobol index (total effect)
+    real(dp),     dimension(n,size(yc,2)), intent(out)            :: si     ! Sobol index (main effect)
+    real(dp),     dimension(n,size(yc,2)), intent(out)            :: sti    ! Sobol index (total effect)
 
-    integer(i4),                                      intent(in),  optional  :: method           ! method for calculating the sobol index
-    integer(i8),                                      intent(in),  optional  :: seed             ! seed
+    integer(i4),                           intent(in),  optional  :: method ! method for calculating the sobol index
+    integer(i8),                           intent(in),  optional  :: seed   ! seed
 
     ! local variables
     real(dp),     dimension(n)                         :: r
@@ -157,8 +157,9 @@ CONTAINS
 
 
     allocate(save_state(n,n_save_state))
+
     if (present(seed)) then
-       seed_tmp(i)=seed
+       seed_tmp(1)=seed
        do i=2,n
           seed_tmp(i)=seed_tmp(i-1)+1000_i8
        end do
@@ -203,16 +204,16 @@ CONTAINS
 
     IMPLICIT NONE
 
-    real(sp),     dimension(:),                       intent(in)             :: ya               ! model output for parameter set A
-    real(sp),     dimension(:),                       intent(in)             :: yb               ! model output for parameter set B
-    real(sp),     dimension(:,:),                     intent(in)             :: yc               ! model output for parameter set C
-    integer(i4),                                      intent(in)             :: n                ! number of new data sets
+    real(sp),     dimension(:),            intent(in)             :: ya     ! model output for parameter set A
+    real(sp),     dimension(:),            intent(in)             :: yb     ! model output for parameter set B
+    real(sp),     dimension(:,:),          intent(in)             :: yc     ! model output for parameter set C
+    integer(i4),                           intent(in)             :: n      ! number of new data sets
 
-    real(sp),     dimension(n,size(yc,2)),            intent(out)            :: si               ! Sobol index (main effect)
-    real(sp),     dimension(n,size(yc,2)),            intent(out)            :: sti              ! Sobol index (total effect)
+    real(sp),     dimension(n,size(yc,2)), intent(out)            :: si     ! Sobol index (main effect)
+    real(sp),     dimension(n,size(yc,2)), intent(out)            :: sti    ! Sobol index (total effect)
 
-    integer(i4),                                      intent(in),  optional  :: method           ! method for calculating the sobol index
-    integer(i4),                                      intent(in),  optional  :: seed             ! seed
+    integer(i4),                           intent(in),  optional  :: method ! method for calculating the sobol index
+    integer(i4),                           intent(in),  optional  :: seed   ! seed
 
     ! local variables
     real(sp),     dimension(n)                         :: r 
@@ -231,9 +232,9 @@ CONTAINS
     allocate(save_state(n,n_save_state))
    
     if (present(seed)) then
-       seed_tmp(i)=seed
+       seed_tmp(1)=seed
        do i=2,n
-          seed_tmp(i)=seed_tmp(i-1)+1000_i8
+          seed_tmp(i)=seed_tmp(i-1)+1000_i4
        end do
     else
        call get_timeseed(seed_tmp)
@@ -276,16 +277,16 @@ CONTAINS
 
     IMPLICIT NONE
 
-    real(dp),     dimension(:,:),                     intent(in)             :: ya               ! model output for parameter set A
-    real(dp),     dimension(:,:),                     intent(in)             :: yb               ! model output for parameter set B
-    real(dp),     dimension(:,:,:),                   intent(in)             :: yc               ! model output for parameter set C
-    integer(i4),                                      intent(in)             :: n                ! number of new data sets
+    real(dp),     dimension(:,:),                     intent(in)             :: ya     ! model output for parameter set A
+    real(dp),     dimension(:,:),                     intent(in)             :: yb     ! model output for parameter set B
+    real(dp),     dimension(:,:,:),                   intent(in)             :: yc     ! model output for parameter set C
+    integer(i4),                                      intent(in)             :: n      ! number of new data sets
 
-    real(dp),     dimension(n,size(yc,2),size(ya,2)), intent(out)            :: si               ! Sobol index (main effect)
-    real(dp),     dimension(n,size(yc,2),size(ya,2)), intent(out)            :: sti              ! Sobol index (total effect)
+    real(dp),     dimension(n,size(yc,2),size(ya,2)), intent(out)            :: si     ! Sobol index (main effect)
+    real(dp),     dimension(n,size(yc,2),size(ya,2)), intent(out)            :: sti    ! Sobol index (total effect)
 
-    integer(i4),                                      intent(in),  optional  :: method           ! method for calculating the sobol index
-    integer(i8),                                      intent(in),  optional  :: seed             ! seed
+    integer(i4),                                      intent(in),  optional  :: method ! method for calculating the sobol index
+    integer(i8),                                      intent(in),  optional  :: seed   ! seed
 
     ! local variables
     real(dp),     dimension(n)                                 :: r 
@@ -349,16 +350,16 @@ CONTAINS
 
     IMPLICIT NONE
 
-    real(sp),     dimension(:,:),                     intent(in)             :: ya               ! model output for parameter set A
-    real(sp),     dimension(:,:),                     intent(in)             :: yb               ! model output for parameter set B
-    real(sp),     dimension(:,:,:),                   intent(in)             :: yc               ! model output for parameter set C
-    integer(i4),                                      intent(in)             :: n                ! number of new data sets
+    real(sp),     dimension(:,:),                     intent(in)             :: ya     ! model output for parameter set A
+    real(sp),     dimension(:,:),                     intent(in)             :: yb     ! model output for parameter set B
+    real(sp),     dimension(:,:,:),                   intent(in)             :: yc     ! model output for parameter set C
+    integer(i4),                                      intent(in)             :: n      ! number of new data sets
 
-    real(sp),     dimension(n,size(yc,2),size(ya,2)), intent(out)            :: si               ! Sobol index (main effect)
-    real(sp),     dimension(n,size(yc,2),size(ya,2)), intent(out)            :: sti              ! Sobol index (total effect)
+    real(sp),     dimension(n,size(yc,2),size(ya,2)), intent(out)            :: si     ! Sobol index (main effect)
+    real(sp),     dimension(n,size(yc,2),size(ya,2)), intent(out)            :: sti    ! Sobol index (total effect)
 
-    integer(i4),                                      intent(in),  optional  :: method           ! method for calculating the sobol index
-    integer(i4),                                      intent(in),  optional  :: seed             ! seed
+    integer(i4),                                      intent(in),  optional  :: method ! method for calculating the sobol index
+    integer(i4),                                      intent(in),  optional  :: seed   ! seed
 
     ! local variables  
     real(sp),     dimension(n)                                 :: r       
@@ -377,9 +378,9 @@ CONTAINS
     allocate(save_state(n,n_save_state))
  
     if (present(seed)) then
-       seed_tmp(1)=seed+1000_i8
+       seed_tmp(1)=seed
        do i=2,n
-          seed_tmp(i)=seed_tmp(i-1)+1000_i8
+          seed_tmp(i)=seed_tmp(i-1)+1000_i4
        end do
     else
        call get_timeseed(seed_tmp)
