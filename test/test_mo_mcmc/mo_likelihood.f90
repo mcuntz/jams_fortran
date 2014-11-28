@@ -9,7 +9,8 @@ module mo_likelihood
 
   PUBLIC :: data        
   PUBLIC :: model
-  PUBLIC :: likelihood_dp, loglikelihood_dp
+  PUBLIC :: likelihood_dp,        loglikelihood_dp        ! "real" likelihood  (sigma is an error model or given)
+  PUBLIC :: likelihood_stddev_dp, loglikelihood_stddev_dp ! "faked" likelihood (sigma is computed by obs vs model)
   PUBLIC :: setmeas
 
   INTERFACE data
@@ -24,29 +25,60 @@ module mo_likelihood
      MODULE PROCEDURE setmeas_dp
   END INTERFACE setmeas
 
-  REAL(DP),DIMENSION(100,2)  :: meas
+  REAL(DP),DIMENSION(100,2)  :: meas                   ! measurements
+  REAL(DP),PARAMETER         :: stddev_global=0.5_dp   ! standard deviation of measurement error
 
   ! ------------------------------------------------------------------
 
 CONTAINS
 
   ! -------------------------------
-  ! A Likelihood function
+  ! A Likelihood function: "real" likelihood  (sigma is an error model or given)
   ! -------------------------------
-  function likelihood_dp(paraset,stddev_in,stddev_new,likeli_new)
+  function likelihood_dp(paraset)
+    REAL(DP), DIMENSION(:), INTENT(IN)            :: paraset          ! parameter set
+    REAL(DP)                                      :: likelihood_dp
+
+    ! local
+    REAL(DP), DIMENSION(size(meas,1))   :: errors
+
+    errors  = model(paraset)-data()
+    likelihood_dp = exp(-0.5_dp * sum( errors(:) * errors(:) / stddev_global**2 ))
+
+  end function likelihood_dp
+
+  ! -------------------------------
+  ! A Log-Likelihood function: "real" likelihood  (sigma is an error model or given)
+  ! -------------------------------
+  function loglikelihood_dp(paraset)
+    REAL(DP), DIMENSION(:), INTENT(IN)            :: paraset          ! parameter set
+    REAL(DP)                                      :: loglikelihood_dp
+
+    ! local
+    REAL(DP), DIMENSION(size(meas,1))   :: errors
+
+    errors(:) = model(paraset)-data() 
+    loglikelihood_dp = -0.5_dp * sum( errors(:) * errors(:) / stddev_global**2 )
+
+  end function loglikelihood_dp
+
+  ! -------------------------------
+  ! A Likelihood function: "faked" likelihood (sigma is computed by obs vs model)
+  ! -------------------------------
+  function likelihood_stddev_dp(paraset,stddev_in,stddev_new,likeli_new)
     REAL(DP), DIMENSION(:), INTENT(IN)            :: paraset          ! parameter set
     REAL(DP),               INTENT(IN)            :: stddev_in        ! standard deviation of data
     REAL(DP),               INTENT(OUT), OPTIONAL :: stddev_new       ! standard deviation of errors using paraset
     REAL(DP),               INTENT(OUT), OPTIONAL :: likeli_new       ! likelihood using stddev_new, 
     !                                                                 ! i.e. using new parameter set
-    REAL(DP)                                      :: likelihood_dp
+    REAL(DP)                                      :: likelihood_stddev_dp
 
     ! local
     REAL(DP), DIMENSION(size(meas,1))   :: errors
     REAL(DP)                            :: stddev_err
 
     errors  = model(paraset)-data()
-    likelihood_dp = exp(-0.5_dp * sum( errors(:) * errors(:) / stddev_in**2 ))
+    likelihood_stddev_dp = exp(-0.5_dp * sum( errors(:) * errors(:) / stddev_in**2 ))
 
     ! optional out
     stddev_err = stddev(errors)
@@ -57,25 +89,25 @@ CONTAINS
        likeli_new = exp(-0.5_dp * sum( errors(:) * errors(:) / stddev_err**2 ))
     end if
 
-  end function likelihood_dp
+  end function likelihood_stddev_dp
 
   ! -------------------------------
-  ! A Log-Likelihood function
+  ! A Log-Likelihood_stddev function: "faked" likelihood (sigma is computed by obs vs model)
   ! -------------------------------
-  function loglikelihood_dp(paraset,stddev_in,stddev_new,likeli_new)
+  function loglikelihood_stddev_dp(paraset,stddev_in,stddev_new,likeli_new)
     REAL(DP), DIMENSION(:), INTENT(IN)            :: paraset          ! parameter set
     REAL(DP),               INTENT(IN)            :: stddev_in        ! standard deviation of data
     REAL(DP),               INTENT(OUT), OPTIONAL :: stddev_new       ! standard deviation of errors using paraset
     REAL(DP),               INTENT(OUT), OPTIONAL :: likeli_new       ! likelihood using stddev_new, 
     !                                                                 ! i.e. using new parameter set
-    REAL(DP)                                      :: loglikelihood_dp
+    REAL(DP)                                      :: loglikelihood_stddev_dp
 
     ! local
     REAL(DP), DIMENSION(size(meas,1))   :: errors
     REAL(DP)                            :: stddev_err
 
     errors(:) = model(paraset)-data() 
-    loglikelihood_dp = -0.5_dp * sum( errors(:) * errors(:) / stddev_in**2 )
+    loglikelihood_stddev_dp = -0.5_dp * sum( errors(:) * errors(:) / stddev_in**2 )
 
     ! optional out
     stddev_err = stddev(errors)
@@ -86,7 +118,7 @@ CONTAINS
        likeli_new = -0.5_dp * sum( errors(:) * errors(:) / stddev_err**2 )
     end if
 
-  end function loglikelihood_dp
+  end function loglikelihood_stddev_dp
 
   ! -------------------------------
   ! A Model: p1*x^2 + p2*x + p3
@@ -101,7 +133,11 @@ CONTAINS
   end function model_dp
 
   ! -------------------------------
-  ! DATA
+  ! Data generated with
+  !     paraset(1) = 1.0
+  !     paraset(2) = 2.0
+  !     paraset(3) = 3.0
+  ! plus additive, Gaussian distributed error with mu=0.0 and sigma=0.5
   ! -------------------------------
   function data_dp()
     use mo_kind
