@@ -25,6 +25,6 @@ double testc(double *data, int d, int n, const double ref)
 #ifdef CFORTRAN
 /* Called as ctest in fortran; has 4 inputs.
    Put P in front of variable definition for pointers, i.e. INT -> int d, and PINT -> int *d
- */
+*/
 FCALLSCFUN4(DOUBLE, testc, CTEST, ctest, PDOUBLE, INT, INT, DOUBLE)
 #endif
