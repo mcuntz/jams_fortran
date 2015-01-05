@@ -32,6 +32,7 @@ PROGRAM main
   model2 = .false.
   ! fit should be perfect
   yout = linfit(xx, yy, a=a2, b=b2, siga=siga, sigb=sigb, chi2=chi2, model2=model2)
+  yout = yout
   if (abs(a-a2) > 100._dp*epsilon(1.0_dp)) isgood = .false.
   if (siga > 100._dp*epsilon(1.0_dp)) isgood = .false.
   if (sigb > 100._dp*epsilon(1.0_dp)) isgood = .false.
@@ -40,6 +41,7 @@ PROGRAM main
   ! model II
   model2 = .true.
   yout = linfit(xx, yy, a=a2, b=b2, siga=siga, sigb=sigb, chi2=chi2, model2=model2)
+  yout = yout
   if (abs(a-a2) > 100._dp*epsilon(1.0_dp)) isgood = .false.
   if (siga > 1.0e-4*a) isgood = .false.
   if (sigb > 1.0e-4*b) isgood = .false.
@@ -56,6 +58,7 @@ PROGRAM main
   model2 = .false.
   ! fit should be perfect
   syout = linfit(sxx, syy, a=sa2, b=sb2, siga=ssiga, sigb=ssigb, chi2=schi2, model2=model2)
+  syout = syout
   if (abs(sa-sa2) > 100._sp*epsilon(1.0_sp)) isgood = .false.
   if (ssiga > 100._sp*epsilon(1.0_sp)) isgood = .false.
   if (ssigb > 100._sp*epsilon(1.0_sp)) isgood = .false.
@@ -64,6 +67,7 @@ PROGRAM main
   ! model II
   model2 = .true.
   syout = linfit(sxx, syy, a=sa2, b=sb2, siga=ssiga, sigb=ssigb, chi2=schi2, model2=model2)
+  syout = syout
   if (abs(sa-sa2) > 100._sp*epsilon(1.0_sp)) isgood = .false.
   if (ssiga > 1.0e-4*sa) isgood = .false.
   if (ssigb > 1.0e-4*sb) isgood = .false.

@@ -76,8 +76,6 @@ module mo_ode_generator
     !>                                                                  (dim_3=i : reactant i-1)\n
     !
     !     INTENT(IN), OPTIONAL
-    !>        \param[in] "real(dp),    optional :: nodata_value"choosing the value to no-data\n
-    !>                                                          DEFAULT: -9999.9_dp
     !>        \param[in] "integer(i8), optional :: jPerm"       choosing one single permutation\n
     !>                                                          ode_results(1,:,:) is returned\n
     !>                                                          DEFAULT: all
@@ -109,6 +107,7 @@ module mo_ode_generator
     !         Modified Giovanni Dalmasso, Apr 2014 - added printflag
     !                                              - added variable to store results
     !                                              - renamed variables
+    !                  Matthias Cuntz, Jan 2015    - removed nodata_value
     ! ------------------------------------------------------------------
     interface ode_generator
         module procedure ode_generator_dp
@@ -145,7 +144,7 @@ contains
 
     subroutine ode_generator_dp( n_reac, dt, t_start, t_end, x_initial, para,   &   ! IN
             ode_results,                                                        &   ! OUT
-            nodata_value, jPerm, printflag                                      &   ! optional IN
+            jPerm, printflag                                                    &   ! optional IN
             )
 
         use mo_kind,            only    :   i4, i8, dp
@@ -162,7 +161,6 @@ contains
         real(dp),   dimension(:,:),                     intent(in)  ::  para        ! array of paramenters
 
         !! Intent IN optional
-        real(dp),       optional,                       intent(in)  ::  nodata_value! choosing the value to no-data
         integer(i8),    optional,                       intent(in)  ::  jPerm       ! choosing one single permutation
         logical,        optional,                       intent(in)  ::  printflag   ! flag for printing results on screen
 
@@ -182,7 +180,6 @@ contains
         integer(i4)                                 ::  dim_new, dim_old  ! dimensions needed for re-allocation
         integer(i8)                                 ::  iPer              ! current permutation
         integer(i8)                                 ::  nPer              ! number of permutations
-        real(dp)                                    ::  nodata_valueIn    ! no-data value
         real(dp)                                    ::  dt_min            ! step size
         real(dp),   dimension(:),       allocatable ::  xout              ! time
         real(dp),   dimension(:,:),     allocatable ::  yout              ! concentration per reactant
@@ -200,10 +197,6 @@ contains
             write(*,*) 'mo_ode_generator: Reaction rates need to be non-negative!'
             stop
         end if
-
-        ! seeting no-data value
-        nodata_valueIn = -9999.9_dp
-        if ( present(nodata_value) )   nodata_valueIn = nodata_value
 
         printflagIn = .false.
         if ( present(printflag) )   printflagIn = printflag

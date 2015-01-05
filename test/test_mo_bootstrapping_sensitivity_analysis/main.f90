@@ -32,9 +32,11 @@ PROGRAM mo_bootstrapping_test
   real(dp),  dimension(nsets,npar,nt)        :: yci                     ! model output C(i), i=1,npar
 
   real(dp),  dimension(nboot+1,npar,nt)      :: si                      ! sobol index (main effect) 
-                                                                        !    per parameter and time point for each bootstrapping sample
+                                                                        !    per parameter and time point
+                                                                        !    for each bootstrapping sample
   real(dp),  dimension(nboot+1,npar,nt)      :: sti                     ! sobol index (total effect)
-                                                                        !    per parameter and time point for each bootstrapping sample
+                                                                        !    per parameter and time point
+                                                                        !    for each bootstrapping sample
   integer(i4)        :: i
   logical            :: isgood = .true.
 
