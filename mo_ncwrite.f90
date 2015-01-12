@@ -396,7 +396,7 @@ contains
 
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
-    inetcdf4 = .false.
+    inetcdf4 = .true.
     if (present(netcdf4)) inetcdf4 = netcdf4
     deflate = 1
     if (present(deflate_level)) deflate = deflate_level
