@@ -120,6 +120,13 @@ print*, '    matrix1(3,2) = ', trim(matrix1_c(3,2))
 print*, ' '
 if (trim(matrix1_c(3,2)) /= 'C') isgood=.false.
 
+
+print*, '(E) character matrix1 will be appended by first column only of character matrix 2'
+call append(matrix1_c, matrix2_c(:,:1), fill_value = 'X' )
+print*, '    matrix1(7,2) = ', trim(matrix1_c(7,2))
+
+if (trim( matrix1_c(7,2 ) ) .ne. 'X' ) isgood=.false.
+
 deallocate(vector1_c)
 deallocate(vector2_c)
 deallocate(matrix1_c, matrix2_c)
@@ -162,6 +169,21 @@ call paste(matrix4_i4, 5_i4)
 print*, '    result  = (/ ', matrix4_i4(1,:),' /)'
 print*, ' '
 if ( any(matrix4_i4(1,:) .ne. (/ 2_i4,2_i4,2_i4, 5_i4 /)) ) isgood=.false.
+
+deallocate( matrix2_i4, matrix3_i4 )
+allocate(matrix2_i4(2,2), matrix3_i4(2,3) )
+matrix2_i4 = 5_i4
+matrix3_i4 = 3_i4
+
+print*, '(D) matrix2 will be pasted by the first row of matrix3'
+print*, '    matrix2 = (/', matrix2_i4(1,:)
+print*, '                ',matrix2_i4(2,:),' /)'
+print*, '    matrix3 = (/', matrix3_i4(1,:)
+print*, '                ',matrix3_i4(2,:),' /)'
+call paste(matrix2_i4, matrix3_i4(:1,:), fill_value = -9999_i4 )
+print*, '    result  = (/', matrix2_i4(1,:)
+print*, '                ',matrix2_i4(2,:),'/)'
+if ( matrix2_i4(2,3) .ne. -9999_i4 ) isgood=.false.
 
 deallocate(matrix1_i4, matrix2_i4, matrix3_i4, matrix4_i4)
 
