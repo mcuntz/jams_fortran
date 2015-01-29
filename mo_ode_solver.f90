@@ -8,7 +8,7 @@
 !> a fourth-order Runge-Kutta with fixed time-steps increments or a fourth-order Runge-Kutta with
 !> adaptive stepsize control.
 
-!> \authors Giovanni Dalmasso
+!> \authors Giovanni Dalmasso, Sebastian Mueller
 !> \date Jul 2012
 module mo_ode_solver
 
@@ -20,6 +20,7 @@ module mo_ode_solver
     !                                      - collected together different methods
     !                                      - speeded up
     !                             Apr 2013 - added documentation
+    ! Modified Sebastian Mueller, Jan 2015 - added a parameter input for the derivatives to use the solver dynamically
 
 
     ! License
@@ -117,7 +118,7 @@ module mo_ode_solver
     !>                                                                       dim 2 = number of equations.
 
     !     INTENT(IN), OPTIONAL
-    !         None
+    !>        \param[in] "real(sp/dp),  dimension(:)    ::  para"           parameter for the derivatives $dydx$
 
     !     INTENT(INOUT), OPTIONAL
     !         None
@@ -139,8 +140,9 @@ module mo_ode_solver
     !>        \author Giovanni Dalmasso
     !>        \date Jul 2012
     !         Modified, Giovanni Dalmasso, Mar 2013
-    interface Euler
-        module procedure Euler_sp, Euler_dp
+    !         Modified, Sebastian Mueller, Jan 2015
+        interface Euler
+        module procedure Euler_sp, Euler_dp, Euler_para_sp, Euler_para_dp
     end interface Euler
 
     ! ------------------------------------------------------------------
@@ -183,7 +185,7 @@ module mo_ode_solver
     !>                                                                       dim 2 = number of equations.
 
     !     INTENT(IN), OPTIONAL
-    !         None
+    !>        \param[in] "real(sp/dp),  dimension(:)    ::  para"           parameter for the derivatives $dydx$
 
     !     INTENT(INOUT), OPTIONAL
     !         None
@@ -210,8 +212,9 @@ module mo_ode_solver
     !>        \author Giovanni Dalmasso
     !>        \date Jul 2012
     !         Modified, Giovanni Dalmasso, Mar 2013
+    !         Modified, Sebastian Mueller, Jan 2015
     interface RK4
-        module procedure RK4_sp, RK4_dp
+        module procedure RK4_sp, RK4_dp, RK4_para_sp, RK4_para_dp
     end interface RK4
 
     ! ------------------------------------------------------------------
@@ -259,6 +262,7 @@ module mo_ode_solver
     !>                                                                              DEFAULT: 0.0
     !>        \param[in] "real(sp/dp),  optional         ::  eps"                   accuracy (overall tolerance level)
     !>                                                                              DEFAULT: 1E-6
+    !>        \param[in] "real(sp/dp),  dimension(:)     ::  para"                  parameter for the derivatives $dydx$
 
     !     INTENT(INOUT), OPTIONAL
     !         None
@@ -285,15 +289,16 @@ module mo_ode_solver
     !>        \author Giovanni Dalmasso
     !>        \date Jul 2012
     !         Modified, Giovanni Dalmasso, Mar 2013
+    !         Modified, Sebastian Mueller, Jan 2015
     interface RK4as
-        module procedure RK4as_sp, RK4as_dp
+        module procedure RK4as_sp, RK4as_dp, RK4as_para_sp, RK4as_para_dp
     end interface RK4as
 
     private
 
     ! Private method
     interface CashKarpRK
-        module procedure CashKarpRK_sp, CashKarpRK_dp
+        module procedure CashKarpRK_sp, CashKarpRK_dp, CashKarpRK_para_sp, CashKarpRK_para_dp
     end interface CashKarpRK
 
     ! ------------------------------------------------------------------
@@ -964,5 +969,694 @@ contains
     end subroutine CashKarpRK_dp
 
     ! ------------------------------------------------------------------
+
+
+!-----------------------------------------------------------|
+!the second version with parameter-input for the derivatives|
+!-----------------------------------------------------------|
+
+
+    ! ------------------------------------------------------------------
+
+    ! SINGLE PRECISION Euler
+    subroutine Euler_para_sp( ystart, x1, x2, h, derivs, para, xout, yout )    ! all obligatory
+
+        use mo_kind, only: i4, sp
+
+        implicit none
+
+        ! Intent IN
+        real(sp),   dimension(:),                intent(in)  :: ystart   ! initial conditions
+        real(sp),                                intent(in)  :: x1, x2   ! initial and final time
+        real(sp),                                intent(in)  :: h        ! step size
+        real(sp),   dimension(:),                intent(in)  :: para     ! parameters for derivs
+
+        ! Intent OUT
+        real(sp),   dimension(:),   allocatable, intent(out) :: xout
+        real(sp),   dimension(:,:), allocatable, intent(out) :: yout
+
+        interface
+            subroutine derivs( x, y, para, dydx )
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                 intent(in)  :: x        ! time
+                real(sp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(sp),   dimension(:), intent(in)  :: para     ! parameters for derivs
+                real(sp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+            end subroutine derivs
+        end interface
+
+        ! Internal variables
+        integer(i4)                           :: j        ! counter
+        integer(i4)                           :: nstep    ! number of steps
+        real(sp)                              :: x
+        real(sp),   dimension( size(ystart) ) :: dy, y
+
+        y(:) = ystart(:)                        ! load starting values
+        nstep = nint( (x2-x1)/h, i4 )           ! find number of steps
+
+        if ( allocated(xout) ) deallocate(xout) ! clear out old stored variables if necessary
+        if ( allocated(yout) ) deallocate(yout)
+        allocate( xout(nstep+1_i4) )            ! allocate storage for saved values
+        allocate( yout(nstep+1_i4, size(ystart)) )
+
+        yout(1,:) = y(:)
+        xout(1) = x1
+        x = x1
+
+        do j=1, nstep                   ! take nstep steps
+            call derivs( x, y, para, dy )
+            y = y + h*dy                ! step EULER
+            if ( h .lt. tiny(1._sp) )    stop 'Euler_para_sp --> stepsize not significant!'
+            x = x+h
+            xout(j+1_i4) = x            ! store intermediate steps
+            yout(j+1_i4,:) = y(:)
+        end do
+
+    end subroutine Euler_para_sp
+
+    ! DOUBLE PRECISION Euler
+    subroutine Euler_para_dp( ystart, x1, x2, h, derivs, para, xout, yout )    ! all obligatory
+
+        use mo_kind, only: i4, dp
+
+        implicit none
+
+        ! Intent IN
+        real(dp),   dimension(:),                intent(in)  :: ystart   ! initial conditions
+        real(dp),                                intent(in)  :: x1, x2   ! initial and final time
+        real(dp),                                intent(in)  :: h        ! step size
+        real(dp),   dimension(:),                intent(in)  :: para     ! parameters for derivs
+
+        ! Intent OUT
+        real(dp),   dimension(:),   allocatable, intent(out) :: xout
+        real(dp),   dimension(:,:), allocatable, intent(out) :: yout
+
+        interface
+            subroutine derivs( x, y, para, dydx )
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                 intent(in)  :: x        ! time
+                real(dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(dp),   dimension(:), intent(in)  :: para     ! parameters for derivs
+                real(dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+            end subroutine derivs
+        end interface
+
+        ! Internal variables
+        integer(i4)                           :: j        ! counter
+        integer(i4)                           :: nstep    ! nuber of steps
+        real(dp)                              :: x
+        real(dp),   dimension( size(ystart) ) :: dy, y
+
+        y(:) = ystart(:)                        ! load starting values
+        nstep = nint( (x2-x1)/h, i4 )           ! find number of steps
+
+        if ( allocated(xout) ) deallocate(xout) ! clear out old stored variables if necessary
+        if ( allocated(yout) ) deallocate(yout)
+        allocate( xout(nstep+1_i4) )            ! allocate storage for saved values
+        allocate( yout(nstep+1_i4, size(ystart)) )
+
+        yout(1,:) = y(:)
+        xout(1) = x1
+        x = x1
+
+        do j=1, nstep                   ! take nstep steps
+            call derivs( x, y, para, dy )
+            y = y + h*dy                ! step EULER
+            if ( h .lt. tiny(1._dp) )    stop 'Euler_para_dp --> stepsize not significant!'
+            x = x+h
+            xout(j+1_i4) = x            ! store intermediate steps
+            yout(j+1_i4,:) = y(:)
+        end do
+
+    end subroutine Euler_para_dp
+
+    ! ------------------------------------------------------------------
+
+    ! SINGLE PRECISION 4th order RUNGE-KUTTA
+    subroutine RK4_para_sp( ystart, x1, x2, h, derivs, para, xout, yout )    ! all obligatory
+
+        use mo_kind, only: i4, sp
+
+        implicit none
+
+        ! Intent IN
+        real(sp),   dimension(:),                intent(in)  :: ystart   ! initial conditions
+        real(sp),                                intent(in)  :: x1, x2   ! initial and final time
+        real(sp),                                intent(in)  :: h        ! step size
+        real(sp),   dimension(:),                intent(in)  :: para     ! parameters for derivs
+
+        ! Intent OUT
+        real(sp),   dimension(:),   allocatable, intent(out) :: xout
+        real(sp),   dimension(:,:), allocatable, intent(out) :: yout
+
+        interface
+            subroutine derivs( x, y, para, dydx )
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                 intent(in)  :: x        ! time
+                real(sp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(sp),   dimension(:), intent(in)  :: para     ! parameters for derivs
+                real(sp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+            end subroutine derivs
+        end interface
+
+        ! Internal variables
+        integer(i4)                           :: j            ! counter
+        integer(i4)                           :: nstep        ! nuber of steps
+        real(sp)                              :: x
+        real(sp)                              :: hh, h6, xh
+        real(sp),   dimension( size(ystart) ) :: dy, dyt, dym, y, yt
+
+        y(:) = ystart(:)                        ! load starting values
+        nstep = nint( (x2-x1)/h, i4 )           ! find number of steps
+
+        if ( allocated(xout) ) deallocate(xout) ! clear out old stored variables if necessary
+        if ( allocated(yout) ) deallocate(yout)
+        allocate( xout(nstep+1_i4) )            ! allocate storage for saved values
+        allocate( yout(nstep+1_i4, size(ystart)) )
+
+        yout(1,:) = y(:)
+        xout(1) = x1
+        x = x1
+
+        hh = h*0.5_sp
+        h6 = h/6.0_sp
+        xh = x+hh
+
+        do j=1, nstep                          ! take nstep steps
+            call derivs( x, y, para, dy )            ! first step
+            yt = y + hh*dy
+            call derivs( xh, yt, para, dyt )         ! second step
+            yt = y + hh*dyt
+            call derivs( xh, yt, para, dym )         ! third step
+            yt = y + h*dym
+            dym = dyt + dym
+            call derivs( x+h, yt, para, dyt )        ! fourth step
+            y = y + h6*( dy+dyt+2.0_sp*dym )   ! accumulate increments with proper weights
+            if ( h .lt. tiny(1._sp) )    stop 'RK4_para_sp --> stepsize not significant!'
+            x = x+h
+            xout(j+1_i4) = x            ! store intermediate steps
+            yout(j+1_i4,:) = y(:)
+        end do
+
+    end subroutine RK4_para_sp
+
+
+    ! DOUBLE PRECISION 4th order RUNGE-KUTTA
+    subroutine RK4_para_dp( ystart, x1, x2, h, derivs, para, xout, yout )    ! all obligatory
+
+        use mo_kind, only: i4, dp
+
+        implicit none
+
+        ! Intent IN
+        real(dp),   dimension(:),                intent(in)  :: ystart   ! initial conditions
+        real(dp),                                intent(in)  :: x1, x2   ! initial and final time
+        real(dp),                                intent(in)  :: h        ! step size
+        real(dp),   dimension(:),                intent(in)  :: para     ! parameters for derivs
+
+        ! Intent OUT
+        real(dp),   dimension(:),   allocatable, intent(out) :: xout
+        real(dp),   dimension(:,:), allocatable, intent(out) :: yout
+
+        interface
+            subroutine derivs( x, y, para, dydx )
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                 intent(in)  :: x        ! time
+                real(dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(dp),   dimension(:), intent(in)  :: para     ! parameters for derivs
+                real(dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+            end subroutine derivs
+        end interface
+
+        ! Internal variables
+        integer(i4)                           :: j            ! counter
+        integer(i4)                           :: nstep        ! nuber of steps
+        real(dp)                              :: x
+        real(dp)                              :: hh, h6, xh
+        real(dp),   dimension( size(ystart) ) :: dy, dyt, dym, y, yt
+
+        y(:) = ystart(:)                        ! load starting values
+        nstep = nint( (x2-x1)/h, i4 )           ! find number of steps
+
+        if ( allocated(xout) ) deallocate(xout) ! clear out old stored variables if necessary
+        if ( allocated(yout) ) deallocate(yout)
+        allocate( xout(nstep+1_i4) )            ! allocate storage for saved values
+        allocate( yout(nstep+1_i4, size(ystart)) )
+
+        yout(1,:) = y(:)
+        xout(1) = x1
+        x = x1
+
+        hh = h*0.5_dp
+        h6 = h/6.0_dp
+        xh = x+hh
+
+        do j=1, nstep                          ! take nstep steps
+            call derivs( x, y, para, dy )
+            yt = y + hh*dy                     ! first step
+            call derivs( xh, yt, para, dyt )         ! second step
+            yt = y + hh*dyt
+            call derivs( xh, yt, para, dym )         ! third step
+            yt = y + h*dym
+            dym = dyt + dym
+            call derivs( x+h, yt, para, dyt )        ! fourth step
+            y = y + h6*( dy+dyt+2.0_dp*dym )   ! accumulate increments with proper weights
+            if ( h .lt. tiny(1._dp) )    stop 'RK4_para_dp --> stepsize not significant!'
+            x = x+h
+            xout(j+1_i4) = x            ! store intermediate steps
+            yout(j+1_i4,:) = y(:)
+        end do
+
+    end subroutine RK4_para_dp
+
+    ! ------------------------------------------------------------------
+
+    ! SINGLE PRECISION 4th order RUNGE-KUTTA Adaptive Step-size
+    subroutine RK4as_para_sp( ystart, x1, x2, h, derivs, para, xout, yout, &   ! obligatory
+        hmin, eps )                                                 ! optional
+
+        use mo_kind,   only: i4, sp
+        use mo_nrutil, only: reallocate
+
+        implicit none
+
+        ! Intent IN
+        real(sp),                                intent(in) :: x1, x2    ! initial and final time
+        real(sp),                                intent(in) :: h         ! guessed step size
+        real(sp),   dimension(:),                intent(in) :: ystart    ! initial conditions
+        real(sp),                   optional,    intent(in) :: hmin
+        real(sp),                   optional,    intent(in) :: eps
+        real(sp),   dimension(:),                intent(in) :: para      ! parameters for derivs
+
+        ! Intent OUT
+        real(sp),   dimension(:),   allocatable, intent(out) :: xout
+        real(sp),   dimension(:,:), allocatable, intent(out) :: yout
+
+        interface
+            subroutine derivs( x, y, para, dydx )
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                 intent(in)  :: x        ! time
+                real(sp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(sp),   dimension(:), intent(in)  :: para     ! parameters for derivs
+                real(sp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+            end subroutine derivs
+        end interface
+
+        ! Internal variables
+        integer(i4)                         :: nstep        ! nuber of steps
+        integer(i4)                         :: nok, nbad    ! number of good and bad (but retried and fixed) steps taken
+        integer(i4)                         :: kount        ! total number of saved steps
+        real(sp)                            :: hIN, hdid, hnext, x, hminIN, epsIN, xsav, dxsav, errmax, htemp, xnew
+        real(sp),   dimension(size(ystart)) :: dydx, y, yscal, yerr, ytemp
+        ! Pointers
+        real(sp),   dimension(:),   pointer :: xp
+        real(sp),   dimension(:,:), pointer :: yp
+
+        ! parameters
+        integer(i4),    parameter   :: MAXstp = 1000000_i4  ! max number of steps
+        real(sp),       parameter   :: safety = 0.9_sp, pgrow = -0.2_sp, pshrnk = -0.25_sp
+        real(sp) :: errcon
+
+        errcon = exp( (1._sp/pgrow)*log(5._sp/safety) )
+
+        if( present(hmin) ) then
+            hminIN = hmin
+        else
+            hminIN = 0.0_sp
+        end if
+
+        if( present(eps) ) then
+            epsIN = eps
+        else
+            epsIN = 1e-6_sp
+        end if
+
+        x = x1
+        hIN = sign( h, x2-x1 )
+        nok = 0_i4
+        nbad = 0_i4
+        kount = 0_i4
+        y(:) = ystart(:)
+        dxsav = tiny(1._sp)
+
+        xsav = x-2.0_sp*dxsav                                                   ! assures storage of first step
+        nullify( xp, yp )
+        allocate( xp(256) )
+        allocate( yp(size(xp), size(ystart)) )
+
+        call save_a_step                                                        ! save initial step
+
+        do nstep=1, MAXstp                                                      ! take at most MAXstp steps
+
+            call derivs( x, y, para, dydx )
+            yscal(:) = abs( y(:) ) + abs( hIN*dydx(:) ) + tiny(1._sp)           ! scaling used to monitor accuracy
+                                                                                ! --> CAN BE MODIFIED...
+
+            if ( abs(x-xsav) .gt. abs(dxsav) ) call save_a_step                 ! store intermediate results
+
+            if ( (x+hIN-x2)*(x+hIN-x1) .gt. 0.0_sp ) hIN = x2-x                 ! if stepsize can overshoot, decrease
+
+            do
+                call CashKarpRK(y, dydx, x, hIN, ytemp, yerr, derivs, para)     ! take a step
+                errmax = maxval( abs(yerr(:)/yscal(:)) )/epsIN                  ! evaluate accuracy
+                if ( errmax .lt. 1.0_sp )   exit                                ! step succeeded
+                htemp = safety*hIN*(errmax**pshrnk)                             ! truncation error too large, reduce stepsize
+                hIN = sign( max( abs(htemp), 0.1_sp*abs(hIN) ), hIN )           ! no more than a factor of 10
+                xnew = x+hIN
+                if ( abs(xnew-x) .lt. epsilon(1.0_sp) )  stop 'RK4as_para_sp --> hey !!! stepsize underflow!'
+            end do
+
+            if ( errmax .gt. errcon )   then                                    ! compute size of next step
+                hnext = safety*hIN*(errmax**pgrow)
+            else                                                                ! no more than a factor of 5 increase
+                hnext = 5.0_sp*hIN
+            end if
+
+            hdid = hIN
+            x = x+hIN
+            y(:) = ytemp(:)
+
+            if ( abs(hdid-hIN) .gt. epsilon(1.0_sp) )    then
+                nbad = nbad+1_i4
+            else
+                nok = nok+1_i4
+            end if
+
+            if ( (x-x2)*(x2-x1) .ge. 0.0_sp )   then            ! are we done?!?!
+                call save_a_step                                ! save final step
+                allocate( xout(kount) )                         ! allocate storage for outputs
+                xout(:) = xp(1:kount)
+                allocate( yout(kount, size(yp,2)) )             ! allocate storage for outputs
+                yout(:,:) = yp(1:kount, :)
+                deallocate( xp, yp )                            ! clear out old stored variables
+                return                                          ! normal exit
+            end if
+
+            if ( abs(hnext-hminIN) .lt. epsilon(1.0_sp) )   stop 'RK4as_para_sp --> WTF! ...stepsize smaller than minimum!!!'
+            hIN = hnext
+
+        end do
+
+        stop 'RK4as_para_sp --> dude, too many steps!!!'
+
+    contains
+
+        subroutine save_a_step      ! --> like a macro in C
+            kount = kount+1
+            if ( kount .gt. size(xp) ) then
+                xp=>reallocate( xp, 2*size(xp) )
+                yp=>reallocate( yp, size(xp), size(yp,2) )
+            end if
+            xp(kount) = x
+            yp(kount, :) = y(:)
+            xsav = x
+        end subroutine save_a_step
+
+    end subroutine RK4as_para_sp
+
+
+    ! DOUBLE PRECISION 4th order RUNGE-KUTTA Adaptive Step-size
+    subroutine RK4as_para_dp( ystart, x1, x2, h, derivs, para, xout, yout, &   ! obligatory
+        hmin, eps )                                                 ! optional
+
+        use mo_kind,   only: i4, dp
+        use mo_nrutil, only: reallocate
+
+        implicit none
+
+        ! Intent IN
+        real(dp),                                intent(in) :: x1, x2    ! initial and final time
+        real(dp),                                intent(in) :: h         ! guessed step size
+        real(dp),   dimension(:),                intent(in) :: ystart    ! initial conditions
+        real(dp),                   optional,    intent(in) :: hmin
+        real(dp),                   optional,    intent(in) :: eps
+        real(dp),   dimension(:),                intent(in) :: para      ! parameters for derivs
+
+        ! Intent OUT
+        real(dp),   dimension(:),   allocatable, intent(out) :: xout
+        real(dp),   dimension(:,:), allocatable, intent(out) :: yout
+
+        interface
+            subroutine derivs( x, y, para, dydx )
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                 intent(in)  :: x        ! time
+                real(dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+                real(dp),   dimension(:), intent(in)  :: para     ! parameters for derivs
+                real(dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+            end subroutine derivs
+        end interface
+
+        ! Internal variables
+        integer(i4)                         :: nstep        ! nuber of steps
+        integer(i4)                         :: nok, nbad    ! number of good and bad (but retried and fixed) steps taken
+        integer(i4)                         :: kount        ! total number of saved steps
+        real(dp)                            :: hIN, hdid, hnext, x, hminIN, epsIN, xsav, dxsav, errmax, htemp, xnew
+        real(dp),   dimension(size(ystart)) :: dydx, y, yscal, yerr, ytemp
+        ! Pointers
+        real(dp),   dimension(:),   pointer :: xp
+        real(dp),   dimension(:,:), pointer :: yp
+
+        ! parameters
+        integer(i4),    parameter   :: MAXstp = 1000000_i4  ! max nuber of steps
+        real(dp),       parameter   :: safety = 0.9_dp, pgrow = -0.2_dp, pshrnk = -0.25_dp
+        real(dp) :: errcon
+
+        errcon = exp( (1._dp/pgrow)*log(5._dp/safety) )
+
+        if( present(hmin) ) then
+            hminIN = hmin
+        else
+            hminIN = 0.0_dp
+        end if
+
+        if( present(eps) ) then
+            epsIN = eps
+        else
+            epsIN = 1e-6_dp
+        end if
+
+        x = x1
+        hIN = sign( h, x2-x1 )
+        nok = 0_i4
+        nbad = 0_i4
+        kount = 0_i4
+        y(:) = ystart(:)
+        dxsav = tiny(1._dp)
+
+        xsav = x-2.0_dp*dxsav                    ! assures storage of first step
+        nullify( xp, yp )
+        allocate( xp(256) )
+        allocate( yp(size(xp), size(ystart)) )
+
+        call save_a_step                        ! save initial step
+
+        do nstep=1, MAXstp      ! take at most MAXstp steps
+
+            call derivs( x, y, para, dydx )
+            yscal(:) = abs( y(:) ) + abs( hIN*dydx(:) ) + tiny(1._dp)   ! scaling used to monitor accuracy --> CAN BE MODIFIED...
+
+            if ( abs(x-xsav) .gt. abs(dxsav) ) call save_a_step         ! store intermediate results
+
+            if ( (x+hIN-x2)*(x+hIN-x1) .gt. 0.0_dp ) hIN = x2-x         ! if stepsize can overshoot, decrease
+
+            do
+                call CashKarpRK( y, dydx, x, hIN, ytemp, yerr, derivs, para ) ! take a step
+                errmax = maxval( abs(yerr(:)/yscal(:)) )/epsIN          ! evaluate accuracy
+                if ( errmax .lt. 1.0_dp )   exit                        ! step succeeded
+                htemp = safety*hIN*(errmax**pshrnk)                     ! truncation error too large, reduce stepsize
+                hIN = sign( max( abs(htemp), 0.1_dp*abs(hIN) ), hIN )   ! no more than a factor of 10
+                xnew = x+hIN
+!test
+write(*,*) hIN
+                if ( abs(xnew-x) .lt. epsilon(1._dp) )  stop 'RK4as_para_dp --> hey!!! stepsize underflow!'
+            end do
+
+            if ( errmax .gt. errcon )   then                            ! compute size of next step
+                hnext = safety*hIN*(errmax**pgrow)
+            else                                                        ! no more than a factor of 5 increase
+                hnext = 5.0_dp*hIN
+            end if
+
+            hdid = hIN
+            x = x+hIN
+            y(:) = ytemp(:)
+
+            if ( abs(hdid-hIN) .gt. epsilon(1._dp) ) then
+                nbad = nbad+1_i4
+            else
+                nok = nok+1_i4
+            end if
+
+            if ( (x-x2)*(x2-x1) .ge. 0.0_dp )   then        ! are we done?!?!
+                call save_a_step                            ! save final step
+                allocate( xout(kount) )                     ! allocate storage for outputs
+                xout(:) = xp(1:kount)
+                allocate( yout(kount, size(yp,2)) )         ! allocate storage for outputs
+                yout(:,:) = yp(1:kount, :)
+                deallocate( xp, yp )                        ! clear out old stored variables
+                return                                      ! normal exit
+            end if
+
+            if ( abs(hnext-hminIN) .lt. epsilon(1.0_dp) )   stop 'RK4as_para_dp --> WTF! ...stepsize smaller than minimum!!!'
+            hIN = hnext
+
+        end do
+
+        stop 'RK4as_para_dp --> dude, too many steps!!!'
+
+    contains
+
+        subroutine save_a_step      ! --> like a macro in C
+            kount = kount+1
+            if ( kount .gt. size(xp) ) then
+                xp=>reallocate( xp, 2*size(xp) )
+                yp=>reallocate( yp, size(xp), size(yp,2) )
+            end if
+            xp(kount) = x
+            yp(kount, :) = y(:)
+            xsav = x
+        end subroutine save_a_step
+
+    end subroutine RK4as_para_dp
+
+    ! ------------------------------------------------------------------
+    !   PRIVATE METHODS
+    ! ------------------------------------------------------------------
+
+    ! SINGLE PRECISION CASH-KARP RUNGE-KUTTA step
+    subroutine CashKarpRK_para_sp( y, dydx, x, h, yout, yerr, derivs, para )
+        ! Given values for N variables y and their derivatives dydx known at x, use the fifth-order
+        ! Cash-Karp Runge-Kutta method to advance the solution over an interval h and return
+        ! the incremented variables as yout. Also return an estimate of the local truncation error
+        ! in yout using the embedded fourth order method.
+
+        use mo_kind,   only : i4, sp
+        use mo_nrutil, only : assert_eq
+
+        implicit none
+
+        ! Intent IN
+        real(sp),   dimension(:), intent(in)  :: y, dydx
+        real(sp),                 intent(in)  :: x, h
+        real(sp),   dimension(:), intent(in)  :: para     ! parameters for derivs
+
+        ! Intent OUT
+        real(sp),   dimension(:), intent(out) :: yout, yerr
+
+        interface
+            subroutine derivs( x, y, para, dydx )
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                 intent(in)  :: x
+                real(sp),   dimension(:), intent(in)  :: y
+                real(sp),   dimension(:), intent(in)  :: para     ! parameters for derivs
+                real(sp),   dimension(:), intent(out) :: dydx
+            end subroutine derivs
+        end interface
+
+        ! Internal variables
+        integer(i4)                             :: ndum
+        real(sp),   dimension(:),   allocatable :: ak2, ak3, ak4, ak5, ak6, ytemp
+
+        ! parameters
+        real(sp),   parameter   :: A2=0.2_sp, A3=0.3_sp, A4=0.6_sp, A5=1._sp, A6=0.875_sp, B21=0.2_sp, B31=3._sp/40._sp, &
+            B32=9._sp/40._sp, B41=0.3_sp, B42=-0.9_sp, B43=1.2_sp, B51=-11._sp/54._sp, B52=2.5_sp, &
+            B53=-70._sp/27._sp, B54=35._sp/27._sp, B61=1631._sp/55296._sp, B62=175._sp/512._sp, &
+            B63=575._sp/13824._sp, B64=44275._sp/110592._sp, B65=253._sp/4096._sp, &
+            C1=37._sp/378._sp, C3=250._sp/621._sp, C4=125._sp/594._sp, C6=512._sp/1771._sp, &
+            DC1=C1-2825._sp/27648._sp, DC3=C3-18575._sp/48384._sp, &
+            DC4=C4-13525._sp/55296._sp, DC5=-277._sp/14336._sp, DC6=C6-.25_sp
+
+        ndum = assert_eq( size(y), size(dydx) ,size(yout) ,size(yerr) , 'CashKarpRK_para_sp' )
+
+        allocate( ak2(ndum), ak3(ndum), ak4(ndum), ak5(ndum), ak6(ndum), ytemp(ndum) )
+
+        ytemp = y + B21*h*dydx                                  ! first step
+        call derivs( x+A2*h, ytemp, para, ak2 )                       ! second step
+        ytemp = y + h*(B31*dydx+B32*ak2)
+        call derivs( x+A3*h, ytemp, para, ak3 )                       ! third step
+        ytemp = y + h*(B41*dydx+B42*ak2+B43*ak3)
+        call derivs( x+A4*h, ytemp, para, ak4 )                       ! fourth step
+        ytemp = y + h*(B51*dydx+B52*ak2+B53*ak3+B54*ak4)
+        call derivs( x+A5*h, ytemp, para, ak5 )                       ! fifth step
+        ytemp = y + h*(B61*dydx+B62*ak2+B63*ak3+B64*ak4+B65*ak5)
+        call derivs( x+A6*h, ytemp, para, ak6 )                       ! sixth step
+        yout = y + h*(C1*dydx+C3*ak3+C4*ak4+C6*ak6)             ! accumulate increments with proper weights
+        yerr = h*(DC1*dydx+DC3*ak3+DC4*ak4+DC5*ak5+DC6*ak6)
+
+    end subroutine CashKarpRK_para_sp
+
+
+    ! DOUBLE PRECISION CASH-KARP RUNGE-KUTTA step
+    subroutine CashKarpRK_para_dp( y, dydx, x, h, yout, yerr, derivs, para )
+        ! Given values for N variables y and their derivatives dydx known at x, use the fifth-order
+        ! Cash-Karp Runge-Kutta method to advance the solution over an interval h and return
+        ! the incremented variables as yout. Also return an estimate of the local truncation error
+        ! in yout using the embedded fourth order method.
+
+        use mo_kind,   only: i4, dp
+        use mo_nrutil, only: assert_eq
+
+        implicit none
+
+        ! Intent IN
+        real(dp),   dimension(:), intent(in)  :: y, dydx
+        real(dp),                 intent(in)  :: x, h
+        real(dp),   dimension(:), intent(in)  :: para     ! parameters for derivs
+
+        ! Intent OUT
+        real(dp),   dimension(:), intent(out) :: yout, yerr
+
+        interface
+            subroutine derivs( x, y, para, dydx )
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                 intent(in)  :: x
+                real(dp),   dimension(:), intent(in)  :: y
+                real(dp),   dimension(:), intent(in)  :: para     ! parameters for derivs
+                real(dp),   dimension(:), intent(out) :: dydx
+            end subroutine derivs
+        end interface
+
+        ! Internal variables
+        integer(i4)                             :: ndum
+        real(dp),   dimension(:),   allocatable :: ak2, ak3, ak4, ak5, ak6, ytemp
+
+        ! parameters
+        real(dp),   parameter   :: A2=0.2_dp, A3=0.3_dp, A4=0.6_dp, A5=1._dp, A6=0.875_dp, B21=0.2_dp, B31=3._dp/40._dp, &
+            B32=9._dp/40._dp, B41=0.3_dp, B42=-0.9_dp, B43=1.2_dp, B51=-11._dp/54._dp, B52=2.5_dp, &
+            B53=-70._dp/27._dp, B54=35._dp/27._dp, B61=1631._dp/55296._dp, B62=175._dp/512._dp, &
+            B63=575._dp/13824._dp, B64=44275._dp/110592._dp, B65=253._dp/4096._dp, &
+            C1=37._dp/378._dp, C3=250._dp/621._dp, C4=125._dp/594._dp, C6=512._dp/1771._dp, &
+            DC1=C1-2825._dp/27648._dp, DC3=C3-18575._dp/48384._dp, &
+            DC4=C4-13525._dp/55296._dp, DC5=-277._dp/14336._dp, DC6=C6-.25_dp
+
+        ndum = assert_eq( size(y), size(dydx) ,size(yout) ,size(yerr) , 'CashKarpRK_para_dp' )
+
+        allocate( ak2(ndum), ak3(ndum), ak4(ndum), ak5(ndum), ak6(ndum), ytemp(ndum) )
+
+        ytemp = y + B21*h*dydx                                  ! first step
+        call derivs( x+A2*h, ytemp, para, ak2 )                       ! second step
+        ytemp = y + h*(B31*dydx+B32*ak2)
+        call derivs( x+A3*h, ytemp, para, ak3 )                       ! third step
+        ytemp = y + h*(B41*dydx+B42*ak2+B43*ak3)
+        call derivs( x+A4*h, ytemp, para, ak4 )                       ! fourth step
+        ytemp = y + h*(B51*dydx+B52*ak2+B53*ak3+B54*ak4)
+        call derivs( x+A5*h, ytemp, para, ak5 )                       ! fifth step
+        ytemp = y + h*(B61*dydx+B62*ak2+B63*ak3+B64*ak4+B65*ak5)
+        call derivs( x+A6*h, ytemp, para, ak6 )                       ! sixth step
+        yout = y + h*(C1*dydx+C3*ak3+C4*ak4+C6*ak6)             ! accumulate increments with proper weights
+        yerr = h*(DC1*dydx+DC3*ak3+DC4*ak4+DC5*ak5+DC6*ak6)
+
+    end subroutine CashKarpRK_para_dp
+
+    ! ------------------------------------------------------------------
+
 
 end module mo_ode_solver
