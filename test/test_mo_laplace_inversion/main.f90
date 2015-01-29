@@ -8,10 +8,12 @@ implicit none
 
 integer(i4)             :: n,m
 real(dp), dimension(10) :: test_s, comp_func1, comp_func2
-real(dp), dimension(10) :: testpara, meansq_err, compvalue 
+real(dp), dimension(10) :: testpara, compvalue 
+real(dp), dimension(10) :: meansq_err
 
 real(sp), dimension(10) :: test_s_sp, comp_func1_sp, comp_func2_sp
-real(sp), dimension(10) :: testpara_sp, meansq_err_sp, compvalue_sp 
+real(sp), dimension(10) :: testpara_sp, compvalue_sp 
+real(sp), dimension(6)  :: meansq_err_sp 
 
 LOGICAL                 :: isgood
 
@@ -119,7 +121,7 @@ end do
 
 
 meansq_err=0.0_dp
-do m=1_i4, 10_i4
+do m=1_i4, size(meansq_err)
         !write (*,*) " "
         !write (*,*) "stehfest-limit: ", 2*m
     comp_func2=NLInvSteh(testfuncvec, testpara, test_s,2*m)
@@ -137,7 +139,7 @@ end do
 write (*,*) " "
 write (*,*) "MSE between the stehfest-inverted- and analytical-function in dependency of the stehfestlimit"
 write (*,*) '-------------------------------------------------------------------------------------------------------'
-do m=1_i4,10_i4
+do m=1_i4, size(meansq_err)
     write (*,*) "stehfest-limit with MSE: ", 2*m,":", meansq_err(m)
 end do
 write (*,*) "least absolut MSE with Stehfest-limit: ", minloc(meansq_err)*2
@@ -159,8 +161,6 @@ compvalue_sp   =   (/&
     4.22386564E-02_sp/)
 
 
-write(*,*) compvalue_sp(10)
-
 testpara_sp=(/2.0_sp,0.0_sp,0.0_sp,0.0_sp,0.0_sp,0.0_sp,0.0_sp,0.0_sp,0.0_sp,0.0_sp/)
 
 comp_func1_sp=exp(-test_s_sp(:))
@@ -180,7 +180,7 @@ end do
 
 
 meansq_err_sp=0.0_sp
-do m=1_i4, 10_i4
+do m=1_i4, size(meansq_err_sp)
 !        write (*,*) " "
 !        write (*,*) "stehfest-limit: ", 2*m
     comp_func2_sp=NLInvSteh(testfuncvecsp, testpara_sp, test_s_sp,2*m)
@@ -198,7 +198,7 @@ end do
 write (*,*) " "
 write (*,*) "MSE between the stehfest-inverted- and analytical-function in dependency of the stehfestlimit"
 write (*,*) '-------------------------------------------------------------------------------------------------------'
-do m=1_i4,10_i4
+do m=1_i4, size(meansq_err_sp)
     write (*,*) "stehfest-limit with MSE: ", 2*m,":", meansq_err_sp(m)
 end do
 write (*,*) "least absolut MSE with Stehfest-limit: ", minloc(meansq_err_sp)*2
@@ -386,7 +386,7 @@ end do
 
 
 meansq_err=0.0_dp
-do m=1_i4, 10_i4
+do m=1_i4, size(meansq_err)
 !        write (*,*) " "
 !        write (*,*) "stehfest-limit: ", 2*m
     comp_func2=NLInvSteh(testfuncvec, testpara, test_s, 2*m)
@@ -404,7 +404,7 @@ end do
 write (*,*) " "
 write (*,*) "MSE between the stehfest-inverted- and analytical-function in dependency of the stehfestlimit"
 write (*,*) '-------------------------------------------------------------------------------------------------------'
-do m=1_i4,10_i4
+do m=1_i4,size(meansq_err)
     write (*,*) "stehfest-limit with MSE: ", 2*m,":", meansq_err(m)
 end do
 write (*,*) "least absolut MSE with Stehfest-limit: ", minloc(meansq_err)*2
@@ -446,7 +446,7 @@ end do
 
 
 meansq_err_sp=0.0_sp
-do m=1_i4, 10_i4
+do m=1_i4, size(meansq_err_sp)
 !        write (*,*) " "
 !        write (*,*) "stehfest-limit: ", 2*m
     comp_func2_sp=NLInvSteh(testfuncvecsp, testpara_sp, test_s_sp, 2*m)
@@ -464,7 +464,7 @@ end do
 write (*,*) " "
 write (*,*) "MSE between the stehfest-inverted- and analytical-function in dependency of the stehfestlimit"
 write (*,*) '-------------------------------------------------------------------------------------------------------'
-do m=1_i4,10_i4
+do m=1_i4, size(meansq_err_sp)
     write (*,*) "stehfest-limit with MSE: ", 2*m,":", meansq_err_sp(m)
 end do
 write (*,*) "least absolut MSE with Stehfest-limit: ", minloc(meansq_err_sp)*2

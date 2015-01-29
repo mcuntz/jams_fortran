@@ -27,7 +27,7 @@ MODULE mo_laplace_inversion
 
   ! Copyright 2014 Sebastian Mueller
 
-  use mo_kind, only: i4, SP, DP
+  use mo_kind, only: i4, i8, SP, DP
   use mo_combinatorics,   only: binomcoeffi
   use mo_functions,       only: factorial
 
@@ -117,10 +117,15 @@ CONTAINS
 
     do n=1_i4, 2*m
        do k=FLOOR((real(n,dp)+1.0_dp)/2.0_dp), min(n,m)
-          csteh_dp(n)  =   csteh_dp(n) +   real(k**(m+1_i4)*binomcoeffi(2_i4*k,k),dp)/&
-               real(factorial(m-k)*factorial(n-k)*factorial(2_i4*k-n),dp)
+          csteh_dp(n)  =   csteh_dp(n) +   real(k,dp)**real(m+1_i4,dp)*real(binomcoeffi(int(2_i4*k,i8),int(k,i8)),dp)/&
+               real(factorial(int(m-k,i8))*factorial(int(n-k,i8))*factorial(int(2_i4*k-n,i8)),dp)
+
+!          csteh_dp(n)  =   csteh_dp(n) +   real(k**(m+1_i4)*binomcoeffi(2_i4*k,k),dp)/&
+!               real(factorial(m-k)*factorial(n-k)*factorial(2_i4*k-n),dp)
+
        end do
        csteh_dp(n)     =   (-1.0_dp)**(n+m)*csteh_dp(n)
+!write(*,*) "csteh_dp(",n,")= ", csteh_dp(n)
     end do
 
   end function csteh_dp
@@ -135,14 +140,18 @@ CONTAINS
     ! local variables
     integer(i4)              :: k, n
 
+    !Check if the given boundary is not to big
+    if (m>=7_i4)            stop 'The Stehfest-boundary must be less than 14 for single-precision.'
+
     csteh_sp            =   0.0_sp
 
     do n=1_i4, 2*m
        do k=FLOOR((real(n,sp)+1.0_sp)/2.0_sp), min(n,m)
-          csteh_sp(n)  =   csteh_sp(n) +   real(k**(m+1_i4)*binomcoeffi(2_i4*k,k),sp)/&
-               real(factorial(m-k)*factorial(n-k)*factorial(2_i4*k-n),sp)
+          csteh_sp(n)  =   csteh_sp(n) +   real(k,sp)**real(m+1_i4,sp)*real(binomcoeffi(int(2_i4*k,i8),int(k,i8)),sp)/&
+               real(factorial(int(m-k,i8))*factorial(int(n-k,i8))*factorial(int(2_i4*k-n,i8)),sp)
        end do
        csteh_sp(n)     =   (-1.0_sp)**(n+m)*csteh_sp(n)
+!write(*,*) "csteh_sp(",n,")= ", csteh_sp(n)
     end do
 
   end function csteh_sp
