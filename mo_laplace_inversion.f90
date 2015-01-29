@@ -113,6 +113,9 @@ CONTAINS
     ! local variables
     integer(i4)              :: k, n
 
+    !Check if the given boundary is not to big
+    if (m>=11_i4)            stop 'The Stehfest-boundary must be less than 22 for double-precision.'
+
     csteh_dp            =   0.0_dp
 
     do n=1_i4, 2*m
