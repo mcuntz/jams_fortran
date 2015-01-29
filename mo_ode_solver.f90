@@ -1472,8 +1472,8 @@ contains
                 htemp = safety*hIN*(errmax**pshrnk)                     ! truncation error too large, reduce stepsize
                 hIN = sign( max( abs(htemp), 0.1_dp*abs(hIN) ), hIN )   ! no more than a factor of 10
                 xnew = x+hIN
-!test
-write(*,*) hIN
+!!test
+!write(*,*) hIN
                 if ( abs(xnew-x) .lt. epsilon(1._dp) )  stop 'RK4as_para_dp --> hey!!! stepsize underflow!'
             end do
 
