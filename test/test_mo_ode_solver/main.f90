@@ -9,8 +9,8 @@
 
 program main_test_mo_ode_solver
 
-    use mo_kind,        only    : i4, sp
-    use mo_eq_lv,       only    : LV_eqn_sp
+    use mo_kind,        only    : i4, sp, dp
+    use mo_eq_lv,       only    : LV_eqn_sp, LV_eqn_dp, LV_eqn_para_sp, LV_eqn_para_dp
     use mo_ode_solver,  only    : EULER, RK4, RK4as
 
     implicit none
@@ -25,10 +25,24 @@ program main_test_mo_ode_solver
     real(sp), dimension(:),     allocatable :: yi       ! initial conditions
     real(sp), dimension(:),     allocatable :: xout     ! output time
     real(sp), dimension(:,:),   allocatable :: yout     ! output solutions
+    real(sp), dimension(3)                  :: para     ! parameter for derivs
+    
+    real(dp)                                :: dx1       ! initial time point
+    real(dp)                                :: dx2       ! final time point
+    real(dp)                                :: dh        ! time step
+    real(dp)                                :: dhmin     ! minimum allowed stepsize
+    real(dp)                                :: deps      ! accurancy
+    real(dp)                                :: dtest     ! test variable
+    real(dp), dimension(:),     allocatable :: dyi       ! initial conditions
+    real(dp), dimension(:),     allocatable :: dxout     ! output time
+    real(dp), dimension(:,:),   allocatable :: dyout     ! output solutions
+    real(dp), dimension(3)                  :: dpara     ! parameter for derivs
 
     logical                                 :: isgood
 
     isgood = .true.     ! test variable
+
+!sp
     test   = 1e4_sp     ! test variable
 
     nEq    = 2_i4       ! number of equations
@@ -38,22 +52,94 @@ program main_test_mo_ode_solver
     hmin   = h*1e-11_sp ! minimum allowed stepsize
     eps    = 1e-8_sp    ! accuracy
 
+    para   = (/0.5_sp, 2.0_sp, -1.0_sp/)
+
     allocate( yi(nEq) )
     yi = (/ 1._sp, 1._sp /)         ! initial conditions
 
     ! Euler method
     call Euler( yi, x1, x2, h, LV_eqn_sp, xout, yout )
     if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 10000_i4, 13000_i4 /)) ) isgood = .false.    ! test
+    if (.not. isgood) write(*,*) "euler sp"
 
     ! 4th order RUNGE-KUTTA method
     call RK4( yi, x1, x2, h, LV_eqn_sp, xout, yout )
     if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.     ! test
+    if (.not. isgood) write(*,*) "rk sp"
 
     ! 4th order RUNGE-KUTTA Adaptive Step-size
     call RK4as( yi, x1, x2, h, LV_eqn_sp, xout, yout, hmin=hmin, eps=eps )
     if ( nint(xout(2)*test) .ne. 580_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9950_i4, 11687_i4 /)) ) isgood = .false.     ! test
+    if (.not. isgood) write(*,*) "rk-as sp"
 
-    ! Is the program running properly?
+
+    !with parameters
+
+    ! Euler method with parameter
+    call Euler( yi, x1, x2, h, LV_eqn_para_sp, para, xout, yout )
+    if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 10000_i4, 13000_i4 /)) ) isgood = .false.    ! test
+    if (.not. isgood) write(*,*) "euler sp para"
+
+    ! 4th order RUNGE-KUTTA method with parameter
+    call RK4( yi, x1, x2, h, LV_eqn_para_sp, para, xout, yout )
+    if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.     ! test
+    if (.not. isgood) write(*,*) "rk sp para"
+
+    ! 4th order RUNGE-KUTTA Adaptive Step-size with parameter
+    call RK4as( yi, x1, x2, h, LV_eqn_para_sp, para, xout, yout, hmin=hmin, eps=eps )
+    if ( nint(xout(2)*test) .ne. 580_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9950_i4, 11687_i4 /)) ) isgood = .false.     ! test
+    if (.not. isgood) write(*,*) "rk-as sp para"
+
+
+!dp
+    dtest   = 1e4_dp     ! test variable
+
+    nEq    = 2_i4       ! number of equations
+    dx1     = 0._dp      ! intial time
+    dx2     = 10._dp     ! final time
+    dh      = 0.1_dp     ! incremental time step
+    dhmin   = h*1e-11_dp ! minimum allowed stepsize
+    deps    = 1e-8_dp    ! accuracy
+
+    dpara   = (/0.5_dp, 2.0_dp, -1.0_dp/)
+
+    allocate( dyi(nEq) )
+    dyi = (/ 1._dp, 1._dp /)         ! initial conditions
+
+    ! Euler method
+    call Euler( dyi, dx1, dx2, dh, LV_eqn_dp, dxout, dyout )
+    if ( nint(dxout(2)*dtest) .ne. 1000_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 10000_i4, 13000_i4 /)) ) isgood = .false.  ! test
+    if (.not. isgood) write(*,*) "euler dp"
+
+    ! 4th order RUNGE-KUTTA method
+    call RK4( dyi, dx1, dx2, dh, LV_eqn_dp, dxout, dyout )
+    if ( nint(dxout(2)*dtest) .ne. 1000_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.   ! test
+    if (.not. isgood) write(*,*) "rk dp"
+
+    ! 4th order RUNGE-KUTTA Adaptive Step-size
+    call RK4as( dyi, dx1, dx2, dh, LV_eqn_dp, dxout, dyout, hmin=dhmin, eps=deps )
+    if ( nint(dxout(2)*dtest) .ne. 601_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 9946_i4, 11745_i4 /)) ) isgood = .false.    ! test
+    if (.not. isgood) write(*,*) "rk-as dp"
+
+    !with parameters
+
+    ! Euler method with parameters
+    call Euler( dyi, dx1, dx2, dh, LV_eqn_para_dp, dpara, dxout, dyout )
+    if ( nint(dxout(2)*dtest) .ne. 1000_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 10000_i4, 13000_i4 /)) ) isgood = .false.  ! test
+    if (.not. isgood) write(*,*) "euler dp para"
+
+    ! 4th order RUNGE-KUTTA method with parameters
+    call RK4( dyi, dx1, dx2, dh, LV_eqn_para_dp, dpara, dxout, dyout )
+    if ( nint(dxout(2)*dtest) .ne. 1000_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.   ! test
+    if (.not. isgood) write(*,*) "rk dp para"
+
+    ! 4th order RUNGE-KUTTA Adaptive Step-size with parameters
+    call RK4as( dyi, dx1, dx2, dh, LV_eqn_para_dp, dpara, dxout, dyout, hmin=dhmin, eps=deps )
+    if ( nint(dxout(2)*dtest) .ne. 601_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 9946_i4, 11745_i4 /)) ) isgood = .false.    ! test
+    if (.not. isgood) write(*,*) "rk-as dp para"
+
+
+! Is the program running properly?
     write(*,*) ''
     write(*,*) '------------------------------------------'
     if (isgood) then

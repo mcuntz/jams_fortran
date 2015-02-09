@@ -95,6 +95,30 @@ module mo_ode_solver
     !>        \details Starting from $N$ initial values $v_{start}$ known at $x_1$,
     !>                 use Euler to advance $n$-steps equal increments to $x_2$.
     !>                 Results are stored in the variables $x_{out}$ and $y_{out}$.
+    !>                 If you use "para" as parameters for derivs, the interface for derivs has to look like:
+    !>
+    !>                            interface
+    !>                                subroutine derivs( x, y, para, dydx )
+    !>                                    use mo_kind, only: sp/dp
+    !>                                    implicit none
+    !>                                    real(sp/dp),                 intent(in)  :: x        ! time
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: para     ! parameter for the derivatives
+    !>                                    real(sp/dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+    !>                                end subroutine derivs
+    !>                            end interface
+    !>
+    !>                 Elsewise "para" must be left out:
+    !>
+    !>                            interface
+    !>                                subroutine derivs( x, y, dydx )
+    !>                                    use mo_kind, only: sp/dp
+    !>                                    implicit none
+    !>                                    real(sp/dp),                 intent(in)  :: x        ! time
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+    !>                                    real(sp/dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+    !>                                end subroutine derivs
+    !>                            end interface
 
     !     INTENT(IN)
     !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"          initial conditions.
@@ -162,6 +186,30 @@ module mo_ode_solver
     !>                 use a fourth-order Runge-Kutta with fixed time-steps increments
     !>                 to advance $n$-steps equal increments to $x_2$.
     !>                 Results are stored in the variables $x_{out}$ and $y_{out}$.
+    !>                 If you use "para" as parameters for derivs, the interface for derivs has to look like:
+    !>
+    !>                            interface
+    !>                                subroutine derivs( x, y, para, dydx )
+    !>                                    use mo_kind, only: sp/dp
+    !>                                    implicit none
+    !>                                    real(sp/dp),                 intent(in)  :: x        ! time
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: para     ! parameter for the derivatives
+    !>                                    real(sp/dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+    !>                                end subroutine derivs
+    !>                            end interface
+    !>
+    !>                 Elsewise "para" must be left out:
+    !>
+    !>                            interface
+    !>                                subroutine derivs( x, y, dydx )
+    !>                                    use mo_kind, only: sp/dp
+    !>                                    implicit none
+    !>                                    real(sp/dp),                 intent(in)  :: x        ! time
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+    !>                                    real(sp/dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+    !>                                end subroutine derivs
+    !>                            end interface
 
     !     INTENT(IN)
     !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"          initial conditions.
@@ -236,6 +284,30 @@ module mo_ode_solver
     !>                 storing intermediate results in the module variables.
     !>                 $h_1$ should be set as a guessed first stepsize, $h_{min} as the minimum allowed stepsize (can be zero).
     !>                 On output $y_{start}$ is replaced by values at the end of the integration interval.
+    !>                 If you use "para" as parameters for derivs, the interface for derivs has to look like:
+    !>
+    !>                            interface
+    !>                                subroutine derivs( x, y, para, dydx )
+    !>                                    use mo_kind, only: sp/dp
+    !>                                    implicit none
+    !>                                    real(sp/dp),                 intent(in)  :: x        ! time
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: para     ! parameter for the derivatives
+    !>                                    real(sp/dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+    !>                                end subroutine derivs
+    !>                            end interface
+    !>
+    !>                 Elsewise "para" must be left out:
+    !>
+    !>                            interface
+    !>                                subroutine derivs( x, y, dydx )
+    !>                                    use mo_kind, only: sp/dp
+    !>                                    implicit none
+    !>                                    real(sp/dp),                 intent(in)  :: x        ! time
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+    !>                                    real(sp/dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+    !>                                end subroutine derivs
+    !>                            end interface
 
     !     INTENT(IN)
     !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"          initial conditions.
