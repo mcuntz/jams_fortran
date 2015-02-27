@@ -273,6 +273,9 @@ module mo_ncwrite
   !                                           that is added to the dimensions of the given array
   !                 Stephan Thober - Jan 2015 changed chunk_size convention to one chunk per unit in
   !                                           unlimited dimension (typically time)
+  !                 Matthias Cuntz - Feb 2015 d_unlimit was not set in 5d cases
+  !                                           use ne from mo_utils for fill value comparisons
+  !                                           dummy(1) was sp instead of i4 in var2nc_1d_i4
 
   interface var2nc
      module procedure var2nc_1d_i4, var2nc_1d_sp, var2nc_1d_dp, &
@@ -2738,7 +2741,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 1
-    integer(i4)            :: ndim = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     integer(i4),      dimension(:),             intent(in) :: arr
@@ -2768,7 +2771,9 @@ contains
     integer(i4), dimension(:), allocatable :: varid     ! dimension variables and var id
     integer(i4)                            :: i         ! loop indices
     integer(i4), dimension(:), allocatable :: dummy_count
-    real(sp),    dimension(1)              :: dummy     ! dummy read
+    integer(i4), dimension(1)              :: dummy     ! dummy read
+    !
+    ndim = size(dnames, 1)
     ! consistency checks
     d_unlimit    = 0_i4
     if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
@@ -2780,7 +2785,6 @@ contains
        print *, '***ERROR too many dimension name specified, should be atmost ndim_const + 1'
        stop '***ERROR see StdOut'
     end if
-    ndim = size( dnames, 1 )
     allocate( chunksizes(  ndim ) )
     allocate( start(       ndim ) )
     allocate( counter(     ndim ) )
@@ -2885,7 +2889,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 1
-    integer(i4)            :: ndim = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     real(sp),         dimension(:),             intent(in) :: arr
@@ -2916,6 +2920,8 @@ contains
     integer(i4)                            :: i         ! loop indices
     integer(i4), dimension(:), allocatable :: dummy_count
     real(sp),    dimension(1)              :: dummy     ! dummy read
+    !
+    ndim = size(dnames, 1)
     ! consistency checks
     d_unlimit    = 0_i4
     if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
@@ -2927,7 +2933,6 @@ contains
        print *, '***ERROR too many dimension name specified, should be atmost ndim_const + 1'
        stop '***ERROR see StdOut'
     end if
-    ndim = size( dnames, 1 )
     allocate( chunksizes(  ndim ) )
     allocate( start(       ndim ) )
     allocate( counter(     ndim ) )
@@ -2967,7 +2972,7 @@ contains
        call check(nf90_inquire_dimension( f_handle, u_dimid, len = u_len ) )
        ! adapt start, find first chunk that was written
        do i = u_len, 1, -1
-          if ( dummy(1) .ne. nf90_fill_float ) exit
+          if ( ne(dummy(1),nf90_fill_float) ) exit
           start(d_unlimit) = i
           call check( nf90_get_var( f_handle, varid(ndim+1), dummy, start, dummy_count ) )
        end do
@@ -3031,7 +3036,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 1
-    integer(i4)            :: ndim = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     real(dp),         dimension(:),             intent(in) :: arr
@@ -3062,6 +3067,8 @@ contains
     integer(i4)                            :: i         ! loop indices
     integer(i4), dimension(:), allocatable :: dummy_count
     real(dp),    dimension(1)              :: dummy     ! dummy read
+    !
+    ndim = size(dnames, 1)
     ! consistency checks
     d_unlimit    = 0_i4
     if ( present( dim_unlimited ) ) d_unlimit = dim_unlimited
@@ -3073,7 +3080,6 @@ contains
        print *, '***ERROR too many dimension name specified, should be atmost ndim_const + 1'
        stop '***ERROR see StdOut'
     end if
-    ndim = size( dnames, 1 )
     allocate( chunksizes(  ndim ) )
     allocate( start(       ndim ) )
     allocate( counter(     ndim ) )
@@ -3113,7 +3119,7 @@ contains
        call check(nf90_inquire_dimension( f_handle, u_dimid, len = u_len ) )
        ! adapt start, that is find last written chunk
        do i = u_len, 1, -1
-          if ( dummy(1) .ne. nf90_fill_double ) exit
+          if ( ne(dummy(1),nf90_fill_double) ) exit
           start(d_unlimit) = i
           call check( nf90_get_var( f_handle, varid(ndim+1), dummy, start, dummy_count ) )
        end do
@@ -3177,7 +3183,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 2
-    integer(i4)            :: ndim = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     integer(i4),      dimension(:,:),           intent(in) :: arr
@@ -3222,8 +3228,9 @@ contains
        stop '***ERROR see StdOut'
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
-          ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+         ( d_unlimit .lt. 0_i4 ) ) then
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -3333,7 +3340,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 2
-    integer(i4)            :: ndim = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     real(sp),         dimension(:,:),           intent(in) :: arr
@@ -3379,7 +3386,8 @@ contains
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
           ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -3424,7 +3432,7 @@ contains
        call check(nf90_inquire_dimension( f_handle, u_dimid, len = u_len ) )
        ! adapt start, that is find last written chunk
        do i = u_len, 1, -1
-          if ( dummy(1) .ne. nf90_fill_float ) exit
+          if ( ne(dummy(1),nf90_fill_float) ) exit
           start(d_unlimit) = i
           call check( nf90_get_var( f_handle, varid(ndim+1), dummy, start, dummy_count ) )
        end do
@@ -3489,7 +3497,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 2
-    integer(i4)            :: ndim       = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     real(dp),         dimension(:,:),           intent(in) :: arr
@@ -3535,7 +3543,8 @@ contains
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
           ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -3580,7 +3589,7 @@ contains
        call check(nf90_inquire_dimension( f_handle, u_dimid, len = u_len ) )
        ! adapt start, that is find last written chunk
        do i = u_len, 1, -1
-          if ( dummy(1) .ne. nf90_fill_double ) exit
+          if ( ne(dummy(1),nf90_fill_double) ) exit
           start(d_unlimit) = i
           call check( nf90_get_var( f_handle, varid(ndim+1), dummy, start, dummy_count ) )
        end do
@@ -3645,7 +3654,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 3
-    integer(i4)            :: ndim       = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     integer(i4),      dimension(:,:,:),         intent(in) :: arr
@@ -3691,7 +3700,8 @@ contains
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
           ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -3801,7 +3811,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 3
-    integer(i4)            :: ndim       = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     real(sp),         dimension(:,:,:),         intent(in) :: arr
@@ -3847,7 +3857,8 @@ contains
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
           ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -3893,7 +3904,7 @@ contains
        call check(nf90_inquire_dimension( f_handle, u_dimid, len = u_len ) )
        ! adapt start, that is find last written chunk
        do i = u_len, 1, -1
-          if ( dummy(1) .ne. nf90_fill_float ) exit
+          if ( ne(dummy(1),nf90_fill_float) ) exit
           start(d_unlimit) = i
           call check( nf90_get_var( f_handle, varid(ndim+1), dummy, start, dummy_count ) )
        end do
@@ -3958,7 +3969,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 3
-    integer(i4)            :: ndim       = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     real(dp),         dimension(:,:,:),         intent(in) :: arr
@@ -4004,7 +4015,8 @@ contains
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
           ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -4049,7 +4061,7 @@ contains
        call check(nf90_inquire_dimension( f_handle, u_dimid, len = u_len ) )
        ! adapt start, that is find last written chunk
        do i = u_len, 1, -1
-          if ( dummy(1) .ne. nf90_fill_double ) exit
+          if ( ne(dummy(1),nf90_fill_double) ) exit
           start(d_unlimit) = i
           call check( nf90_get_var( f_handle, varid(ndim+1), dummy, start, dummy_count ) )
        end do
@@ -4114,7 +4126,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 4
-    integer(i4)            :: ndim       = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     integer(i4),      dimension(:,:,:,:),       intent(in) :: arr
@@ -4160,7 +4172,8 @@ contains
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
           ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -4272,7 +4285,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 4
-    integer(i4)            :: ndim       = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     real(sp),         dimension(:,:,:,:),       intent(in) :: arr
@@ -4318,7 +4331,8 @@ contains
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
           ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -4365,7 +4379,7 @@ contains
        call check(nf90_inquire_dimension( f_handle, u_dimid, len = u_len ) )
        ! adapt start, that is find last written chunk
        do i = u_len, 1, -1
-          if ( dummy(1) .ne. nf90_fill_float ) exit
+          if ( ne(dummy(1),nf90_fill_float) ) exit
           start(d_unlimit) = i
           call check( nf90_get_var( f_handle, varid(ndim+1), dummy, start, dummy_count ) )
        end do
@@ -4430,7 +4444,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 4
-    integer(i4)            :: ndim       = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     real(dp),         dimension(:,:,:,:),       intent(in) :: arr
@@ -4476,7 +4490,8 @@ contains
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
           ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -4523,7 +4538,7 @@ contains
        call check(nf90_inquire_dimension( f_handle, u_dimid, len = u_len ) )
        ! adapt start, that is find last written chunk
        do i = u_len, 1, -1
-          if ( dummy(1) .ne. nf90_fill_double ) exit
+          if ( ne(dummy(1),nf90_fill_double) ) exit
           start(d_unlimit) = i
           call check( nf90_get_var( f_handle, varid(ndim+1), dummy, start, dummy_count ) )
        end do
@@ -4588,7 +4603,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 5
-    integer(i4)            :: ndim       = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     integer(i4),      dimension(:,:,:,:,:),     intent(in) :: arr
@@ -4621,6 +4636,8 @@ contains
     integer(i4), dimension(1)              :: dummy     ! dummy read
     !
     ndim = size( dnames, 1 )
+    d_unlimit = 0_i4
+    if (present(dim_unlimited)) d_unlimit = dim_unlimited
     ! consistency checks
     if ( ndim .gt. ndim_const ) then
        print *, '***ERROR more than five dimension names given'
@@ -4628,7 +4645,8 @@ contains
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
           ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -4734,7 +4752,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 5
-    integer(i4)            :: ndim       = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     real(sp),         dimension(:,:,:,:,:),     intent(in) :: arr
@@ -4767,6 +4785,8 @@ contains
     real(sp),    dimension(1)              :: dummy     ! dummy read
     !
     ndim = size( dnames, 1 )
+    d_unlimit = 0_i4
+    if (present(dim_unlimited)) d_unlimit = dim_unlimited
     ! consistency checks
     if ( ndim .gt. ndim_const ) then
        print *, '***ERROR more than five dimension names given'
@@ -4774,7 +4794,8 @@ contains
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
           ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -4815,7 +4836,7 @@ contains
        call check(nf90_inquire_dimension( f_handle, u_dimid, len = u_len ) )
        ! adapt start, that is find last written chunk
        do i = u_len, 1, -1
-          if ( dummy(1) .ne. nf90_fill_float ) exit
+          if ( ne(dummy(1),nf90_fill_float) ) exit
           start(d_unlimit) = i
           call check( nf90_get_var( f_handle, varid(ndim+1), dummy, start, dummy_count ) )
        end do
@@ -4880,7 +4901,7 @@ contains
     implicit none
     !
     integer(i4), parameter :: ndim_const = 5
-    integer(i4)            :: ndim       = ndim_const
+    integer(i4)            :: ndim
     ! input variables
     character(len=*),                           intent(in) :: f_name
     real(dp),         dimension(:,:,:,:,:),     intent(in) :: arr
@@ -4913,6 +4934,8 @@ contains
     real(dp),    dimension(1)              :: dummy     ! dummy read
     !
     ndim = size( dnames, 1 )
+    d_unlimit = 0_i4
+    if (present(dim_unlimited)) d_unlimit = dim_unlimited
     ! consistency checks
     if ( ndim .gt. ndim_const ) then
        print *, '***ERROR more than five dimension names given'
@@ -4920,7 +4943,8 @@ contains
     end if
     if  ( ( ( ndim .eq. ndim_const ) .and. ( d_unlimit .gt. ndim_const ) ) .or. &
           ( d_unlimit .lt. 0_i4 ) ) then
-       print *, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***ERROR unlimited dimension out of bounds, must be positive but not greater than number of given dimensions'
+       print*, '***Dims: ', ndim, ndim_const, d_unlimit, ndim_const, d_unlimit
        stop '***ERROR see StdOut'
     end if
     !
@@ -4961,7 +4985,7 @@ contains
        call check(nf90_inquire_dimension( f_handle, u_dimid, len = u_len ) )
        ! adapt start, that is find last written chunk
        do i = u_len, 1, -1
-          if ( dummy(1) .ne. nf90_fill_double ) exit
+          if ( ne(dummy(1),nf90_fill_double) ) exit
           start(d_unlimit) = i
           call check( nf90_get_var( f_handle, varid(ndim+1), dummy, start, dummy_count ) )
        end do
