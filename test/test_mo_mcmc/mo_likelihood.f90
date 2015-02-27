@@ -124,11 +124,31 @@ CONTAINS
   ! A Model: p1*x^2 + p2*x + p3
   ! -------------------------------
   function model_dp(paraset)
+    
     use mo_kind, only: dp
+    !! !$ USE omp_lib,    only: OMP_GET_THREAD_NUM
+    
     REAL(DP), DIMENSION(:), INTENT(IN)     :: paraset
     REAL(DP), DIMENSION(size(meas,1))      :: model_dp
 
-    model_dp(:) = paraset(1) * meas(:,1) * meas(:,1) + paraset(2) * meas(:,1) + paraset(3)
+    integer(i4) :: i, n
+    ! for OMP
+    !! !$  integer(i4)                           :: n_threads, is_thread
+
+    n = size(meas,1)
+
+    !! !$ is_thread = OMP_GET_THREAD_NUM()
+    !! !$ write(*,*) 'OMP_thread: ', is_thread
+    
+    !$OMP parallel default(shared) &
+    !$OMP private(i)
+    !$OMP do
+    do i=1, n
+       !! !$ if (is_thread /= 0) write(*,*) '    OMP_thread-1: ', is_thread
+       model_dp(i) = paraset(1) * meas(i,1) * meas(i,1) + paraset(2) * meas(i,1) + paraset(3)
+    end do
+    !$OMP end do
+    !$OMP end parallel
 
   end function model_dp
 
