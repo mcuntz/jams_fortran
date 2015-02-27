@@ -26,7 +26,8 @@ program test_mcmc
 
   write(*,*) ''
   write(*,*) '---------------------------------------------------------------------------------------------'
-  write(*,*) ' (A) "real" likelihood  (sigma is an error model or given) --> e.g. loglikelihood of mo_likelihood'
+  write(*,*) ' (A1) "real" likelihood  (sigma is an error model or given) --> e.g. loglikelihood of mo_likelihood'
+  write(*,*) '      full run '
   write(*,*) '---------------------------------------------------------------------------------------------'
   p = loglikelihood_dp(parabest)
   write(*,*) 'log-likelihood = ',p
@@ -47,6 +48,7 @@ program test_mcmc
   !         will be sampled by MCMC
   call mcmc(loglikelihood_dp, parabest, rangePar, mcmc_paras, burnin_paras, &
        ParaSelectMode_in=2_i4,tmp_file='A_make_check_test_file',              &
+       restart=.false., restart_file='restart_make_check_test_file', &
        seed_in=seed, loglike_in=.true., maskpara_in=maskpara, printflag_in=.true.)
 
   write(*,*)''
@@ -81,9 +83,49 @@ program test_mcmc
      write(*,*) 'mo_mcmc: mcmc failed '
   end if
 
-  ! clean-up
-  deallocate(mcmc_paras)
-  deallocate(burnin_paras)
+    write(*,*) ''
+  write(*,*) '---------------------------------------------------------------------------------------------'
+  write(*,*) ' (A2) "real" likelihood  (sigma is an error model or given) --> e.g. loglikelihood of mo_likelihood'
+  write(*,*) '      RESTART '
+  write(*,*) '---------------------------------------------------------------------------------------------'
+  ! starting MCMC: 
+  !     (1) starting from restart file
+  call mcmc(loglikelihood_dp, parabest, rangePar, mcmc_paras, burnin_paras, &
+       ParaSelectMode_in=2_i4,tmp_file='A_make_check_test_file',              &
+       restart=.true., restart_file='restart_make_check_test_file', &
+       seed_in=seed, loglike_in=.true., maskpara_in=maskpara, printflag_in=.true.)
+
+  write(*,*)''
+  write(*,*) '--------------------------------------------------'
+  write(*,*) 'Results '
+  write(*,*) '--------------------------------------------------'
+  write(*,*) ''
+  write(*,*) 'Number of parameter sets sampled'
+  ! number of samples per chain x number of chains
+  samples = size(mcmc_paras,1) 
+  write(*,*) samples
+
+  write(*,*) ''
+  write(*,*) 'Mean parameter value +/- standard deviation'
+  do i=1,size(parabest)
+     if (maskpara(i)) then
+        write(*,*) 'para #',i, ' = ',mean(mcmc_paras(:,i)), '+/-',stddev(mcmc_paras(:,i))
+     end if
+  end do
+
+  ! Does it run properly?
+  ! para # 1  =    0.9999637290554980 +/-   5.8265791202762377E-05
+  ! para # 2  =    2.0054443506614068 +/-   6.0238019468712668E-03
+  ! para # 3  =    2.8306538403277148 +/-   0.1384711293432960
+  write(*,*) ''
+  write(*,*) '-----------------------------------'
+  if ( (nint(stddev(mcmc_paras(:,1))*10000000,i4) .eq. 583_i4)   .and. &
+       (nint(stddev(mcmc_paras(:,2))*10000000,i4) .eq. 60238_i4) .and. &
+       (nint(stddev(mcmc_paras(:,3))*10000000,i4) .eq. 1384711_i4) ) then
+     write(*,*) 'mo_mcmc: mcmc with restart o.k.'
+  else
+     write(*,*) 'mo_mcmc: mcmc with restart failed '
+  end if
 
   write(*,*) ''
   write(*,*) '---------------------------------------------------------------------------------------------'
