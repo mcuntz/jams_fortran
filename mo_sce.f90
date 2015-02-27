@@ -940,12 +940,12 @@ CONTAINS
        close(999)
     endif ! restart or not
 
-    ! read 1st namelist with allocated/scalar variables
-    open(999, file=isrestart_file, status='old', action='read', delim='QUOTE')
-    read(999, nml=restartnml1)
-    close(999)
-
     if (irestart) then
+       ! read 1st namelist with allocated/scalar variables
+       open(999, file=isrestart_file, status='old', action='read', delim='QUOTE')
+       read(999, nml=restartnml1)
+       close(999)
+       
        ! allocate global arrays
        allocate(rand_tmp(n_threads))
        allocate(iseed(n_threads))
@@ -967,10 +967,10 @@ CONTAINS
     !
     !  begin the main loop 
     mainloop:do while (icall .lt. maxn)
-       ! read 1st namelist with allocated/scalar variables
+       ! read variables from restart files
        open(999, file=isrestart_file, status='old', action='read', delim='QUOTE')
        read(999, nml=restartnml1)
-       read(999, restartnml2)
+       read(999, nml=restartnml2)
        close(999)       
        !
        nloop = nloop + 1
