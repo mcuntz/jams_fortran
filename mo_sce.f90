@@ -126,19 +126,23 @@ MODULE mo_sce
   !>                                                             DEFAULT: 0.8_dp
   !>        \param[in] "real(dp),    optional :: mybeta"    parameter for contraction of points in complex\n
   !>                                                             DEFAULT: 0.45_dp
-  !>        \param[in]  "character(len=*), optional  :: tmp_file"    file for temporal output: write results after evolution loop\n
-  !>                                                                    # of headlines: 7\n
-  !>                                                                    format: '# nloop   icall   ngs1   bestf   worstf ... \n
-  !>                                                                             ... gnrng   (bestx(j),j=1,nn)'
-  !>        \param[in]  "character(len=*), optional  :: popul_file"  file for temporal output: writes whole population \n
-  !>                                                                    # of headlines: 1 \n
-  !>                                                                    format: #_evolution_loop, xf(i), (x(i,j),j=1,nn)\n
-  !>                                                                    total number of lines written <= neval <= mymaxn\n
-  !>        \param[in]  "logical, optional  :: popul_file_append"    if true, append to existing population file (default: false)\n
+  !>        \param[in]  "character(len=*), optional  :: tmp_file" if given: write results after each evolution loop
+  !>                                                              to temporal output file of that name\n
+  !>                                                              # of headlines: 7\n
+  !>                                                              format: '# nloop   icall   ngs1   bestf   worstf ... \n
+  !>                                                                         ... gnrng   (bestx(j),j=1,nn)'
+  !>        \param[in]  "character(len=*), optional  :: popul_file" if given: write whole population to file of that name\n
+  !>                                                                # of headlines: 1 \n
+  !>                                                                format: #_evolution_loop, xf(i), (x(i,j),j=1,nn)\n
+  !>                                                                total number of lines written <= neval <= mymaxn\n
+  !>        \param[in]  "logical, optional  :: popul_file_append"   if true, append to existing population file (default: false)\n
   !>        \param[in]  "logical, optional  :: parallel"    sce runs in parallel (true) or not (false)
   !>                                                             parallel sce should only be used if model/ objective 
   !>                                                             is not parallel
-  !>                                                             DEAFULT: .false.
+  !>                                                             DEFAULT: .false.
+  !>        \param[in]  "logical, optional  :: restart"                  if .true.: restart former sce run from restart_file
+  !>        \param[in]  "character(len=*), optional  :: restart_file"    file name for read/write of restart file
+  !>                                                                     (default: mo_sce.restart)
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -191,6 +195,7 @@ MODULE mo_sce
   !                  Matthias Cuntz,              May 2014 - sort -> orderpack
   !                  Matthias Cuntz,              May 2014 - popul_file_append
   !                  Matthias Cuntz,              May 2014 - sort with NaNs
+  !                  Matthias Cuntz, Juliane Mai  Feb 2015 - restart
 
   ! ------------------------------------------------------------------
 
@@ -212,7 +217,7 @@ CONTAINS
        mymask,myalpha, mybeta,                            & ! Optional IN
        tmp_file, popul_file,                              & ! Optional IN
        popul_file_append,                                 & ! Optional IN
-       parallel,                                          & ! OPTIONAL IN
+       parallel, restart, restart_file,                   & ! OPTIONAL IN
        bestf,neval,history                                & ! Optional OUT
        ) result(bestx)
 
@@ -290,11 +295,13 @@ CONTAINS
     !                                                               !     # of headlines: 1
     !                                                               !     format: #_evolution_loop, xf(i), (x(i,j),j=1,nn)
     !                                                               !     total number of lines written <= neval <= mymaxn
-    logical,          optional,          intent(in)  :: popul_file_append ! if true, append to popul_file
+    logical,     optional,               intent(in)  :: popul_file_append ! if true, append to popul_file
     logical,     optional,               intent(in)  :: parallel    ! sce runs in parallel (true) or not (false)
     !                                                               !     parallel sce should only be used if model/ objective 
     !                                                               !     is not parallel
     !                                                               !     DEAFULT: .false.
+    logical,     optional,               intent(in)  :: restart     ! if .true., start from restart file
+    character(len=*), optional,          intent(in)  :: restart_file ! restart file name (default: mo_sce.restart)
     real(dp),    optional,               intent(out) :: bestf       ! function value of bestx(.)
     integer(i8), optional,               intent(out) :: neval       ! number of function evaluations
     real(dp),    optional, &
@@ -324,10 +331,17 @@ CONTAINS
     !                                                               ! mask(i) = .false. --> parameter i will not be optimized 
     real(dp)                                         :: alpha       ! parameter for reflection  of points in complex
     real(dp)                                         :: beta        ! parameter for contraction of points in complex
+    logical                                          :: itmp_file   ! if temporal results wanted
+    character(len=1024)                              :: istmp_file  ! local copy of file for temporal results output
+    logical                                          :: ipopul_file  ! if temporal population wanted
+    character(len=1024)                              :: ispopul_file ! local copy of file for temporal population output
+    
     real(dp), dimension(:), allocatable              :: history_tmp ! history of best function values after each iteration
     real(dp), dimension(:), allocatable              :: ihistory_tmp ! local history for OpenMP
     real(dp)                                         :: bestf_tmp   ! function value of bestx(.)
     logical                                          :: parall      ! if sce is used parallel or not
+    logical                                          :: irestart    ! if restart wanted
+    character(len=1024)                              :: isrestart_file ! local copy of restart file name
     !
     ! local variables
     integer(i4)                                      :: nopt        ! number of parameters to be optimized
@@ -347,7 +361,7 @@ CONTAINS
     real(dp)                                         :: gnrng       ! normalized geometric mean of parameter ranges
     integer(i4), dimension(:),   allocatable         :: lcs         ! indices locating position of s(.,.) in x(.,.)  
     real(dp),    dimension(:),   allocatable         :: bound       ! length of range of ith variable being optimized
-    real(dp),    dimension(:),   allocatable         :: unit        ! ?????
+    real(dp),    dimension(:),   allocatable         :: unit        ! standard deviation of initial parameter distributions
     integer(i4)                                      :: ngs1        ! number of complexes in current population
     integer(i4)                                      :: ngs2        ! number of complexes in last population
     real(dp),    dimension(:),   allocatable         :: criter      ! vector containing the best criterion values of the last
@@ -391,496 +405,574 @@ CONTAINS
     real(dp)                                         :: NaN           ! NaN value
 #endif
 
-    if (present(parallel)) then
-       parall = parallel
-    else
-       parall = .false.
-    end if
+    namelist /restartnml1/ &
+         bestx, bl, bu, maxn, maxit, kstop, pcento, peps, ngs, npg, nps, nspl, &
+         mings, iniflg, iprint, idot, maskpara, alpha, beta, bestf_tmp, &
+         parall, nopt, nn, npt, fpini, xx, worstf, gnrng, &
+         ngs1, ngs2, nloop, npt1, icall, &
+         n_threads, large, ipopul_file_append, itmp_file, istmp_file, &
+         ipopul_file, ispopul_file
+    namelist /restartnml2/ &
+         history_tmp, x, xf, worstx, xnstd, &
+         bound, unit, criter, xname, iseed, save_state_unif, &
+         save_state_gauss
 
-    if (parall) then
-       ! OpenMP or not
-       n_threads = 1
-       !$  write(output_unit,*) '--------------------------------------------------'
-       !$OMP parallel
-       !$    n_threads = OMP_GET_NUM_THREADS()
-       !$OMP end parallel
-       !$  write(output_unit,*) '   SCE is parellel with ',n_threads,' threads'
-       !$  write(output_unit,*) '--------------------------------------------------'
+    if (present(restart)) then
+       irestart = restart
     else
-       n_threads = 1
-    end if
-
-    ! One random number chain per OpenMP thread
-    allocate(rand_tmp(n_threads))
-    allocate(iseed(n_threads))
-    allocate(save_state_unif(n_threads,n_save_state))
-    allocate(save_state_gauss(n_threads,n_save_state))
-
-    if (present(mymask)) then
-       if (.not. any(mymask)) stop 'mo_sce: all parameters are masked --> none will be optimized' 
-       maskpara = mymask
-    else
-       maskpara = .true.
-    end if
-
-    ! number of parameters to optimize
-    nopt = count(maskpara,dim=1)
-    ! total number of parameters
-    nn   = size(pini,1)
-
-    ! input checking
-    if (size(prange,dim=1) .ne. size(pini,1)) then
-       stop 'mo_sce: prange has not matching rows'
-    end if
-    if (size(prange,dim=2) .ne. 2) then
-       stop 'mo_sce: two colums expected for prange'
-    end if
-    bl(:)   = prange(:,1)
-    bu(:)   = prange(:,2)
-    do ii=1, nn
-       if( ((bu(ii)-bl(ii)) .lt. tiny(1.0_dp) ) .and. maskpara(ii) ) then
-          write(error_unit,*) 'para #',ii,'  :: range = ( ',bl(ii),' , ',bu(ii),' )'
-          stop 'mo_sce: inconsistent or too small parameter range'
-       end if
-    end do
-    
-    !
-    ! optionals checking
-    if (present(mymaxn)) then
-       if (mymaxn .lt. 2_i4) stop 'mo_sce: maxn has to be at least 2'
-       maxn = mymaxn
-    else
-       maxn = 1000_i8
-    end if
-    if (present(mymaxit)) then
-       maxit = mymaxit
-    else
-       maxit = .false.
-    end if
-    if (present(mykstop)) then
-       if (mykstop .lt. 1_i4) stop 'mo_sce: kstop has to be at least 1'
-       kstop = mykstop
-    else
-       kstop = 10_i4
-    end if
-    if (present(mypcento)) then
-       if (mypcento .lt. 0_dp) stop 'mo_sce: pcento should be positive'
-       pcento = mypcento
-    else
-       pcento = 0.0001_dp
-    end if
-    if (present(mypeps)) then
-       if (mypeps .lt. 0_dp) stop 'mo_sce: peps should be positive'
-       peps = mypeps
-    else
-       peps = 0.001_dp
-    end if
-    if (present(myseed)) then
-       if (myseed .lt. 1_i8) stop 'mo_sce: seed should be non-negative'
-       forall(ii=1:n_threads) iseed(ii) = myseed + (ii-1)*1000_i8
-    else
-       call get_timeseed(iseed)
-    end if
-    if (present(myngs)) then
-       if (myngs .lt. 1_i4) stop 'mo_sce: ngs has to be at least 1'
-       ngs = myngs
-    else
-       ngs = 2_i4
-    end if
-    if (present(mynpg)) then
-       if (mynpg .lt. 3_i4) stop 'mo_sce: npg has to be at least 3'
-       npg = mynpg
-    else
-       npg = 2*nopt + 1
-    end if
-    if (present(mynps)) then
-       if (mynps .lt. 2_i4) stop 'mo_sce: nps has to be at least 2'
-       nps = mynps
-    else
-       nps = nopt + 1_i4
-    end if
-    if (present(mynspl)) then
-       if (mynspl .lt. 3_i4) stop 'mo_sce: nspl has to be at least 3'
-       nspl = mynspl
-    else
-       nspl = 2*nopt + 1
-    end if
-    if (present(mymings)) then
-       if (mymings .lt. 1_i4) stop 'mo_sce: mings has to be at least 1'
-       mings = mymings
-    else
-       mings = ngs  ! no reduction of complexes
-    end if
-    if (present(myiniflg)) then
-       if ( (myiniflg .ne. 1_i4) .and. (myiniflg .ne. 0_i4)) stop 'mo_sce: iniflg has to be 0 or 1'
-       iniflg = myiniflg
-    else
-       iniflg = 1_i4
-    end if
-    idot = .false.
-    if (present(myprint)) then
-       if ( (myprint .lt. 0_i4) .or. (myprint .gt. 4_i4)) stop 'mo_sce: iprint has to be between 0 and 4'
-       if (myprint > 2_i4) then
-          iprint = myprint-3
-          idot = .true.
-       else
-          iprint = myprint
-       endif
-    else
-       iprint = 2_i4  ! no printing
-       iprint = 0_i4
-    end if
-    if (present(myalpha)) then
-       alpha = myalpha
-    else
-       alpha = 0.8_dp
-    end if
-    if (present(mybeta)) then
-       beta = mybeta
-    else
-       beta = 0.45_dp
-    end if
-
-    if (present(popul_file_append)) then
-       ipopul_file_append = popul_file_append
-    else
-       ipopul_file_append = .false.
+       irestart = .false.
     endif
 
-    if(present(tmp_file)) then
-       open(unit=999,file=trim(adjustl(tmp_file)), action='write', status = 'unknown')
-       write(999,*) '# settings :: general'
-       write(999,*) '# nIterations    seed'
-       write(999,*) maxn, iseed
-       write(999,*) '# settings :: sce specific'
-       write(999,*) '# sce_ngs    sce_npg    sce_nps'
-       write(999,*) ngs, npg, nps
-       write(999,*) '# nloop   icall   ngs1   bestf   worstf   gnrng   (bestx(j),j=1,nn)'
-       close(999)
-    end if
-
-    if (present(popul_file) .and. (.not. ipopul_file_append)) then
-       open(unit=999,file=trim(adjustl(popul_file)), action='write', status = 'unknown')
-       write(999,*) '#   xf(i)   (x(i,j),j=1,nn)'
-       close(999)
-    end if
-
-    ! allocation of arrays
-    allocate(x(ngs*npg,nn))
-    allocate(xf(ngs*npg))
-    allocate(worstx(nn))
-    allocate(xnstd(nn))
-    allocate(bound(nn))
-    allocate(unit(nn))
-    allocate(criter(kstop+1))  
-    allocate(xname(nn))
-    allocate(history_tmp(maxn+3*ngs*nspl))
-    allocate(xtmp(npg,nn)) 
-    allocate(ftmp(npg))
-    if (maxit) then
-       large = -huge(1.0_dp)
+    if (present(restart_file)) then
+       isrestart_file = restart_file
     else
-       large = huge(1.0_dp)
+       isrestart_file = 'mo_sce.restart'
     endif
-    criter(:) = large
-    !
-    !  initialize variables
-    do ii=1,nn
-       xname(ii) = compress('p'//num2str(ii))
-    end do
 
-    nloop = 0_i4
-    loop  = 0_i4
-    igs   = 0_i4
-    !
-    !  compute the total number of points in initial population
-    npt = ngs * npg
-    ngs1 = ngs
-    npt1 = npt
-    !
-    if (iprint .lt. 2) then
-       write(output_unit,*) '=================================================='
-       write(output_unit,*) 'ENTER THE SHUFFLED COMPLEX EVOLUTION GLOBAL SEARCH'
-       write(output_unit,*) '=================================================='
-    end if
-    !
-    !  Print seed
-    if (iprint .lt. 2) then
-       write (*,*) ' Seeds used : ',iseed
-    end if
-    !  initialize random number generator: Uniform
-    call xor4096(iseed, rand_tmp, save_state=save_state_unif)
-    !  initialize random number generator: Gaussian
-    iseed = iseed + 1000_i8
-    call xor4096g(iseed, rand_tmp, save_state=save_state_gauss)
-    iseed = 0_i8
-    !
-    !  compute the bound for parameters being optimized
-    do ii = 1, nn
-       bound(ii) = bu(ii) - bl(ii)
-       unit(ii) = 1.0_dp
-    end do
-    !--------------------------------------------------
-    !  compute the function value of the initial point
-    !--------------------------------------------------
-    ! function evaluation will be counted later...
-    if (idot) write(output_unit,'(A1)') '.'
-    if (.not. maxit) then
-       fpini = functn(pini)
-       history_tmp(1) = fpini
-    else
-       fpini = -functn(pini)
-       history_tmp(1) = -fpini
-    end if
+    if (.not. irestart) then
 
-    !  print the initial point and its criterion value
-    bestx = pini
-    bestf_tmp = fpini
-    if (iprint .lt. 2) then
-       write(output_unit,*) ''
-       write(output_unit,*) ''
-       write(output_unit,*) '*** PRINT THE INITIAL POINT AND ITS CRITERION VALUE ***'
-       call write_best_final()
-    end if
-    file_write_initial: if (present(tmp_file)) then
-       open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append',recl=(nn+6)*30)
-       if (.not. maxit) then
-          write(999,*) 0,1,ngs1,fpini,fpini,1.0_dp, pini
+       if (present(parallel)) then
+          parall = parallel
        else
-          write(999,*) 0,1,ngs1,-fpini,-fpini,1.0_dp, pini
+          parall = .false.
        end if
-       close(999)
-    end if file_write_initial
-    !
-    !  generate an initial set of npt1 points in the parameter space
-    !  if iniflg is equal to 1, set x(1,.) to initial point pini(.)
-    if (iniflg .eq. 1) then
-       do ii = 1, nn
-          x(1,ii) = pini(ii)
-       end do
-       xf(1) = fpini
-       !
-       !  else, generate a point randomly and set it equal to x(1,.)
-    else
-       itmp = save_state_unif(1,:)
-       call getpnt(1,bl(1:nn),bu(1:nn),unit(1:nn),pini(1:nn),maskpara,itmp,xx)
-       save_state_unif(1,:) = itmp
+
+       if (parall) then
+          ! OpenMP or not
+          n_threads = 1
+          !$  write(output_unit,*) '--------------------------------------------------'
+          !$OMP parallel
+          !$    n_threads = OMP_GET_NUM_THREADS()
+          !$OMP end parallel
+          !$  write(output_unit,*) '   SCE is parellel with ',n_threads,' threads'
+          !$  write(output_unit,*) '--------------------------------------------------'
+       else
+          n_threads = 1
+       end if
+
+       ! One random number chain per OpenMP thread
+       allocate(rand_tmp(n_threads))
+       allocate(iseed(n_threads))
+       allocate(save_state_unif(n_threads,n_save_state))
+       allocate(save_state_gauss(n_threads,n_save_state))
+
+       if (present(mymask)) then
+          if (.not. any(mymask)) stop 'mo_sce: all parameters are masked --> none will be optimized' 
+          maskpara = mymask
+       else
+          maskpara = .true.
+       end if
+
+       ! number of parameters to optimize
+       nopt = count(maskpara,dim=1)
+       ! total number of parameters
+       nn   = size(pini,1)
+
+       ! input checking
+       if (size(prange,dim=1) .ne. size(pini,1)) then
+          stop 'mo_sce: prange has not matching rows'
+       end if
+       if (size(prange,dim=2) .ne. 2) then
+          stop 'mo_sce: two colums expected for prange'
+       end if
+       bl(:)   = prange(:,1)
+       bu(:)   = prange(:,2)
        do ii=1, nn
-          x(1,ii) = xx(ii)
+          if( ((bu(ii)-bl(ii)) .lt. tiny(1.0_dp) ) .and. maskpara(ii) ) then
+             write(error_unit,*) 'para #',ii,'  :: range = ( ',bl(ii),' , ',bu(ii),' )'
+             stop 'mo_sce: inconsistent or too small parameter range'
+          end if
        end do
+
+       !
+       ! optionals checking
+       if (present(mymaxn)) then
+          if (mymaxn .lt. 2_i4) stop 'mo_sce: maxn has to be at least 2'
+          maxn = mymaxn
+       else
+          maxn = 1000_i8
+       end if
+       if (present(mymaxit)) then
+          maxit = mymaxit
+       else
+          maxit = .false.
+       end if
+       if (present(mykstop)) then
+          if (mykstop .lt. 1_i4) stop 'mo_sce: kstop has to be at least 1'
+          kstop = mykstop
+       else
+          kstop = 10_i4
+       end if
+       if (present(mypcento)) then
+          if (mypcento .lt. 0_dp) stop 'mo_sce: pcento should be positive'
+          pcento = mypcento
+       else
+          pcento = 0.0001_dp
+       end if
+       if (present(mypeps)) then
+          if (mypeps .lt. 0_dp) stop 'mo_sce: peps should be positive'
+          peps = mypeps
+       else
+          peps = 0.001_dp
+       end if
+       if (present(myseed)) then
+          if (myseed .lt. 1_i8) stop 'mo_sce: seed should be non-negative'
+          forall(ii=1:n_threads) iseed(ii) = myseed + (ii-1)*1000_i8
+       else
+          call get_timeseed(iseed)
+       end if
+       if (present(myngs)) then
+          if (myngs .lt. 1_i4) stop 'mo_sce: ngs has to be at least 1'
+          ngs = myngs
+       else
+          ngs = 2_i4
+       end if
+       if (present(mynpg)) then
+          if (mynpg .lt. 3_i4) stop 'mo_sce: npg has to be at least 3'
+          npg = mynpg
+       else
+          npg = 2*nopt + 1
+       end if
+       if (present(mynps)) then
+          if (mynps .lt. 2_i4) stop 'mo_sce: nps has to be at least 2'
+          nps = mynps
+       else
+          nps = nopt + 1_i4
+       end if
+       if (present(mynspl)) then
+          if (mynspl .lt. 3_i4) stop 'mo_sce: nspl has to be at least 3'
+          nspl = mynspl
+       else
+          nspl = 2*nopt + 1
+       end if
+       if (present(mymings)) then
+          if (mymings .lt. 1_i4) stop 'mo_sce: mings has to be at least 1'
+          mings = mymings
+       else
+          mings = ngs  ! no reduction of complexes
+       end if
+       if (present(myiniflg)) then
+          if ( (myiniflg .ne. 1_i4) .and. (myiniflg .ne. 0_i4)) stop 'mo_sce: iniflg has to be 0 or 1'
+          iniflg = myiniflg
+       else
+          iniflg = 1_i4
+       end if
+       idot = .false.
+       if (present(myprint)) then
+          if ( (myprint .lt. 0_i4) .or. (myprint .gt. 4_i4)) stop 'mo_sce: iprint has to be between 0 and 4'
+          if (myprint > 2_i4) then
+             iprint = myprint-3
+             idot = .true.
+          else
+             iprint = myprint
+          endif
+       else
+          iprint = 2_i4  ! no printing
+          iprint = 0_i4
+       end if
+       if (present(myalpha)) then
+          alpha = myalpha
+       else
+          alpha = 0.8_dp
+       end if
+       if (present(mybeta)) then
+          beta = mybeta
+       else
+          beta = 0.45_dp
+       end if
+
+       if (present(popul_file_append)) then
+          ipopul_file_append = popul_file_append
+       else
+          ipopul_file_append = .false.
+       endif
+
+       if (present(tmp_file)) then          
+          itmp_file  = .true.
+          istmp_file = tmp_file
+          open(999, file=trim(adjustl(istmp_file)), action='write', status = 'unknown')
+          write(999,*) '# settings :: general'
+          write(999,*) '# nIterations    seed'
+          write(999,*) maxn, iseed
+          write(999,*) '# settings :: sce specific'
+          write(999,*) '# sce_ngs    sce_npg    sce_nps'
+          write(999,*) ngs, npg, nps
+          write(999,*) '# nloop   icall   ngs1   bestf   worstf   gnrng   (bestx(j),j=1,nn)'
+          close(999)
+       else
+          itmp_file  = .false.          
+          istmp_file = ''
+       end if
+
+       if (present(popul_file)) then
+          ipopul_file  = .true.
+          ispopul_file = popul_file
+       else
+          ipopul_file  = .false.
+          ispopul_file = ''
+       endif
+
+       if (ipopul_file .and. (.not. ipopul_file_append)) then
+          open(999, file=trim(adjustl(ispopul_file)), action='write', status = 'unknown')
+          write(999,*) '#   xf(i)   (x(i,j),j=1,nn)'
+          close(999)
+       end if
+
+       ! allocation of arrays
+       allocate(x(ngs*npg,nn))
+       allocate(xf(ngs*npg))
+       allocate(worstx(nn))
+       allocate(xnstd(nn))
+       allocate(bound(nn))
+       allocate(unit(nn))
+       allocate(criter(kstop+1))  
+       allocate(xname(nn))
+       allocate(history_tmp(maxn+3*ngs*nspl))
+       allocate(xtmp(npg,nn)) 
+       allocate(ftmp(npg))
+       if (maxit) then
+          large = -huge(1.0_dp)
+       else
+          large = huge(1.0_dp)
+       endif
+       criter(:) = large
+       !
+       !  initialize variables
+       do ii=1,nn
+          xname(ii) = compress('p'//num2str(ii,'(I3.3)'))
+       end do
+
+       nloop = 0_i4
+       loop  = 0_i4
+       igs   = 0_i4
+       !
+       !  compute the total number of points in initial population
+       npt = ngs * npg
+       ngs1 = ngs
+       npt1 = npt
+       !
+       if (iprint .lt. 2) then
+          write(output_unit,*) '=================================================='
+          write(output_unit,*) 'ENTER THE SHUFFLED COMPLEX EVOLUTION GLOBAL SEARCH'
+          write(output_unit,*) '=================================================='
+       end if
+       !
+       !  Print seed
+       if (iprint .lt. 2) then
+          write (*,*) ' Seeds used : ',iseed
+       end if
+       !  initialize random number generator: Uniform
+       call xor4096(iseed, rand_tmp, save_state=save_state_unif)
+       !  initialize random number generator: Gaussian
+       iseed = iseed + 1000_i8
+       call xor4096g(iseed, rand_tmp, save_state=save_state_gauss)
+       iseed = 0_i8
+       !
+       !  compute the bound for parameters being optimized
+       do ii = 1, nn
+          bound(ii) = bu(ii) - bl(ii)
+          unit(ii) = 1.0_dp
+       end do
+
+       !--------------------------------------------------
+       !  compute the function value of the initial point
+       !--------------------------------------------------
+       ! function evaluation will be counted later...
        if (idot) write(output_unit,'(A1)') '.'
        if (.not. maxit) then
-          xf(1) = functn(xx)
+          fpini = functn(pini)
+          history_tmp(1) = fpini
        else
-          xf(1) = -functn(xx)
+          fpini = -functn(pini)
+          history_tmp(1) = -fpini
        end if
-    end if
-    !
-    ! count function evaluation of the first point
-    icall = 1_i8
-    ! if (icall .ge. maxn) return 
-    !
-    if (parall) then
-       
-       ! -----------------------------------------------------------------------
-       ! Parallel version of complex-loop
-       ! -----------------------------------------------------------------------
-       !  generate npt1-1 random points distributed uniformly in the parameter
-       !  space, and compute the corresponding function values
-       ithread = 1
-       !$OMP parallel default(shared) private(ii,jj,ithread,xx)
-       !$OMP do
-       do ii = 2, npt1
-          !$ ithread = OMP_GET_THREAD_NUM() + 1
-          itmp = save_state_unif(ithread,:)
+
+       !  print the initial point and its criterion value
+       bestx = pini
+       bestf_tmp = fpini
+       if (iprint .lt. 2) then
+          write(output_unit,*) ''
+          write(output_unit,*) ''
+          write(output_unit,*) '*** PRINT THE INITIAL POINT AND ITS CRITERION VALUE ***'
+          call write_best_final()
+       end if
+       if (itmp_file) then ! initial tmp file
+          open(999, file=trim(adjustl(istmp_file)), action='write', position='append', recl=(nn+6)*30)
+          if (.not. maxit) then
+             write(999,*) 0,1,ngs1,fpini,fpini,1.0_dp, pini
+          else
+             write(999,*) 0,1,ngs1,-fpini,-fpini,1.0_dp, pini
+          end if
+          close(999)
+       end if
+       !
+       !  generate an initial set of npt1 points in the parameter space
+       !  if iniflg is equal to 1, set x(1,.) to initial point pini(.)
+       if (iniflg .eq. 1) then
+          do ii = 1, nn
+             x(1,ii) = pini(ii)
+          end do
+          xf(1) = fpini
+          !
+          !  else, generate a point randomly and set it equal to x(1,.)
+       else
+          itmp = save_state_unif(1,:)
           call getpnt(1,bl(1:nn),bu(1:nn),unit(1:nn),pini(1:nn),maskpara,itmp,xx)
-          save_state_unif(ithread,:) = itmp
-          do jj = 1, nn
-             x(ii,jj) = xx(jj)
+          save_state_unif(1,:) = itmp
+          do ii=1, nn
+             x(1,ii) = xx(ii)
           end do
           if (idot) write(output_unit,'(A1)') '.'
           if (.not. maxit) then
-             xf(ii) = functn(xx)
-             history_tmp(ii) = xf(ii) ! min(history_tmp(ii-1),xf(ii)) --> will be sorted later
+             xf(1) = functn(xx)
           else
-             xf(ii) = -functn(xx)
-             history_tmp(ii) = -xf(ii) ! max(history_tmp(ii-1),-xf(ii)) --> will be sorted later
+             xf(1) = -functn(xx)
           end if
-       end do
-       !$OMP end do
-       !$OMP end parallel
+       end if
+       !
+       ! count function evaluation of the first point
+       icall = 1_i8
+       ! if (icall .ge. maxn) return 
+       !
+       if (parall) then
 
-    else
-
-       ! -----------------------------------------------------------------------
-       ! Non-Parallel version of complex-loop
-       ! -----------------------------------------------------------------------
-       !  generate npt1-1 random points distributed uniformly in the parameter
-       !  space, and compute the corresponding function values
-       ithread = 1
-
-       do ii = 2, npt1
-          call getpnt(1,bl(1:nn),bu(1:nn),unit(1:nn),pini(1:nn),maskpara,save_state_unif(ithread,:),xx)
-          do jj = 1, nn
-             x(ii,jj) = xx(jj)
+          ! -----------------------------------------------------------------------
+          ! Parallel version of complex-loop
+          ! -----------------------------------------------------------------------
+          !  generate npt1-1 random points distributed uniformly in the parameter
+          !  space, and compute the corresponding function values
+          ithread = 1
+          !$OMP parallel default(shared) private(ii,jj,ithread,xx)
+          !$OMP do
+          do ii = 2, npt1
+             !$ ithread = OMP_GET_THREAD_NUM() + 1
+             itmp = save_state_unif(ithread,:)
+             call getpnt(1,bl(1:nn),bu(1:nn),unit(1:nn),pini(1:nn),maskpara,itmp,xx)
+             save_state_unif(ithread,:) = itmp
+             do jj = 1, nn
+                x(ii,jj) = xx(jj)
+             end do
+             if (idot) write(output_unit,'(A1)') '.'
+             if (.not. maxit) then
+                xf(ii) = functn(xx)
+                history_tmp(ii) = xf(ii) ! min(history_tmp(ii-1),xf(ii)) --> will be sorted later
+             else
+                xf(ii) = -functn(xx)
+                history_tmp(ii) = -xf(ii) ! max(history_tmp(ii-1),-xf(ii)) --> will be sorted later
+             end if
           end do
-          if (idot) write(output_unit,'(A1)') '.'
-          if (.not. maxit) then
-             xf(ii) = functn(xx)
-             icall = icall + 1_i8
-             history_tmp(icall) = xf(ii) ! min(history_tmp(icall-1),xf(ii)) --> will be sorted later
-          else
-             xf(ii) = -functn(xx)
-             icall = icall + 1_i8
-             history_tmp(icall) = -xf(ii) ! max(history_tmp(icall-1),-xf(ii)) --> will be sorted later
-          end if
-          
-          if (icall .ge. maxn) then
-             npt1 = ii
-             exit
-          end if
-       end do
+          !$OMP end do
+          !$OMP end parallel
 
-    end if
+       else
 
-    icall = int(npt1,i8)
-    !
-    !  arrange the points in order of increasing function value
-    if (maxit) then
-       large = minval(xf(1:npt1))
-       large = merge(0.9_dp*large, 1.1_dp*large, large>0._dp)
-    else
-       large = maxval(xf(1:npt1))
-       large = merge(1.1_dp*large, 0.9_dp*large, large>0._dp)
-    endif
+          ! -----------------------------------------------------------------------
+          ! Non-Parallel version of complex-loop
+          ! -----------------------------------------------------------------------
+          !  generate npt1-1 random points distributed uniformly in the parameter
+          !  space, and compute the corresponding function values
+          ithread = 1
+
+          do ii = 2, npt1
+             call getpnt(1,bl(1:nn),bu(1:nn),unit(1:nn),pini(1:nn),maskpara,save_state_unif(ithread,:),xx)
+             do jj = 1, nn
+                x(ii,jj) = xx(jj)
+             end do
+             if (idot) write(output_unit,'(A1)') '.'
+             if (.not. maxit) then
+                xf(ii) = functn(xx)
+                icall = icall + 1_i8
+                history_tmp(icall) = xf(ii) ! min(history_tmp(icall-1),xf(ii)) --> will be sorted later
+             else
+                xf(ii) = -functn(xx)
+                icall = icall + 1_i8
+                history_tmp(icall) = -xf(ii) ! max(history_tmp(icall-1),-xf(ii)) --> will be sorted later
+             end if
+
+             if (icall .ge. maxn) then
+                npt1 = ii
+                exit
+             end if
+          end do
+
+       end if
+
+       icall = int(npt1,i8)
+       !
+       !  arrange the points in order of increasing function value
+       if (maxit) then
+          large = minval(xf(1:npt1))
+          large = merge(0.9_dp*large, 1.1_dp*large, large>0._dp)
+       else
+          large = maxval(xf(1:npt1))
+          large = merge(1.1_dp*large, 0.9_dp*large, large>0._dp)
+       endif
 #ifndef GFORTRAN
-    xf(1:npt1) = merge(xf(1:npt1), large, ieee_is_finite(xf(1:npt1))) ! NaN and Infinite
-    ! sort does not work with NaNs
-    ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
-    nonan = size(pack(history_tmp(1:npt1), mask=ieee_is_finite(history_tmp(1:npt1))))
-    if (nonan /= npt1) then
-       allocate(htmp(nonan))
-       htmp(1:nonan) = pack(history_tmp(1:npt1), mask=ieee_is_finite(history_tmp(1:npt1)))
-       call sort(htmp(1:nonan))
-       history_tmp(1:nonan) = htmp(1:nonan)
-       history_tmp(nonan+1:npt1) = ieee_value(1.0_dp, IEEE_QUIET_NAN)
-       deallocate(htmp)
-    else
-       call sort(history_tmp(1:npt1))
-    endif
+       xf(1:npt1) = merge(xf(1:npt1), large, ieee_is_finite(xf(1:npt1))) ! NaN and Infinite
+       ! sort does not work with NaNs
+       ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
+       nonan = size(pack(history_tmp(1:npt1), mask=ieee_is_finite(history_tmp(1:npt1))))
+       if (nonan /= npt1) then
+          allocate(htmp(nonan))
+          htmp(1:nonan) = pack(history_tmp(1:npt1), mask=ieee_is_finite(history_tmp(1:npt1)))
+          call sort(htmp(1:nonan))
+          history_tmp(1:nonan) = htmp(1:nonan)
+          history_tmp(nonan+1:npt1) = ieee_value(1.0_dp, IEEE_QUIET_NAN)
+          deallocate(htmp)
+       else
+          call sort(history_tmp(1:npt1))
+       endif
 #else
 #ifdef GFORTRAN41
-    xf(1:npt1) = merge(xf(1:npt1), large, xf(1:npt1) == xf(1:npt1))   ! only NaN
-    ! sort does not work with NaNs
-    ! -> get the NaN value
-    ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
-    nonan = size(pack(history_tmp(1:npt1), mask=(xf(1:npt1)==xf(1:npt1))))
-    if (nonan /= npt1) then
-       NaN = large
-       do ii=1, npt1
-          if (xf(ii) /= xf(ii)) then
-             NaN = xf(ii)
-             exit
-          endif
-       end do
-       allocate(htmp(nonan))
-       htmp(1:nonan) = pack(history_tmp(1:npt1), mask=(xf(1:npt1)==xf(1:npt1)))
-       call sort(htmp(1:nonan))
-       history_tmp(1:nonan) = htmp(1:nonan)
-       history_tmp(nonan+1:npt1) = NaN
-       deallocate(htmp)
-    else
-       call sort(history_tmp(1:npt1))
-    endif
+       xf(1:npt1) = merge(xf(1:npt1), large, xf(1:npt1) == xf(1:npt1))   ! only NaN
+       ! sort does not work with NaNs
+       ! -> get the NaN value
+       ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
+       nonan = size(pack(history_tmp(1:npt1), mask=(xf(1:npt1)==xf(1:npt1))))
+       if (nonan /= npt1) then
+          NaN = large
+          do ii=1, npt1
+             if (xf(ii) /= xf(ii)) then
+                NaN = xf(ii)
+                exit
+             endif
+          end do
+          allocate(htmp(nonan))
+          htmp(1:nonan) = pack(history_tmp(1:npt1), mask=(xf(1:npt1)==xf(1:npt1)))
+          call sort(htmp(1:nonan))
+          history_tmp(1:nonan) = htmp(1:nonan)
+          history_tmp(nonan+1:npt1) = NaN
+          deallocate(htmp)
+       else
+          call sort(history_tmp(1:npt1))
+       endif
 #else
-    xf(1:npt1) = merge(xf(1:npt1), large, .not. isnan(xf(1:npt1)))   ! only NaN
-    ! sort does not work with NaNs
-    ! -> get the NaN value
-    ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
-    nonan = size(pack(history_tmp(1:npt1), mask=(.not. isnan(xf(1:npt1)))))
-    if (nonan /= npt1) then
-       NaN = large
-       do ii=1, npt1
-          if (isnan(xf(ii))) then
-             NaN = xf(ii)
-             exit
-          endif
+       xf(1:npt1) = merge(xf(1:npt1), large, .not. isnan(xf(1:npt1)))   ! only NaN
+       ! sort does not work with NaNs
+       ! -> get the NaN value
+       ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
+       nonan = size(pack(history_tmp(1:npt1), mask=(.not. isnan(xf(1:npt1)))))
+       if (nonan /= npt1) then
+          NaN = large
+          do ii=1, npt1
+             if (isnan(xf(ii))) then
+                NaN = xf(ii)
+                exit
+             endif
+          end do
+          allocate(htmp(nonan))
+          htmp(1:nonan) = pack(history_tmp(1:npt1), mask=(.not. isnan(xf(1:npt1))))
+          call sort(htmp(1:nonan))
+          history_tmp(1:nonan) = htmp(1:nonan)
+          history_tmp(nonan+1:npt1) = NaN
+          deallocate(htmp)
+       else
+          call sort(history_tmp(1:npt1))
+       endif
+#endif
+#endif
+       call sort_matrix(x(1:npt1,1:nn),xf(1:npt1))
+       !
+       !  record the best and worst points
+       do ii = 1, nn
+          bestx(ii) = x(1,ii)
+          worstx(ii) = x(npt1,ii)
        end do
-       allocate(htmp(nonan))
-       htmp(1:nonan) = pack(history_tmp(1:npt1), mask=(.not. isnan(xf(1:npt1))))
-       call sort(htmp(1:nonan))
-       history_tmp(1:nonan) = htmp(1:nonan)
-       history_tmp(nonan+1:npt1) = NaN
-       deallocate(htmp)
-    else
-       call sort(history_tmp(1:npt1))
+       bestf_tmp = xf(1)
+       worstf = xf(npt1)
+       !
+       !  compute the parameter range for the initial population
+       call parstt(x(1:npt1,1:nn),bound,peps,maskpara,xnstd,gnrng,ipcnvg)
+       !
+       ! write currently best x and xf to temporal file
+       if (itmp_file) then
+          call write_best_intermediate(.true.)
+       end if
+
+       ! write population to file
+       if (ipopul_file) then
+          call write_population(.true.)
+       end if
+       !
+       !  print the results for the initial population
+       print: if (iprint .lt. 2) then
+          ! write currently best x and xf to screen
+          call write_best_intermediate(.false.)
+
+          ! write population on screen
+          if (iprint .eq. 1) then
+             call write_population(.false.)
+          end if
+       end if print
+       !
+       ! Maximum number of function evaluations reached?
+       if (icall .ge. maxn) then 
+          if (iprint .lt. 2) then
+             ! maximum trials reached
+             call write_termination_case(1)
+             call write_best_final()
+          end if
+          call set_optional()
+          ! -----------------------
+          ! Abort subroutine
+          ! -----------------------
+          return
+       end if
+       !
+       ! Feasible parameter space converged?
+       if (ipcnvg .eq. 1) then 
+          if (iprint .lt. 2) then
+             ! converged because feasible parameter space small
+             call write_termination_case(3)
+             call write_best_final()
+          end if
+          call set_optional()
+          ! -----------------------
+          ! Abort subroutine
+          ! -----------------------
+          return
+       end if
+       !
+       ! write restart
+       open(999, file=isrestart_file, status='unknown', action='write', delim='QUOTE')
+       write(999, restartnml1)
+       write(999, restartnml2)
+       close(999)
+    endif ! restart or not
+
+    ! read 1st namelist with allocated/scalar variables
+    open(999, file=isrestart_file, status='old', action='read', delim='QUOTE')
+    read(999, nml=restartnml1)
+    close(999)
+
+    if (irestart) then
+       ! allocate global arrays
+       allocate(rand_tmp(n_threads))
+       allocate(iseed(n_threads))
+       allocate(save_state_unif(n_threads,n_save_state))
+       allocate(save_state_gauss(n_threads,n_save_state))
+       allocate(x(ngs*npg,nn))
+       allocate(xf(ngs*npg))
+       allocate(worstx(nn))
+       allocate(xnstd(nn))
+       allocate(bound(nn))
+       allocate(unit(nn))
+       allocate(criter(kstop+1))  
+       allocate(xname(nn))
+       allocate(history_tmp(maxn+3*ngs*nspl))
+       allocate(xtmp(npg,nn))
+       allocate(ftmp(npg))
     endif
-#endif
-#endif
-    call sort_matrix(x(1:npt1,1:nn),xf(1:npt1))
-    !
-    !  record the best and worst points
-    do ii = 1, nn
-       bestx(ii) = x(1,ii)
-       worstx(ii) = x(npt1,ii)
-    end do
-    bestf_tmp = xf(1)
-    worstf = xf(npt1)
-    !
-    !  compute the parameter range for the initial population
-    call parstt(x(1:npt1,1:nn),bound,peps,maskpara,xnstd,gnrng,ipcnvg)
-    !
-    ! write currently best x and xf to temporal file
-    if (present(tmp_file)) then
-       call write_best_intermediate(.true.)
-    end if
-
-    ! write population to file
-    if (present(popul_file)) then
-       call write_population(.true.)
-    end if
-    !
-    !  print the results for the initial population
-    print: if (iprint .lt. 2) then
-       ! write currently best x and xf to screen
-       call write_best_intermediate(.false.)
-
-       ! write population on screen
-       if (iprint .eq. 1) then
-          call write_population(.false.)
-       end if
-    end if print
-    !
-    ! Maximum number of function evaluations reached?
-    if (icall .ge. maxn) then 
-       if (iprint .lt. 2) then
-          ! maximum trials reached
-          call write_termination_case(1)
-          call write_best_final()
-       end if
-       call set_optional()
-       ! -----------------------
-       ! Abort subroutine
-       ! -----------------------
-       return
-    end if
-    !
-    ! Feasible parameter space converged?
-    if (ipcnvg .eq. 1) then 
-       if (iprint .lt. 2) then
-          ! converged because feasible parameter space small
-          call write_termination_case(3)
-          call write_best_final()
-       end if
-       call set_optional()
-       ! -----------------------
-       ! Abort subroutine
-       ! -----------------------
-       return
-    end if
+    
     !
     !  begin the main loop 
     mainloop:do while (icall .lt. maxn)
+       ! read 1st namelist with allocated/scalar variables
+       open(999, file=isrestart_file, status='old', action='read', delim='QUOTE')
+       read(999, nml=restartnml1)
+       read(999, restartnml2)
+       close(999)       
+       !
        nloop = nloop + 1
        !
        if (iprint .lt. 2) then
@@ -1173,12 +1265,12 @@ CONTAINS
        call parstt(x(1:npt1,1:nn),bound,peps,maskpara,xnstd,gnrng,ipcnvg)
        !
        ! write currently best x and xf to temporal file
-       if (present(tmp_file)) then
+       if (itmp_file) then
           call write_best_intermediate(.true.)
        end if
        !
        ! write population to file
-       if (present(popul_file)) then
+       if (ipopul_file) then
           call write_population(.true.)
        end if
        !
@@ -1254,6 +1346,12 @@ CONTAINS
           npt1 = ngs1 * npg
           call comp(ngs2,npg,x(1:ngs2*npg,1:nn),xf(1:ngs2*npg),xtmp(1:ngs2*npg,1:nn),ftmp(1:ngs2*npg))
        end if
+       !
+       ! write restart
+       open(999, file=isrestart_file, status='unknown', action='write', delim='QUOTE')
+       write(999, restartnml1)
+       write(999, restartnml2)
+       close(999)
     end do mainloop
 
     deallocate(xtmp)
@@ -1270,7 +1368,7 @@ CONTAINS
       logical, intent(in) :: to_file
 
       if (to_file) then
-         open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append',recl=(nn+6)*30)
+         open(999,file=trim(adjustl(istmp_file)), action='write', position='append',recl=(nn+6)*30)
          if (.not. maxit) then
             write(999,*) nloop,icall,ngs1,bestf_tmp,worstf,gnrng, (bestx(jj),jj=1,nn)
          else
@@ -1317,7 +1415,7 @@ CONTAINS
 
       if (to_file) then
          write(format_str2,'(A13,I3,A9)') '(I4, E22.14, ',nn,'(E22.14))'
-         open(unit=999,file=trim(adjustl(popul_file)), action='write', position='append',recl=(nn+2)*30)
+         open(unit=999,file=trim(adjustl(ispopul_file)), action='write', position='append',recl=(nn+2)*30)
          if (.not. maxit) then
             do ii = 1, npt1
                write(999,*) nloop, xf(ii), (x(ii,jj),jj=1,nn)
@@ -1770,81 +1868,81 @@ CONTAINS
     if ((fnew .gt. fw) .or. (.not. ieee_is_finite(fnew))) then
 #else
 #ifdef GFORTRAN41
-    if ((fnew .gt. fw) .or. (fnew .ne. fnew)) then
-#else
-    if ((fnew .gt. fw) .or. isnan(fnew)) then
-#endif
-#endif
-       do j = 1, m
-          if (maskpara(j)) then
-             snew(j) = ce(j) - beta * (ce(j) - sw(j))
-          else
-             snew(j) = s(1,j)
-          end if
-       end do
-       !
-       ! compute the function value of the contracted point
-       if (idot) write(output_unit,'(A1)') '.'
-       if (.not. maxit) then
-          fnew = functn(snew)
-          icall = icall + 1_i8
-          history(icall) = min(history(icall-1),fnew)
-       else
-          fnew = -functn(snew)
-          icall = icall + 1_i8
-          history(icall) = max(history(icall-1),-fnew)
-       end if
-       !
-       ! maximum numbers of function evaluations reached
-       if (icall .ge. maxn) return
-       !
-       ! compare fnew to the worst value fw
-       ! if fnew is less than or equal to fw, then accept the point and return
-#ifndef GFORTRAN
-       if ((fnew .gt. fw) .or. (.not. ieee_is_finite(fnew))) then
-#else
-#ifdef GFORTRAN41
        if ((fnew .gt. fw) .or. (fnew .ne. fnew)) then
 #else
-       if ((fnew .gt. fw) .or. isnan(fnew)) then
+          if ((fnew .gt. fw) .or. isnan(fnew)) then
 #endif
 #endif
-          !
-          ! if both reflection and contraction fail, choose another point
-          ! according to a normal distribution with best point of the sub-complex
-          ! as mean and standard deviation of the population as std
-          call getpnt(2,bl(1:nn),bu(1:nn),xnstd(1:nn),sb(1:nn),maskpara(1:nn),save_state_gauss,snew)
-          !
-          ! compute the function value at the random point
-          if (idot) write(output_unit,'(A1)') '.'
-          if (.not. maxit) then
-             fnew = functn(snew)
-             icall = icall + 1_i8
-             history(icall) = min(history(icall-1),fnew)
-          else
-             fnew = -functn(snew)
-             icall = icall + 1_i8
-             history(icall) = max(history(icall-1),-fnew)
-          end if
-          !
-          ! maximum numbers of function evaluations reached
-          if (icall .ge. maxn) return
-          !
-          ! successful mutation
-          ! replace the worst point by the new point
-          do j = 1, m
-             s(n,j) = snew(j)
-          end do
-          sf(n) = fnew
-       end if
-    end if
-    !
-    ! replace the worst point by the new point
-    do j = 1, m
-       s(n,j) = snew(j)
-    end do
-    sf(n) = fnew
+             do j = 1, m
+                if (maskpara(j)) then
+                   snew(j) = ce(j) - beta * (ce(j) - sw(j))
+                else
+                   snew(j) = s(1,j)
+                end if
+             end do
+             !
+             ! compute the function value of the contracted point
+             if (idot) write(output_unit,'(A1)') '.'
+             if (.not. maxit) then
+                fnew = functn(snew)
+                icall = icall + 1_i8
+                history(icall) = min(history(icall-1),fnew)
+             else
+                fnew = -functn(snew)
+                icall = icall + 1_i8
+                history(icall) = max(history(icall-1),-fnew)
+             end if
+             !
+             ! maximum numbers of function evaluations reached
+             if (icall .ge. maxn) return
+             !
+             ! compare fnew to the worst value fw
+             ! if fnew is less than or equal to fw, then accept the point and return
+#ifndef GFORTRAN
+             if ((fnew .gt. fw) .or. (.not. ieee_is_finite(fnew))) then
+#else
+#ifdef GFORTRAN41
+                if ((fnew .gt. fw) .or. (fnew .ne. fnew)) then
+#else
+                   if ((fnew .gt. fw) .or. isnan(fnew)) then
+#endif
+#endif
+                      !
+                      ! if both reflection and contraction fail, choose another point
+                      ! according to a normal distribution with best point of the sub-complex
+                      ! as mean and standard deviation of the population as std
+                      call getpnt(2,bl(1:nn),bu(1:nn),xnstd(1:nn),sb(1:nn),maskpara(1:nn),save_state_gauss,snew)
+                      !
+                      ! compute the function value at the random point
+                      if (idot) write(output_unit,'(A1)') '.'
+                      if (.not. maxit) then
+                         fnew = functn(snew)
+                         icall = icall + 1_i8
+                         history(icall) = min(history(icall-1),fnew)
+                      else
+                         fnew = -functn(snew)
+                         icall = icall + 1_i8
+                         history(icall) = max(history(icall-1),-fnew)
+                      end if
+                      !
+                      ! maximum numbers of function evaluations reached
+                      if (icall .ge. maxn) return
+                      !
+                      ! successful mutation
+                      ! replace the worst point by the new point
+                      do j = 1, m
+                         s(n,j) = snew(j)
+                      end do
+                      sf(n) = fnew
+                   end if
+                end if
+                !
+                ! replace the worst point by the new point
+                do j = 1, m
+                   s(n,j) = snew(j)
+                end do
+                sf(n) = fnew
 
-  end subroutine cce
+              end subroutine cce
 
-END MODULE mo_sce
+            END MODULE mo_sce
