@@ -44,6 +44,10 @@ MODULE mo_mcmc
   !>                 This sampling is performed in two steps, i.e. the burn-in phase for adjusting 
   !>                 model dependent parameters for the second step which is the proper 
   !>                 sampling using the Metropolis Hastings Algorithm.\n\n
+  !>
+  !>                 This sampler does not change the best parameter set, i.e.
+  !>                 it cannot be used as an optimiser.\n
+  !>                 However, the serial and the parallel version give therefore the bitwise same results.
   !
   !>     <b>1. BURN IN PHASE: FIND THE OPTIMAL STEP SIZE </b>\n\n
   !
@@ -566,6 +570,7 @@ CONTAINS
     REAL(DP),DIMENSION(size(para,1))               :: paraold           ! old parameter set
     REAL(DP),DIMENSION(size(para,1))               :: paranew           ! new parameter set
     REAL(DP),DIMENSION(size(para,1))               :: parabest          ! best parameter set overall
+    REAL(DP),DIMENSION(size(para,1))               :: initial_paraset_mcmc ! best parameterset found in burn-in
     REAL(DP)                                       :: likeliold         ! likelihood of old parameter set
     REAL(DP)                                       :: likelinew         ! likelihood of new parameter set
     REAL(DP)                                       :: likelibest        ! likelihood of best parameter set overall
@@ -895,6 +900,11 @@ CONTAINS
     ! (2) MCMC
     !----------------------------------------------------------------------
 
+    ! just to be sure that all chains start with same initial parameter set
+    ! in both parallel and sequential mode
+    ! (although in between a new parabest will be found in chains)
+    initial_paraset_mcmc = parabest
+
     if (printflag) then
        write(*,*) ''
        write(*,*) '--------------------------------------------------'
@@ -933,7 +943,7 @@ CONTAINS
        parallelchain: do chain=1, chains
 
           if (Ipos(chain)+Ineg(chain) .eq. 0_i4) then
-             paraold = parabest
+             paraold = initial_paraset_mcmc ! = parabest of burn-in
           else
              paraold = mcmc_paras_3d(Ipos(chain)+Ineg(chain),:,chain)
           end if
@@ -977,16 +987,20 @@ CONTAINS
                    end if
                 end if
 
-                if (likelinew .gt. likelibest) then
-                   parabest   = paranew
-                   likelibest = likelinew
-                   if (printflag) then
-                      write(*,*) ''
-                      write(*,*) 'best para changed: ',paranew
-                      write(*,*) 'likelihood new:    ',likelinew
-                      write(*,*) ''
-                   end if
-                end if
+                ! If the following code block is not commented
+                ! then mcmc can be used as an optimiser as well
+                ! and not 'only' for determination of parameter uncertainties.
+                ! However, then the serial and the parallel versions give different results.
+                ! if (likelinew .gt. likelibest) then
+                !    parabest   = paranew
+                !    likelibest = likelinew
+                !    if (printflag) then
+                !       write(*,*) ''
+                !       write(*,*) 'best para changed: ',paranew
+                !       write(*,*) 'likelihood new:    ',likelinew
+                !       write(*,*) ''
+                !    end if
+                ! end if
 
              else
 
@@ -1151,7 +1165,7 @@ CONTAINS
        mcmc_paras, burnin_paras,                 &   ! obligatory OUT
        seed_in, printflag_in, maskpara_in,       &   ! optional IN
        tmp_file,                                 &   ! optional IN : filename for temporal output of 
-                                !                                             !               MCMC parasets
+       !                                             !               MCMC parasets
        loglike_in,                               &   ! optional IN : true if loglikelihood is given
        ParaSelectMode_in,                        &   ! optional IN : (=1) half, (=2) one, (=3) all
        iter_burnin_in,                           &   ! optional IN : markov length of (1) burn-in
@@ -1255,6 +1269,7 @@ CONTAINS
     REAL(DP),DIMENSION(size(para,1))               :: paraold           ! old parameter set
     REAL(DP),DIMENSION(size(para,1))               :: paranew           ! new parameter set
     REAL(DP),DIMENSION(size(para,1))               :: parabest          ! best parameter set overall
+    REAL(DP),DIMENSION(size(para,1))               :: initial_paraset_mcmc ! best parameterset found in burn-in
     REAL(DP)                                       :: stddev_data       ! approximated stddev of data for best paraset found
     LOGICAL                                        :: parabestChanged   ! if better parameter set was found during burn-in
     REAL(DP)                                       :: likeliold         ! likelihood of old parameter set
@@ -1617,6 +1632,11 @@ CONTAINS
     ! (2) MCMC
     !----------------------------------------------------------------------
 
+    ! just to be sure that all chains start with same initial parameter set
+    ! in both parallel and sequential mode
+    ! (although in between a new parabest will be found in chains)
+    initial_paraset_mcmc = parabest
+
     if (printflag) then
        write(*,*) ''
        write(*,*) '--------------------------------------------------'
@@ -1655,7 +1675,7 @@ CONTAINS
        parallelchain: do chain=1, chains
 
           if (Ipos(chain)+Ineg(chain) .eq. 0_i4) then
-             paraold = parabest
+             paraold = initial_paraset_mcmc ! = parabest of burn-in
           else
              paraold = mcmc_paras_3d(Ipos(chain)+Ineg(chain),:,chain)
           end if
