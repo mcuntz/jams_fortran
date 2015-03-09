@@ -1,7 +1,7 @@
 program test_utils
 
   use mo_kind,  only: sp, dp, i4
-  use mo_utils, only: eq, ge, le, ne, swap, locate
+  use mo_utils, only: eq, ge, le, ne, swap, locate, is_finite, is_nan, is_normal, special_value
 
   implicit none
 
@@ -27,7 +27,7 @@ program test_utils
   logical  :: compare
 
   isgood = .true.
-  
+
   ! -----------------------------------------------------
   ! DOUBLE PRECISON
   ! -----------------------------------------------------
@@ -232,7 +232,7 @@ program test_utils
   call swap(dat2, 1, nn)
   call swap(dat2, nn, 1)
   isgood = isgood .and. all(eq(dat2,dat3))
-  
+
   call random_number(sat1)
   call random_number(sat2)
   sat3 = sat1
@@ -279,6 +279,83 @@ program test_utils
   s5 = (/ 0.1_sp, 5.5_sp, 10.1_sp, 50.5_sp, 200.1_sp /)
   ii5 = locate(sat1, s5)
   isgood = isgood .and. all(ii5 == (/0, 5, 10, 50, 100/))
+
+  ! -----------------------------------------------------
+  ! is_finite, is_nan, is_normal
+
+  call random_number(dat1)
+  isgood = isgood .and. all(is_finite(dat1))
+  isgood = isgood .and. all(.not. is_nan(dat1))
+  isgood = isgood .and. all(is_normal(dat1))
+  ! NaN
+  dat1(1) = 0.0_dp
+  dat1(1) = dat1(1)/dat1(1)
+  isgood = isgood .and. any(is_nan(dat1))
+  isgood = isgood .and. is_nan(dat1(1))
+  ! Inf
+  dat1(2) = huge(1.0_dp)
+  dat1(2) = dat1(2)*dat1(2)
+  isgood = isgood .and. any(.not. is_finite(dat1))
+  isgood = isgood .and. (.not. is_finite(dat1(2)))
+  ! Both
+  isgood = isgood .and. (.not. all(is_normal(dat1)))
+  isgood = isgood .and. (.not. any(is_normal(dat1(1:2))))
+
+  call random_number(sat1)
+  isgood = isgood .and. all(is_finite(sat1))
+  isgood = isgood .and. all(.not. is_nan(sat1))
+  isgood = isgood .and. all(is_normal(sat1))
+  ! NaN
+  sat1(1) = 0.0_sp
+  sat1(1) = sat1(1)/sat1(1)
+  isgood = isgood .and. any(is_nan(sat1))
+  isgood = isgood .and. is_nan(sat1(1))
+  ! Inf
+  sat1(2) = huge(1.0_sp)
+  sat1(2) = sat1(2)*sat1(2)
+  isgood = isgood .and. any(.not. is_finite(sat1))
+  isgood = isgood .and. (.not. is_finite(sat1(2)))
+  ! Both
+  isgood = isgood .and. (.not. all(is_normal(sat1)))
+  isgood = isgood .and. (.not. any(is_normal(sat1(1:2))))
+
+  ! -----------------------------------------------------
+  ! special_value
+
+  isgood = isgood .and. is_nan(special_value(1.0_dp, 'IEEE_SIGNALING_NAN'))
+  isgood = isgood .and. is_nan(special_value(1.0_dp, 'IEEE_QUIET_NAN'))
+  isgood = isgood .and. (.not. is_finite(special_value(1.0_dp, 'IEEE_POSITIVE_INF')))
+  isgood = isgood .and. (.not. is_finite(special_value(1.0_dp, 'IEEE_NEGATIVE_INF')))
+  isgood = isgood .and. is_finite(special_value(1.0_dp, 'IEEE_POSITIVE_DENORMAL'))
+  isgood = isgood .and. is_finite(special_value(1.0_dp, 'IEEE_NEGATIVE_DENORMAL'))
+  isgood = isgood .and. is_finite(special_value(1.0_dp, 'IEEE_POSITIVE_NORMAL'))
+  isgood = isgood .and. is_finite(special_value(1.0_dp, 'IEEE_NEGATIVE_NORMAL'))
+  isgood = isgood .and. is_finite(special_value(1.0_dp, 'IEEE_POSITIVE_ZERO'))
+  isgood = isgood .and. is_finite(special_value(1.0_dp, 'IEEE_NEGATIVE_ZERO'))
+  isgood = isgood .and. (special_value(1.0_dp, 'IEEE_NEGATIVE_INF') == -special_value(1.0_dp, 'IEEE_POSITIVE_INF'))
+  isgood = isgood .and. (special_value(1.0_dp, 'IEEE_NEGATIVE_DENORMAL') == -special_value(1.0_dp, 'IEEE_POSITIVE_DENORMAL'))
+  isgood = isgood .and. (special_value(1.0_dp, 'IEEE_NEGATIVE_NORMAL') == -special_value(1.0_dp, 'IEEE_POSITIVE_NORMAL'))
+  isgood = isgood .and. (special_value(1.0_dp, 'IEEE_NEGATIVE_ZERO') == -special_value(1.0_dp, 'IEEE_POSITIVE_ZERO'))
+  isgood = isgood .and. (abs(special_value(1.0_dp, 'IEEE_POSITIVE_ZERO')) == 0.0_dp)
+  isgood = isgood .and. (abs(special_value(1.0_dp, 'IEEE_NEGATIVE_ZERO')) == 0.0_dp)
+
+  isgood = isgood .and. is_nan(special_value(1.0_sp, 'IEEE_SIGNALING_NAN'))
+  isgood = isgood .and. is_nan(special_value(1.0_sp, 'IEEE_QUIET_NAN'))
+  isgood = isgood .and. (.not. is_finite(special_value(1.0_sp, 'IEEE_POSITIVE_INF')))
+  isgood = isgood .and. (.not. is_finite(special_value(1.0_sp, 'IEEE_NEGATIVE_INF')))
+  isgood = isgood .and. is_finite(special_value(1.0_sp, 'IEEE_POSITIVE_DENORMAL'))
+  isgood = isgood .and. is_finite(special_value(1.0_sp, 'IEEE_NEGATIVE_DENORMAL'))
+  isgood = isgood .and. is_finite(special_value(1.0_sp, 'IEEE_POSITIVE_NORMAL'))
+  isgood = isgood .and. is_finite(special_value(1.0_sp, 'IEEE_NEGATIVE_NORMAL'))
+  isgood = isgood .and. is_finite(special_value(1.0_sp, 'IEEE_POSITIVE_ZERO'))
+  isgood = isgood .and. is_finite(special_value(1.0_sp, 'IEEE_NEGATIVE_ZERO'))
+  isgood = isgood .and. (special_value(1.0_sp, 'IEEE_NEGATIVE_INF') == -special_value(1.0_sp, 'IEEE_POSITIVE_INF'))
+  isgood = isgood .and. (special_value(1.0_sp, 'IEEE_NEGATIVE_DENORMAL') == -special_value(1.0_sp, 'IEEE_POSITIVE_DENORMAL'))
+  isgood = isgood .and. (special_value(1.0_sp, 'IEEE_NEGATIVE_NORMAL') == -special_value(1.0_sp, 'IEEE_POSITIVE_NORMAL'))
+  isgood = isgood .and. (special_value(1.0_sp, 'IEEE_NEGATIVE_ZERO') == -special_value(1.0_sp, 'IEEE_POSITIVE_ZERO'))
+  isgood = isgood .and. (abs(special_value(1.0_sp, 'IEEE_POSITIVE_ZERO')) == 0.0_sp)
+  isgood = isgood .and. (abs(special_value(1.0_sp, 'IEEE_NEGATIVE_ZERO')) == 0.0_sp)
+
 
   write(*,*) ''
   if (isgood) then
