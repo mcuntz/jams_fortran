@@ -196,6 +196,7 @@ MODULE mo_sce
   !                  Matthias Cuntz,              May 2014 - popul_file_append
   !                  Matthias Cuntz,              May 2014 - sort with NaNs
   !                  Matthias Cuntz, Juliane Mai  Feb 2015 - restart
+  !                  Matthias Cuntz               Mar 2015 - use is_finite and special_value from mo_utils
 
   ! ------------------------------------------------------------------
 
@@ -227,9 +228,7 @@ CONTAINS
     use mo_xor4096,      only: get_timeseed, n_save_state, xor4096, xor4096g
     !$ use omp_lib,      only: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
     use iso_fortran_env, only: output_unit, error_unit
-#ifndef GFORTRAN
-    use, intrinsic :: ieee_arithmetic, only: ieee_is_finite, ieee_value, IEEE_QUIET_NAN
-#endif
+    use mo_utils,        only: is_finite, special_value
 
     implicit none
     ! 
@@ -401,9 +400,6 @@ CONTAINS
     logical                                          :: ipopul_file_append
     integer(i4)                                      :: nonan         ! # of non-NaN in history_tmp
     real(dp), dimension(:), allocatable              :: htmp          ! tmp storage for history_tmp
-#ifdef GFORTRAN
-    real(dp)                                         :: NaN           ! NaN value
-#endif
 
     namelist /restartnml1/ &
          bestx, bl, bu, maxn, maxit, kstop, pcento, peps, ngs, npg, nps, nspl, &
@@ -807,70 +803,20 @@ CONTAINS
           large = maxval(xf(1:npt1))
           large = merge(1.1_dp*large, 0.9_dp*large, large>0._dp)
        endif
-#ifndef GFORTRAN
-       xf(1:npt1) = merge(xf(1:npt1), large, ieee_is_finite(xf(1:npt1))) ! NaN and Infinite
+       xf(1:npt1) = merge(xf(1:npt1), large, is_finite(xf(1:npt1))) ! NaN and Infinite
        ! sort does not work with NaNs
        ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
-       nonan = size(pack(history_tmp(1:npt1), mask=ieee_is_finite(history_tmp(1:npt1))))
+       nonan = size(pack(history_tmp(1:npt1), mask=is_finite(history_tmp(1:npt1))))
        if (nonan /= npt1) then
           allocate(htmp(nonan))
-          htmp(1:nonan) = pack(history_tmp(1:npt1), mask=ieee_is_finite(history_tmp(1:npt1)))
+          htmp(1:nonan) = pack(history_tmp(1:npt1), mask=is_finite(history_tmp(1:npt1)))
           call sort(htmp(1:nonan))
           history_tmp(1:nonan) = htmp(1:nonan)
-          history_tmp(nonan+1:npt1) = ieee_value(1.0_dp, IEEE_QUIET_NAN)
+          history_tmp(nonan+1:npt1) = special_value(1.0_dp, 'IEEE_QUIET_NAN')
           deallocate(htmp)
        else
           call sort(history_tmp(1:npt1))
        endif
-#else
-#ifdef GFORTRAN41
-       xf(1:npt1) = merge(xf(1:npt1), large, xf(1:npt1) == xf(1:npt1))   ! only NaN
-       ! sort does not work with NaNs
-       ! -> get the NaN value
-       ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
-       nonan = size(pack(history_tmp(1:npt1), mask=(xf(1:npt1)==xf(1:npt1))))
-       if (nonan /= npt1) then
-          NaN = large
-          do ii=1, npt1
-             if (xf(ii) /= xf(ii)) then
-                NaN = xf(ii)
-                exit
-             endif
-          end do
-          allocate(htmp(nonan))
-          htmp(1:nonan) = pack(history_tmp(1:npt1), mask=(xf(1:npt1)==xf(1:npt1)))
-          call sort(htmp(1:nonan))
-          history_tmp(1:nonan) = htmp(1:nonan)
-          history_tmp(nonan+1:npt1) = NaN
-          deallocate(htmp)
-       else
-          call sort(history_tmp(1:npt1))
-       endif
-#else
-       xf(1:npt1) = merge(xf(1:npt1), large, .not. isnan(xf(1:npt1)))   ! only NaN
-       ! sort does not work with NaNs
-       ! -> get the NaN value
-       ! -> get history_tmp w/o NaN, sort it, and set the rest to NaN
-       nonan = size(pack(history_tmp(1:npt1), mask=(.not. isnan(xf(1:npt1)))))
-       if (nonan /= npt1) then
-          NaN = large
-          do ii=1, npt1
-             if (isnan(xf(ii))) then
-                NaN = xf(ii)
-                exit
-             endif
-          end do
-          allocate(htmp(nonan))
-          htmp(1:nonan) = pack(history_tmp(1:npt1), mask=(.not. isnan(xf(1:npt1))))
-          call sort(htmp(1:nonan))
-          history_tmp(1:nonan) = htmp(1:nonan)
-          history_tmp(nonan+1:npt1) = NaN
-          deallocate(htmp)
-       else
-          call sort(history_tmp(1:npt1))
-       endif
-#endif
-#endif
        call sort_matrix(x(1:npt1,1:nn),xf(1:npt1))
        !
        !  record the best and worst points
@@ -1084,15 +1030,7 @@ CONTAINS
                 end do
                 !
                 !  sort the points
-#ifndef GFORTRAN
-                cf(1:npg) = merge(cf(1:npg), large, ieee_is_finite(cf(1:npg))) ! NaN and Infinite
-#else
-#ifdef GFORTRAN41
-                cf(1:npg) = merge(cf(1:npg), large, cf(1:npg) == cf(1:npg))   ! only NaN
-#else
-                cf(1:npg) = merge(cf(1:npg), large, .not. isnan(cf(1:npg)))   ! only NaN
-#endif
-#endif
+                cf(1:npg) = merge(cf(1:npg), large, is_finite(cf(1:npg))) ! NaN and Infinite
                 call sort_matrix(cx(1:npg,1:nn),cf(1:npg))
                 !
                 ! !  if maximum number of runs exceeded, break out of the loop
@@ -1213,15 +1151,7 @@ CONTAINS
                 end do
                 !
                 !  sort the points
-#ifndef GFORTRAN
-                cf(1:npg) = merge(cf(1:npg), large, ieee_is_finite(cf(1:npg))) ! NaN and Infinite
-#else
-#ifdef GFORTRAN41
-                cf(1:npg) = merge(cf(1:npg), large, cf(1:npg) == cf(1:npg))   ! only NaN
-#else
-                cf(1:npg) = merge(cf(1:npg), large, .not. isnan(cf(1:npg)))   ! only NaN
-#endif
-#endif
+                cf(1:npg) = merge(cf(1:npg), large, is_finite(cf(1:npg))) ! NaN and Infinite
                 call sort_matrix(cx(1:npg,1:nn),cf(1:npg))
                 !
                 !  if maximum number of runs exceeded, break out of the loop
@@ -1756,9 +1686,7 @@ CONTAINS
     use mo_kind,         only: i4, i8, dp
     use mo_xor4096,      only: n_save_state
     use iso_fortran_env, only: output_unit
-#ifndef GFORTRAN
-    use ieee_arithmetic, only: ieee_is_finite
-#endif
+    use mo_utils,        only: is_finite
 
     implicit none    
 
@@ -1864,15 +1792,7 @@ CONTAINS
     !
     ! compare fnew with the worst function value fw
     ! fnew is greater than fw, so try a contraction step
-#ifndef GFORTRAN
-    if ((fnew .gt. fw) .or. (.not. ieee_is_finite(fnew))) then
-#else
-#ifdef GFORTRAN41
-       if ((fnew .gt. fw) .or. (fnew .ne. fnew)) then
-#else
-          if ((fnew .gt. fw) .or. isnan(fnew)) then
-#endif
-#endif
+    if ((fnew .gt. fw) .or. (.not. is_finite(fnew))) then
              do j = 1, m
                 if (maskpara(j)) then
                    snew(j) = ce(j) - beta * (ce(j) - sw(j))
@@ -1898,15 +1818,7 @@ CONTAINS
              !
              ! compare fnew to the worst value fw
              ! if fnew is less than or equal to fw, then accept the point and return
-#ifndef GFORTRAN
-             if ((fnew .gt. fw) .or. (.not. ieee_is_finite(fnew))) then
-#else
-#ifdef GFORTRAN41
-                if ((fnew .gt. fw) .or. (fnew .ne. fnew)) then
-#else
-                   if ((fnew .gt. fw) .or. isnan(fnew)) then
-#endif
-#endif
+             if ((fnew .gt. fw) .or. (.not. is_finite(fnew))) then
                       !
                       ! if both reflection and contraction fail, choose another point
                       ! according to a normal distribution with best point of the sub-complex
