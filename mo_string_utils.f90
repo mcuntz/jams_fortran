@@ -44,6 +44,10 @@ MODULE mo_string_utils
   PUBLIC :: separator     ! Format string: '-----...-----'
   PUBLIC :: tolower       ! Conversion   : 'ABCXYZ' -> 'abcxyz'
   PUBLIC :: toupper       ! Conversion   : 'abcxyz' -> 'ABCXYZ'
+  ! public :: numarray2str
+  public :: startsWith
+  public :: equalStrings
+  public :: splitString
 
   ! ------------------------------------------------------------------
 
@@ -113,6 +117,59 @@ MODULE mo_string_utils
   INTERFACE num2str
      MODULE PROCEDURE i42str, i82str, sp2str, dp2str, log2str
   END INTERFACE num2str
+
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         numarray2str
+
+  !     PURPOSE
+  !>        \brief Convert to string.
+
+  !>        \details Convert a array of numbers or logicals to a string.
+
+  !     CALLING SEQUENCE
+  !         str = numarray2str(num)
+
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4/i8)/real(sp/dp)/logical :: num(:)"    Array of numbers or logicals
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+  
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !>        \return character(len=X) :: str &mdash; String of formatted input number or logical\n
+  !
+
+  !     RESTRICTIONS
+  !        Unknown
+
+  !     EXAMPLE
+  !        None
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !>        \date Dec 2011
+
+  INTERFACE numarray2str
+     MODULE PROCEDURE i4array2str
+  END INTERFACE numarray2str
 
   ! ------------------------------------------------------------------
 
@@ -604,5 +661,293 @@ CONTAINS
     END DO
 
   END FUNCTION toupper
+
+
+  function str2num(string) result(out)
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         str2num
+
+  !     PURPOSE
+  !         \brief Converts string into an array of its numerical representation
+
+  !         \details Converts string into an integer array of the numerical values of the letters
+
+  !     CALLING SEQUENCE
+  !         str2num = startsWith(string)
+
+  !     INTENT(IN)
+  !         \param[in] "character(len=*) :: string"    String
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !         \return integer  :: out(:)
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         None
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         \author David Schaefer
+  !         \date Mar 2015
+    
+    implicit none
+
+    character(len=*), intent(in)       :: string
+    integer(i4), allocatable           :: out(:)
+    integer(i4)                        :: i  
+
+    if (allocated(out)) deallocate(out)
+    allocate(out(len(string)))
+
+    do i=1,len(string)
+       out(i) = ichar(string(i:i))
+    end do
+
+  end function str2num
+
+
+  function startsWith(string,start)
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         startsWith
+
+  !     PURPOSE
+  !         \brief Checks if string starts with character(s)
+
+  !         \details Returns true if string starts with characters, flase otherwise
+
+  !     CALLING SEQUENCE
+  !         starts_with = startsWith(string,start)
+
+  !     INTENT(IN)
+  !         \param[in] "character(len=*) :: string"    String
+  !         \param[in] "character(len=*) :: start"    String
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !         \return logical
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         None
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         \author David Schaefer
+  !         \date Mar 2015
+
+    implicit none
+
+    character(len=*), intent(in)     :: string, start
+    integer(i4), allocatable         :: string_array(:), start_array(:)
+    logical                          :: startsWith
+
+    string_array = str2num(string)
+    start_array = str2num(start) 
+
+    startsWith = .false.
+    if (all(string_array(1:1+size(start_array)-1) .eq. start_array)) then 
+       startsWith = .true.
+    end if
+  end function startsWith
+
+  function equalStrings(string1,string2)
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         equalStrings
+
+  !     PURPOSE
+  !         \brief Checks if two string are equal
+
+  !         \details Returns true if the given string arguments are equal
+
+  !     CALLING SEQUENCE
+  !         isequal = equalString(string1,string2)
+
+  !     INTENT(IN)
+  !         \param[in] "character(len=*) :: string1"    String
+  !         \param[in] "character(len=*) :: string2"    String
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !         \return logical
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         None
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         \author David Schaefer
+  !         \date Mar 2015
+
+    implicit none
+
+    character(len=*), intent(in)     :: string1, string2
+    integer(i4),      allocatable    :: array1(:), array2(:)
+    integer(i4)                      :: i
+    logical                          :: equalStrings
+
+    array1 = str2num(trim(string1))
+    array2 = str2num(trim(string2))
+    equalStrings = .false.
+
+    if (size(array1) .eq. size(array2)) then
+       equalStrings = .true.
+       do i=1,size(array1)
+          if (array1(i) .ne. array2(i)) then
+             equalStrings = .false.
+             exit 
+          end if
+       end do
+    end if
+
+  end function equalStrings
+
+  function splitString(string,delim) result(out)
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         splitString
+
+  !     PURPOSE
+  !         \brief split string at delimiter
+
+  !         \details Split string at delimiter an return an array of strings
+
+  !     CALLING SEQUENCE
+  !         string_parts = splitString(string,delim)
+
+  !     INTENT(IN)
+  !         \param[in] "character(len=*) :: string"    String
+  !         \param[in] "character(len=*) :: delim"     String
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !         \return character(len=245) :: out(:)
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         None
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         \author David Schaefer
+  !         \date Mar 2015
+
+    use mo_append, only : append    
+    implicit none
+    
+    character(len=*),   intent(in)        :: string
+    character(len=*),   intent(in)        :: delim
+    character(len=256), allocatable       :: out(:)
+    integer(i4),        allocatable       :: string_array(:), delim_array(:)
+    integer(i4)                           :: i, start
+    !
+    if (allocated(out)) deallocate(out)
+    string_array = str2num(string//delim)
+    delim_array = str2num(delim)
+    start = 1
+
+    do i=1, size(string_array) - size(delim_array) + 1
+       if (all(string_array(i:i+size(delim_array)-1) .eq. delim_array)) then
+          call append(out, numarray2str(string_array(start:i-1)))
+          start = i + size(delim_array)
+       end if
+    end do
+    !
+  end function splitString
+
+
+  function i4array2str(arr) result(out)
+
+    integer(i4), intent(in)     :: arr(:)
+    integer(i4)                 :: ii
+    character(len=size(arr))    :: out
+
+    out = " "
+    do ii=1,size(arr)
+       out(ii:ii) = char(arr(ii))
+    end do
+
+  end function i4array2str
+
 
 END MODULE mo_string_utils

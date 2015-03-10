@@ -2,6 +2,7 @@ PROGRAM main
   
   USE mo_kind,   ONLY: i4, i8, dp, sp
   USE mo_string_utils, ONLY: tolower, toupper, separator, num2str, nonull, compress
+  USE mo_string_utils, ONLY: startsWith, equalStrings, splitString
 #ifndef ABSOFT
   USE mo_string_utils, ONLY: DIVIDE_STRING
 #endif
@@ -39,6 +40,38 @@ PROGRAM main
   if (nonull(sundef)) isgood =.false.
   sout = compress('H a      l l o       ')
   if (.not.(lle(trim(sout),'Hallo') .and. lge(trim(sout),'Hallo'))) isgood =.false.
+  ! startsWith
+  if (.not. (startsWith("Thisisatest","T") .and. startsWith("Thisisatest","This"))) isgood = .false.
+  if ((startsWith("Thisisatest","t") .or. startsWith("Thisisatest","test_*"))) isgood = .false.
+  ! equalStrings
+  if (.not. (equalStrings("Thisis","Thisis") .and. equalStrings("test*_<","test*_<"))) isgood = .false.
+  if ((equalStrings("Thisis","THISIS") .or. equalStrings("test*_<","est*_<"))) isgood = .false.
+  ! splitString
+  strArr = splitString('I want to test this routine!', ' ')
+  isgood = isgood .and. (strArr(1) .eq. 'I')
+  isgood = isgood .and. (strArr(2) .eq. 'want')
+  isgood = isgood .and. (strArr(3) .eq. 'to')
+  isgood = isgood .and. (strArr(4) .eq. 'test')
+  isgood = isgood .and. (strArr(5) .eq. 'this')
+  isgood = isgood .and. (strArr(6) .eq. 'routine!')
+  strArr = splitString('I,want,to,test,this,routine!', ',')
+  isgood = isgood .and. (strArr(1) .EQ. 'I')
+  isgood = isgood .and. (strArr(2) .EQ. 'want')
+  isgood = isgood .and. (strArr(3) .EQ. 'to')
+  isgood = isgood .and. (strArr(4) .EQ. 'test')
+  isgood = isgood .and. (strArr(5) .EQ. 'this')
+  isgood = isgood .and. (strArr(6) .EQ. 'routine!')
+  strArr = splitString('w!hat_s-a+bout=-sp.eci,al-chara<cte>rs?', '-')
+  isgood = isgood .and. (strArr(1) .EQ. 'w!hat_s')
+  isgood = isgood .and. (strArr(2) .EQ. 'a+bout=')
+  isgood = isgood .and. (strArr(3) .EQ. 'sp.eci,al')
+  isgood = isgood .and. (strArr(4) .EQ. 'chara<cte>rs?')
+  strArr = splitString('multi_+character_*splits_+should work_+', '_+')
+  isgood = isgood .and. (strArr(1) .EQ. 'multi')
+  isgood = isgood .and. (strArr(2) .EQ. 'character_*splits')
+  isgood = isgood .and. (strArr(3) .EQ. 'should work')
+  isgood = isgood .and. (strArr(4) .EQ. '')
+
 #ifndef ABSOFT
   call DIVIDE_STRING('I want to test this routine!', ' ', strArr)
   isgood = isgood .and. (strArr(1) .EQ. 'I')
