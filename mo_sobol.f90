@@ -3,8 +3,8 @@
 !> \brief Module to generate Sobol sequences.
 
 !> \details This module provides routines to sample n-dimensional Sobol sequeneces.\n 
-!>          The original code was provided by J. Burkhardt who used a code by Bennett Fox. \n
-!>          Burkhardt's code can be downloaded at http://people.sc.fsu.edu/~jburkardt/f_src/f_src.html.
+!>          The original code was provided by J. Burkardt who used a code by Bennett Fox. \n
+!>          Burkardt's code can be downloaded at http://people.sc.fsu.edu/~jburkardt/f_src/f_src.html.
 
 !> \authors Bennett Fox (F77), John Burkardt (F90), Juliane Mai (CHS)
 !> \date May 2013
