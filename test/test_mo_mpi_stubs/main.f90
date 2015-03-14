@@ -179,7 +179,7 @@ program main
       '     Estimated Pi         Error'
     write ( *, '(a)' ) ' '
     write ( *, '(2x,i8,2x,i8,2x,g20.12,2x,g20.12,2x,g20.12)' ) &
-      trial_total, hit_total, pdf_estimate, pi_estimate, pi_error
+         trial_total, hit_total, pdf_estimate, pi_estimate, pi_error
 
   end if
 !
@@ -195,7 +195,12 @@ program main
     write ( *, '(a)' ) '  Normal end of execution.'
   end if
 
-  stop
+  if (pi_error < 0.1_dp) then
+     write(*,*) 'mo_mpi_stubs o.k.'
+  else
+     write(*,*) 'mo_mpi_stubs failed!'
+  endif
+  
 end program main
 
 
