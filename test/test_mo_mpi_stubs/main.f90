@@ -49,14 +49,22 @@ program main
   use mo_kind, only: i4, dp
 
 #ifdef MPI
+#ifdef NAG
+  implicit none
+
+  include "mpif.h"
+#else
   use mpi, only: mpi_init, mpi_success, mpi_finalize, mpi_comm_size, mpi_comm_world, &
        mpi_comm_rank, mpi_reduce, mpi_integer, mpi_sum
+
+  implicit none
+#endif
 #else
   use mo_mpi_stubs, only: mpi_init, mpi_success, mpi_finalize, mpi_comm_size, mpi_comm_world, &
        mpi_comm_rank, mpi_reduce, mpi_integer, mpi_sum
-#endif
 
   implicit none
+#endif
 
   real(dp) :: a = 1.0D+00
   real(dp) :: b = 1.0D+00
@@ -80,11 +88,6 @@ program main
 !
 !  Initialize MPI.
 !
-#ifdef MPI
-  write ( *, '(a)' ) 'Using mpi'
-#else
-  write ( *, '(a)' ) 'Using mo_mpi_stubs'
-#endif
   
   call MPI_Init ( ierr )
 
@@ -107,6 +110,14 @@ program main
 !  The master process sets the value of the parameters,
 !  and broadcasts them.
 !
+  if ( process_rank == master ) then
+#ifdef MPI
+     write ( *, '(a)' ) 'Using mpi'
+#else
+     write ( *, '(a)' ) 'Using mo_mpi_stubs'
+#endif
+  endif
+
   if ( process_rank == master ) then
     write ( *, '(a)' ) ' '
     write ( *, '(a)' ) 'BUFFON_LAPLACE - Master process:'
@@ -181,6 +192,12 @@ program main
     write ( *, '(2x,i8,2x,i8,2x,g20.12,2x,g20.12,2x,g20.12)' ) &
          trial_total, hit_total, pdf_estimate, pi_estimate, pi_error
 
+    if (pi_error < 0.1_dp) then
+       write(*,*) 'mo_mpi_stubs o.k.'
+    else
+       write(*,*) 'mo_mpi_stubs failed!'
+    endif
+ 
   end if
 !
 !  Terminate MPI.
@@ -194,13 +211,7 @@ program main
     write ( *, '(a)' ) 'BUFFON_LAPLACE - Master process:'
     write ( *, '(a)' ) '  Normal end of execution.'
   end if
-
-  if (pi_error < 0.1_dp) then
-     write(*,*) 'mo_mpi_stubs o.k.'
-  else
-     write(*,*) 'mo_mpi_stubs failed!'
-  endif
-  
+ 
 end program main
 
 
