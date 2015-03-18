@@ -93,7 +93,7 @@ MODULE mo_nrutil
   END INTERFACE cumsum
 
   INTERFACE diagadd
-     MODULE PROCEDURE diagadd_rv,diagadd_r
+     MODULE PROCEDURE diagadd_rvsp,diagadd_rsp,diagadd_rvdp,diagadd_rdp
   END INTERFACE diagadd
   INTERFACE diagmult
      MODULE PROCEDURE diagmult_rvsp,diagmult_rsp, diagmult_rvdp,diagmult_rdp
@@ -1450,17 +1450,17 @@ CONTAINS
     end do
   END SUBROUTINE scatter_max_d
   !BL
-  SUBROUTINE diagadd_rv(mat,diag)
+  SUBROUTINE diagadd_rvsp(mat,diag)
     REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: mat
     REAL(SP), DIMENSION(:), INTENT(IN) :: diag
     INTEGER(I4) :: j,n
-    n = assert_eq2(size(diag),min(size(mat,1),size(mat,2)),'diagadd_rv')
+    n = assert_eq2(size(diag),min(size(mat,1),size(mat,2)),'diagadd_rvsp')
     do j=1,n
        mat(j,j)=mat(j,j)+diag(j)
     end do
-  END SUBROUTINE diagadd_rv
+  END SUBROUTINE diagadd_rvsp
   !BL
-  SUBROUTINE diagadd_r(mat,diag)
+  SUBROUTINE diagadd_rsp(mat,diag)
     REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: mat
     REAL(SP), INTENT(IN) :: diag
     INTEGER(I4) :: j,n
@@ -1468,7 +1468,27 @@ CONTAINS
     do j=1,n
        mat(j,j)=mat(j,j)+diag
     end do
-  END SUBROUTINE diagadd_r
+  END SUBROUTINE diagadd_rsp
+  !BL
+  SUBROUTINE diagadd_rvdp(mat,diag)
+    REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: mat
+    REAL(DP), DIMENSION(:), INTENT(IN) :: diag
+    INTEGER(I4) :: j,n
+    n = assert_eq2(size(diag),min(size(mat,1),size(mat,2)),'diagadd_rvdp')
+    do j=1,n
+       mat(j,j)=mat(j,j)+diag(j)
+    end do
+  END SUBROUTINE diagadd_rvdp
+  !BL
+  SUBROUTINE diagadd_rdp(mat,diag)
+    REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: mat
+    REAL(DP), INTENT(IN) :: diag
+    INTEGER(I4) :: j,n
+    n = min(size(mat,1),size(mat,2))
+    do j=1,n
+       mat(j,j)=mat(j,j)+diag
+    end do
+  END SUBROUTINE diagadd_rdp
   !BL
   SUBROUTINE diagmult_rvsp(mat,diag)
     REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: mat

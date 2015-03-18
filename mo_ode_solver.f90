@@ -9,7 +9,7 @@
 !> adaptive stepsize control.
 
 !> \authors Giovanni Dalmasso, Sebastian Mueller
-!> \date Jul 2012
+!> \date Mar 2015
 module mo_ode_solver
 
     ! This module provides a set of iterative methods for the approximation of solutions
@@ -21,6 +21,7 @@ module mo_ode_solver
     !                                      - speeded up
     !                             Apr 2013 - added documentation
     ! Modified Sebastian Mueller, Jan 2015 - added a parameter input for the derivatives to use the solver dynamically
+    !                             Mar 2015 - added RBstiff as a solver for stiff ODEs
 
 
     ! License
@@ -79,6 +80,7 @@ module mo_ode_solver
     public :: Euler     ! Euler method with equal time-steps increments
     public :: RK4       ! Fourth-order Runge-Kutta method with equal time-steps increments
     public :: RK4as     ! Fourth-order Runge-Kutta method with adaptive stepsize control
+    public :: RBstiff   ! Rosenbrock Method for stiff ODEs with adaptive stepsize control
 
     ! ------------------------------------------------------------------
 
@@ -366,12 +368,135 @@ module mo_ode_solver
         module procedure RK4as_sp, RK4as_dp, RK4as_para_sp, RK4as_para_dp
     end interface RK4as
 
+
+    ! ------------------------------------------------------------------
+
+    !     NAME
+    !         RBstiff
+
+    !     PURPOSE
+    !         Integration of Ordinary Differential Equations using a Rosenbrock Method
+    !         with adaptive stepsize control.
+    !         Integrate the array of starting values ystart from x1 to x2 with accuracy eps, storing intermediate results
+    !         in the module variables. h1 should be set as a guessed first stepsize,
+    !         hmin as the minimum allowed stepsize (can be zero).
+    !         On output ystart is replaced by values at the end of the integration interval.
+
+    !>        \brief Rosenbrock Method with adaptive stepsize control.
+
+    !>        \details Integrate the array of starting values $y_{start} from $x_1$ to $x_2$ with accuracy $\varepsilon$,
+    !>                 storing intermediate results in the module variables.
+    !>                 $h_1$ should be set as a guessed first stepsize, $h_{min} as the minimum allowed stepsize (can be zero).
+    !>                 On output $y_{start}$ is replaced by values at the end of the integration interval.
+    !>                 If you use "para" as parameters for derivs/jacobn, the interface for derivs has to look like:
+    !>
+    !>                            interface
+    !>                                subroutine derivs( x, y, para, dydx )
+    !>                                    use mo_kind, only: sp/dp
+    !>                                    implicit none
+    !>                                    real(sp/dp),                 intent(in)  :: x        ! time
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: para     ! parameter for the derivatives
+    !>                                    real(sp/dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+    !>                                end subroutine derivs
+    !>                                subroutine jacobn(x, y, para, dfdx, dfdy)
+    !>                                    use mo_kind, only: sp
+    !>                                    implicit none
+    !>                                    real(sp/dp),                intent(in)   :: x        ! time
+    !>                                    real(sp/dp),dimension(:),   intent(in)   :: y        ! unknowns of the equations
+    !>                                    real(sp/dp),dimension(:),   intent(in)   :: para     ! parameters for derivs
+    !>                                    real(sp/dp),dimension(:),   intent(out)  :: dfdx     ! derivatives of f for x
+    !>                                    real(sp/dp),dimension(:,:), intent(out)  :: dfdy     ! jacobi-matrix df/dy
+    !>                                end subroutine jacobn
+    !>                            end interface
+    !>
+    !>                 Elsewise "para" must be left out:
+    !>
+    !>                            interface
+    !>                                subroutine derivs( x, y, dydx )
+    !>                                    use mo_kind, only: sp/dp
+    !>                                    implicit none
+    !>                                    real(sp/dp),                 intent(in)  :: x        ! time
+    !>                                    real(sp/dp),   dimension(:), intent(in)  :: y        ! unknowns of the equations
+    !>                                    real(sp/dp),   dimension(:), intent(out) :: dydx     ! derivatives of y
+    !>                                end subroutine derivs
+    !>                                subroutine jacobn(x, y, dfdx, dfdy)
+    !>                                    use mo_kind, only: sp
+    !>                                    implicit none
+    !>                                    real(sp/dp),                intent(in)   :: x        ! time
+    !>                                    real(sp/dp),dimension(:),   intent(in)   :: y        ! unknowns of the equations
+    !>                                    real(sp/dp),dimension(:),   intent(out)  :: dfdx     ! derivatives of f for x
+    !>                                    real(sp/dp),dimension(:,:), intent(out)  :: dfdy     ! jacobi-matrix df/dy
+    !>                                end subroutine jacobn
+    !>                            end interface
+
+    !     INTENT(IN)
+    !>        \param[in] "real(sp/dp),  dimension(:)    ::  vstart"          initial conditions.
+    !>                                                                       $N$ inital values known at the time $x_1$
+    !>                                                                       (given $N$ ODEs)
+    !>        \param[in] "real(sp/dp)                   ::  x1"              initial time.
+    !>        \param[in] "real(sp/dp)                   ::  x2"              final time.
+    !>        \param[in] "real(sp/dp)                   ::  h"               guessed first stepsize.
+    !>        \param[in] "interface                     ::  derivs_sp/dp"    derivatives $dydx$ of $y$ at $x$.
+    !>        \param[in] "interface                     ::  jacobn_sp/dp"    derivatives of the RHS: $dfdx$ and $dfdy$
+
+    !     INTENT(INOUT)
+    !         None
+
+    !     INTENT(OUT)
+    !>        \param[out] "real(sp/dp),  dimension(:), allocatable :: xout"  storage for outputs (time).
+    !>        \param[out] "real(sp/dp),  dimension(:), allocatable :: yout"  storage for outputs
+    !>                                                                       (incremented variables).
+    !>                                                                       dim 1 = function evaluations
+    !>                                                                               at any time point.
+    !>                                                                       dim 2 = number of equations.
+
+    !     INTENT(IN), OPTIONAL
+    !>        \param[in] "real(sp/dp),  optional         ::  hmin"                  minimum allowed stepsize (can be 0.)
+    !>                                                                              DEFAULT: 0.0
+    !>        \param[in] "real(sp/dp),  optional         ::  eps"                   accuracy (overall tolerance level)
+    !>                                                                              DEFAULT: 1E-6
+    !>        \param[in] "real(sp/dp),  dimension(:)     ::  para"                  parameter for the derivatives
+
+    !     INTENT(INOUT), OPTIONAL
+    !         None
+
+    !     INTENT(OUT), OPTIONAL
+    !         None
+
+    !     RESTRICTIONS
+    !>       \note The user has to supply the subroutine derivs(x,y,dydx), which returns derivatives $dydx$ at $x$.
+
+    !     EXAMPLE
+    !           call RK4as( ystart, x1, x2, h, derivs, jacobn, xout, yout, hmin, eps )
+    !           --> see example in test directory --> test/test_mo_ode_solver
+
+    !     LITERATURE
+    !        1) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 77 -
+    !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 1 of Fortran Numerical Recipes,
+    !             Cambridge University Press, UK, 1992
+    !        2) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 90 -
+    !             The Art of Parallel Scientific Computing, 2nd Edition, Volume 2 of Fortran Numerical Recipes,
+    !             Cambridge University Press, UK, 1996
+
+    !     HISTORY
+    !>        \author Sebastian Mueller
+    !>        \date Mar 2015
+
+    interface RBstiff
+        module procedure RBstiff_sp, RBstiff_dp, RBstiff_para_sp, RBstiff_para_dp
+    end interface RBstiff
+
     private
 
     ! Private method
     interface CashKarpRK
         module procedure CashKarpRK_sp, CashKarpRK_dp, CashKarpRK_para_sp, CashKarpRK_para_dp
     end interface CashKarpRK
+
+    interface RBstep
+        module procedure RBstep_sp, RBstep_dp, RBstep_para_sp, RBstep_para_dp
+    end interface RBstep
 
     ! ------------------------------------------------------------------
 
@@ -914,6 +1039,268 @@ contains
     end subroutine RK4as_dp
 
     ! ------------------------------------------------------------------
+
+    ! SINGLE PRECISION Rosenbrock Method for stiff ode's
+    subroutine RBstiff_sp( ystart, x1, x2, h, derivs, jacobn, xout, yout, &                 ! obligatory
+        hmin, eps )                                                                         ! optional
+
+        use mo_kind,            only : i4, sp
+        use mo_utils,           only : ge
+        use mo_nrutil,          only : reallocate
+
+        implicit none
+
+        ! Intent IN
+        real(sp),                                intent(in)     :: x1, x2    ! initial and final time
+        real(sp),                                intent(in)     :: h         ! guessed step size
+        real(sp),   dimension(:),                intent(in)     :: ystart    ! initial conditions
+        real(sp),                   optional,    intent(in)     :: hmin
+        real(sp),                   optional,    intent(in)     :: eps
+
+        ! Intent OUT
+        real(sp),   dimension(:),   allocatable, intent(out)    :: xout
+        real(sp),   dimension(:,:), allocatable, intent(out)    :: yout
+
+        interface
+            subroutine derivs( x, y, dydx )
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                 intent(in)            :: x        ! time
+                real(sp),   dimension(:), intent(in)            :: y        ! unknowns of the equations
+                real(sp),   dimension(:), intent(out)           :: dydx     ! derivatives of y
+            end subroutine derivs
+
+            subroutine jacobn(x, y, dfdx, dfdy)
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                   intent(in)          :: x
+                real(sp),   dimension(:),   intent(in)          :: y
+                real(sp),   dimension(:),   intent(out)         :: dfdx
+                real(sp),   dimension(:,:), intent(out)         :: dfdy
+            end subroutine jacobn
+        end interface
+
+        ! Internal variables
+        integer(i4)                         :: n    
+        integer(i4)                         :: nstep                        ! nuber of steps
+        integer(i4)                         :: kount                        ! total number of saved steps
+        real(sp)                            :: hIN, hdid, hnext, x, hminIN, epsIN, xsav, dxsav
+        real(sp),   dimension(size(ystart)) :: dydx, y, yscal, C
+
+        ! Pointers
+        real(sp),   dimension(:),   pointer :: xp
+        real(sp),   dimension(:,:), pointer :: yp
+
+        ! parameters
+        integer(i4),    parameter           :: MAXstp = 1000000_i4          ! max number of steps
+
+
+        if( present(hmin) ) then
+            hminIN = abs(hmin)
+        else
+            hminIN = 0.0_sp
+        end if
+
+        if( present(eps) ) then
+            epsIN = abs(eps)
+        else
+            epsIN = 1e-6_sp
+        end if
+        
+        C       = 1.0_sp                                                !lower boundary for scaling
+
+        hIN     = sign( h, x2-x1 )
+        hnext   = 0.0_sp
+        hdid    = 0.0_sp
+
+        kount   = 0_i4
+
+        x       = x1
+        y(:)    = ystart(:)
+        dxsav   = tiny(1._sp)
+        xsav    = x-2.0_sp*dxsav                                        ! assures storage of first step
+
+        nullify( xp, yp )
+        allocate( xp(256) )
+        allocate( yp(size(xp), size(ystart)) )
+
+        call save_a_step                                                ! save initial step
+
+        do nstep=1, MAXstp                                              ! take at most MAXstp steps
+
+            call derivs( x, y, dydx )
+            forall( n = 1:size(yscal) ) yscal(n) = max (abs(y(n)),C(n)) ! scaling used to monitor accuracy --> CAN BE MODIFIED...
+
+            if ( abs(x-xsav) .gt. abs(dxsav) ) call save_a_step         ! store intermediate results
+
+            if ( (x+hIN-x2)*(x+hIN-x1) .gt. 0.0_sp ) hIN = x2-x         ! if stepsize can overshoot, decrease
+
+            call RBstep( y, dydx, x, hIN, epsIN, yscal, hdid, hnext, derivs, jacobn) !do one Rosenbrock-Step
+
+            if ( ge((x-x2)*(x2-x1), 0.0_sp) )   then                    ! are we done?!?!
+                call save_a_step                                        ! save final step
+                allocate( xout(kount) )                                 ! allocate storage for outputs
+                xout(:) = xp(1:kount)
+                allocate( yout(kount, size(yp,2)) )                     ! allocate storage for outputs
+                yout(:,:) = yp(1:kount, :)
+                deallocate( xp, yp )                                    ! clear out old stored variables
+                return                                                  ! normal exit
+            end if
+
+            if ( abs(hnext-hminIN) .lt. epsilon(1.0_sp) )   stop 'RBstiff_sp --> WTF! ...stepsize smaller than minimum!!!'
+            
+            hIN     = hnext
+
+        end do
+
+        stop 'RBstiff_sp --> dude, too many steps!!!'
+
+    contains
+
+        subroutine save_a_step      ! --> like a macro in C
+            kount = kount+1_i4
+            if ( kount .gt. size(xp) ) then
+                xp=>reallocate( xp, 2*size(xp) )
+                yp=>reallocate( yp, size(xp), size(yp,2) )
+            end if
+            xp(kount) = x
+            yp(kount, :) = y(:)
+            xsav = x
+        end subroutine save_a_step
+
+    end subroutine RBstiff_sp
+
+    ! DOUBLE PRECISION Rosenbrock Method for stiff ode's
+    subroutine RBstiff_dp( ystart, x1, x2, h, derivs, jacobn, xout, yout, &                 ! obligatory
+        hmin, eps )                                                                         ! optional
+
+        use mo_kind,            only : i4, dp
+        use mo_utils,           only : ge
+        use mo_nrutil,          only : reallocate
+
+        implicit none
+
+        ! Intent IN
+        real(dp),                                intent(in)     :: x1, x2    ! initial and final time
+        real(dp),                                intent(in)     :: h         ! guessed step size
+        real(dp),   dimension(:),                intent(in)     :: ystart    ! initial conditions
+        real(dp),                   optional,    intent(in)     :: hmin
+        real(dp),                   optional,    intent(in)     :: eps
+
+        ! Intent OUT
+        real(dp),   dimension(:),   allocatable, intent(out)    :: xout
+        real(dp),   dimension(:,:), allocatable, intent(out)    :: yout
+
+        interface
+            subroutine derivs( x, y, dydx )
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                 intent(in)            :: x        ! time
+                real(dp),   dimension(:), intent(in)            :: y        ! unknowns of the equations
+                real(dp),   dimension(:), intent(out)           :: dydx     ! derivatives of y
+            end subroutine derivs
+
+            subroutine jacobn(x, y, dfdx, dfdy)
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                   intent(in)          :: x
+                real(dp),   dimension(:),   intent(in)          :: y
+                real(dp),   dimension(:),   intent(out)         :: dfdx
+                real(dp),   dimension(:,:), intent(out)         :: dfdy
+            end subroutine jacobn
+        end interface
+
+        ! Internal variables
+        integer(i4)                         :: n    
+        integer(i4)                         :: nstep                        ! nuber of steps
+        integer(i4)                         :: kount                        ! total number of saved steps
+        real(dp)                            :: hIN, hdid, hnext, x, hminIN, epsIN, xsav, dxsav
+        real(dp),   dimension(size(ystart)) :: dydx, y, yscal, C
+
+        ! Pointers
+        real(dp),   dimension(:),   pointer :: xp
+        real(dp),   dimension(:,:), pointer :: yp
+
+        ! parameters
+        integer(i4),    parameter           :: MAXstp = 1000000_i4          ! max number of steps
+
+
+        if( present(hmin) ) then
+            hminIN = abs(hmin)
+        else
+            hminIN = 0.0_dp
+        end if
+
+        if( present(eps) ) then
+            epsIN = abs(eps)
+        else
+            epsIN = 1e-6_dp
+        end if
+        
+        C       = 1.0_dp                                                !lower boundary for scaling
+
+        hIN     = sign( h, x2-x1 )
+        hnext   = 0.0_dp
+        hdid    = 0.0_dp
+
+        kount   = 0_i4
+
+        x       = x1
+        y(:)    = ystart(:)
+        dxsav   = tiny(1._dp)
+        xsav    = x-2.0_dp*dxsav                                        ! assures storage of first step
+
+        nullify( xp, yp )
+        allocate( xp(256) )
+        allocate( yp(size(xp), size(ystart)) )
+
+        call save_a_step                                                ! save initial step
+
+        do nstep=1, MAXstp                                              ! take at most MAXstp steps
+
+            call derivs( x, y, dydx )
+            forall( n = 1:size(yscal) ) yscal(n) = max (abs(y(n)),C(n)) ! scaling used to monitor accuracy --> CAN BE MODIFIED...
+
+            if ( abs(x-xsav) .gt. abs(dxsav) ) call save_a_step         ! store intermediate results
+
+            if ( (x+hIN-x2)*(x+hIN-x1) .gt. 0.0_dp ) hIN = x2-x         ! if stepsize can overshoot, decrease
+
+            call RBstep( y, dydx, x, hIN, epsIN, yscal, hdid, hnext, derivs, jacobn) !do one Rosenbrock-Step
+
+            if ( ge((x-x2)*(x2-x1), 0.0_dp) )   then                    ! are we done?!?!
+                call save_a_step                                        ! save final step
+                allocate( xout(kount) )                                 ! allocate storage for outputs
+                xout(:) = xp(1:kount)
+                allocate( yout(kount, size(yp,2)) )                     ! allocate storage for outputs
+                yout(:,:) = yp(1:kount, :)
+                deallocate( xp, yp )                                    ! clear out old stored variables
+                return                                                  ! normal exit
+            end if
+
+            if ( abs(hnext-hminIN) .lt. epsilon(1.0_dp) )   stop 'RBstiff_dp --> WTF! ...stepsize smaller than minimum!!!'
+            
+            hIN     = hnext
+
+        end do
+
+        stop 'RBstiff_dp --> dude, too many steps!!!'
+
+    contains
+
+        subroutine save_a_step      ! --> like a macro in C
+            kount = kount+1_i4
+            if ( kount .gt. size(xp) ) then
+                xp=>reallocate( xp, 2*size(xp) )
+                yp=>reallocate( yp, size(xp), size(yp,2) )
+            end if
+            xp(kount) = x
+            yp(kount, :) = y(:)
+            xsav = x
+        end subroutine save_a_step
+
+    end subroutine RBstiff_dp
+
+    ! ------------------------------------------------------------------
     !   PRIVATE METHODS
     ! ------------------------------------------------------------------
 
@@ -1039,6 +1426,261 @@ contains
         yerr = h*(DC1*dydx+DC3*ak3+DC4*ak4+DC5*ak5+DC6*ak6)
 
     end subroutine CashKarpRK_dp
+
+    ! ------------------------------------------------------------------
+
+    ! SINGLE PRECISION ROSENBROCK step
+    subroutine RBstep_sp(y, dydx, x, htry, eps, yscal, hdid, hnext, derivs, jacobn)
+
+        use mo_kind,            only : i4, sp
+        use mo_utils,           only : eq, le
+        use mo_nrutil,          only : assert_eq, diagadd
+        use mo_linear_algebra,  only : solve_linear_equations
+
+        implicit none
+
+        real(sp),       dimension(:),   intent(inout)   :: y
+        real(sp),       dimension(:),   intent(in)      :: dydx, yscal
+        real(sp),                       intent(inout)   :: x
+
+        real(sp),                       intent(in)      :: htry, eps
+        real(sp),                       intent(out)     :: hdid, hnext
+
+        interface
+            subroutine derivs(x, y, dydx)
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                   intent(in)  :: x
+                real(sp),   dimension(:),   intent(in)  :: y
+                real(sp),   dimension(:),   intent(out) :: dydx
+            end subroutine derivs
+
+            subroutine jacobn(x, y, dfdx, dfdy)
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                   intent(in)  :: x
+                real(sp),   dimension(:),   intent(in)  :: y
+                real(sp),   dimension(:),   intent(out) :: dfdx
+                real(sp),   dimension(:,:), intent(out) :: dfdy
+            end subroutine jacobn
+        end interface
+
+        integer(i4)                                     :: jtry,ndum
+!        integer(i4),    dimension(size(y))              :: indx
+        real(sp),       dimension(size(y))              :: dfdx,dytmp,err,g1,g2,g3,g4,ysav
+        real(sp),       dimension(size(y),size(y))      :: a,dfdy
+        real(sp)                                        :: errmax,h,xsav !,d
+
+        integer(i4), parameter  ::  maxtry  = 40_i4
+        real(sp), parameter     ::  safety  = 0.9_sp,               grow    = 1.5_sp,           pgrow   = -0.25_sp,&
+                                    shrnk   = 0.5_sp,               pshrnk  = -1.0_sp/3.0_sp,   errcon  = 0.1296_sp,&
+                                    gam     = 1.0_sp/2.0_sp,&
+                                    a21     = 2.0_sp,               a31     = 48.0_sp/25.0_sp,  a32     = 6.0_sp/25.0_sp,&
+                                    c21     = -8.0_sp,              c31     = 372.0_sp/25.0_sp, c32     = 12.0_sp/5.0_sp,&
+                                    c41     = -112.0_sp/125.0_sp,   c42     = -54._sp/125.0_sp, c43     = -2.0_sp/5.0_sp,&
+                                    b1      = 19.0_sp/9.0_sp,       b2      = 1.0_sp/2.0_sp,    b3      = 25.0_sp/108.0_sp,&
+                                    b4      = 125.0_sp/108.0_sp,&
+                                    e1      = 17.0_sp/54.0_sp,      e2      = 7.0_sp/36.0_sp,   e3      = 0.0_sp,&
+                                    e4      = 125.0_sp/108.0_sp,&
+                                    c1x     = 1.0_sp/2.0_sp,        c2x     = -3.0_sp/2.0_sp,   c3x     = 121.0_sp/50.0_sp,&
+                                    c4x     = 29.0_sp/250.0_sp,&
+                                    a2x     = 1.0_sp,               a3x     = 3.0_sp/5.0_sp
+
+
+        ndum        =   assert_eq(size(y),size(dydx),size(yscal),'stiff')
+        xsav        =   x
+        ysav(:)     =   y(:)
+
+        call jacobn(xsav,ysav,dfdx,dfdy)
+
+        h           =   htry
+
+        do jtry=1,maxtry
+
+            a(:,:)  =   -dfdy(:,:)
+
+            call diagadd(a,1.0_sp/(gam*h))
+!            call ludcmp(a,indx,d)
+
+            g1      =   dydx+h*c1x*dfdx
+            g1      =   solve_linear_equations(a,g1)
+
+ !           call lubksb(a,indx,g1)
+
+            y       =   ysav+a21*g1
+            x       =   xsav+a2x*h
+
+            call derivs(x,y,dytmp)
+
+            g2      =   dytmp+h*c2x*dfdx+c21*g1/h
+            g2      =   solve_linear_equations(a,g2)
+
+  !          call lubksb(a,indx,g2)
+
+            y       =   ysav+a31*g1+a32*g2
+            x       =   xsav+a3x*h
+
+            call derivs(x,y,dytmp)
+
+            g3      =   dytmp+h*c3x*dfdx+(c31*g1+c32*g2)/h
+            g3      =   solve_linear_equations(a,g3)
+
+   !         call lubksb(a,indx,g3)
+
+            g4      =   dytmp+h*c4x*dfdx+(c41*g1+c42*g2+c43*g3)/h
+            g4      =   solve_linear_equations(a,g4)
+
+    !        call lubksb(a,indx,g4)
+
+            y       =   ysav+b1*g1+b2*g2+b3*g3+b4*g4
+            err     =   e1*g1+e2*g2+e3*g3+e4*g4
+            x       =   xsav+h
+
+            if (eq(x,xsav)) stop 'stepsize not significant in RBstep_sp'
+
+            errmax  =   maxval(abs(err/yscal))/eps
+
+            if (le(errmax,1.0_sp)) then
+                hdid    =   h
+                hnext   =  merge(safety*h*errmax**pgrow, grow*h, errmax > errcon)
+                return
+            else
+                hnext   =   safety*h*errmax**pshrnk
+                h       =   sign(max(abs(hnext),shrnk*abs(h)),h)
+            end if
+
+        end do
+
+        stop 'exceeded maxtry in RBstep_sp'
+
+    end subroutine RBstep_sp
+
+
+    ! DOUBLE PRECISION ROSENBROCK step
+    subroutine RBstep_dp(y, dydx, x, htry, eps, yscal, hdid, hnext, derivs, jacobn)
+
+        use mo_kind,            only : i4, dp
+        use mo_utils,           only : eq, le
+        use mo_nrutil,          only : assert_eq, diagadd
+        use mo_linear_algebra,  only : solve_linear_equations
+
+        implicit none
+
+        real(dp),       dimension(:),   intent(inout)   :: y
+        real(dp),       dimension(:),   intent(in)      :: dydx, yscal
+        real(dp),                       intent(inout)   :: x
+
+        real(dp),                       intent(in)      :: htry, eps
+        real(dp),                       intent(out)     :: hdid, hnext
+
+        interface
+            subroutine derivs(x, y, dydx)
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                   intent(in)  :: x
+                real(dp),   dimension(:),   intent(in)  :: y
+                real(dp),   dimension(:),   intent(out) :: dydx
+            end subroutine derivs
+
+            subroutine jacobn(x, y, dfdx, dfdy)
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                   intent(in)  :: x
+                real(dp),   dimension(:),   intent(in)  :: y
+                real(dp),   dimension(:),   intent(out) :: dfdx
+                real(dp),   dimension(:,:), intent(out) :: dfdy
+            end subroutine jacobn
+        end interface
+
+        integer(i4)                                     :: jtry,ndum
+!        integer(i4),    dimension(size(y))              :: indx
+        real(dp),       dimension(size(y))              :: dfdx,dytmp,err,g1,g2,g3,g4,ysav
+        real(dp),       dimension(size(y),size(y))      :: a,dfdy
+        real(dp)                                        :: errmax,h,xsav !,d
+
+        integer(i4), parameter  ::  maxtry  = 40_i4
+        real(dp), parameter     ::  safety  = 0.9_dp,               grow    = 1.5_dp,           pgrow   = -0.25_dp,&
+                                    shrnk   = 0.5_dp,               pshrnk  = -1.0_dp/3.0_dp,   errcon  = 0.1296_dp,&
+                                    gam     = 1.0_dp/2.0_dp,&
+                                    a21     = 2.0_dp,               a31     = 48.0_dp/25.0_dp,  a32     = 6.0_dp/25.0_dp,&
+                                    c21     = -8.0_dp,              c31     = 372.0_dp/25.0_dp, c32     = 12.0_dp/5.0_dp,&
+                                    c41     = -112.0_dp/125.0_dp,   c42     = -54._dp/125.0_dp, c43     = -2.0_dp/5.0_dp,&
+                                    b1      = 19.0_dp/9.0_dp,       b2      = 1.0_dp/2.0_dp,    b3      = 25.0_dp/108.0_dp,&
+                                    b4      = 125.0_dp/108.0_dp,&
+                                    e1      = 17.0_dp/54.0_dp,      e2      = 7.0_dp/36.0_dp,   e3      = 0.0_dp,&
+                                    e4      = 125.0_dp/108.0_dp,&
+                                    c1x     = 1.0_dp/2.0_dp,        c2x     = -3.0_dp/2.0_dp,   c3x     = 121.0_dp/50.0_dp,&
+                                    c4x     = 29.0_dp/250.0_dp,&
+                                    a2x     = 1.0_dp,               a3x     = 3.0_dp/5.0_dp
+
+
+        ndum        =   assert_eq(size(y),size(dydx),size(yscal),'stiff')
+        xsav        =   x
+        ysav(:)     =   y(:)
+
+        call jacobn(xsav,ysav,dfdx,dfdy)
+
+        h           =   htry
+
+        do jtry=1,maxtry
+
+            a(:,:)  =   -dfdy(:,:)
+
+            call diagadd(a,1.0_dp/(gam*h))
+!            call ludcmp(a,indx,d)
+
+            g1      =   dydx+h*c1x*dfdx
+            g1      =   solve_linear_equations(a,g1)
+
+ !           call lubksb(a,indx,g1)
+
+            y       =   ysav+a21*g1
+            x       =   xsav+a2x*h
+
+            call derivs(x,y,dytmp)
+
+            g2      =   dytmp+h*c2x*dfdx+c21*g1/h
+            g2      =   solve_linear_equations(a,g2)
+
+  !          call lubksb(a,indx,g2)
+
+            y       =   ysav+a31*g1+a32*g2
+            x       =   xsav+a3x*h
+
+            call derivs(x,y,dytmp)
+
+            g3      =   dytmp+h*c3x*dfdx+(c31*g1+c32*g2)/h
+            g3      =   solve_linear_equations(a,g3)
+
+   !         call lubksb(a,indx,g3)
+
+            g4      =   dytmp+h*c4x*dfdx+(c41*g1+c42*g2+c43*g3)/h
+            g4      =   solve_linear_equations(a,g4)
+
+    !        call lubksb(a,indx,g4)
+
+            y       =   ysav+b1*g1+b2*g2+b3*g3+b4*g4
+            err     =   e1*g1+e2*g2+e3*g3+e4*g4
+            x       =   xsav+h
+
+            if (eq(x,xsav)) stop 'stepsize not significant in RBstep_dp'
+
+            errmax  =   maxval(abs(err/yscal))/eps
+
+            if (le(errmax,1.0_dp)) then
+                hdid    =   h
+                hnext   =  merge(safety*h*errmax**pgrow, grow*h, errmax > errcon)
+                return
+            else
+                hnext   =   safety*h*errmax**pshrnk
+                h       =   sign(max(abs(hnext),shrnk*abs(h)),h)
+            end if
+
+        end do
+
+        stop 'exceeded maxtry in RBstep_dp'
+
+    end subroutine RBstep_dp
 
     ! ------------------------------------------------------------------
 
@@ -1597,6 +2239,275 @@ contains
 
     end subroutine RK4as_para_dp
 
+
+    ! ------------------------------------------------------------------
+
+    ! SINGLE PRECISION Rosenbrock Method for stiff ode's
+    subroutine RBstiff_para_sp( ystart, x1, x2, h, derivs, jacobn, para, xout, yout, &      ! obligatory
+        hmin, eps )                                                                         ! optional
+
+        use mo_kind,            only : i4, sp
+        use mo_utils,           only : ge
+        use mo_nrutil,          only : reallocate
+
+        implicit none
+
+        ! Intent IN
+        real(sp),                                intent(in)     :: x1, x2    ! initial and final time
+        real(sp),                                intent(in)     :: h         ! guessed step size
+        real(sp),   dimension(:),                intent(in)     :: ystart    ! initial conditions
+        real(sp),                   optional,    intent(in)     :: hmin
+        real(sp),                   optional,    intent(in)     :: eps
+        real(sp),   dimension(:),                intent(in)     :: para      ! parameters for derivs
+
+        ! Intent OUT
+        real(sp),   dimension(:),   allocatable, intent(out)    :: xout
+        real(sp),   dimension(:,:), allocatable, intent(out)    :: yout
+
+        interface
+            subroutine derivs( x, y, para, dydx )
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                 intent(in)            :: x        ! time
+                real(sp),   dimension(:), intent(in)            :: y        ! unknowns of the equations
+                real(sp),   dimension(:), intent(in)            :: para     ! parameters for derivs
+                real(sp),   dimension(:), intent(out)           :: dydx     ! derivatives of y
+            end subroutine derivs
+
+            subroutine jacobn(x, y, para, dfdx, dfdy)
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                   intent(in)          :: x
+                real(sp),   dimension(:),   intent(in)          :: y
+                real(sp),   dimension(:),   intent(in)          :: para     ! parameters for derivs
+                real(sp),   dimension(:),   intent(out)         :: dfdx
+                real(sp),   dimension(:,:), intent(out)         :: dfdy
+            end subroutine jacobn
+        end interface
+
+        ! Internal variables
+        integer(i4)                         :: n    
+        integer(i4)                         :: nstep                        ! nuber of steps
+        integer(i4)                         :: kount                        ! total number of saved steps
+        real(sp)                            :: hIN, hdid, hnext, x, hminIN, epsIN, xsav, dxsav
+        real(sp),   dimension(size(ystart)) :: dydx, y, yscal, C
+
+        ! Pointers
+        real(sp),   dimension(:),   pointer :: xp
+        real(sp),   dimension(:,:), pointer :: yp
+
+        ! parameters
+        integer(i4),    parameter           :: MAXstp = 1000000_i4          ! max number of steps
+
+
+        if( present(hmin) ) then
+            hminIN = abs(hmin)
+        else
+            hminIN = 0.0_sp
+        end if
+
+        if( present(eps) ) then
+            epsIN = abs(eps)
+        else
+            epsIN = 1e-6_sp
+        end if
+        
+        C       = 1.0_sp                                                !lower boundary for scaling
+
+        hIN     = sign( h, x2-x1 )
+        hnext   = 0.0_sp
+        hdid    = 0.0_sp
+
+        kount   = 0_i4
+
+        x       = x1
+        y(:)    = ystart(:)
+        dxsav   = tiny(1._sp)
+        xsav    = x-2.0_sp*dxsav                                        ! assures storage of first step
+
+        nullify( xp, yp )
+        allocate( xp(256) )
+        allocate( yp(size(xp), size(ystart)) )
+
+        call save_a_step                                                ! save initial step
+
+        do nstep=1, MAXstp                                              ! take at most MAXstp steps
+
+            call derivs( x, y, para, dydx )
+            forall( n = 1:size(yscal) ) yscal(n) = max (abs(y(n)),C(n)) ! scaling used to monitor accuracy --> CAN BE MODIFIED...
+
+            if ( abs(x-xsav) .gt. abs(dxsav) ) call save_a_step         ! store intermediate results
+
+            if ( (x+hIN-x2)*(x+hIN-x1) .gt. 0.0_sp ) hIN = x2-x         ! if stepsize can overshoot, decrease
+
+            call RBstep( y, dydx, x, hIN, epsIN, yscal, hdid, hnext, derivs, jacobn, para) !do one Rosenbrock-Step
+
+            if ( ge((x-x2)*(x2-x1), 0.0_sp) )   then                    ! are we done?!?!
+                call save_a_step                                        ! save final step
+                allocate( xout(kount) )                                 ! allocate storage for outputs
+                xout(:) = xp(1:kount)
+                allocate( yout(kount, size(yp,2)) )                     ! allocate storage for outputs
+                yout(:,:) = yp(1:kount, :)
+                deallocate( xp, yp )                                    ! clear out old stored variables
+                return                                                  ! normal exit
+            end if
+
+            if ( abs(hnext-hminIN) .lt. epsilon(1.0_sp) )   stop 'RBstiff_para_sp --> WTF! ...stepsize smaller than minimum!!!'
+            
+            hIN     = hnext
+
+        end do
+
+        stop 'RBstiff_para_sp --> dude, too many steps!!!'
+
+    contains
+
+        subroutine save_a_step      ! --> like a macro in C
+            kount = kount+1_i4
+            if ( kount .gt. size(xp) ) then
+                xp=>reallocate( xp, 2*size(xp) )
+                yp=>reallocate( yp, size(xp), size(yp,2) )
+            end if
+            xp(kount) = x
+            yp(kount, :) = y(:)
+            xsav = x
+        end subroutine save_a_step
+
+    end subroutine RBstiff_para_sp
+
+    ! DOUBLE PRECISION Rosenbrock Method for stiff ode's
+    subroutine RBstiff_para_dp( ystart, x1, x2, h, derivs, jacobn, para, xout, yout, &      ! obligatory
+        hmin, eps )                                                                         ! optional
+
+        use mo_kind,            only : i4, dp
+        use mo_utils,           only : ge
+        use mo_nrutil,          only : reallocate
+
+        implicit none
+
+        ! Intent IN
+        real(dp),                                intent(in)     :: x1, x2    ! initial and final time
+        real(dp),                                intent(in)     :: h         ! guessed step size
+        real(dp),   dimension(:),                intent(in)     :: ystart    ! initial conditions
+        real(dp),                   optional,    intent(in)     :: hmin
+        real(dp),                   optional,    intent(in)     :: eps
+        real(dp),   dimension(:),                intent(in)     :: para      ! parameters for derivs
+
+        ! Intent OUT
+        real(dp),   dimension(:),   allocatable, intent(out)    :: xout
+        real(dp),   dimension(:,:), allocatable, intent(out)    :: yout
+
+        interface
+            subroutine derivs( x, y, para, dydx )
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                 intent(in)            :: x        ! time
+                real(dp),   dimension(:), intent(in)            :: y        ! unknowns of the equations
+                real(dp),   dimension(:), intent(in)            :: para     ! parameters for derivs
+                real(dp),   dimension(:), intent(out)           :: dydx     ! derivatives of y
+            end subroutine derivs
+
+            subroutine jacobn(x, y, para, dfdx, dfdy)
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                   intent(in)          :: x
+                real(dp),   dimension(:),   intent(in)          :: y
+                real(dp),   dimension(:),   intent(in)          :: para     ! parameters for derivs
+                real(dp),   dimension(:),   intent(out)         :: dfdx
+                real(dp),   dimension(:,:), intent(out)         :: dfdy
+            end subroutine jacobn
+        end interface
+
+        ! Internal variables
+        integer(i4)                         :: n    
+        integer(i4)                         :: nstep                        ! nuber of steps
+        integer(i4)                         :: kount                        ! total number of saved steps
+        real(dp)                            :: hIN, hdid, hnext, x, hminIN, epsIN, xsav, dxsav
+        real(dp),   dimension(size(ystart)) :: dydx, y, yscal, C
+
+        ! Pointers
+        real(dp),   dimension(:),   pointer :: xp
+        real(dp),   dimension(:,:), pointer :: yp
+
+        ! parameters
+        integer(i4),    parameter           :: MAXstp = 1000000_i4          ! max number of steps
+
+
+        if( present(hmin) ) then
+            hminIN = abs(hmin)
+        else
+            hminIN = 0.0_dp
+        end if
+
+        if( present(eps) ) then
+            epsIN = abs(eps)
+        else
+            epsIN = 1e-6_dp
+        end if
+        
+        C       = 1.0_dp                                                !lower boundary for scaling
+
+        hIN     = sign( h, x2-x1 )
+        hnext   = 0.0_dp
+        hdid    = 0.0_dp
+
+        kount   = 0_i4
+
+        x       = x1
+        y(:)    = ystart(:)
+        dxsav   = tiny(1._dp)
+        xsav    = x-2.0_dp*dxsav                                        ! assures storage of first step
+
+        nullify( xp, yp )
+        allocate( xp(256) )
+        allocate( yp(size(xp), size(ystart)) )
+
+        call save_a_step                                                ! save initial step
+
+        do nstep=1, MAXstp                                              ! take at most MAXstp steps
+
+            call derivs( x, y, para, dydx )
+            forall( n = 1:size(yscal) ) yscal(n) = max (abs(y(n)),C(n)) ! scaling used to monitor accuracy --> CAN BE MODIFIED...
+
+            if ( abs(x-xsav) .gt. abs(dxsav) ) call save_a_step         ! store intermediate results
+
+            if ( (x+hIN-x2)*(x+hIN-x1) .gt. 0.0_dp ) hIN = x2-x         ! if stepsize can overshoot, decrease
+
+            call RBstep( y, dydx, x, hIN, epsIN, yscal, hdid, hnext, derivs, jacobn, para) !do one Rosenbrock-Step
+
+            if ( ge((x-x2)*(x2-x1), 0.0_dp) )   then                    ! are we done?!?!
+                call save_a_step                                        ! save final step
+                allocate( xout(kount) )                                 ! allocate storage for outputs
+                xout(:) = xp(1:kount)
+                allocate( yout(kount, size(yp,2)) )                     ! allocate storage for outputs
+                yout(:,:) = yp(1:kount, :)
+                deallocate( xp, yp )                                    ! clear out old stored variables
+                return                                                  ! normal exit
+            end if
+
+            if ( abs(hnext-hminIN) .lt. epsilon(1.0_dp) )   stop 'RBstiff_para_dp --> WTF! ...stepsize smaller than minimum!!!'
+            
+            hIN     = hnext
+
+        end do
+
+        stop 'RBstiff_para_dp --> dude, too many steps!!!'
+
+    contains
+
+        subroutine save_a_step      ! --> like a macro in C
+            kount = kount+1_i4
+            if ( kount .gt. size(xp) ) then
+                xp=>reallocate( xp, 2*size(xp) )
+                yp=>reallocate( yp, size(xp), size(yp,2) )
+            end if
+            xp(kount) = x
+            yp(kount, :) = y(:)
+            xsav = x
+        end subroutine save_a_step
+
+    end subroutine RBstiff_para_dp
+
     ! ------------------------------------------------------------------
     !   PRIVATE METHODS
     ! ------------------------------------------------------------------
@@ -1727,6 +2638,266 @@ contains
         yerr = h*(DC1*dydx+DC3*ak3+DC4*ak4+DC5*ak5+DC6*ak6)
 
     end subroutine CashKarpRK_para_dp
+
+
+    ! SINGLE PRECISION ROSENBROCK step
+    subroutine RBstep_para_sp(y, dydx, x, htry, eps, yscal, hdid, hnext, derivs, jacobn, para)
+
+        use mo_kind,            only : i4, sp
+        use mo_utils,           only : eq, le
+        use mo_nrutil,          only : assert_eq, diagadd
+        use mo_linear_algebra,  only : solve_linear_equations
+
+        implicit none
+
+        real(sp),       dimension(:),   intent(inout)   :: y
+        real(sp),       dimension(:),   intent(in)      :: dydx, yscal
+        real(sp),                       intent(inout)   :: x
+        real(sp),       dimension(:),   intent(in)      :: para     ! parameters for derivs
+
+        real(sp),                       intent(in)      :: htry, eps
+        real(sp),                       intent(out)     :: hdid, hnext
+
+        interface
+            subroutine derivs(x, y, para, dydx)
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                   intent(in)  :: x
+                real(sp),   dimension(:),   intent(in)  :: y
+                real(sp),   dimension(:),   intent(in)  :: para     ! parameters for derivs
+                real(sp),   dimension(:),   intent(out) :: dydx
+            end subroutine derivs
+
+            subroutine jacobn(x, y, para, dfdx, dfdy)
+                use mo_kind, only: sp
+                implicit none
+                real(sp),                   intent(in)  :: x
+                real(sp),   dimension(:),   intent(in)  :: y
+                real(sp),   dimension(:),   intent(in)  :: para     ! parameters for derivs
+                real(sp),   dimension(:),   intent(out) :: dfdx
+                real(sp),   dimension(:,:), intent(out) :: dfdy
+            end subroutine jacobn
+        end interface
+
+        integer(i4)                                     :: jtry,ndum
+!        integer(i4),    dimension(size(y))              :: indx
+        real(sp),       dimension(size(y))              :: dfdx,dytmp,err,g1,g2,g3,g4,ysav
+        real(sp),       dimension(size(y),size(y))      :: a,dfdy
+        real(sp)                                        :: errmax,h,xsav !,d
+
+        integer(i4), parameter  ::  maxtry  = 40_i4
+        real(sp), parameter     ::  safety  = 0.9_sp,               grow    = 1.5_sp,           pgrow   = -0.25_sp,&
+                                    shrnk   = 0.5_sp,               pshrnk  = -1.0_sp/3.0_sp,   errcon  = 0.1296_sp,&
+                                    gam     = 1.0_sp/2.0_sp,&
+                                    a21     = 2.0_sp,               a31     = 48.0_sp/25.0_sp,  a32     = 6.0_sp/25.0_sp,&
+                                    c21     = -8.0_sp,              c31     = 372.0_sp/25.0_sp, c32     = 12.0_sp/5.0_sp,&
+                                    c41     = -112.0_sp/125.0_sp,   c42     = -54._sp/125.0_sp, c43     = -2.0_sp/5.0_sp,&
+                                    b1      = 19.0_sp/9.0_sp,       b2      = 1.0_sp/2.0_sp,    b3      = 25.0_sp/108.0_sp,&
+                                    b4      = 125.0_sp/108.0_sp,&
+                                    e1      = 17.0_sp/54.0_sp,      e2      = 7.0_sp/36.0_sp,   e3      = 0.0_sp,&
+                                    e4      = 125.0_sp/108.0_sp,&
+                                    c1x     = 1.0_sp/2.0_sp,        c2x     = -3.0_sp/2.0_sp,   c3x     = 121.0_sp/50.0_sp,&
+                                    c4x     = 29.0_sp/250.0_sp,&
+                                    a2x     = 1.0_sp,               a3x     = 3.0_sp/5.0_sp
+
+
+        ndum        =   assert_eq(size(y),size(dydx),size(yscal),'stiff')
+        xsav        =   x
+        ysav(:)     =   y(:)
+
+        call jacobn(xsav,ysav,para,dfdx,dfdy)
+
+        h           =   htry
+
+        do jtry=1,maxtry
+
+            a(:,:)  =   -dfdy(:,:)
+
+            call diagadd(a,1.0_sp/(gam*h))
+!            call ludcmp(a,indx,d)
+
+            g1      =   dydx+h*c1x*dfdx
+            g1      =   solve_linear_equations(a,g1)
+
+ !           call lubksb(a,indx,g1)
+
+            y       =   ysav+a21*g1
+            x       =   xsav+a2x*h
+
+            call derivs(x,y,para,dytmp)
+
+            g2      =   dytmp+h*c2x*dfdx+c21*g1/h
+            g2      =   solve_linear_equations(a,g2)
+
+  !          call lubksb(a,indx,g2)
+
+            y       =   ysav+a31*g1+a32*g2
+            x       =   xsav+a3x*h
+
+            call derivs(x,y,para,dytmp)
+
+            g3      =   dytmp+h*c3x*dfdx+(c31*g1+c32*g2)/h
+            g3      =   solve_linear_equations(a,g3)
+
+   !         call lubksb(a,indx,g3)
+
+            g4      =   dytmp+h*c4x*dfdx+(c41*g1+c42*g2+c43*g3)/h
+            g4      =   solve_linear_equations(a,g4)
+
+    !        call lubksb(a,indx,g4)
+
+            y       =   ysav+b1*g1+b2*g2+b3*g3+b4*g4
+            err     =   e1*g1+e2*g2+e3*g3+e4*g4
+            x       =   xsav+h
+
+            if (eq(x,xsav)) stop 'stepsize not significant in RBstep_para_sp'
+
+            errmax  =   maxval(abs(err/yscal))/eps
+
+            if (le(errmax,1.0_sp)) then
+                hdid    =   h
+                hnext   =  merge(safety*h*errmax**pgrow, grow*h, errmax > errcon)
+                return
+            else
+                hnext   =   safety*h*errmax**pshrnk
+                h       =   sign(max(abs(hnext),shrnk*abs(h)),h)
+            end if
+
+        end do
+
+        stop 'exceeded maxtry in RBstep_para_sp'
+
+    end subroutine RBstep_para_sp
+
+
+    ! DOUBLE PRECISION ROSENBROCK step
+    subroutine RBstep_para_dp(y, dydx, x, htry, eps, yscal, hdid, hnext, derivs, jacobn, para)
+
+        use mo_kind,            only : i4, dp
+        use mo_utils,           only : eq, le
+        use mo_nrutil,          only : assert_eq, diagadd
+        use mo_linear_algebra,  only : solve_linear_equations
+
+        implicit none
+
+        real(dp),       dimension(:),   intent(inout)   :: y
+        real(dp),       dimension(:),   intent(in)      :: dydx, yscal
+        real(dp),                       intent(inout)   :: x
+        real(dp),       dimension(:),   intent(in)      :: para     ! parameters for derivs
+
+        real(dp),                       intent(in)      :: htry, eps
+        real(dp),                       intent(out)     :: hdid, hnext
+
+        interface
+            subroutine derivs(x, y, para, dydx)
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                   intent(in)  :: x
+                real(dp),   dimension(:),   intent(in)  :: y
+                real(dp),   dimension(:),   intent(in)  :: para     ! parameters for derivs
+                real(dp),   dimension(:),   intent(out) :: dydx
+            end subroutine derivs
+
+            subroutine jacobn(x, y, para, dfdx, dfdy)
+                use mo_kind, only: dp
+                implicit none
+                real(dp),                   intent(in)  :: x
+                real(dp),   dimension(:),   intent(in)  :: y
+                real(dp),   dimension(:),   intent(in)  :: para     ! parameters for derivs
+                real(dp),   dimension(:),   intent(out) :: dfdx
+                real(dp),   dimension(:,:), intent(out) :: dfdy
+            end subroutine jacobn
+        end interface
+
+        integer(i4)                                     :: jtry,ndum
+!        integer(i4),    dimension(size(y))              :: indx
+        real(dp),       dimension(size(y))              :: dfdx,dytmp,err,g1,g2,g3,g4,ysav
+        real(dp),       dimension(size(y),size(y))      :: a,dfdy
+        real(dp)                                        :: errmax,h,xsav !,d
+
+        integer(i4), parameter  ::  maxtry  = 40_i4
+        real(dp), parameter     ::  safety  = 0.9_dp,               grow    = 1.5_dp,           pgrow   = -0.25_dp,&
+                                    shrnk   = 0.5_dp,               pshrnk  = -1.0_dp/3.0_dp,   errcon  = 0.1296_dp,&
+                                    gam     = 1.0_dp/2.0_dp,&
+                                    a21     = 2.0_dp,               a31     = 48.0_dp/25.0_dp,  a32     = 6.0_dp/25.0_dp,&
+                                    c21     = -8.0_dp,              c31     = 372.0_dp/25.0_dp, c32     = 12.0_dp/5.0_dp,&
+                                    c41     = -112.0_dp/125.0_dp,   c42     = -54._dp/125.0_dp, c43     = -2.0_dp/5.0_dp,&
+                                    b1      = 19.0_dp/9.0_dp,       b2      = 1.0_dp/2.0_dp,    b3      = 25.0_dp/108.0_dp,&
+                                    b4      = 125.0_dp/108.0_dp,&
+                                    e1      = 17.0_dp/54.0_dp,      e2      = 7.0_dp/36.0_dp,   e3      = 0.0_dp,&
+                                    e4      = 125.0_dp/108.0_dp,&
+                                    c1x     = 1.0_dp/2.0_dp,        c2x     = -3.0_dp/2.0_dp,   c3x     = 121.0_dp/50.0_dp,&
+                                    c4x     = 29.0_dp/250.0_dp,&
+                                    a2x     = 1.0_dp,               a3x     = 3.0_dp/5.0_dp
+
+
+        ndum        =   assert_eq(size(y),size(dydx),size(yscal),'stiff')
+        xsav        =   x
+        ysav(:)     =   y(:)
+
+        call jacobn(xsav,ysav,para,dfdx,dfdy)
+
+        h           =   htry
+
+        do jtry=1,maxtry
+
+            a(:,:)  =   -dfdy(:,:)
+
+            call diagadd(a,1.0_dp/(gam*h))
+!            call ludcmp(a,indx,d)
+
+            g1      =   dydx+h*c1x*dfdx
+            g1      =   solve_linear_equations(a,g1)
+
+ !           call lubksb(a,indx,g1)
+
+            y       =   ysav+a21*g1
+            x       =   xsav+a2x*h
+
+            call derivs(x,y,para,dytmp)
+
+            g2      =   dytmp+h*c2x*dfdx+c21*g1/h
+            g2      =   solve_linear_equations(a,g2)
+
+  !          call lubksb(a,indx,g2)
+
+            y       =   ysav+a31*g1+a32*g2
+            x       =   xsav+a3x*h
+
+            call derivs(x,y,para,dytmp)
+
+            g3      =   dytmp+h*c3x*dfdx+(c31*g1+c32*g2)/h
+            g3      =   solve_linear_equations(a,g3)
+
+   !         call lubksb(a,indx,g3)
+
+            g4      =   dytmp+h*c4x*dfdx+(c41*g1+c42*g2+c43*g3)/h
+            g4      =   solve_linear_equations(a,g4)
+
+    !        call lubksb(a,indx,g4)
+
+            y       =   ysav+b1*g1+b2*g2+b3*g3+b4*g4
+            err     =   e1*g1+e2*g2+e3*g3+e4*g4
+            x       =   xsav+h
+
+            if (eq(x,xsav)) stop 'stepsize not significant in RBstep_para_dp'
+
+            errmax  =   maxval(abs(err/yscal))/eps
+
+            if (le(errmax,1.0_dp)) then
+                hdid    =   h
+                hnext   =  merge(safety*h*errmax**pgrow, grow*h, errmax > errcon)
+                return
+            else
+                hnext   =   safety*h*errmax**pshrnk
+                h       =   sign(max(abs(hnext),shrnk*abs(h)),h)
+            end if
+
+        end do
+
+        stop 'exceeded maxtry in RBstep_para_dp'
+
+    end subroutine RBstep_para_dp
 
     ! ------------------------------------------------------------------
 

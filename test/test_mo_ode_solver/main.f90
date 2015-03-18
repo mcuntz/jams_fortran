@@ -10,8 +10,12 @@
 program main_test_mo_ode_solver
 
     use mo_kind,        only    : i4, sp, dp
-    use mo_eq_lv,       only    : LV_eqn_sp, LV_eqn_dp, LV_eqn_para_sp, LV_eqn_para_dp
-    use mo_ode_solver,  only    : EULER, RK4, RK4as
+    use mo_eq_lv,       only    : LV_eqn_sp, LV_eqn_dp, LV_eqn_para_sp, LV_eqn_para_dp,&
+                                  deriv2_testRB_sp, jacobn2_testRB_sp,&
+                                  deriv2_testRB_dp, jacobn2_testRB_dp,&
+                                  deriv2_testRB_para_sp, jacobn2_testRB_para_sp,&
+                                  deriv2_testRB_para_dp, jacobn2_testRB_para_dp
+    use mo_ode_solver,  only    : EULER, RK4, RK4as, RBstiff
 
     implicit none
 
@@ -39,6 +43,7 @@ program main_test_mo_ode_solver
     real(dp), dimension(3)                  :: dpara     ! parameter for derivs
 
     logical                                 :: isgood
+
 
     isgood = .true.     ! test variable
 
@@ -72,6 +77,14 @@ program main_test_mo_ode_solver
     if ( nint(xout(2)*test) .ne. 580_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9950_i4, 11687_i4 /)) ) isgood = .false.     ! test
     if (.not. isgood) write(*,*) "rk-as sp"
 
+    ! Rosenbrock Method
+    call RBstiff( (/1.0_sp,1.0_sp,0.0_sp/), 0.0_sp, 50.0_sp, 2.9e-4_sp, deriv2_testRB_sp,&
+                    jacobn2_testRB_sp, xout, yout, hmin=hmin, eps=1e-4_sp )
+    if (    nint(xout(2)*test) .ne. 3_i4 .or.&
+            any(nint(yout(2,:)*test) .ne. (/ 10000_i4, 10000_i4, 0_i4 /)) )&
+       isgood = .false.    ! test
+    if (.not. isgood) write(*,*) "rb-stiff sp"
+
 
     !with parameters
 
@@ -90,9 +103,17 @@ program main_test_mo_ode_solver
     if ( nint(xout(2)*test) .ne. 580_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9950_i4, 11687_i4 /)) ) isgood = .false.     ! test
     if (.not. isgood) write(*,*) "rk-as sp para"
 
+    ! Rosenbrock Method with parameter
+    call RBstiff( (/1.0_sp,1.0_sp,0.0_sp/), 0.0_sp, 50.0_sp, 2.9e-4_sp, deriv2_testRB_para_sp,&
+                    jacobn2_testRB_para_sp, (/1000.0_sp/), xout, yout, hmin=hmin, eps=1e-4_sp )
+    if (    nint(xout(2)*test) .ne. 3_i4 .or.&
+            any(nint(yout(2,:)*test) .ne. (/ 10000_i4, 10000_i4, 0_i4 /)) )&
+       isgood = .false.    ! test
+    if (.not. isgood) write(*,*) "rb-stiff sp"
+
 
 !dp
-    dtest   = 1e4_dp     ! test variable
+    dtest   = 1e8_dp     ! test variable
 
     nEq    = 2_i4       ! number of equations
     dx1     = 0._dp      ! intial time
@@ -108,35 +129,69 @@ program main_test_mo_ode_solver
 
     ! Euler method
     call Euler( dyi, dx1, dx2, dh, LV_eqn_dp, dxout, dyout )
-    if ( nint(dxout(2)*dtest) .ne. 1000_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 10000_i4, 13000_i4 /)) ) isgood = .false.  ! test
+    if ( nint(dxout(2)*dtest) .ne. 10000000_i4 .or. &
+         any(nint(dyout(2,:)*dtest) .ne. (/ 100000000_i4, 130000000_i4 /)) ) isgood = .false.  ! test
     if (.not. isgood) write(*,*) "euler dp"
 
     ! 4th order RUNGE-KUTTA method
     call RK4( dyi, dx1, dx2, dh, LV_eqn_dp, dxout, dyout )
-    if ( nint(dxout(2)*dtest) .ne. 1000_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.   ! test
+    if ( nint(dxout(2)*dtest) .ne. 10000000_i4 .or. &
+         any(nint(dyout(2,:)*dtest) .ne. (/ 98503750_i4, 128353750_i4 /)) ) isgood = .false.   ! test
     if (.not. isgood) write(*,*) "rk dp"
 
     ! 4th order RUNGE-KUTTA Adaptive Step-size
     call RK4as( dyi, dx1, dx2, dh, LV_eqn_dp, dxout, dyout, hmin=dhmin, eps=deps )
-    if ( nint(dxout(2)*dtest) .ne. 601_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 9946_i4, 11745_i4 /)) ) isgood = .false.    ! test
+    if ( nint(dxout(2)*dtest) .ne. 6008771_i4 .or. &
+         any(nint(dyout(2,:)*dtest) .ne. (/ 99458909_i4, 117452697_i4 /)) ) isgood = .false.    ! test
     if (.not. isgood) write(*,*) "rk-as dp"
+
+    ! Rosenbrock Method
+    call RBstiff( (/1.0_dp,1.0_dp,0.0_dp/), 0.0_dp, 50.0_dp, 2.9e-4_dp, deriv2_testRB_dp,&
+                    jacobn2_testRB_dp, dxout, dyout, hmin=dhmin, eps=1e-4_dp )
+    if (    nint(dxout(2)*dtest) .ne. 29000_i4 .or.&
+            any(nint(dyout(2,:)*dtest) .ne. (/ 99999663_i4, 100000100_i4, -237_i4 /)) )&
+       isgood = .false.    ! test
+    if (.not. isgood) write(*,*) "rb-stiff dp"
 
     !with parameters
 
     ! Euler method with parameters
     call Euler( dyi, dx1, dx2, dh, LV_eqn_para_dp, dpara, dxout, dyout )
-    if ( nint(dxout(2)*dtest) .ne. 1000_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 10000_i4, 13000_i4 /)) ) isgood = .false.  ! test
+    if ( nint(dxout(2)*dtest) .ne. 10000000_i4 .or. &
+         any(nint(dyout(2,:)*dtest) .ne. (/ 100000000_i4, 130000000_i4 /)) ) isgood = .false.  ! test
     if (.not. isgood) write(*,*) "euler dp para"
+
+!    write(*,*) dxout(2), dyout(2,:)
+!    write(*,*) nint(dxout(2)*dtest), nint(dyout(2,:)*dtest)
 
     ! 4th order RUNGE-KUTTA method with parameters
     call RK4( dyi, dx1, dx2, dh, LV_eqn_para_dp, dpara, dxout, dyout )
-    if ( nint(dxout(2)*dtest) .ne. 1000_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.   ! test
+    if ( nint(dxout(2)*dtest) .ne. 10000000_i4 .or. &
+         any(nint(dyout(2,:)*dtest) .ne. (/ 98503750_i4, 128353750_i4 /)) ) isgood = .false.   ! test
     if (.not. isgood) write(*,*) "rk dp para"
+
+!    write(*,*) dxout(2), dyout(2,:)
+!    write(*,*) nint(dxout(2)*dtest), nint(dyout(2,:)*dtest)
 
     ! 4th order RUNGE-KUTTA Adaptive Step-size with parameters
     call RK4as( dyi, dx1, dx2, dh, LV_eqn_para_dp, dpara, dxout, dyout, hmin=dhmin, eps=deps )
-    if ( nint(dxout(2)*dtest) .ne. 601_i4 .or. any(nint(dyout(2,:)*dtest) .ne. (/ 9946_i4, 11745_i4 /)) ) isgood = .false.    ! test
+    if ( nint(dxout(2)*dtest) .ne. 6008771_i4 .or. &
+         any(nint(dyout(2,:)*dtest) .ne. (/ 99458909_i4, 117452697_i4 /)) ) isgood = .false.    ! test
     if (.not. isgood) write(*,*) "rk-as dp para"
+
+!    write(*,*) dxout(2), dyout(2,:)
+!    write(*,*) nint(dxout(2)*dtest), nint(dyout(2,:)*dtest)
+
+    ! Rosenbrock Method with parameter
+    call RBstiff( (/1.0_dp,1.0_dp,0.0_dp/), 0.0_dp, 50.0_dp, 2.9e-4_dp, deriv2_testRB_para_dp,&
+                    jacobn2_testRB_para_dp, (/1000.0_dp/), dxout, dyout, hmin=dhmin, eps=1e-4_dp )
+    if (    nint(dxout(2)*dtest) .ne. 29000_i4 .or.&
+            any(nint(dyout(2,:)*dtest) .ne. (/ 99999663_i4, 100000100_i4, -237_i4 /)) )&
+       isgood = .false.    ! test
+    if (.not. isgood) write(*,*) "rb-stiff dp para"
+
+!    write(*,*) dxout(2), dyout(2,:)
+!    write(*,*) nint(dxout(2)*dtest), nint(dyout(2,:)*dtest)
 
 
 ! Is the program running properly?
