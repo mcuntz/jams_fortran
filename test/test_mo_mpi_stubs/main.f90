@@ -54,10 +54,12 @@ program main
 
   include "mpif.h"
 #else
-  use mpi, only: mpi_init, mpi_success, mpi_finalize, mpi_comm_size, mpi_comm_world, &
-       mpi_comm_rank, mpi_reduce, mpi_integer, mpi_sum
+  ! use mpi, only: mpi_init, mpi_success, mpi_finalize, mpi_comm_size, mpi_comm_world, &
+  !      mpi_comm_rank, mpi_reduce, mpi_integer, mpi_sum
 
   implicit none
+
+  include "mpif.h"
 #endif
 #else
   use mo_mpi_stubs, only: mpi_init, mpi_success, mpi_finalize, mpi_comm_size, mpi_comm_world, &
