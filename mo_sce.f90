@@ -158,8 +158,8 @@ MODULE mo_sce
   !>                                                        to minimize/maximize the function.
   !
   !     RESTRICTIONS
-  !>       \note No mask of parameters implemented yet.
-  !>             SCE is OpenMP enabled on the loop over the complexes.
+  !>       \note Maximal number of parameters is 1000.\n
+  !>             SCE is OpenMP enabled on the loop over the complexes.\n
   !>             OMP_NUM_THREADS > 1 does not give reproducible results even when seeded!
   !
   !     EXAMPLE
@@ -197,6 +197,7 @@ MODULE mo_sce
   !                  Matthias Cuntz,              May 2014 - sort with NaNs
   !                  Matthias Cuntz, Juliane Mai  Feb 2015 - restart
   !                  Matthias Cuntz               Mar 2015 - use is_finite and special_value from mo_utils
+  !                  Juliane Mai                  Apr 2015 - handling of array-like variables in restart-namelists
 
   ! ------------------------------------------------------------------
 
@@ -309,7 +310,9 @@ CONTAINS
     !
     ! optionals transfer
     real(dp), dimension(size(pini,1))                :: bl          ! lower bound on parameters
+    real(dp), dimension(1000)                        :: dummy_bl    ! dummy lower bound (only for namelist)
     real(dp), dimension(size(pini,1))                :: bu          ! upper bound on parameters
+    real(dp), dimension(1000)                        :: dummy_bu    ! dummy upper bound (only for namelist)
     integer(i8)                                      :: maxn        ! max no. of trials allowed before optimization is terminated
     logical                                          :: maxit       ! minimization (false) or maximization (true)
     integer(i4)                                      :: kstop       ! number of shuffling loops in which the criterion value
@@ -327,14 +330,15 @@ CONTAINS
     integer(i4)                                      :: iprint      ! flag for controlling print-out after each shuffling loop
     logical                                          :: idot        ! controls progress report .
     logical, dimension(size(pini,1))                 :: maskpara    ! mask(i) = .true.  --> parameter i will be optimized 
-    !                                                               ! mask(i) = .false. --> parameter i will not be optimized 
+    !                                                               ! mask(i) = .false. --> parameter i will not be optimized
+    logical, dimension(1000)                         :: dummy_maskpara    ! dummy maskpara (only for namelist)
     real(dp)                                         :: alpha       ! parameter for reflection  of points in complex
     real(dp)                                         :: beta        ! parameter for contraction of points in complex
     logical                                          :: itmp_file   ! if temporal results wanted
     character(len=1024)                              :: istmp_file  ! local copy of file for temporal results output
     logical                                          :: ipopul_file  ! if temporal population wanted
     character(len=1024)                              :: ispopul_file ! local copy of file for temporal population output
-    
+
     real(dp), dimension(:), allocatable              :: history_tmp ! history of best function values after each iteration
     real(dp), dimension(:), allocatable              :: ihistory_tmp ! local history for OpenMP
     real(dp)                                         :: bestf_tmp   ! function value of bestx(.)
@@ -350,6 +354,7 @@ CONTAINS
     real(dp),    dimension(:,:), allocatable         :: x           ! coordinates of points in the population 
     real(dp),    dimension(:),   allocatable         :: xf          ! function values of x                    
     real(dp),    dimension(size(pini,1))             :: xx          ! coordinates of a single point in x
+    real(dp),    dimension(1000)                     :: dummy_xx    ! dummy xx (only for namelist)
     real(dp),    dimension(:,:), allocatable         :: cx          ! coordinates of points in a complex      
     real(dp),    dimension(:),   allocatable         :: cf          ! function values of cx
     real(dp),    dimension(:,:), allocatable         :: s           ! coordinates of points in the current sub-complex !simplex
@@ -373,40 +378,40 @@ CONTAINS
     integer(i4)                                      :: loop
     integer(i4)                                      :: ii, jj, kk, ll
     integer(i4)                                      :: lpos
-    logical                                          :: lpos_ok     ! for selction of points based on triangular 
-    !                                                               ! probability distribution
+    logical                                          :: lpos_ok            ! for selction of points based on triangular 
+    !                                                                      ! probability distribution
     integer(i4)                                      :: npt1
-    integer(i8)                                      :: icall       ! counter for function evaluations
+    integer(i8)                                      :: icall              ! counter for function evaluations
     integer(i8)                                      :: icall_merk, iicall ! local icall for OpenMP
     integer(i4)                                      :: igs
     integer(i4)                                      :: k1, k2
-    real(dp)                                         :: denomi      ! for checking improvement of last steps
-    real(dp)                                         :: timeou      ! for checking improvement of last steps
-    real(dp)                                         :: rtiny       ! for checking improvement of last steps
-    character(4), dimension(:),  allocatable         :: xname       ! parameter names: "p1", "p2", "p3", ...
-    character(512)                                   :: format_str1 ! format string
-    character(512)                                   :: format_str2 ! format string
-    ! for random numbers
-    real(dp)                                         :: rand        ! random number
-    integer(i8), dimension(:),   allocatable         :: iseed       ! initial random seed  
+    real(dp)                                         :: denomi             ! for checking improvement of last steps
+    real(dp)                                         :: timeou             ! for checking improvement of last steps
+    real(dp)                                         :: rtiny              ! for checking improvement of last steps
+    character(4), dimension(:),  allocatable         :: xname              ! parameter names: "p1", "p2", "p3", ...
+    character(512)                                   :: format_str1        ! format string
+    character(512)                                   :: format_str2        ! format string
+                                                                           ! for random numbers
+    real(dp)                                         :: rand               ! random number
+    integer(i8), dimension(:),   allocatable         :: iseed              ! initial random seed  
     integer(i8), dimension(:,:), allocatable         :: save_state_unif    ! save state of uniform stream
     integer(i8), dimension(:,:), allocatable         :: save_state_gauss   ! save state of gaussian stream
-    real(dp),    dimension(:),   allocatable         :: rand_tmp    ! random number
-    integer(i4)                                      :: ithread, n_threads   ! OMP or not
+    real(dp),    dimension(:),   allocatable         :: rand_tmp           ! random number
+    integer(i4)                                      :: ithread, n_threads ! OMP or not
     integer(i8), dimension(n_save_state)             :: itmp
-    real(dp),    dimension(:,:), allocatable         :: xtmp          ! tmp array for complex reduction
-    real(dp),    dimension(:),   allocatable         :: ftmp          !            %
-    real(dp)                                         :: large         ! for treating NaNs
+    real(dp),    dimension(:,:), allocatable         :: xtmp               ! tmp array for complex reduction
+    real(dp),    dimension(:),   allocatable         :: ftmp               !            %
+    real(dp)                                         :: large              ! for treating NaNs
     logical                                          :: ipopul_file_append
-    integer(i4)                                      :: nonan         ! # of non-NaN in history_tmp
-    real(dp), dimension(:), allocatable              :: htmp          ! tmp storage for history_tmp
-
+    integer(i4)                                      :: nonan              ! # of non-NaN in history_tmp
+    real(dp),    dimension(:), allocatable           :: htmp               ! tmp storage for history_tmp
+    
     namelist /restartnml1/ &
-         bestx, bl, bu, maxn, maxit, kstop, pcento, peps, ngs, npg, nps, nspl, &
-         mings, iniflg, iprint, idot, maskpara, alpha, beta, bestf_tmp, &
-         parall, nopt, nn, npt, fpini, xx, worstf, gnrng, &
+         bestx, dummy_bl, dummy_bu, maxn, maxit, kstop, pcento, peps, ngs, npg, nps, nspl, &
+         mings, iniflg, iprint, idot, dummy_maskpara, alpha, beta, bestf_tmp, &
+         parall, nopt, nn, npt, fpini, dummy_xx, worstf, gnrng, &
          ngs1, ngs2, nloop, npt1, icall, &
-         n_threads, large, ipopul_file_append, itmp_file, istmp_file, &
+         n_threads, ipopul_file_append, itmp_file, istmp_file, &
          ipopul_file, ispopul_file
     namelist /restartnml2/ &
          history_tmp, x, xf, worstx, xnstd, &
@@ -631,7 +636,7 @@ CONTAINS
        else
           large = huge(1.0_dp)
        endif
-       criter(:) = large
+       criter(:) = large / 2.0_dp  ! originally this value should be huge, but Intel does not like to read in huge values
        !
        !  initialize variables
        do ii=1,nn
@@ -879,6 +884,16 @@ CONTAINS
           return
        end if
        !
+       ! transfer all array-like variables in namelist to fixed-size dummy-arrays
+       dummy_maskpara                 = .false.
+       dummy_maskpara(1:size(pini,1)) = maskpara
+       dummy_bl                       = -9999.0_dp
+       dummy_bl(1:size(pini,1))       = bl
+       dummy_bu                       = -9999.0_dp
+       dummy_bu(1:size(pini,1))       = bu
+       dummy_xx                       = -9999.0_dp
+       dummy_xx(1:size(pini,1))       = xx
+       !
        ! write restart
        open(999, file=isrestart_file, status='unknown', action='write', delim='QUOTE')
        write(999, restartnml1)
@@ -891,7 +906,13 @@ CONTAINS
        open(999, file=isrestart_file, status='old', action='read', delim='QUOTE')
        read(999, nml=restartnml1)
        close(999)
-       
+
+       ! transfer all array-like variables in namelist to fixed-size dummy-arrays
+       maskpara = dummy_maskpara(1:size(pini,1))
+       bl       = dummy_bl(1:size(pini,1))
+       bu       = dummy_bu(1:size(pini,1))
+       xx       = dummy_xx(1:size(pini,1))
+
        ! allocate global arrays
        allocate(rand_tmp(n_threads))
        allocate(iseed(n_threads))
@@ -909,7 +930,7 @@ CONTAINS
        allocate(xtmp(npg,nn))
        allocate(ftmp(npg))
     endif
-    
+
     !
     !  begin the main loop 
     mainloop:do while (icall .lt. maxn)
@@ -917,7 +938,13 @@ CONTAINS
        open(999, file=isrestart_file, status='old', action='read', delim='QUOTE')
        read(999, nml=restartnml1)
        read(999, nml=restartnml2)
-       close(999)       
+       close(999)
+       !
+       ! transfer all array-like variables in namelist to fixed-size dummy-arrays
+       maskpara = dummy_maskpara(1:size(pini,1))
+       bl       = dummy_bl(1:size(pini,1))
+       bu       = dummy_bu(1:size(pini,1))
+       xx       = dummy_xx(1:size(pini,1))
        !
        nloop = nloop + 1
        !
@@ -1276,6 +1303,16 @@ CONTAINS
           npt1 = ngs1 * npg
           call comp(ngs2,npg,x(1:ngs2*npg,1:nn),xf(1:ngs2*npg),xtmp(1:ngs2*npg,1:nn),ftmp(1:ngs2*npg))
        end if
+       !
+       ! transfer all array-like variables in namelist to fixed-size dummy-arrays
+       dummy_maskpara                 = .false.
+       dummy_maskpara(1:size(pini,1)) = maskpara
+       dummy_bl                       = -9999.0_dp
+       dummy_bl(1:size(pini,1))       = bl
+       dummy_bu                       = -9999.0_dp
+       dummy_bu(1:size(pini,1))       = bu
+       dummy_xx                       = -9999.0_dp
+       dummy_xx(1:size(pini,1))       = xx
        !
        ! write restart
        open(999, file=isrestart_file, status='unknown', action='write', delim='QUOTE')
@@ -1793,68 +1830,68 @@ CONTAINS
     ! compare fnew with the worst function value fw
     ! fnew is greater than fw, so try a contraction step
     if ((fnew .gt. fw) .or. (.not. is_finite(fnew))) then
-             do j = 1, m
-                if (maskpara(j)) then
-                   snew(j) = ce(j) - beta * (ce(j) - sw(j))
-                else
-                   snew(j) = s(1,j)
-                end if
-             end do
-             !
-             ! compute the function value of the contracted point
-             if (idot) write(output_unit,'(A1)') '.'
-             if (.not. maxit) then
-                fnew = functn(snew)
-                icall = icall + 1_i8
-                history(icall) = min(history(icall-1),fnew)
-             else
-                fnew = -functn(snew)
-                icall = icall + 1_i8
-                history(icall) = max(history(icall-1),-fnew)
-             end if
-             !
-             ! maximum numbers of function evaluations reached
-             if (icall .ge. maxn) return
-             !
-             ! compare fnew to the worst value fw
-             ! if fnew is less than or equal to fw, then accept the point and return
-             if ((fnew .gt. fw) .or. (.not. is_finite(fnew))) then
-                      !
-                      ! if both reflection and contraction fail, choose another point
-                      ! according to a normal distribution with best point of the sub-complex
-                      ! as mean and standard deviation of the population as std
-                      call getpnt(2,bl(1:nn),bu(1:nn),xnstd(1:nn),sb(1:nn),maskpara(1:nn),save_state_gauss,snew)
-                      !
-                      ! compute the function value at the random point
-                      if (idot) write(output_unit,'(A1)') '.'
-                      if (.not. maxit) then
-                         fnew = functn(snew)
-                         icall = icall + 1_i8
-                         history(icall) = min(history(icall-1),fnew)
-                      else
-                         fnew = -functn(snew)
-                         icall = icall + 1_i8
-                         history(icall) = max(history(icall-1),-fnew)
-                      end if
-                      !
-                      ! maximum numbers of function evaluations reached
-                      if (icall .ge. maxn) return
-                      !
-                      ! successful mutation
-                      ! replace the worst point by the new point
-                      do j = 1, m
-                         s(n,j) = snew(j)
-                      end do
-                      sf(n) = fnew
-                   end if
-                end if
-                !
-                ! replace the worst point by the new point
-                do j = 1, m
-                   s(n,j) = snew(j)
-                end do
-                sf(n) = fnew
+       do j = 1, m
+          if (maskpara(j)) then
+             snew(j) = ce(j) - beta * (ce(j) - sw(j))
+          else
+             snew(j) = s(1,j)
+          end if
+       end do
+       !
+       ! compute the function value of the contracted point
+       if (idot) write(output_unit,'(A1)') '.'
+       if (.not. maxit) then
+          fnew = functn(snew)
+          icall = icall + 1_i8
+          history(icall) = min(history(icall-1),fnew)
+       else
+          fnew = -functn(snew)
+          icall = icall + 1_i8
+          history(icall) = max(history(icall-1),-fnew)
+       end if
+       !
+       ! maximum numbers of function evaluations reached
+       if (icall .ge. maxn) return
+       !
+       ! compare fnew to the worst value fw
+       ! if fnew is less than or equal to fw, then accept the point and return
+       if ((fnew .gt. fw) .or. (.not. is_finite(fnew))) then
+          !
+          ! if both reflection and contraction fail, choose another point
+          ! according to a normal distribution with best point of the sub-complex
+          ! as mean and standard deviation of the population as std
+          call getpnt(2,bl(1:nn),bu(1:nn),xnstd(1:nn),sb(1:nn),maskpara(1:nn),save_state_gauss,snew)
+          !
+          ! compute the function value at the random point
+          if (idot) write(output_unit,'(A1)') '.'
+          if (.not. maxit) then
+             fnew = functn(snew)
+             icall = icall + 1_i8
+             history(icall) = min(history(icall-1),fnew)
+          else
+             fnew = -functn(snew)
+             icall = icall + 1_i8
+             history(icall) = max(history(icall-1),-fnew)
+          end if
+          !
+          ! maximum numbers of function evaluations reached
+          if (icall .ge. maxn) return
+          !
+          ! successful mutation
+          ! replace the worst point by the new point
+          do j = 1, m
+             s(n,j) = snew(j)
+          end do
+          sf(n) = fnew
+       end if
+    end if
+    !
+    ! replace the worst point by the new point
+    do j = 1, m
+       s(n,j) = snew(j)
+    end do
+    sf(n) = fnew
 
-              end subroutine cce
+  end subroutine cce
 
-            END MODULE mo_sce
+END MODULE mo_sce
