@@ -1047,6 +1047,12 @@ CONTAINS
        read(999, restartnml2)
        close(999)
 
+       ! transfer all array-like variables in namelist to fixed-size dummy-arrays
+       maskpara             = dummy_maskpara(1:size(para,1))
+       stepsize             = dummy_stepsize(1:size(para,1))
+       parabest             = dummy_parabest(1:size(para,1))
+       initial_paraset_mcmc = dummy_initial_paraset_mcmc(1:size(para,1))
+
        ! iter_mcmc was increased  --> indicates new length of mcmc_paras_3d
        ! Minval(Ipos+Ineg)        --> indicates old length of mcmc_paras_3d
        idummy = Minval(Ipos+Ineg)
@@ -1271,6 +1277,16 @@ CONTAINS
              write(*,*) ' '
           end if
        end if
+
+       ! transfer all array-like variables in namelist to fixed-size dummy-arrays
+       dummy_maskpara                             = .false.
+       dummy_maskpara(1:size(para,1))             = maskpara
+       dummy_stepsize                             = -9999.0_dp
+       dummy_stepsize(1:size(para,1))             = stepsize
+       dummy_parabest                             = -9999.0_dp
+       dummy_parabest(1:size(para,1))             = parabest
+       dummy_initial_paraset_mcmc                 = -9999.0_dp
+       dummy_initial_paraset_mcmc(1:size(para,1)) = initial_paraset_mcmc
        
        ! write restart
        open(999, file=isrestart_file, status='unknown', action='write', delim='QUOTE')
@@ -1285,6 +1301,12 @@ CONTAINS
     read(999, restartnml1)          
     read(999, restartnml2)
     close(999)
+
+    ! transfer all array-like variables in namelist to fixed-size dummy-arrays
+    maskpara             = dummy_maskpara(1:size(para,1))
+    stepsize             = dummy_stepsize(1:size(para,1))
+    parabest             = dummy_parabest(1:size(para,1))
+    initial_paraset_mcmc = dummy_initial_paraset_mcmc(1:size(para,1))
 
     ! reshape of mcmc_paras_3d: return only 2d matrix mcmc_paras
     allocate(mcmc_paras(size(mcmc_paras_3d,1)*size(mcmc_paras_3d,3),size(mcmc_paras_3d,2)))
