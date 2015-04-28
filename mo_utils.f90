@@ -884,32 +884,33 @@ CONTAINS
 
     ! local
     character(len=21) :: ieee_up
-    real(dp)                      :: tmp
+#ifdef GFORTRAN
+    real(dp) :: tmp
+#endif
 
-    tmp = x ! for compiler
     ieee_up = toupper(ieee)
 #ifndef GFORTRAN
     select case(trim(ieee_up))
     case('IEEE_SIGNALING_NAN')
-       special_value_dp = ieee_value(1.0_dp, IEEE_SIGNALING_NAN)
+       special_value_dp = ieee_value(x, IEEE_SIGNALING_NAN)
     case('IEEE_QUIET_NAN')
-       special_value_dp = ieee_value(1.0_dp, IEEE_QUIET_NAN)
+       special_value_dp = ieee_value(x, IEEE_QUIET_NAN)
     case('IEEE_NEGATIVE_INF')
-       special_value_dp = ieee_value(1.0_dp, IEEE_NEGATIVE_INF)
+       special_value_dp = ieee_value(x, IEEE_NEGATIVE_INF)
     case('IEEE_POSITIVE_INF')
-       special_value_dp = ieee_value(1.0_dp, IEEE_POSITIVE_INF)
+       special_value_dp = ieee_value(x, IEEE_POSITIVE_INF)
     case('IEEE_NEGATIVE_DENORMAL')
-       special_value_dp = ieee_value(1.0_dp, IEEE_NEGATIVE_DENORMAL)
+       special_value_dp = ieee_value(x, IEEE_NEGATIVE_DENORMAL)
     case('IEEE_POSITIVE_DENORMAL')
-       special_value_dp = ieee_value(1.0_dp, IEEE_POSITIVE_DENORMAL)
+       special_value_dp = ieee_value(x, IEEE_POSITIVE_DENORMAL)
     case('IEEE_NEGATIVE_NORMAL')
-       special_value_dp = ieee_value(1.0_dp, IEEE_NEGATIVE_NORMAL)
+       special_value_dp = ieee_value(x, IEEE_NEGATIVE_NORMAL)
     case('IEEE_POSITIVE_NORMAL')
-       special_value_dp = ieee_value(1.0_dp, IEEE_POSITIVE_NORMAL)
+       special_value_dp = ieee_value(x, IEEE_POSITIVE_NORMAL)
     case('IEEE_NEGATIVE_ZERO')
-       special_value_dp = ieee_value(1.0_dp, IEEE_NEGATIVE_ZERO)
+       special_value_dp = ieee_value(x, IEEE_NEGATIVE_ZERO)
     case('IEEE_POSITIVE_ZERO')
-       special_value_dp = ieee_value(1.0_dp, IEEE_POSITIVE_ZERO)
+       special_value_dp = ieee_value(x, IEEE_POSITIVE_ZERO)
     case default
        special_value_dp = 0.0_dp
     end select
@@ -922,15 +923,15 @@ CONTAINS
        tmp = 0.0_dp
        special_value_dp = tmp/tmp
     case('IEEE_NEGATIVE_INF')
-       tmp = huge(1.0_dp)
+       tmp = huge(x)
        special_value_dp = -tmp*tmp
     case('IEEE_POSITIVE_INF')
-       tmp = huge(1.0_dp)
+       tmp = huge(x)
        special_value_dp = tmp*tmp
     case('IEEE_NEGATIVE_DENORMAL')
        special_value_dp = -0.0_dp
     case('IEEE_POSITIVE_DENORMAL')
-       special_value_dp = 0.0_sp
+       special_value_dp = 0.0_dp
     case('IEEE_NEGATIVE_NORMAL')
        special_value_dp = -1.0_dp
     case('IEEE_POSITIVE_NORMAL')
@@ -970,32 +971,33 @@ CONTAINS
 
     ! local
     character(len=21) :: ieee_up
-    real(sp)                      :: tmp
+#ifdef GFORTRAN
+    real(sp) :: tmp
+#endif
 
-    tmp = x ! for compiler
     ieee_up = toupper(ieee)
 #ifndef GFORTRAN
     select case(trim(ieee_up))
     case('IEEE_SIGNALING_NAN')
-       special_value_sp = ieee_value(1.0_sp, IEEE_SIGNALING_NAN)
+       special_value_sp = ieee_value(x, IEEE_SIGNALING_NAN)
     case('IEEE_QUIET_NAN')
-       special_value_sp = ieee_value(1.0_sp, IEEE_QUIET_NAN)
+       special_value_sp = ieee_value(x, IEEE_QUIET_NAN)
     case('IEEE_NEGATIVE_INF')
-       special_value_sp = ieee_value(1.0_sp, IEEE_NEGATIVE_INF)
+       special_value_sp = ieee_value(x, IEEE_NEGATIVE_INF)
     case('IEEE_POSITIVE_INF')
-       special_value_sp = ieee_value(1.0_sp, IEEE_POSITIVE_INF)
+       special_value_sp = ieee_value(x, IEEE_POSITIVE_INF)
     case('IEEE_NEGATIVE_DENORMAL')
-       special_value_sp = ieee_value(1.0_sp, IEEE_NEGATIVE_DENORMAL)
+       special_value_sp = ieee_value(x, IEEE_NEGATIVE_DENORMAL)
     case('IEEE_POSITIVE_DENORMAL')
-       special_value_sp = ieee_value(1.0_sp, IEEE_POSITIVE_DENORMAL)
+       special_value_sp = ieee_value(x, IEEE_POSITIVE_DENORMAL)
     case('IEEE_NEGATIVE_NORMAL')
-       special_value_sp = ieee_value(1.0_sp, IEEE_NEGATIVE_NORMAL)
+       special_value_sp = ieee_value(x, IEEE_NEGATIVE_NORMAL)
     case('IEEE_POSITIVE_NORMAL')
-       special_value_sp = ieee_value(1.0_sp, IEEE_POSITIVE_NORMAL)
+       special_value_sp = ieee_value(x, IEEE_POSITIVE_NORMAL)
     case('IEEE_NEGATIVE_ZERO')
-       special_value_sp = ieee_value(1.0_sp, IEEE_NEGATIVE_ZERO)
+       special_value_sp = ieee_value(x, IEEE_NEGATIVE_ZERO)
     case('IEEE_POSITIVE_ZERO')
-       special_value_sp = ieee_value(1.0_sp, IEEE_POSITIVE_ZERO)
+       special_value_sp = ieee_value(x, IEEE_POSITIVE_ZERO)
     case default
        special_value_sp = 0.0_sp
     end select
@@ -1008,10 +1010,10 @@ CONTAINS
        tmp = 0.0_sp
        special_value_sp = tmp/tmp
     case('IEEE_NEGATIVE_INF')
-       tmp = huge(1.0_sp)
+       tmp = huge(x)
        special_value_sp = -tmp*tmp
     case('IEEE_POSITIVE_INF')
-       tmp = huge(1.0_sp)
+       tmp = huge(x)
        special_value_sp = tmp*tmp
     case('IEEE_NEGATIVE_DENORMAL')
        special_value_sp = -0.0_sp
