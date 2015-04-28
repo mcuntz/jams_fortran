@@ -387,7 +387,6 @@ CONTAINS
     integer(i4)                                      :: k1, k2
     real(dp)                                         :: denomi             ! for checking improvement of last steps
     real(dp)                                         :: timeou             ! for checking improvement of last steps
-    real(dp)                                         :: rtiny              ! for checking improvement of last steps
     character(4), dimension(:),  allocatable         :: xname              ! parameter names: "p1", "p2", "p3", ...
     character(512)                                   :: format_str1        ! format string
     character(512)                                   :: format_str2        ! format string
@@ -632,11 +631,11 @@ CONTAINS
        allocate(xtmp(npg,nn)) 
        allocate(ftmp(npg))
        if (maxit) then
-          large = -huge(1.0_dp)
+          large = -0.5_dp*huge(1.0_dp)
        else
-          large = huge(1.0_dp)
+          large = 0.5_dp*huge(1.0_dp)
        endif
-       criter(:) = large / 2.0_dp  ! originally this value should be huge, but Intel does not like to read in huge values
+       criter(:) = large
        !
        !  initialize variables
        do ii=1,nn
@@ -1258,12 +1257,11 @@ CONTAINS
        !
        !  compute the count on successive loops w/o function improvement
        criter(kstop+1) = bestf_tmp
-       if (nloop .gt. kstop) then 
-          denomi = dabs(criter((kstop+1)-kstop) + criter(kstop+1)) / 2.
-          rtiny = 1.0/(1.0**15)
-          denomi = max(denomi, rtiny)
-          timeou = dabs(criter((kstop+1)-kstop) - criter(kstop+1)) / denomi
-          if (timeou .lt. pcento) then 
+       if (nloop .gt. kstop) then
+          denomi = 0.5_dp * abs(criter((kstop+1)-kstop) + criter(kstop+1))
+          denomi = max(denomi, 1.0e-15_dp)
+          timeou = abs(criter((kstop+1)-kstop) - criter(kstop+1)) / denomi
+          if (timeou .lt. pcento) then
              if (iprint .lt. 2) then
                 ! criterion value has not changed during last loops
                 call write_termination_case(2)
@@ -1276,9 +1274,7 @@ CONTAINS
              return
           end if
        end if
-       do ll = 1, kstop
-          criter(ll) = criter(ll+1)
-       end do
+       criter(1:kstop) = criter(2:kstop+1)
        !
        !  if population is converged into a sufficiently small space
        if (ipcnvg .eq. 1) then 
