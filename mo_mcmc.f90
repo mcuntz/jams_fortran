@@ -212,7 +212,8 @@ MODULE mo_mcmc
   !         None
 
   !     RESTRICTIONS
-  !         \note Likelihood has to be defined as a function interface
+  !>        \note Likelihood has to be defined as a function interface\n
+  !>              The maximal number of parameters is 1000.              
   !         -> see also example in test directory
 
   !     EXAMPLE
@@ -451,6 +452,8 @@ MODULE mo_mcmc
   !                  Mai,        Nov. 2014 : add new routine for mcmc
   !                                          mcmc_stddev, i.e. mcmc with likelihood with "faked sigma"
   !                                          mcmc,        i.e. mcmc with "real" likelihood (sigma is given by e.g. error model)
+  !                  Cuntz, Mai  Feb. 2015 : restart
+  !                  Mai,        Apr. 2015 : handling of array-like variables in restart-namelists
   !
   INTERFACE mcmc_stddev
      MODULE PROCEDURE mcmc_stddev_dp
@@ -534,6 +537,7 @@ CONTAINS
     INTEGER(I4)                              :: n                    ! Number of parameters
     LOGICAL                                  :: printflag            ! If command line output is written
     LOGICAL,     DIMENSION(size(para,1))     :: maskpara             ! true if parameter will be optimized
+    LOGICAL,     DIMENSION(1000)             :: dummy_maskpara       ! dummy mask_para (only for namelist)
     INTEGER(I4), DIMENSION(:), ALLOCATABLE   :: truepara             ! indexes of parameters to be optimized
     LOGICAL                                  :: loglike              ! if loglikelihood is given
     LOGICAL                                  :: skip_burnin          ! if stepsize is given --> burnin is skipped
@@ -577,10 +581,13 @@ CONTAINS
     LOGICAL,DIMENSION(size(para,1))          :: ChangePara           ! logical array to switch if parameter is changed
     INTEGER(I4)                              :: trial                ! number of trials for burn-in
     REAL(DP),DIMENSION(size(para,1))         :: stepsize             ! stepsize adjusted by burn-in and used by mcmc
+    REAL(DP),DIMENSION(1000)                 :: dummy_stepsize       ! dummy stepsize (only for namelist)
     REAL(DP),DIMENSION(size(para,1))         :: paraold              ! old parameter set
     REAL(DP),DIMENSION(size(para,1))         :: paranew              ! new parameter set
     REAL(DP),DIMENSION(size(para,1))         :: parabest             ! best parameter set overall
+    REAL(DP),DIMENSION(1000)                 :: dummy_parabest       ! dummy parabest (only for namelist)
     REAL(DP),DIMENSION(size(para,1))         :: initial_paraset_mcmc ! best parameterset found in burn-in
+    REAL(DP),DIMENSION(1000)                 :: dummy_initial_paraset_mcmc ! dummy initial_paraset_mcmc (only for namelist)
     REAL(DP)                                 :: likeliold            ! likelihood of old parameter set
     REAL(DP)                                 :: likelinew            ! likelihood of new parameter set
     REAL(DP)                                 :: likelibest           ! likelihood of best parameter set overall
@@ -606,10 +613,10 @@ CONTAINS
     integer(i4)                              :: n_threads
 
     namelist /restartnml1/ &
-         n, printflag, maskpara, loglike, skip_burnin, &    
+         n, printflag, dummy_maskpara, loglike, skip_burnin, &    
          iStop, ParaSelectMode, iter_burnin, &
-         iter_mcmc, chains, accMult, rejMult, trial, stepsize, &
-         parabest, likelibest, initial_paraset_mcmc, &
+         iter_mcmc, chains, accMult, rejMult, trial, dummy_stepsize, &
+         dummy_parabest, likelibest, dummy_initial_paraset_mcmc, &
          accratio_stddev, &
          accratio_n, vDotDot, B, W, converged, &
          n_threads, &
@@ -979,6 +986,16 @@ CONTAINS
        ! if all parameters converged: Sqrt(R_i) < 1.1 (see Gelman et. al: Baysian Data Analysis, p. 331ff
        converged = .False.
 
+       ! transfer all array-like variables in namelist to fixed-size dummy-arrays
+       dummy_maskpara                             = .false.
+       dummy_maskpara(1:size(para,1))             = maskpara
+       dummy_stepsize                             = -9999.0_dp
+       dummy_stepsize(1:size(para,1))             = stepsize
+       dummy_parabest                             = -9999.0_dp
+       dummy_parabest(1:size(para,1))             = parabest
+       dummy_initial_paraset_mcmc                 = -9999.0_dp
+       dummy_initial_paraset_mcmc(1:size(para,1)) = initial_paraset_mcmc
+
        ! write restart
        open(999, file=isrestart_file, status='unknown', action='write', delim='QUOTE')
        write(999, restartnml1)
@@ -992,6 +1009,12 @@ CONTAINS
        read(999, nml=restartnml1)
        close(999)
 
+       ! transfer all array-like variables in namelist to fixed-size dummy-arrays
+       maskpara             = dummy_maskpara(1:size(para,1))
+       stepsize             = dummy_stepsize(1:size(para,1))
+       parabest             = dummy_parabest(1:size(para,1))
+       initial_paraset_mcmc = dummy_initial_paraset_mcmc(1:size(para,1))
+        
        ! allocate global arrays
        allocate(truepara(count(maskpara)) )
        allocate(seeds(chains,3))
