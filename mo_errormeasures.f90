@@ -1245,7 +1245,7 @@ CONTAINS
     INTEGER(i4)                            :: n
     INTEGER(i4), DIMENSION(size(shape(x))) :: shapemask
     REAL(sp)                               :: xmean
-    REAL(sp), DIMENSION(size(x))           :: v1, v2
+    REAL(sp), DIMENSION(size(x))           :: logx, logy, v1, v2
     LOGICAL,  DIMENSION(size(x))           :: maske
 
     if (present(mask)) then
@@ -1269,12 +1269,20 @@ CONTAINS
     n = count(maske)
     if (n .LE. 1_i4) stop 'LNNSE_sp_1d: number of arguments must be at least 2'
 
+    ! logarithms
+    logx = 0.0_sp
+    logy = 0.0_sp
+    where (maske)
+       logx = log(x)
+       logy = log(y)
+    end where
+    
     ! mean of x
-    xmean = average(log(x), mask=maske)
-    !
-    v1 = merge(log(y) - log(x), 0.0_sp, maske)
-    v2 = merge(log(x) - xmean,  0.0_sp, maske)
-    !
+    xmean = average(logx, mask=maske)
+
+    ! NSE
+    v1 = merge(logy - logx,  0.0_sp, maske)
+    v2 = merge(logx - xmean, 0.0_sp, maske)
     LNNSE_sp_1d = 1.0_sp - dot_product(v1,v1) / dot_product(v2,v2)
 
   END FUNCTION LNNSE_sp_1d
@@ -1294,7 +1302,7 @@ CONTAINS
     INTEGER(i4)                            :: n
     INTEGER(i4), DIMENSION(size(shape(x))) :: shapemask
     REAL(dp)                               :: xmean
-    REAL(dp), DIMENSION(size(x))           :: v1, v2
+    REAL(dp), DIMENSION(size(x))           :: logx, logy, v1, v2
     LOGICAL,  DIMENSION(size(x))           :: maske
 
     if (present(mask)) then
@@ -1318,13 +1326,21 @@ CONTAINS
     n = count(maske)
     if (n .LE. 1_i4) stop 'LNNSE_dp_1d: number of arguments must be at least 2'
 
+    ! logarithms
+    logx = 0.0_dp
+    logy = 0.0_dp
+    where (maske)
+       logx = log(x)
+       logy = log(y)
+    end where
+    
     ! mean of x
-    xmean = average(log(x), mask=maske)
-    !
-    v1 = merge(log(y) - log(x), 0.0_dp, maske)
-    v2 = merge(log(x) -  xmean, 0.0_dp, maske)
-    !
-    LNNSE_dp_1d = 1.0_dp - dot_product(v1,v1) / dot_product(v2,v2)
+    xmean = average(logx, mask=maske)
+
+    ! NSE
+    v1 = merge(logy - logx,  0.0_dp, maske)
+    v2 = merge(logx - xmean, 0.0_dp, maske)
+    LNNSE_dp_1d = 1.0_dp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
 
   END FUNCTION LNNSE_dp_1d
 
@@ -1341,9 +1357,10 @@ CONTAINS
     REAL(sp)                                          :: LNNSE_sp_2d
 
     INTEGER(i4)                                       :: n
-    INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
+    INTEGER(i4), DIMENSION(size(shape(x)))            :: shapemask
     REAL(sp)                                          :: xmean
-    LOGICAL, DIMENSION(size(x, dim=1), size(x, dim=2)):: maske
+    REAL(sp), DIMENSION(size(x,dim=1),size(x,dim=2))  :: logx, logy, v1, v2
+    LOGICAL,  DIMENSION(size(x,dim=1),size(x,dim=2))  :: maske
 
     if (present(mask)) then
        shapemask = shape(mask)
@@ -1358,22 +1375,30 @@ CONTAINS
     else
        maske = .true.
     endif
-    !
+
     ! mask all negative and zero entries
     where (x .lt. tiny(1.0_sp) .or. y .lt. tiny(1.0_sp))
        maske = .false.
     end where
     n = count(maske)
     if (n .LE. 1_i4) stop 'LNNSE_sp_2d: number of arguments must be at least 2'
-    !
+
+    ! logarithms
+    logx = 0.0_sp
+    logy = 0.0_sp
+    where (maske)
+       logx = log(x)
+       logy = log(y)
+    end where
+    
     ! mean of x
-    xmean = average(reshape(log(x(:,:)), (/size(x, dim=1)*size(x, dim=2)/)), &
-               mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/)))
-    !
-    LNNSE_sp_2d = 1.0_sp - &
-         sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
-         sum((log(x)- xmean)*(log(x)- xmean), mask=maske)
-    !
+    xmean = average(pack(logx,maske))
+
+    ! NSE
+    v1 = merge(logy - logx,  0.0_sp, maske)
+    v2 = merge(logx - xmean, 0.0_sp, maske)
+    LNNSE_sp_2d = 1.0_sp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
+
   END FUNCTION LNNSE_sp_2d
 
   ! ------------------------------------------------------------------
@@ -1389,9 +1414,10 @@ CONTAINS
     REAL(dp)                                          :: LNNSE_dp_2d
 
     INTEGER(i4)                                       :: n
-    INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
+    INTEGER(i4), DIMENSION(size(shape(x)))            :: shapemask
     REAL(dp)                                          :: xmean
-    LOGICAL, DIMENSION(size(x, dim=1), size(x, dim=2)):: maske
+    REAL(dp), DIMENSION(size(x,dim=1),size(x,dim=2))  :: logx, logy, v1, v2
+    LOGICAL,  DIMENSION(size(x,dim=1),size(x,dim=2))  :: maske
 
     if (present(mask)) then
        shapemask = shape(mask)
@@ -1406,22 +1432,30 @@ CONTAINS
     else
        maske = .true.
     endif
-    !
+
     ! mask all negative and zero entries
     where (x .lt. tiny(1.0_dp) .or. y .lt. tiny(1.0_dp))
        maske = .false.
     end where
     n = count(maske)
     if (n .LE. 1_i4) stop 'LNNSE_dp_2d: number of arguments must be at least 2'
-    !
+
+    ! logarithms
+    logx = 0.0_dp
+    logy = 0.0_dp
+    where (maske)
+       logx = log(x)
+       logy = log(y)
+    end where
+    
     ! mean of x
-    xmean = average(reshape( log(x(:,:)), (/size(x, dim=1)*size(x, dim=2)/)), &
-                 mask=reshape(maske(:,:), (/size(x, dim=1)*size(x, dim=2)/)))
-    !
-    LNNSE_dp_2d = 1.0_dp - &
-         sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
-         sum((log(x)-xmean )*(log(x)- xmean), mask=maske)
-    !
+    xmean = average(pack(logx,maske))
+
+    ! NSE
+    v1 = merge(logy - logx,  0.0_dp, maske)
+    v2 = merge(logx - xmean, 0.0_dp, maske)
+    LNNSE_dp_2d = 1.0_dp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
+
   END FUNCTION LNNSE_dp_2d
 
   ! ------------------------------------------------------------------
@@ -1432,16 +1466,16 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(sp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
-    LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                          :: LNNSE_sp_3d
+    REAL(sp), DIMENSION(:,:,:),           INTENT(IN)    :: x, y
+    LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(INOUT) :: mask
+    REAL(sp)                                            :: LNNSE_sp_3d
 
-    INTEGER(i4)                                       :: n
-    INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
-    REAL(sp)                                          :: xmean
-    LOGICAL,  DIMENSION(size(x, dim=1), &
-         size(x, dim=2), size(x, dim=3))    :: maske
-
+    INTEGER(i4)                                         :: n
+    INTEGER(i4), DIMENSION(size(shape(x)))              :: shapemask
+    REAL(sp)                                            :: xmean
+    REAL(sp), DIMENSION(size(x,dim=1),size(x,dim=2),size(x,dim=3)) :: logx, logy, v1, v2
+    LOGICAL,  DIMENSION(size(x,dim=1),size(x,dim=2),size(x,dim=3)) :: maske
+    
     if (present(mask)) then
        shapemask = shape(mask)
     else
@@ -1455,22 +1489,30 @@ CONTAINS
     else
        maske = .true.
     endif
-    !
+
     ! mask all negative and zero entries
     where (x .lt. tiny(1.0_sp) .or. y .lt. tiny(1.0_sp))
        maske = .false.
     end where
     n = count(maske)
-    if (n .LE. 1_i4) stop 'LNNSE_dp_2d: number of arguments must be at least 2'
-    !
+    if (n .LE. 1_i4) stop 'LNNSE_sp_3d: number of arguments must be at least 2'
+
+    ! logarithms
+    logx = 0.0_sp
+    logy = 0.0_sp
+    where (maske)
+       logx = log(x)
+       logy = log(y)
+    end where
+    
     ! mean of x
-    xmean = average(reshape(log(x(:,:,:)), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
-                mask=reshape(maske(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
-    !
-    LNNSE_sp_3d = 1.0_sp - &
-         sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
-         sum((log(x)-xmean )*(log(x)-xmean ), mask=maske)
-    !
+    xmean = average(pack(logx,maske))
+
+    ! NSE
+    v1 = merge(logy - logx,  0.0_sp, maske)
+    v2 = merge(logx - xmean, 0.0_sp, maske)
+    LNNSE_sp_3d = 1.0_sp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
+
   END FUNCTION LNNSE_sp_3d
 
   ! ------------------------------------------------------------------
@@ -1481,16 +1523,16 @@ CONTAINS
 
     IMPLICIT NONE
 
-    REAL(dp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
-    LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                          :: LNNSE_dp_3d
+    REAL(dp), DIMENSION(:,:,:),           INTENT(IN)    :: x, y
+    LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(INOUT) :: mask
+    REAL(dp)                                            :: LNNSE_dp_3d
 
-    INTEGER(i4)                                       :: n
-    INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
-    REAL(dp)                                          :: xmean
-    LOGICAL,  DIMENSION(size(x, dim=1), &
-         size(x, dim=2), size(x, dim=3))    :: maske
-
+    INTEGER(i4)                                         :: n
+    INTEGER(i4), DIMENSION(size(shape(x)))              :: shapemask
+    REAL(dp)                                            :: xmean
+    REAL(dp), DIMENSION(size(x,dim=1),size(x,dim=2),size(x,dim=3)) :: logx, logy, v1, v2
+    LOGICAL,  DIMENSION(size(x,dim=1),size(x,dim=2),size(x,dim=3)) :: maske
+    
     if (present(mask)) then
        shapemask = shape(mask)
     else
@@ -1504,22 +1546,30 @@ CONTAINS
     else
        maske = .true.
     endif
-    !
+
     ! mask all negative and zero entries
     where (x .lt. tiny(1.0_dp) .or. y .lt. tiny(1.0_dp))
        maske = .false.
     end where
     n = count(maske)
-    if (n .LE. 1_i4) stop 'LNNSE_dp_2d: number of arguments must be at least 2'
-    !
+    if (n .LE. 1_i4) stop 'LNNSE_dp_3d: number of arguments must be at least 2'
+
+    ! logarithms
+    logx = 0.0_dp
+    logy = 0.0_dp
+    where (maske)
+       logx = log(x)
+       logy = log(y)
+    end where
+    
     ! mean of x
-    xmean = average(reshape(log(x(:,:,:)), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
-         mask=reshape(maske(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
-    !
-    LNNSE_dp_3d = 1.0_dp - &
-         sum((log(y)-log(x))*(log(y)-log(x)), mask=maske) / &
-         sum((log(x)-xmean )*(log(x)- xmean), mask=maske)
-    !
+    xmean = average(pack(logx,maske))
+
+    ! NSE
+    v1 = merge(logy - logx,  0.0_dp, maske)
+    v2 = merge(logx - xmean, 0.0_dp, maske)
+    LNNSE_dp_3d = 1.0_dp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
+
   END FUNCTION LNNSE_dp_3d
 
   ! ------------------------------------------------------------------
