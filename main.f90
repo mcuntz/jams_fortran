@@ -54,6 +54,7 @@ PROGRAM main
   USE mo_sobol
   USE mo_sobol_index
   USE mo_sort
+  USE mo_spatialsimilarity
   USE mo_specan
   USE mo_spline
   USE mo_string_utils
