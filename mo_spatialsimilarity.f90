@@ -3,7 +3,7 @@
 !> \brief Routines for bias insensitive comparison of spatial patterns.
 
 !> \details These routines are based on the idea that spatial similarity can be assessed by comparing
-!>          the the magnitude of neighboring pixels (e.g. is mu neighboring pixel larger or smaller).             
+!>          the magnitude of neighboring pixels (e.g. is the neighboring pixel larger or smaller).             
 
 !> \author Matthias Zink
 !> \date Mar 2013
@@ -19,19 +19,10 @@ MODULE mo_spatialsimilarity
   ! -------
   ! This file is part of the UFZ Fortran library.
 
-  ! The UFZ Fortran library is free software: you can redistribute it and/or modify
-  ! it under the terms of the GNU Lesser General Public License as published by
-  ! the Free Software Foundation, either version 3 of the License, or
-  ! (at your option) any later version.
-
-  ! The UFZ Fortran library is distributed in the hope that it will be useful,
-  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  ! GNU Lesser General Public License for more details.
-
-  ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the UFZ Fortran library (cf. gpl.txt and lgpl.txt).
-  ! If not, see <http://www.gnu.org/licenses/>.
+  ! This file is part of the UFZ Fortran library. 
+  ! It is NOT released under the GNU Lesser General Public License, yet. 
+  ! If you use this routine, please contact Matthias Zink or Juliane Mai. 
+  ! Copyright 2012-2013 Matthias Zink and Juliane Mai 
 
   ! Copyright 2011-2014 Matthias Zink
 
@@ -43,17 +34,6 @@ MODULE mo_spatialsimilarity
 
   PUBLIC :: NNDV                  ! number of neighboring dominating values
   PUBLIC :: PD         ! patter dissimilarity measure
-
-  INTERFACE NNDV                  
-     MODULE PROCEDURE NNDV_sp, NNDV_dp
-  END INTERFACE NNDV
-  INTERFACE PD                  
-     MODULE PROCEDURE PD_sp, PD_dp
-  END INTERFACE PD
-
-  ! ------------------------------------------------------------------
-
-CONTAINS
 
   ! ------------------------------------------------------------------
 
@@ -142,6 +122,104 @@ CONTAINS
   !     HISTORY
   !>         \author Matthias Zink
   !>         \date   Nov 2012
+  
+  INTERFACE NNDV                  
+     MODULE PROCEDURE NNDV_sp, NNDV_dp
+  END INTERFACE NNDV
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         PD
+
+  !     PURPOSE
+  !>         \brief Calculates pattern dissimilarity (PD) measure
+  !>         \details
+  !>             PD             = 1 - sum(dissimilarity(mat1, mat2)) / count(mask)
+  !>             dissimilarity(mat1, mat2) = comparison if pixel is larger than its neighbouring values
+  !>
+  !>            An array element value is compared with its 8 neighbouring cells to check if these cells are larger
+  !>            than the array element value. The result is a 3x3 matrix in which larger cells are indicated by a 
+  !>            true value. For comparison this is done with both input arrays. The resulting array is the sum of
+  !>            xor values of the 3x3 matrices for each of the both arrays.  This means only neighbourhood comparisons
+  !>            which are different in the 2 matrices are counted. This resulting matrix is afterwards normalized to its
+  !>            available neighbors. Furthermore an average over the entire field is calculated. The valid interval of
+  !>            the values for PD is [0..1]. In which 1 indicates full agreement and 0 full dismatching.
+  !>
+  !>            EXAMPLE:
+  !>            mat1 =  | 12 17  1 | , mat2 = |  7  9 12 | 
+  !>                    |  4 10 11 |          | 12 11 11 | 
+  !>                    | 15  2 20 |          |  5 13  7 |
+  !>            booleans determined for every grid cell following fortran array scrolling 
+  !>            i.e. (/col1_row1, col1_row2, col1_row3, col2_row1, .. ,col3_row3/),(/3,3/)
+  !>            comp1 = | FFF FFF FTF, FFF FFF FFF, FTT FFT FFF |, comp2 = | FFF FFT FTT, FFT FFT FTT, FFF FFF FFF |
+  !>                    | FFF TFT TTF, TFT TFF FTT, TFF FFT FFF |          | FFF FFF FFT, FTF FFT TFF, FFT TFF FFF |
+  !>                    | FFF FFF FFF, TTF TFF TTF, FFF FFF FFF |          | FFF TFF TTF, FFF FFF FFF, TTF TFF FFF |
+  !>
+  !>                                                                                      DISSIMILAR / VALID NEIGH CELLS
+  !>            xor=neq = | FFF FFT FFT, FFT FFT FTT, FTT FFT FFF |  -->PDMatrix = | 2, 4, 3 | / | 3, 5, 3 |
+  !>                      | FFF TFT TTT, TTT TFT TTT, TFT TFT FFF |                           | 5, 8, 4 |   | 5, 8, 5 |
+  !>                      | FFF TFF TTF, TTF TFF TTF, TTF TFF FFF |                           | 3, 5, 3 |   | 3, 5, 3 |
+  !>                                                                 --> PDMatrix = | 0.66, 0.80, 1.00 |
+  !>                                                                                           | 1.00, 1.00, 0.80 |
+  !>                                                                                           | 1.00, 1.00, 1.00 |
+  !>  
+  !>           PD = 1 - sum(PDMatrix) / count(mask) = 1 - (8.2666666 / 9) = 0.08148
+  !> 
+  !>           If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
+  !>           x and y can be single or double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = PD(mat1, mat2, mask=mask, valid=valid)
+  
+  !     INDENT(IN)
+  !>        \param[in] "real(sp/dp), dimension(:,:) :: mat1" 2D-array with input numbers
+  !>        \param[in] "real(sp/dp), dimension(:,:) :: mat2" 2D-array with input numbers
+
+  !     INDENT(INOUT)
+  !         None
+
+  !     INDENT(OUT)
+  !         None
+
+  !     INDENT(IN), OPTIONAL
+  !>        \param[out] "logical               :: mask(:,:)" 2D-array of logical values with size(mat1/mat2)
+  !>           If present, only those locations in mask having true values in mask are evaluated.
+
+  !     INDENT(INOUT), OPTIONAL
+  !         None
+
+  !     INDENT(OUT), OPTIONAL
+  !>        \param[out] "logical              :: valid"   indicates if the function could determine a valid value
+  !>                                                      result can be unvalid if entire mask is .false. for ex.
+  !>                                                      in this case PD is set to 0 (worst case)
+
+  !     RETURN
+  !>        \return real(sp/dp) :: PD &mdash; pattern dissimilarity measure 
+  
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !         mat1 = reshape(/ 1., 2, 3., -999., 5., 6. /, (/3,3/))
+  !         mat2 = reshape(/ 1., 2, 3., -999., 5., 6. /, (/3,3/))
+  !         out  = PD(mat1, mat2, mask=(mat1 >= 0. .and. mat2 >= 0.))
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !          None         
+
+  !     HISTORY
+  !>         \author Matthias Zink and Juliane Mai
+  !>         \date   Jan 2013
+  
+  INTERFACE PD                  
+     MODULE PROCEDURE PD_sp, PD_dp
+  END INTERFACE PD
+
+  ! ------------------------------------------------------------------
+
+CONTAINS
   
   FUNCTION NNDV_sp(mat1, mat2, mask, valid)
 
@@ -315,91 +393,7 @@ CONTAINS
     !
   END FUNCTION NNDV_dp
 
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         PD
-
-  !     PURPOSE
-  !>         \brief Calculates pattern dissimilarity (PD) measure
-  !>         \details
-  !>             PD             = 1 - sum(dissimilarity(mat1, mat2)) / count(mask)
-  !>             dissimilarity(mat1, mat2) = comparison if pixel is larger than its neighbouring values
-  !>
-  !>            An array element value is compared with its 8 neighbouring cells to check if these cells are larger
-  !>            than the array element value. The result is a 3x3 matrix in which larger cells are indicated by a 
-  !>            true value. For comparison this is done with both input arrays. The resulting array is the sum of
-  !>            xor values of the 3x3 matrices for each of the both arrays.  This means only neighbourhood comparisons
-  !>            which are different in the 2 matrices are counted. This resulting matrix is afterwards normalized to its
-  !>            available neighbors. Furthermore an average over the entire field is calculated. The valid interval of
-  !>            the values for PD is [0..1]. In which 1 indicates full agreement and 0 full dismatching.
-  !>
-  !>            EXAMPLE:
-  !>            mat1 =  | 12 17  1 | , mat2 = |  7  9 12 | 
-  !>                    |  4 10 11 |          | 12 11 11 | 
-  !>                    | 15  2 20 |          |  5 13  7 |
-  !>            booleans determined for every grid cell following fortran array scrolling 
-  !>            i.e. (/col1_row1, col1_row2, col1_row3, col2_row1, .. ,col3_row3/),(/3,3/)
-  !>            comp1 = | FFF FFF FTF, FFF FFF FFF, FTT FFT FFF |, comp2 = | FFF FFT FTT, FFT FFT FTT, FFF FFF FFF |
-  !>                    | FFF TFT TTF, TFT TFF FTT, TFF FFT FFF |          | FFF FFF FFT, FTF FFT TFF, FFT TFF FFF |
-  !>                    | FFF FFF FFF, TTF TFF TTF, FFF FFF FFF |          | FFF TFF TTF, FFF FFF FFF, TTF TFF FFF |
-  !>
-  !>                                                                                      DISSIMILAR / VALID NEIGH CELLS
-  !>            xor=neq = | FFF FFT FFT, FFT FFT FTT, FTT FFT FFF |  -->PDMatrix = | 2, 4, 3 | / | 3, 5, 3 |
-  !>                      | FFF TFT TTT, TTT TFT TTT, TFT TFT FFF |                           | 5, 8, 4 |   | 5, 8, 5 |
-  !>                      | FFF TFF TTF, TTF TFF TTF, TTF TFF FFF |                           | 3, 5, 3 |   | 3, 5, 3 |
-  !>                                                                 --> PDMatrix = | 0.66, 0.80, 1.00 |
-  !>                                                                                           | 1.00, 1.00, 0.80 |
-  !>                                                                                           | 1.00, 1.00, 1.00 |
-  !>  
-  !>           PD = 1 - sum(PDMatrix) / count(mask) = 1 - (8.2666666 / 9) = 0.08148
-  !> 
-  !>           If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
-  !>           x and y can be single or double precision. The result will have the same numerical precision.
-
-  !     CALLING SEQUENCE
-  !         out = PD(mat1, mat2, mask=mask, valid=valid)
-  
-  !     INDENT(IN)
-  !>        \param[in] "real(sp/dp), dimension(:,:) :: mat1" 2D-array with input numbers
-  !>        \param[in] "real(sp/dp), dimension(:,:) :: mat2" 2D-array with input numbers
-
-  !     INDENT(INOUT)
-  !         None
-
-  !     INDENT(OUT)
-  !         None
-
-  !     INDENT(IN), OPTIONAL
-  !>        \param[out] "logical               :: mask(:,:)" 2D-array of logical values with size(mat1/mat2)
-  !>           If present, only those locations in mask having true values in mask are evaluated.
-
-  !     INDENT(INOUT), OPTIONAL
-  !         None
-
-  !     INDENT(OUT), OPTIONAL
-  !>        \param[out] "logical              :: valid"   indicates if the function could determine a valid value
-  !>                                                      result can be unvalid if entire mask is .false. for ex.
-  !>                                                      in this case PD is set to 0 (worst case)
-
-  !     RETURN
-  !>        \return real(sp/dp) :: PD &mdash; pattern dissimilarity measure 
-  
-  !     RESTRICTIONS
-  !         Input values must be floating points.
-
-  !     EXAMPLE
-  !         mat1 = reshape(/ 1., 2, 3., -999., 5., 6. /, (/3,3/))
-  !         mat2 = reshape(/ 1., 2, 3., -999., 5., 6. /, (/3,3/))
-  !         out  = PD(mat1, mat2, mask=(mat1 >= 0. .and. mat2 >= 0.))
-  !         -> see also example in test directory
-
-  !     LITERATURE
-  !          None         
-
-  !     HISTORY
-  !>         \author Matthias Zink and Juliane Mai
-  !>         \date   Jan 2013
+  ! ----------------------------------------------------------------------------------------------------------------
 
   FUNCTION PD_sp(mat1, mat2, mask, valid)
 
