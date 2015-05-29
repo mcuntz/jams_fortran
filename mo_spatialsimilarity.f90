@@ -19,12 +19,10 @@ MODULE mo_spatialsimilarity
   ! -------
   ! This file is part of the UFZ Fortran library.
 
-  ! This file is part of the UFZ Fortran library. 
   ! It is NOT released under the GNU Lesser General Public License, yet. 
   ! If you use this routine, please contact Matthias Zink or Juliane Mai. 
-  ! Copyright 2012-2013 Matthias Zink and Juliane Mai 
 
-  ! Copyright 2011-2014 Matthias Zink
+  ! Copyright 2012-2015 Matthias Zink and Juliane Mai
 
   USE mo_kind,   ONLY: i4, sp, dp
 
@@ -122,6 +120,7 @@ MODULE mo_spatialsimilarity
   !     HISTORY
   !>         \author Matthias Zink
   !>         \date   Nov 2012
+  !          update  May 2015 created documentation
   
   INTERFACE NNDV                  
      MODULE PROCEDURE NNDV_sp, NNDV_dp
