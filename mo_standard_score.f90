@@ -185,7 +185,7 @@ MODULE mo_standard_score
   
   !     LITERATURE
   !        None
-  
+
   !     HISTORY
   !>         \author Matthias Zink
   !>         \date   May 2012
@@ -276,12 +276,14 @@ CONTAINS
 
     ! local
     integer(i4)                                       :: iclass, ielem        ! loop variable
-    integer(i4)                                       :: number_of_classes    ! number of unique classes in vector classes
+    integer(i4)                                       :: number_of_classes    ! number of unique classes in vector
+    ! classes
     integer(i4), dimension(size(data, dim=1))         :: unique_classes       ! vector of uniqe classes
     real(sp)                                          :: class_mean           ! mean of class
     real(sp)                                          :: class_stddev         ! standard deviation of class
     logical,     dimension(size(data, dim=1))         :: maske                ! data mask
-    logical,     dimension(size(data, dim=1))         :: mask_class_maske     ! combined mask for current class and maske
+    logical,     dimension(size(data, dim=1))         :: mask_class_maske     ! combined mask for current class and
+    ! maske
 
     ! check if optional mask matches shape of data
     if (present(mask)) then

@@ -57,6 +57,7 @@ PROGRAM main
   USE mo_spatialsimilarity
   USE mo_specan
   USE mo_spline
+  USE mo_standard_score
   USE mo_string_utils
   !USE mo_template
   USE mo_timer
