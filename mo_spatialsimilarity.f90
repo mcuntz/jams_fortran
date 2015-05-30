@@ -28,9 +28,7 @@ MODULE mo_spatialsimilarity
 
   IMPLICIT NONE
 
-  PRIVATE
-
-  PUBLIC :: NNDV                  ! number of neighboring dominating values
+  PUBLIC :: NNDV       ! number of neighboring dominating values
   PUBLIC :: PD         ! patter dissimilarity measure
 
   ! ------------------------------------------------------------------
@@ -51,28 +49,38 @@ MODULE mo_spatialsimilarity
   !>            normalized to its available neighbors. 
   !>            Furthermore an average over the entire field is calculated. The valid interval of
   !>            the values for NNDV is [0..1]. In which 1 indicates full agreement and 0 full dismatching.  
-  !>
-  !>            EXAMPLE:
+  !>             <pre>
+  !>            EXAMPLE:\n
   !>            mat1 =  | 12 17  1 | , mat2 = |  7  9 12 | 
   !>                    |  4 10 11 |          | 12 11 11 | 
-  !>                    | 15  2 20 |          |  5 13  7 |
-  !>
+  !>                    | 15  2 20 |          |  5 13  7 | 
   !>            booleans determined for every grid cell following fortran array scrolling 
   !>            i.e. (/col1_row1, col1_row2, col1_row3, col2_row1, .. ,col3_row3/),(/3,3/)
-  !>            comp1 = | FFF FFF FTF, FFF FFF FFF, FTT FFT FFF |, comp2 = | FFF FFT FTT, FFT FFT FTT, FFF FFF FFF |
-  !>                    | FFF TFT TTF, TFT TFF FTT, TFF FFT FFF |          | FFF FFF FFT, FTF FFT TFF, FFT TFF FFF |
-  !>                    | FFF FFF FFF, TTF TFF TTF, FFF FFF FFF |          | FFF TFF TTF, FFF FFF FFF, TTF TFF FFF |
   !>
-  !>           NNDVMatrix = abs( count(comp1) - count(comp2) ) = | 1-3, 0-4, 3-0 | = | 2, 4, 3 |
-  !>                                                             | 4-1, 5-3, 2-2 |   | 3, 2, 0 |
-  !>                                                             | 0-3, 5-0, 0-3 |   | 3, 5, 3 |
+  !>            comp1 = | FFF FFF FTF, FFF FFF FFF, FTT FFT FFF |
+  !>                    | FFF TFT TTF, TFT TFF FTT, TFF FFT FFF |
+  !>                    | FFF FFF FFF, TTF TFF TTF, FFF FFF FFF |
+  !>
+  !>            comp2 = | FFF FFT FTT, FFT FFT FTT, FFF FFF FFF |
+  !>                    | FFF FFF FFT, FTF FFT TFF, FFT TFF FFF |
+  !>                    | FFF TFF TTF, FFF FFF FFF, TTF TFF FFF |
+  !>
+  !>           NNDVMatrix =
+  !>           abs( count(comp1) - count(comp2) ) = | 1-3, 0-4, 3-0 | = | 2, 4, 3 |
+  !>                                                | 4-1, 5-3, 2-2 |   | 3, 2, 0 |
+  !>                                                | 0-3, 5-0, 0-3 |   | 3, 5, 3 |
   !>
    !>                                    DISSIMILAR / VALID NEIGH CELLS
-  !>           NNDVMatrix / VALID NEIGH CELLS = | 2, 4, 3 | / | 3, 5, 3 | = | 0.66, 0.80, 1.00 |
-  !>                                            | 3, 2, 0 |   | 5, 8, 5 | = | 0.60, 0.25, 0.00 | 
-  !>                                            | 3, 5, 3 |   | 3, 5, 3 | = | 1.0,  1.00, 1.00 |
-  !>  
+  !>           NNDVMatrix / VALID NEIGH CELLS = | 2, 4, 3 | / | 3, 5, 3 |
+  !>                                            | 3, 2, 0 |   | 5, 8, 5 |   
+  !>                                            | 3, 5, 3 |   | 3, 5, 3 |   
+  !>
+  !>                                          = | 0.66, 0.80, 1.00 |
+  !>                                            | 0.60, 0.25, 0.00 |
+  !>                                            | 1.0,  1.00, 1.00 |
+  !>
   !>           NNDV = 1 - sum(NNDVMatrix) / count(mask) = 1 - (6.31666666 / 9) = 0.2981
+  !>            </pre>
   !>
   !>           If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
   !>           x and y can be single or double precision. The result will have the same numerical precision.
@@ -121,7 +129,6 @@ MODULE mo_spatialsimilarity
   !>         \author Matthias Zink
   !>         \date   Nov 2012
   !          update  May 2015 created documentation
-  
   INTERFACE NNDV                  
      MODULE PROCEDURE NNDV_sp, NNDV_dp
   END INTERFACE NNDV
@@ -145,26 +152,36 @@ MODULE mo_spatialsimilarity
   !>            available neighbors. Furthermore an average over the entire field is calculated. The valid interval of
   !>            the values for PD is [0..1]. In which 1 indicates full agreement and 0 full dismatching.
   !>
-  !>            EXAMPLE:
+  !>             <pre>
+ !>            EXAMPLE:\n
   !>            mat1 =  | 12 17  1 | , mat2 = |  7  9 12 | 
   !>                    |  4 10 11 |          | 12 11 11 | 
   !>                    | 15  2 20 |          |  5 13  7 |
+  !>
   !>            booleans determined for every grid cell following fortran array scrolling 
   !>            i.e. (/col1_row1, col1_row2, col1_row3, col2_row1, .. ,col3_row3/),(/3,3/)
-  !>            comp1 = | FFF FFF FTF, FFF FFF FFF, FTT FFT FFF |, comp2 = | FFF FFT FTT, FFT FFT FTT, FFF FFF FFF |
-  !>                    | FFF TFT TTF, TFT TFF FTT, TFF FFT FFF |          | FFF FFF FFT, FTF FFT TFF, FFT TFF FFF |
-  !>                    | FFF FFF FFF, TTF TFF TTF, FFF FFF FFF |          | FFF TFF TTF, FFF FFF FFF, TTF TFF FFF |
   !>
-  !>                                                                                      DISSIMILAR / VALID NEIGH CELLS
-  !>            xor=neq = | FFF FFT FFT, FFT FFT FTT, FTT FFT FFF |  -->PDMatrix = | 2, 4, 3 | / | 3, 5, 3 |
-  !>                      | FFF TFT TTT, TTT TFT TTT, TFT TFT FFF |                           | 5, 8, 4 |   | 5, 8, 5 |
-  !>                      | FFF TFF TTF, TTF TFF TTF, TTF TFF FFF |                           | 3, 5, 3 |   | 3, 5, 3 |
-  !>                                                                 --> PDMatrix = | 0.66, 0.80, 1.00 |
-  !>                                                                                           | 1.00, 1.00, 0.80 |
-  !>                                                                                           | 1.00, 1.00, 1.00 |
+  !>            comp1 = | FFF FFF FTF, FFF FFF FFF, FTT FFT FFF |
+  !>                    | FFF TFT TTF, TFT TFF FTT, TFF FFT FFF |
+  !>                    | FFF FFF FFF, TTF TFF TTF, FFF FFF FFF |
+  !>
+  !>            comp2 = | FFF FFT FTT, FFT FFT FTT, FFF FFF FFF |
+  !>                    | FFF FFF FFT, FTF FFT TFF, FFT TFF FFF |
+  !>                    | FFF TFF TTF, FFF FFF FFF, TTF TFF FFF |
+  !>
+  !>
+  !>            xor=neq = | FFF FFT FFT, FFT FFT FTT, FTT FFT FFF |
+  !>                      | FFF TFT TTT, TTT TFT TTT, TFT TFT FFF |
+  !>                      | FFF TFF TTF, TTF TFF TTF, TTF TFF FFF |               
+  !>  
+  !>                        DISSIMILAR / VALID NEIGH CELLS
+  !>            PDMatrix = | 2, 4, 3 | / | 3, 5, 3 | = | 0.66, 0.80, 1.00 |
+  !>                       | 5, 8, 4 |   | 5, 8, 5 |   | 1.00, 1.00, 0.80 |
+  !>                       | 3, 5, 3 |   | 3, 5, 3 |   | 1.00, 1.00, 1.00 |
   !>  
   !>           PD = 1 - sum(PDMatrix) / count(mask) = 1 - (8.2666666 / 9) = 0.08148
-  !> 
+  !>            </pre>
+  !>
   !>           If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
   !>           x and y can be single or double precision. The result will have the same numerical precision.
 
@@ -211,7 +228,6 @@ MODULE mo_spatialsimilarity
   !     HISTORY
   !>         \author Matthias Zink and Juliane Mai
   !>         \date   Jan 2013
-  
   INTERFACE PD                  
      MODULE PROCEDURE PD_sp, PD_dp
   END INTERFACE PD

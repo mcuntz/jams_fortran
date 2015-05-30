@@ -1,7 +1,7 @@
 !> \file mo_standard_score.f90
 
-  !> \brief Routines for calculating the normalization (anomaly)/standard score/z score and the 
-  !>        deseasonalized (standard score on monthly basis) values of a time series.
+!> \brief Routines for calculating the normalization (anomaly)/standard score/z score and the 
+!>        deseasonalized (standard score on monthly basis) values of a time series.
 
 !> \details In environmental research often the centralization and standardization are estimated
 !>          for characterizing the dynamics of a signal.
@@ -62,10 +62,9 @@ MODULE mo_standard_score
   !>           Standard scores are also called z-values, z-scores, normal scores, and standardized variables; the use
   !>           of "Z" is because the normal distribution is also known as the "Z distribution". They are most frequently
   !>           used to compare a sample to a standard normal deviate, though they can be defined without assumptions of
-  !>           normality (WIKIPEDIA, May 2015)
+  !>           normality (Wikipedia, May 2015).
   !>
   !>          \f[ standard\_score = \frac{x - \mu_x}{\sigma_x} \f]
-  !>
   !>           where \f$ \mu_x \f$ is the mean of a population \f$ x \f$ and \f$ \sigma_x \f$ its standard deviation.
   !>
   !>           If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
@@ -122,7 +121,7 @@ MODULE mo_standard_score
   !         classified_standard_score
 
   !     PURPOSE
-  !>         \brief    Calculates the a classified standard score (e.g. classes are months).
+  !>         \brief    Calculates the  classified standard score (e.g. classes are months).
   !>         \details  In statistics, the standard score is the (signed) number of standard deviations an observation
   !>           or datum is above the mean. Thus, a positive standard score indicates a datum above the mean,        
   !>           while a negative standard score indicates a datum below the mean.
@@ -133,21 +132,20 @@ MODULE mo_standard_score
   !>           Standard scores are also called z-values, z-scores, normal scores, and standardized variables; the use
   !>           of "Z" is because the normal distribution is also known as the "Z distribution". They are most frequently
   !>           used to compare a sample to a standard normal deviate, though they can be defined without assumptions of
-  !>           normality (WIKIPEDIA, May 2015)
+  !>           normality (Wikipedia, May 2015).\n
   !>           In this particular case the standard score is calculated for means and standard deviations derived from
   !>           classes of the time series. Such classes could be for example months. Thus, the output would be a
   !>           deseasonalized time series. 
   !>
-  !>          \f[ standard\_score = \frac{x_i - \mu_c_x_i}{\sigma__c_xi} \f]
-  !>
-  !>           where \f$ x_i \f$ is an element of class \f$ c_x_i \f$. \f$ x \f$ is a population, \f$ \mu_c_x_i \f$
-  !>           is the mean of all members of a class \f$ c_x_i \f$ and \f$ \sigma_c_x_i \f$ its standard deviation.
+  !>          \f[ classified\_standard\_score = \frac{x_i - \mu_{c_{x_i}}}{\sigma_{c_{x_i}}} \f]
+  !>           where \f$ x_i \f$ is an element of class \f$ c_{x_i} \f$. \f$ x \f$ is a population, \f$ \mu_{c_{x_i}} \f$
+  !>           is the mean of all members of a class \f$ c_{x_i} \f$ and \f$ \sigma_{c_{x_i}} \f$ its standard deviation.
   !>
   !>           If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
   !>           x and y can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         out = standard_score(data, mask=mask)
+  !         out = classified_standard_score(data, mask=mask)
   
   !     INDENT(IN)
   !>        \param[in] "integer,     dimension(:) :: classes" classes to categorize data (e.g. months)
@@ -180,7 +178,7 @@ MODULE mo_standard_score
   !     EXAMPLE
   !         data    = (/ 1., 2, 3., -999., 5., 6. /)
   !         classes = (/ 1,  1, 1,     2,  2 , 2 /)
-  !         out  = standard_score(data, classes, mask=(data >= 0.))
+  !         out  = classified_standard_score(data, classes, mask=(data >= 0.))
   !         -> see also example in test directory
   
   !     LITERATURE
