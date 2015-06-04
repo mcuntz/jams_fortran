@@ -923,10 +923,14 @@ CONTAINS
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(dp)                                      :: crosscoeffk_dp
 
-    INTEGER(i4) :: nn, kk
-    REAL(dp)    :: n, ave
-    REAL(dp),  DIMENSION(size(x))   :: xdash
-    REAL(dp),  DIMENSION(size(x))   :: ydash
+    INTEGER(i4) :: nn  ! number of true values in mask
+    INTEGER(i4) :: nnn ! number of true values in mask .and. shifted mask by lag k
+    REAL(dp)    :: n   ! real of nn or nnn
+    INTEGER(i4) :: kk  ! absolute value of lag k
+    REAL(dp)    :: ave
+
+    REAL(dp),  DIMENSION(size(x)) :: xdash
+    REAL(dp),  DIMENSION(size(x)) :: ydash
     LOGICAL,   DIMENSION(size(x)) :: maske
 
     maske(:) = .true.
@@ -951,11 +955,11 @@ CONTAINS
        ydash = x - ave
     endif
     kk = abs(k)
-    n  = real(count(maske(1:nn-kk).and.maske(1+kk:nn)),dp)
-    crosscoeffk_dp = sum(xdash(1:nn-kk)*ydash(1+kk:nn), mask=(maske(1:nn-kk).and.maske(1+kk:nn))) / n
-
+    nnn = size(x,1)
+    n  = real(count(maske(1:nnn-kk).and.maske(1+kk:nnn)),dp)
+    crosscoeffk_dp = sum(xdash(1:nnn-kk)*ydash(1+kk:nnn), mask=(maske(1:nnn-kk).and.maske(1+kk:nnn))) / n
+    
   END FUNCTION crosscoeffk_dp
-
 
   FUNCTION crosscoeffk_sp(x, y, k, mask)
 
@@ -967,10 +971,14 @@ CONTAINS
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(sp)                                      :: crosscoeffk_sp
 
-    INTEGER(i4) :: nn, kk
-    REAL(sp)    :: n, ave
-    REAL(sp),  DIMENSION(size(x))   :: xdash
-    REAL(sp),  DIMENSION(size(x))   :: ydash
+    INTEGER(i4) :: nn  ! number of true values in mask
+    INTEGER(i4) :: nnn ! number of true values in mask .and. shifted mask by lag k
+    REAL(sp)    :: n   ! real of nn or nnn
+    INTEGER(i4) :: kk  ! absolute value of lag k
+    REAL(sp)    :: ave
+
+    REAL(sp),  DIMENSION(size(x)) :: xdash
+    REAL(sp),  DIMENSION(size(x)) :: ydash
     LOGICAL,   DIMENSION(size(x)) :: maske
 
     maske(:) = .true.
@@ -995,9 +1003,10 @@ CONTAINS
        ydash = x - ave
     endif
     kk = abs(k)
-    n  = real(count(maske(1:nn-kk).and.maske(1+kk:nn)),sp)
-    crosscoeffk_sp = sum(xdash(1:nn-kk)*ydash(1+kk:nn), mask=(maske(1:nn-kk).and.maske(1+kk:nn))) / n
-
+    nnn = size(x,1)
+    n  = real(count(maske(1:nnn-kk).and.maske(1+kk:nnn)),sp)
+    crosscoeffk_sp = sum(xdash(1:nnn-kk)*ydash(1+kk:nnn), mask=(maske(1:nnn-kk).and.maske(1+kk:nnn))) / n
+    
   END FUNCTION crosscoeffk_sp
 
   ! ------------------------------------------------------------------
