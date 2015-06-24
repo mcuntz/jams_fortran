@@ -37,12 +37,12 @@ MODULE mo_kernel
 
   ! Copyright 2013-2014 Juliane Mai, Stephan Thober, Matthias Cuntz
 
-  USE mo_kind,      ONLY: i4, sp, dp
   USE mo_constants, ONLY: twopi_sp, twopi_dp
+  USE mo_integrate, ONLY: int_regular
+  USE mo_kind,      ONLY: i4, sp, dp
   USE mo_moment,    ONLY: stddev
   USE mo_nelmin,    ONLY: nelminrange      ! ND optimization
   USE mo_quicksort, ONLY: qsort_index
-  USE mo_integrate, ONLY: int_regular
 
   IMPLICIT NONE
 
