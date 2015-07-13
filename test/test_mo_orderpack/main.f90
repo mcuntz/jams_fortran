@@ -2,7 +2,7 @@ PROGRAM main
 
   USE mo_kind,      ONLY: i4, dp, sp
   USE mo_utils,     ONLY: eq
-  USE mo_orderpack, ONLY: refsor, mrgrnk, median, sort, sort_index
+  USE mo_orderpack, ONLY: refsor, mrgrnk, omedian, sort, sort_index
 
   IMPLICIT NONE
 
@@ -36,7 +36,7 @@ PROGRAM main
   if (any(abs(dat1-dat2(ii)) > 0._dp)) isgood = .false.
 
   ! median
-  isgood = isgood .and. eq(median(dat1),5.5_dp)
+  isgood = isgood .and. eq(omedian(dat1),5.5_dp)
 
   if (isgood) then
      write(*,*) 'mo_orderpack double precision o.k.'
@@ -65,7 +65,7 @@ PROGRAM main
   if (any(abs(sat1-sat2(ii)) > 0._dp)) isgood = .false.
 
   ! median
-  isgood = isgood .and. eq(median(sat1),5.5_sp)
+  isgood = isgood .and. eq(omedian(sat1),5.5_sp)
 
   if (isgood) then
      write(*,*) 'mo_orderpack single precision o.k.'

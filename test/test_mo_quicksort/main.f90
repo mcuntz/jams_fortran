@@ -2,9 +2,12 @@ PROGRAM main
   
   USE mo_kind,      ONLY: i4, sp, dp
   use mo_timer,     only: timers_init, timer_start, timer_stop, timer_print, timer_clear
+#ifndef pgiFortran
+  ! PGI does not like the same name in two used modules such as 'sort' in all sorting modules
   USE mo_sort,      ONLY: sort, sort_index
   USE mo_orderpack, ONLY: mrgrnk, refsor
   use mo_orderpack, only: osort => sort, osort_index => sort_index
+#endif
   use mo_quicksort, only: qsort, qsort_index, qsortc, quick_sort, qsortb, qsortmp
   use mo_quicksort, only: isort => sort, isort_index => sort_index, sortmp, sortmp_index
   use mo_utils,     only: ne
@@ -30,6 +33,7 @@ PROGRAM main
 
   isgood = .true.
   Write(*,*) ''
+#ifndef pgiFortran
   Write(*,*) 'Numerical Recipes'
   call timer_start(1)
   do i=1, nloop
@@ -93,6 +97,7 @@ PROGRAM main
   ii = osort_index(sat)
   call osort(sat)
   if (any(ne(sat2(ii),sat))) isgood = .false.
+#endif
 
   Write(*,*) 'Wikibooks'
   call timer_start(1)
@@ -237,6 +242,7 @@ PROGRAM main
 
   isgood = .true.
   Write(*,*) ''
+#ifndef pgiFortran
   Write(*,*) 'Numerical Recipes'
   call timer_start(1)
   do i=1, nloop
@@ -300,7 +306,8 @@ PROGRAM main
   ii = osort_index(iat)
   call osort(iat)
   if (any(iat2(ii) /= iat)) isgood = .false.
-
+#endif
+  
   Write(*,*) 'Wikibooks'
   call timer_start(1)
   do i=1, nloop
@@ -439,6 +446,7 @@ PROGRAM main
 
   isgood = .true.
   Write(*,*) ''
+#ifndef pgiFortran
   Write(*,*) 'Numerical Recipes'
   call timer_start(1)
   do i=1, nloop
@@ -533,7 +541,8 @@ PROGRAM main
   ii = osort_index(dat)
   call osort(dat)
   if (any(ne(dat2(ii),dat))) isgood = .false.
-
+#endif
+  
   Write(*,*) 'Wikibooks'
   call timer_start(1)
   do i=1, nloop

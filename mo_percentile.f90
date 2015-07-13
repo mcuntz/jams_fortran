@@ -268,7 +268,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION median_dp(arrin,mask)
+  FUNCTION median_dp(arrin, mask)
 
     IMPLICIT NONE
 
@@ -310,7 +310,7 @@ CONTAINS
   END FUNCTION median_dp
 
 
-  FUNCTION median_sp(arrin,mask)
+  FUNCTION median_sp(arrin, mask)
 
     IMPLICIT NONE
 

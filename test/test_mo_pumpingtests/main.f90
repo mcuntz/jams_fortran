@@ -58,7 +58,7 @@ write (*,*) ''
 write (*,*) 'Test mo_pumpingtests.f90'
 write (*,*) ''
 
-write (*,*) 'THIEM''s SOLUTION'
+write (*,*) "THIEM's SOLUTION"
 write (*,*) '-------------------------------------------------------------------------'
 
 ! Thiemsp(0.2)         =  -2.56150007    
@@ -79,7 +79,7 @@ write (*,*) '-------------------------------------------------------------------
 
     write (*,*) ' '
 
-write (*,*) 'EXTENDED THIEM''s SOLUTION IN 3D'
+write (*,*) "EXTENDED THIEM's SOLUTION IN 3D"
 write (*,*) '-------------------------------------------------------------------------'
 
 ! ext_Thiem3d_sp(0.2)  =  -4.19452763    
@@ -138,7 +138,7 @@ write (*,*) '-------------------------------------------------------------------
 
     write (*,*) ' '
 
-write (*,*) 'EXTENDED THIEM''s SOLUTION IN 2D'
+write (*,*) "EXTENDED THIEM's SOLUTION IN 2D"
 write (*,*) '-------------------------------------------------------------------------'
 
 ! ext_Thiem2d_sp(0.2)  =  -2.57654548    
@@ -181,7 +181,7 @@ write (*,*) '-------------------------------------------------------------------
 
     write (*,*) ' '
 
-write (*,*) 'THEIS'' SOLUTION'
+write (*,*) "THEIS' SOLUTION"
 write (*,*) '-------------------------------------------------------------------------'
 
 ! Theissp(r=.2,t=.0)   =  0.00000000    
@@ -214,7 +214,7 @@ write (*,*) '-------------------------------------------------------------------
     
     write (*,*) ' '
 
-write (*,*) 'EXTENDED THEIS'' SOLUTION IN 2D'
+write (*,*) "EXTENDED THEIS' SOLUTION IN 2D"
 write (*,*) '-------------------------------------------------------------------------'
 
 ! ext_theis2d_dp(r=1 ,t=  50 )  =   -2.6490725920191469     
@@ -247,68 +247,68 @@ do m=1_i4,3_i4
 end do        
 
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=1.0_dp,&
                         time=50.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -2649072)
+                .eq. -2649073)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=1.0_dp,&
                         time=100.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
                 .eq. -3506471)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=1.0_dp,&
                         time=1000.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -6479876)
+                .eq. -6479877)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=2.0_dp,&
                         time=50.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
                 .eq. -1183241)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=2.0_dp,&
                         time=100.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
                 .eq. -1905801)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=2.0_dp,&
                         time=1000.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
                 .eq. -4746517)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=3.0_dp,&
                         time=50.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -600542)
+                .eq. -600543)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=3.0_dp,&
                         time=100.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -1157848)
+                .eq. -1157849)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=3.0_dp,&
                         time=1000.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -3805872)
+                .eq. -3805873)
 
 do m=1_i4,3_i4
 do n=1_i4,3_i4
@@ -351,63 +351,63 @@ do m=1_i4,3_i4
 end do        
 
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=1.0_sp,&
                         time=50.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
                 .eq. -2649) !-2648
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=1.0_sp,&
                         time=100.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -3506)
+                .eq. -3507)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=1.0_sp,&
                         time=1000.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
                 .eq. -6480)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=2.0_sp,&
                         time=50.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
                 .eq. -1183)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=2.0_sp,&
                         time=100.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
                 .eq. -1906)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=2.0_sp,&
                         time=1000.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -4746)
+                .eq. -4747)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=3.0_sp,&
                         time=50.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
                 .eq. -600)
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=3.0_sp,&
                         time=100.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
                 .eq. -1158) !-1157
     isgood = isgood .and. &
-                (int(ext_theis2d(&
+                (nint(ext_theis2d(&
                         rad=3.0_sp,&
                         time=1000.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
@@ -429,7 +429,7 @@ end do
 
     write (*,*) ' '
 
-write (*,*) 'EXTENDED THEIS'' SOLUTION IN 3D'
+write (*,*) "EXTENDED THEIS' SOLUTION IN 3D"
 write (*,*) '-------------------------------------------------------------------------'
 
 ! ext_theis3d_dp(r=1 ,t=  50 )  =   -2.6560270406458253     
@@ -462,68 +462,68 @@ do m=1_i4,3_i4
 end do        
 
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=1.0_dp,&
                         time=50.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
                 .eq. -2656027)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=1.0_dp,&
                         time=100.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
                 .eq. -3513567)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=1.0_dp,&
                         time=1000.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -6487101)
+                .eq. -6487102)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=2.0_dp,&
                         time=50.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
                 .eq. -1207094)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=2.0_dp,&
                         time=100.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
                 .eq. -1931521)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=2.0_dp,&
                         time=1000.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
                 .eq. -4774129)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=3.0_dp,&
                         time=50.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
                 .eq. -642955)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=3.0_dp,&
                         time=100.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -1207296)
+                .eq. -1207297)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=3.0_dp,&
                         time=1000.0_dp,&
                         params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
                         inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -3863382)
+                .eq. -3863383)
 
 do m=1_i4,3_i4
 do n=1_i4,3_i4
@@ -566,68 +566,68 @@ do m=1_i4,3_i4
 end do        
 
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=1.0_sp,&
                         time=50.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -2656)
+                .eq. -2657)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=1.0_sp,&
                         time=100.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -3513)
+                .eq. -3514)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=1.0_sp,&
                         time=1000.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
                 .eq. -6487)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=2.0_sp,&
                         time=50.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -1207)
+                .eq. -1208)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=2.0_sp,&
                         time=100.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -1931)
+                .eq. -1932)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=2.0_sp,&
                         time=1000.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
                 .eq. -4774)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=3.0_sp,&
                         time=50.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -644)
+                        inits=(/0.01_sp,-0.001_sp/))*100)&
+                        .eq. -64)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=3.0_sp,&
                         time=100.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
                 .eq. -1207)
     isgood = isgood .and. &
-                (int(ext_theis3d(&
+                (nint(ext_theis3d(&
                         rad=3.0_sp,&
                         time=1000.0_sp,&
                         params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
                         inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -3863)
+                .eq. -3864)
 
 do m=1_i4,3_i4
 do n=1_i4,3_i4
