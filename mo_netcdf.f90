@@ -1217,20 +1217,20 @@ module mo_netcdf
   end type NcVariable
 
   interface NcVariable
-     procedure initVariable
+     procedure initNcVariable
   end interface NcVariable
 
 contains
 
-  type(NcVariable) function initVariable(id, parent, name)
+  type(NcVariable) function initNcVariable(id, parent, name)
     integer(i4)    , intent(in) :: id
     type(NcDataset), intent(in) :: parent
     character(*)   , intent(in) :: name
 
-    initVariable%id     = id
-    initVariable%parent = parent
-    initVariable%name   = name
-  end function initVariable
+    initNcVariable%id     = id
+    initNcVariable%parent = parent
+    initNcVariable%name   = name
+  end function initNcVariable
 
   type(NcDimension) function initNcDimension(id, parent, name)
     integer(i4)    , intent(in) :: id
