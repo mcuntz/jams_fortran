@@ -1255,7 +1255,7 @@ contains
     case("a")
        status = nf90_open(trim(fname), NF90_WRITE, initNcDataset%id)
     case default
-       print*, "Mode argument must be in 'w','r','a' ! "
+       write(*,*) "Mode argument must be in 'w','r','a' ! "
        stop 1
     end select
     call check(status,"Failed to open file: " // fname)
@@ -1297,7 +1297,7 @@ contains
          "Failed to inquire file "//self%fname)
 
     if (dimid .eq. -1) then
-       print*, "Dataset has no unlimited dimension"
+       write(*,*) "Dataset has no unlimited dimension"
        stop 1
     end if
 
@@ -2367,7 +2367,7 @@ contains
     end if
 
     if (count(datashape .gt. 1) .ne. datarank) then
-       print*, "Given read parameters do not match output variable rank!"
+       write(*,*) "Given read parameters do not match output variable rank!"
        stop 1
     end if
 
@@ -2388,8 +2388,8 @@ contains
     case("i32")
        getDtypeFromString = NF90_INT
     case default
-       print*, "Datatype not understood: ", dtype
-       error stop
+       write(*,*) "Datatype not understood: ", dtype
+       stop 1
     end select
   end function getDtypeFromString
 
@@ -2407,8 +2407,8 @@ contains
     case(NF90_INT)
        getDtypeFromInteger = "i32"
     case default
-       print*, "Datatype not understood: ", dtype
-       error stop
+       write(*,*) "Datatype not understood: ", dtype
+       stop 1
     end select
   end function getDtypeFromInteger
 
@@ -2417,8 +2417,8 @@ contains
     character(*), intent(in) :: msg
 
     if (status .ne. NF90_NOERR) then
-       print*, msg
-       print*, nf90_strerror(status)
+       write(*,*) msg
+       write(*,*) nf90_strerror(status)
        stop 1
     end if
   end subroutine check

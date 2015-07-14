@@ -19,7 +19,7 @@ program test_mo_netcdf
   logical                 :: correct
   integer(i4), parameter  :: time=30, y=15, x=25, sup=10
 
-  character(*), parameter :: fname="test.nc", dname_time="time", dname_y="y", dname_x="x"
+  character(*), parameter :: fname="netcdf_make_check_test_file", dname_time="time", dname_y="y", dname_x="x"
   character(*), parameter :: vname_1d="time", vname_2d="xy", vname_3d="data"
 
   type(NcDataset)         :: nc
@@ -70,7 +70,7 @@ program test_mo_netcdf
   var_3d = nc%setVariable(vname_3d, "f64", (/dim1,dim2,dim3/))
 
   ! set the variable fill value -> needs to be done BEFORE data is written
-  call var_3d%setFillValue(wfvalue) 
+  call var_3d%setFillValue(wfvalue)
 
   ! write data
   call var_1d%setData(wdata_1d)
@@ -211,6 +211,10 @@ program test_mo_netcdf
   
   ! --------------------------------------------------------------------------------------
   ! The moment of truth ...
-  print*, "mo_netcdf is correct: ", correct
-  
+  if (correct) then
+     print*, "mo_netcdf is o.k."
+  else
+     print*, "mo_netcdf failed."
+  endif
+
 end program test_mo_netcdf
