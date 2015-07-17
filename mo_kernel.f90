@@ -23,9 +23,9 @@ MODULE mo_kernel
 
   ! Written  Juliane Mai,    Mar 2013
   ! Modified Stephan Thober, Mar 2013
-  !          Matthias Cuntz, Mar 2013
-  !          Matthias Cuntz, May 2014 - sort -> qsort
+  !          Matthias Cuntz, Mar 2013  !          Matthias Cuntz, May 2014 - sort -> qsort
   !          Matthias Cuntz, May 2014 - module procedure golden
+  !          Stephan Thober, Jul 2015 - using sort_index in favor of qsort_index
 
   ! License
   ! -------
@@ -42,7 +42,8 @@ MODULE mo_kernel
   USE mo_kind,      ONLY: i4, sp, dp
   USE mo_moment,    ONLY: stddev
   USE mo_nelmin,    ONLY: nelminrange      ! ND optimization
-  USE mo_quicksort, ONLY: qsort_index
+  !  USE mo_quicksort, ONLY: qsort_index !ST: may lead to Segmentation Fault for large arrays > 600 000 entries
+  use mo_sort,      only: sort_index
 
   IMPLICIT NONE
 
@@ -631,7 +632,7 @@ CONTAINS
        xxout = x
     end if
     ! sort the x
-    xindx = qsort_index(xxout)
+    xindx = sort_index(xxout)
     xxout = xxout(xindx)
 
     ! should be (n*4 + 1) for int_regular
@@ -761,9 +762,9 @@ CONTAINS
        xxout = x
     end if
     ! sort the x
-    xindx = qsort_index(xxout)
+    xindx = sort_index(xxout)
     xxout = xxout(xindx)
-
+    
     ! should be (n*4 + 1) for int_regular
     if (present(nintegrate)) then
        nmesh = nintegrate
@@ -792,6 +793,9 @@ CONTAINS
 
     ! loop through all regression points
     do ii = 1, nout
+       if ( mod( ii, 100 ) .eq. 0 ) Then
+          print *, real( ii, sp) / real( nout, sp ) * 100.
+       END if
        ! generate nmesh points between last x and this x
        ! integrate pdf and add to last point
        if (ii .eq. 1_i4) then
