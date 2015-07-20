@@ -255,13 +255,12 @@ program test_mo_netcdf
   ! --------------------------------------------------------------------------------------
   ! The moment of truth ...
   if (correct) then
-#endif
      print*, "mo_netcdf is o.k."
-#ifndef pgiFortran
   else
      print*, "mo_netcdf failed."
   endif
-
+#else
+  print*, "mo_netcdf not supported for pgfortran because of too modern features"
 #endif
 
 end program test_mo_netcdf
