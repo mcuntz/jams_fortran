@@ -97,6 +97,8 @@ module mo_netcdf
 
    contains
 
+     procedure, public :: initNcDataset
+
      procedure, private :: setGlobalAttributeChar
      procedure, private :: setGlobalAttributeI2
      procedure, private :: setGlobalAttributeI4
@@ -181,6 +183,9 @@ module mo_netcdf
      !     
      ! -----------------------------------------------------------------------------------
      procedure, public  :: hasDimension
+
+
+
 
      ! -----------------------------------------------------------------------------------
      !
@@ -516,7 +521,7 @@ module mo_netcdf
   end type NcDataset
 
   interface NcDataset
-     procedure initNcDataset
+     procedure newNcDataset
   end interface NcDataset
 
   ! -------------------------------------------------------------------------------------- 
@@ -559,6 +564,8 @@ module mo_netcdf
 
    contains
 
+     procedure, public :: initNcDimension
+     
      ! -----------------------------------------------------------------------------------
      !
      !     NAME
@@ -624,7 +631,7 @@ module mo_netcdf
   end type NcDimension
 
   interface NcDimension
-     procedure initNcDimension
+     procedure newNcDimension
   end interface NcDimension
 
   interface operator (==)
@@ -673,6 +680,8 @@ module mo_netcdf
 
    contains
 
+     procedure, public :: initNcVariable
+     
      procedure, private :: setVariableAttributeChar
      procedure, private :: setVariableAttributeI2
      procedure, private :: setVariableAttributeI4
@@ -1063,6 +1072,7 @@ module mo_netcdf
           getData4dDp, &
           getData5dDp          
 
+
      ! -----------------------------------------------------------------------------------
      !
      !     NAME
@@ -1217,58 +1227,85 @@ module mo_netcdf
   end type NcVariable
 
   interface NcVariable
-     procedure initNcVariable
+     procedure newNcVariable
   end interface NcVariable
 
 contains
 
-  type(NcVariable) function initNcVariable(id, parent, name)
-    integer(i4)    , intent(in) :: id
-    type(NcDataset), intent(in) :: parent
-    character(*)   , intent(in) :: name
+  subroutine initNcVariable(self, id, parent, name)
+    class(NcVariable), intent(inout) :: self
+    integer(i4)      , intent(in)    :: id
+    type(NcDataset)  , intent(in)    :: parent
+    character(*)     , intent(in)    :: name
 
-    initNcVariable%id     = id
-    initNcVariable%parent = parent
-    initNcVariable%name   = name
-  end function initNcVariable
+    self%id     = id
+    self%parent = parent
+    self%name   = name
+  end subroutine initNcVariable
 
-  type(NcDimension) function initNcDimension(id, parent, name)
-    integer(i4)    , intent(in) :: id
-    type(NcDataset), intent(in) :: parent
-    character(*)   , intent(in) :: name
+  subroutine initNcDimension(self, id, parent, name)
+    class(NcDimension), intent(inout) :: self
+    integer(i4)       , intent(in)    :: id
+    type(NcDataset)   , intent(in)    :: parent
+    character(*)      , intent(in)    :: name
 
-    initNcDimension%id     = id
-    initNcDimension%parent = parent
-    initNcDimension%name   = name
-  end function initNcDimension
+    self%id     = id
+    self%parent = parent
+    self%name   = name
+  end subroutine initNcDimension
 
-  type(NcDataset) function initNcDataset(fname, mode)
-    character(*), intent(in) :: fname
-    character(1), intent(in) :: mode
-    integer(i4)              :: status
+  subroutine initNcDataset(self, fname, mode)
+    class(NcDataset), intent(inout) :: self
+    character(*)    , intent(in)    :: fname
+    character(1)    , intent(in)    :: mode
+    integer(i4)                     :: status
 
     select case(mode)
     case("w")
-       status = nf90_create(trim(fname), NF90_NETCDF4, initNcDataset%id)
+       status = nf90_create(trim(fname), NF90_NETCDF4, self%id)
     case("r")
-       status = nf90_open(trim(fname), NF90_NOWRITE, initNcDataset%id)           
+       status = nf90_open(trim(fname), NF90_NOWRITE, self%id)           
     case("a")
-       status = nf90_open(trim(fname), NF90_WRITE, initNcDataset%id)
+       status = nf90_open(trim(fname), NF90_WRITE, self%id)
     case default
        write(*,*) "Mode argument must be in 'w','r','a' ! "
        stop 1
     end select
     call check(status,"Failed to open file: " // fname)
 
-    initNcDataset%fname = fname
-    initNcDataset%mode  = mode       
-  end function initNcDataset
+    self%fname = fname
+    self%mode  = mode       
+  end subroutine initNcDataset
+
+  type(NcVariable) function newNcVariable(id, parent, name)
+    integer(i4)    , intent(in) :: id
+    type(NcDataset), intent(in) :: parent
+    character(*)   , intent(in) :: name
+
+    call newNcVariable%initNcVariable(id, parent, name)
+  end function newNcVariable
+
+  type(NcDimension) function newNcDimension(id, parent, name)
+    integer(i4)    , intent(in) :: id
+    type(NcDataset), intent(in) :: parent
+    character(*)   , intent(in) :: name
+
+    call newNcDimension%initNcDimension(id, parent, name)
+  end function newNcDimension
+  
+  type(NcDataset) function newNcDataset(fname, mode)
+    character(*), intent(in) :: fname
+    character(1), intent(in) :: mode
+
+    call newNcDataset%initNcDataset(fname,mode)
+  end function newNcDataset
 
   subroutine close(self)
     class(NcDataset) :: self
 
     call check(nf90_close(self%id), "Failed to close file: "//self%fname)     
   end subroutine close
+
 
   function getDimensionLength(self)
     class(NcDimension), intent(in) :: self
