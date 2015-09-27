@@ -103,7 +103,7 @@ MODULE mo_opt_functions
   PUBLIC :: perm                              ! Perm function, N = 4.
   PUBLIC :: power_sum                         ! Power sum function, N = 4.
   ! ------------------------------------------------------------------
-  ! test_optimization package of John Burkardt - inputs are x(m,n) and output f(n), e.g. compare
+  ! test_optimization package of John Burkardt - inputs are x(n) and output f(m), e.g. compare
   ! rosenbrock = 100.0_dp * (x(2)-x(1)**2)**2 + (1.0_dp-x(1))**2
   ! rosenbrock_2d(j) = sum((1.0_dp-x(1:m,j))**2) + sum((x(2:m,j)-x(1:m-1,j))**2)
   PUBLIC :: sphere_model_2d                   !  The sphere model, (M,N).
@@ -118,6 +118,23 @@ MODULE mo_opt_functions
   PUBLIC :: michalewicz_2d                    !  Michalewicz''s function, (M,N).
   PUBLIC :: drop_wave_2d                      !  The drop wave function, (M,N).
   PUBLIC :: deceptive_2d                      !  The deceptive function, (M,N).
+  ! ------------------------------------------------------------------
+  ! test_optimization functions of Kalyanmoy Deb
+  ! found in Deb et al. (2002), Zitzler et al. (2000) and in Matlab Central file exchange
+  ! http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/
+  ! content/TP_NSGA2/
+  public :: dtlz2_3d   !  3-d objective function (spherical                            pareto front)
+  public :: dtlz2_5d   !  5-d objective function (spherical                            pareto front)
+  public :: dtlz2_10d  ! 10-d objective function (spherical                            pareto front)
+  public :: fon_2d     !  2-d objective function (nonconvex                            pareto front)
+  public :: kur_2d     !  2-d objective function (nonconvex,              disconnected pareto front)
+  public :: pol_2d     !  2-d objective function (nonconvex,              disconnected pareto front)
+  public :: sch_2d     !  2-d objective function (   convex                            pareto front)
+  public :: zdt1_2d    !  2-d objective function (   convex                            pareto front)
+  public :: zdt2_2d    !  2-d objective function (nonconvex                            pareto front)
+  public :: zdt3_2d    !  2-d objective function (   convex,              disconnected pareto front)
+  public :: zdt4_2d    !  2-d objective function (nonconvex                            pareto front)
+  public :: zdt6_2d    !  2-d objective function (nonconvex, nonuniformly disconnected pareto front)
 
 CONTAINS
 
@@ -4701,5 +4718,865 @@ CONTAINS
     end do
 
   end function deceptive_2d
+
+  ! ------------------------------------------------------------------
+  ! test_optimization functions of Kalyanmoy Deb
+  ! found in Deb et al. (2002), Zitzler et al. (2000) and in Matlab Central file exchange
+  ! http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/
+  ! content/TP_NSGA2/
+  ! ------------------------------------------------------------------
+
+  function dtlz2_3d(paraset)
+
+    !  dimensions:
+    !      x    is usually used with 10 dimensions
+    !      f(x) is 3-dimensional
+    !  feasible domain:
+    !      x_i \in [0,1] \forall i=1,N=10
+    !  optimum:
+    !      x_i* = 0.5
+    !      x_i* \in [0,1]
+    !  comments:
+    !      problem has a spherical Pareto-optimal front
+    !      all optimal objective function values fi* must satisfy sum(fi*^2) = 1
+
+    !  Licensing:
+    !    This original MATLAB code was covered by the following BSD License.
+    !    Copyright (c) 2011, Song Lin
+    !    All rights reserved.
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Song Lin Jul 2011
+    !    Modified Sep 2015 Juliane Mai - translated from Matlab
+    !                                  - function, dp, etc.
+    !
+    !  Reference:
+    !    Deb, K., Thiele, L., Laumanns, M., & Zitzler, E. (2002).
+    !        Scalable multi-objective optimization test problems (pp. 825–830).
+    !        Presented at the Congress on Evolutionary Computation (CEC 2002).
+    !        --> Eq. 9
+    !
+    !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
+    !    real(dp)             :: dtlz2_3d  -  returns 3d objective function.
+    
+    implicit none
+
+    real(dp), dimension(:),             intent(in) :: paraset
+    real(dp), dimension(:), allocatable            :: dtlz2_3d
+
+    ! local variables
+    integer(i4)                          :: ii, npara, nobj
+    real(dp)                             :: gm
+    real(dp), dimension(size(paraset,1)) :: xx
+    real(dp)                             :: tt
+    real(dp), parameter                  :: pi_dp = 3.141592653589793238462643383279502884197_dp
+
+    npara = size(paraset)
+    nobj  = 3
+
+    allocate(dtlz2_3d(nobj))
+
+    dtlz2_3d = 0.0_dp
+
+    gm = 0.0_dp
+    do ii = 1, npara
+       gm = gm + (paraset(ii) - 0.5)**2
+    end do
+
+    xx = paraset * pi_dp / 2.0_dp
+
+    ! objective 3
+    tt = 1.0_dp + gm
+    dtlz2_3d(nobj) = tt * sin(xx(1))
+
+    ! objective 2
+    do ii = nobj-1,2,-1
+       tt = tt * cos( xx(nobj-ii) )
+       dtlz2_3d(ii) = tt * sin( xx(nobj-ii+1) )
+    end do
+
+    ! objective 1
+    dtlz2_3d(1) = tt * cos( xx(nobj-1) )
+
+  end function dtlz2_3d
+
+  function dtlz2_5d(paraset)
+
+    !  dimensions:
+    !      x    is usually used with 10 dimensions
+    !      f(x) is 5-dimensional
+    !  feasible domain:
+    !      x_i \in [0,1] \forall i=1,N=10
+    !  optimum:
+    !      x_i* = 0.5
+    !      x_i* \in [0,1]
+    !  comments:
+    !      problem has a spherical Pareto-optimal front
+    !      all optimal objective function values fi* must satisfy sum(fi*^2) = 1
+
+    !  Licensing:
+    !    This original MATLAB code was covered by the following BSD License.
+    !    Copyright (c) 2011, Song Lin
+    !    All rights reserved.
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Song Lin Jul 2011
+    !    Modified Sep 2015 Juliane Mai - translated from Matlab
+    !                                  - function, dp, etc.
+    !
+    !  Reference:
+    !    Deb, K., Thiele, L., Laumanns, M., & Zitzler, E. (2002).
+    !        Scalable multi-objective optimization test problems (pp. 825–830).
+    !        Presented at the Congress on Evolutionary Computation (CEC 2002).
+    !        --> Eq. 9
+    !
+    !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
+    !    real(dp)             :: dtlz2_5d  -  returns 5d objective function.
+    
+    implicit none
+
+    real(dp), dimension(:),             intent(in) :: paraset
+    real(dp), dimension(:), allocatable            :: dtlz2_5d
+
+    ! local variables
+    integer(i4)                          :: ii, npara, nobj
+    real(dp)                             :: gm
+    real(dp), dimension(size(paraset,1)) :: xx
+    real(dp)                             :: tt
+    real(dp), parameter                  :: pi_dp = 3.141592653589793238462643383279502884197_dp
+
+    npara = size(paraset)
+    nobj  = 5
+
+    allocate(dtlz2_5d(nobj))
+
+    dtlz2_5d = 0.0_dp
+
+    gm = 0.0_dp
+    do ii = 1, npara
+       gm = gm + (paraset(ii) - 0.5)**2
+    end do
+
+    xx = paraset * pi_dp / 2.0_dp
+
+    ! objective 5
+    tt = 1.0_dp + gm
+    dtlz2_5d(nobj) = tt * sin(xx(1))
+
+    ! objective 4 ... 2
+    do ii = nobj-1,2,-1
+       tt = tt * cos( xx(nobj-ii) )
+       dtlz2_5d(ii) = tt * sin( xx(nobj-ii+1) )
+    end do
+
+    ! objective 1
+    dtlz2_5d(1) = tt * cos( xx(nobj-1) )
+
+  end function dtlz2_5d
+
+  function dtlz2_10d(paraset)
+    !  dimensions:
+    !      x    is usually used with 10 dimensions
+    !      f(x) is 10-dimensional
+    !  feasible domain:
+    !      x_i \in [0,1] \forall i=1,N=10
+    !  optimum:
+    !      x_i* = 0.5
+    !      x_i* \in [0,1]
+    !  comments:
+    !      problem has a spherical Pareto-optimal front
+    !      all optimal objective function values fi* must satisfy sum(fi*^2) = 1
+
+    !  Licensing:
+    !    This original MATLAB code was covered by the following BSD License.
+    !    Copyright (c) 2011, Song Lin
+    !    All rights reserved.
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Song Lin Jul 2011
+    !    Modified Sep 2015 Juliane Mai - translated from Matlab
+    !                                  - function, dp, etc.
+    !
+    !  Reference:
+    !    Deb, K., Thiele, L., Laumanns, M., & Zitzler, E. (2002).
+    !        Scalable multi-objective optimization test problems (pp. 825–830).
+    !        Presented at the Congress on Evolutionary Computation (CEC 2002).
+    !        --> Eq. 9
+    !
+    !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
+    !    real(dp)             :: dtlz2_10d -  returns 10d objective function.
+    
+    implicit none
+
+    real(dp), dimension(:),             intent(in) :: paraset
+    real(dp), dimension(:), allocatable            :: dtlz2_10d
+
+    ! local variables
+    integer(i4)                          :: ii, npara, nobj
+    real(dp)                             :: gm
+    real(dp), dimension(size(paraset,1)) :: xx
+    real(dp)                             :: tt
+    real(dp), parameter                  :: pi_dp = 3.141592653589793238462643383279502884197_dp
+
+    npara = size(paraset)
+    nobj  = 10
+
+    allocate(dtlz2_10d(nobj))
+
+    dtlz2_10d = 0.0_dp
+
+    gm = 0.0_dp
+    do ii = 1, npara
+       gm = gm + (paraset(ii) - 0.5)**2
+    end do
+
+    xx = paraset * pi_dp / 2.0_dp
+
+    ! objective 10
+    tt = 1.0_dp + gm
+    dtlz2_10d(nobj) = tt * sin(xx(1))
+
+    ! objective 9 ... 2
+    do ii = nobj-1,2,-1
+       tt = tt * cos( xx(nobj-ii) )
+       dtlz2_10d(ii) = tt * sin( xx(nobj-ii+1) )
+    end do
+
+    ! objective 1
+    dtlz2_10d(1) = tt * cos( xx(nobj-1) )
+
+  end function dtlz2_10d
+
+  function fon_2d(paraset)
+    
+    !  dimensions:
+    !      x    is 3 dimensional
+    !      f(x) is 2-dimensional
+    !  feasible domain:
+    !      x_i \in [-4,4] \forall i=1,N=3
+    !  optimum:
+    !      x1 = x2 = x3 \in [-1/sqrt(3), 1/sqrt(3)]
+    !  comments:
+    !      nonconvex pareto front
+    
+    !  Licensing:
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Juliane Mai Sep 2015   - function, dp, etc.
+    !    Modified 
+    !
+    !  Reference:
+    !    C. M. Fonseca and P. J. Fleming (1993)
+    !        Genetic algorithms for multiobjective optimization: Formulation, discussion and generalization
+    !        In Proceedings of the Fifth International Conference on Genetic Algorithms
+    !        S. Forrest, Ed. San Mateo, CA: Morgan Kauffman, pp. 416–423.
+    !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
+    !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)     -  the argument of the objective function.
+    !    real(dp)             :: fon_2d   -  returns 2d objective function.
+
+    implicit none
+
+    real(dp), dimension(:), intent(in)   :: paraset
+    real(dp), dimension(:), allocatable  :: fon_2d
+
+    ! local variables
+    integer(i4) :: ii, npara, nobj
+    real(dp)    :: gg
+
+    npara = size(paraset)
+    if (npara .ne. 3) stop('mo_objective: fon_2d: This function requires 3-dimensional parameter sets')
+    
+    nobj  = 2
+    allocate(fon_2d(nobj))
+
+    ! objective 1
+    gg = 0.0_dp
+    do ii=1, npara
+       gg = gg + (paraset(ii) - 1.0/sqrt(3.0_dp))**2
+    end do
+    fon_2d(1) = 1.0_dp - exp(-gg)
+
+    ! objective 2
+    gg = 0.0_dp
+    do ii=1, npara
+       gg = gg + (paraset(ii) + 1.0/sqrt(3.0_dp))**2
+    end do
+    fon_2d(2) = 1.0_dp - exp(-gg)
+
+  end function fon_2d
+
+  function kur_2d(paraset)
+    
+    !  dimensions:
+    !      x    is usually used with 3 dimensions
+    !      f(x) is 2-dimensional
+    !  feasible domain:
+    !      x_i \in [-5,5] \forall i=1,N=3
+    !  optimum:
+    !      refer to
+    !          Deb, K. (2001)
+    !              Multiobjective Optimization Using Evolutionary Algorithms.
+    !              Chichester, U.K.: Wiley.
+    !  comments:
+    !      nonconvex pareto front
+    
+    !  Licensing:
+    !    This original MATLAB code was covered by the following BSD License.
+    !    Copyright (c) 2011, Song Lin
+    !    All rights reserved.
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Song Lin Jul 2011
+    !    Modified Sep 2015 Juliane Mai - translated from Matlab
+    !                                  - function, dp, etc.
+    !
+    !  Reference:
+    !    Kursawe, F. (1990)
+    !        A variant of evolution strategies for vector optimization
+    !        In Parallel Problem Solving from Nature
+    !        H.-P. Schwefel and R. Maenner, Eds.
+    !        Berlin, Germany: Springer-Verlag, pp. 193–197.
+    !    Deb, K. (2001)
+    !        Multiobjective Optimization Using Evolutionary Algorithms.
+    !        Chichester, U.K.: Wiley.
+    !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
+    !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !
+    !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
+    !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/kur/
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
+    !    real(dp)             :: kur_2d   -  returns 2d objective function.
+
+    implicit none
+
+    real(dp), dimension(:), intent(in)   :: paraset
+    real(dp), dimension(:), allocatable  :: kur_2d
+
+    ! local variables
+    integer(i4) :: ii, npara, nobj
+
+    npara = size(paraset)
+    nobj  = 2
+
+    allocate(kur_2d(nobj))
+
+    ! objective 1
+    kur_2d(1) = 0.0_dp
+    do ii=1, npara-1
+       kur_2d(1) = kur_2d(1) - 10.0_dp * exp(-0.2_dp*sqrt(paraset(ii)**2 + paraset(ii+1)**2) );
+    end do
+
+    ! objective 2
+    kur_2d(2) = 0.0_dp
+    do ii=1,npara
+       kur_2d(2) = kur_2d(2) + abs(paraset(ii))**0.8_dp + 5.0_dp * sin(paraset(ii)**3);
+    end do
+
+  end function kur_2d
+
+  function pol_2d(paraset)
+    
+    !  dimensions:
+    !      x    is 2 dimensional
+    !      f(x) is 2-dimensional
+    !  feasible domain:
+    !      x_i \in [-Pi,Pi] \forall i=1,N=2
+    !  optimum:
+    !      refer to
+    !          Deb, K. (2001)
+    !              Multiobjective Optimization Using Evolutionary Algorithms.
+    !              Chichester, U.K.: Wiley
+    !  comments:
+    !      nonconvex, disconnected pareto front
+    
+    !  Licensing:
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Juliane Mai Sep 2015   - function, dp, etc.
+    !    Modified 
+    !
+    !  Reference:
+    !    Poloni, C. (1997)
+    !        Hybrid GA for multiobjective aerodynamic shape optimization
+    !        In Genetic Algorithms in Engineering and Computer Science
+    !        G. Winter, J. Periaux, M. Galan, and P. Cuesta, Eds.
+    !        New York: Wiley, pp. 397–414.
+    !    Deb, K. (2001)
+    !        Multiobjective Optimization Using Evolutionary Algorithms.
+    !        Chichester, U.K.: Wiley
+    !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
+    !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)     -  the argument of the objective function.
+    !    real(dp)             :: pol_2d   -  returns 2d objective function.
+
+    implicit none
+
+    real(dp), dimension(:), intent(in)   :: paraset
+    real(dp), dimension(:), allocatable  :: pol_2d
+
+    ! local variables
+    integer(i4) :: npara, nobj
+    real(dp)    :: a1, a2, b1, b2
+
+    npara = size(paraset)
+    if (npara .ne. 2) stop('mo_objective: pol_2d: This function requires 2-dimensional parameter sets')
+    
+    nobj  = 2
+    allocate(pol_2d(nobj))
+
+    a1 = 0.5_dp * sin(1.0_dp)     - 2.0_dp * cos(1.0_dp)     + 1.0_dp * sin(2.0_dp)     - 1.5_dp * cos(2.0_dp)
+    a2 = 1.5_dp * sin(1.0_dp)     - 1.0_dp * cos(1.0_dp)     + 2.0_dp * sin(2.0_dp)     - 0.5_dp * cos(2.0_dp)
+    b1 = 0.5_dp * sin(paraset(1)) - 2.0_dp * cos(paraset(1)) + 1.0_dp * sin(paraset(2)) - 1.5_dp * cos(paraset(2))
+    b2 = 1.5_dp * sin(paraset(1)) - 1.0_dp * cos(paraset(1)) + 2.0_dp * sin(paraset(2)) - 0.5_dp * cos(paraset(2))
+
+    ! objective 1
+    pol_2d(1) = 1.0_dp + (a1-b1)**2 + (a2-b2)**2
+
+    ! objective 2
+    pol_2d(2) = (paraset(1) + 3.0_dp)**2 + (paraset(2) + 1.0_dp)**2
+
+  end function pol_2d
+
+  function sch_2d(paraset)
+    
+    !  dimensions:
+    !      x    is 1-dimensional
+    !      f(x) is 2-dimensional
+    !  feasible domain:
+    !      x_i \in [-1000,1000] \forall i=1,N=1
+    !  optimum:
+    !      x \in [0,2]
+    !  comments:
+    !      convex pareto front
+    
+    !  Licensing:
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Juliane Mai Sep 2015   - function, dp, etc.
+    !    Modified 
+    !
+    !  Reference:
+    !    Schaffer J.D. (1987)
+    !        Multiple objective optimization with vector evaluated genetic algorithms
+    !        In Proceedings of the First International Conference on Genetic Algorithms,
+    !        J. J. Grefensttete, Ed. Hillsdale, NJ: Lawrence Erlbaum, pp. 93–100.
+    !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
+    !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)     -  the argument of the objective function.
+    !    real(dp)             :: sch_2d   -  returns 2d objective function.
+
+    implicit none
+
+    real(dp), dimension(:), intent(in)   :: paraset
+    real(dp), dimension(:), allocatable  :: sch_2d
+
+    ! local variables
+    integer(i4) :: npara, nobj
+
+    npara = size(paraset)
+    if (npara .ne. 1) stop('mo_objective: sch_2d: This function requires 1-dimensional parameter sets')
+    
+    nobj  = 2
+    allocate(sch_2d(nobj))
+
+    ! objective 1
+    sch_2d(1) = paraset(1)**2
+
+    ! objective 2
+    sch_2d(2) = (paraset(1) - 2.0_dp)**2
+
+  end function sch_2d
+
+  function zdt1_2d(paraset)
+    
+    !  dimensions:
+    !      x    is usually used with 30 dimensions
+    !      f(x) is 2-dimensional
+    !  feasible domain:
+    !      x_i \in [0,1] \forall i=1,N=30
+    !  optimum:
+    !      x_1 \in [0,1]
+    !      x_i = 0, i=2,N=30
+    !  comments:
+    !      convex pareto front
+    !      front: f2 = 1.0 - Sqrt(f1)
+
+    ! The schematic tradoff looks like this
+    !   /\
+    !    |
+    !  1 . 
+    !    |
+    !    |  
+    !    | .
+    !    |
+    !    |   .
+    !    |
+    !    |      .
+    !    |        
+    !    |           .
+    !    |               
+    !    |                 .
+    !    |                        .
+    !    |                                 .
+    !    |------------------------------------------.------>
+    !                                               1
+
+    !  Licensing:
+    !    This original MATLAB code was covered by the following BSD License.
+    !    Copyright (c) 2011, Song Lin
+    !    All rights reserved.
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Song Lin Jul 2011
+    !    Modified Sep 2015 Juliane Mai - translated from Matlab
+    !                                  - function, dp, etc.
+    !
+    !  Reference:
+    !    Zitzler, E., Thiele, L., & Deb, K. (2000).
+    !        Comparison of Multiobjective Evolutionary Algorithms: Empirical Results.
+    !        Evolutionary Computation, 8(2), 173–195.
+    !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
+    !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !
+    !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
+    !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt1/
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
+    !    real(dp)             :: zdt1_2d   -  returns 2d objective function.
+
+    implicit none
+
+    real(dp), dimension(:), intent(in)   :: paraset
+    real(dp), dimension(:), allocatable  :: zdt1_2d
+
+    ! local variables
+    integer(i4) :: ii, npara, nobj
+    real(dp)    :: gg
+
+    npara = size(paraset)
+    nobj  = 2
+
+    allocate(zdt1_2d(nobj))
+
+    ! objective 1
+    zdt1_2d(1) = paraset(1)
+
+    ! objective 2
+    gg = 0.0_dp
+    do ii = 2, npara
+       gg = gg + paraset(ii)
+    end do
+    gg = 1.0 + 9.0 * gg / real(npara-1,dp)
+    zdt1_2d(2) = gg * (1.0 - sqrt(paraset(1) / gg)) 
+
+  end function zdt1_2d
+
+  function zdt2_2d(paraset)
+
+    !  dimensions:
+    !      x    is usually used with 30 dimensions
+    !      f(x) is 2-dimensional
+    !  feasible domain:
+    !      x_i \in [0,1] \forall i=1,N=30
+    !  optimum:
+    !      x_1 \in [0,1]
+    !      x_i = 0, i=2,N=30
+    !  comments:
+    !      nonconvex pareto front
+    !      front: f2 = 1.0 - f1**2
+
+    !  Licensing:
+    !    This original MATLAB code was covered by the following BSD License.
+    !    Copyright (c) 2011, Song Lin
+    !    All rights reserved.
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Song Lin Jul 2011
+    !    Modified Sep 2015 Juliane Mai - translated from Matlab
+    !                                  - function, dp, etc.
+    !
+    !  Reference:
+    !    Zitzler, E., Thiele, L., & Deb, K. (2000).
+    !        Comparison of Multiobjective Evolutionary Algorithms: Empirical Results.
+    !        Evolutionary Computation, 8(2), 173–195.
+    !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
+    !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !
+    !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
+    !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt2/
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
+    !    real(dp)             :: zdt2_2d   -  returns 2d objective function.
+
+    implicit none
+
+    real(dp), dimension(:), intent(in)   :: paraset
+    real(dp), dimension(:), allocatable  :: zdt2_2d
+
+    ! local variables
+    integer(i4) :: npara, nobj
+    real(dp)    :: gg
+
+    npara = size(paraset)
+    nobj  = 2
+
+    allocate(zdt2_2d(nobj))
+
+    ! objective 1
+    zdt2_2d(1) = paraset(1)
+
+    ! objective 2
+    gg = 1.0_dp + 9.0_dp * sum(paraset(2:npara))/real(npara-1,dp)
+    zdt2_2d(2) = gg * ( 1.0_dp - (paraset(1)/gg)**2 )
+
+  end function zdt2_2d
+
+  function zdt3_2d(paraset)
+
+    !  dimensions:
+    !      x    is usually used with 30 dimensions
+    !      f(x) is 2-dimensional
+    !  feasible domain:
+    !      x_i \in [0,1] \forall i=1,N=30
+    !  optimum:
+    !      x_1 \in [0,1]
+    !      x_i = 0, i=2,N=30
+    !  comments:
+    !      convex, diconnected pareto front
+    !      front: f1 \in F and f2 = 1.0 - sqrt(f1) - f1*sin(10*Pi*f1)
+    !             where
+    !                 F = [0.0000000000, 0.0830015349] v [0.1822287280, 0.2577623634] v
+    !                     [0.4093136748, 0.4538821041] v [0.6183967944, 0.6525117038] v
+    !                     [0.8233317983, 0.8518328654]
+
+    !  Licensing:
+    !    This original MATLAB code was covered by the following BSD License.
+    !    Copyright (c) 2011, Song Lin
+    !    All rights reserved.
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Song Lin Jul 2011
+    !    Modified Sep 2015 Juliane Mai - translated from Matlab
+    !                                  - function, dp, etc.
+    !
+    !  Reference:
+    !    Zitzler, E., Thiele, L., & Deb, K. (2000).
+    !        Comparison of Multiobjective Evolutionary Algorithms: Empirical Results.
+    !        Evolutionary Computation, 8(2), 173–195.
+    !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
+    !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !
+    !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
+    !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt3/
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
+    !    real(dp)             :: zdt3_2d   -  returns 2d objective function.
+
+    implicit none
+
+    real(dp), dimension(:), intent(in)   :: paraset
+    real(dp), dimension(:), allocatable  :: zdt3_2d
+
+    ! local variables
+    integer(i4)         :: npara, nobj
+    real(dp)            :: gg
+    real(dp), parameter :: pi_dp = 3.141592653589793238462643383279502884197_dp
+
+    npara = size(paraset)
+    nobj  = 2
+
+    allocate(zdt3_2d(nobj))
+
+    ! objective 1
+    zdt3_2d(1) = paraset(1)
+
+    ! objective 2
+    gg = 1.0_dp + 9.0_dp * sum(paraset(2:npara))/real(npara-1,dp)
+    zdt3_2d(2) = gg * ( 1.0_dp - sqrt(paraset(1)/gg) - paraset(1)/gg * sin(10.0_dp*pi_dp*paraset(1)) )
+
+  end function zdt3_2d
+
+  function zdt4_2d(paraset)
+
+    !  dimensions:
+    !      x    is usually used with 10 dimensions
+    !      f(x) is 2-dimensional
+    !  feasible domain:
+    !      x_1 \in [0,1]
+    !      x_i \in [-5,5] \forall i=2,N=10
+    !  optimum:
+    !      x_1 \in [0,1]
+    !      x_i = 0, i=2,N=30
+    !  comments:
+    !      nonconvex pareto front
+    !      front: f2 = 1.0 - sqrt(f1)
+
+    !  Licensing:
+    !    This original MATLAB code was covered by the following BSD License.
+    !    Copyright (c) 2011, Song Lin
+    !    All rights reserved.
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Song Lin Jul 2011
+    !    Modified Sep 2015 Juliane Mai - translated from Matlab
+    !                                  - function, dp, etc.
+    !
+    !  Reference:
+    !    Zitzler, E., Thiele, L., & Deb, K. (2000).
+    !        Comparison of Multiobjective Evolutionary Algorithms: Empirical Results.
+    !        Evolutionary Computation, 8(2), 173–195.
+    !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
+    !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !
+    !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
+    !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt4/
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
+    !    real(dp)             :: zdt4_2d   -  returns 2d objective function.
+
+    implicit none
+
+    real(dp), dimension(:), intent(in)   :: paraset
+    real(dp), dimension(:), allocatable  :: zdt4_2d
+
+    ! local variables
+    integer(i4)         :: ii, npara, nobj
+    real(dp)            :: gg
+    real(dp), parameter :: pi_dp = 3.141592653589793238462643383279502884197_dp
+
+    npara = size(paraset)
+    nobj  = 2
+
+    allocate(zdt4_2d(nobj))
+
+    ! objective 1
+    zdt4_2d(1) = paraset(1)
+
+    ! objective 2
+    gg = 1.0 + 10.0_dp*real(npara-1,dp)
+    do ii = 2, npara
+       gg = gg + paraset(ii)**2 - 10.0_dp * cos(4.0_dp*pi_dp*paraset(ii))
+    end do
+    zdt4_2d(2) = gg * ( 1.0_dp - sqrt(paraset(1)/gg ) )
+
+  end function zdt4_2d
+
+  function zdt6_2d(paraset)
+
+    !  dimensions:
+    !      x    is usually used with 10 dimensions
+    !      f(x) is 2-dimensional
+    !  feasible domain:
+    !      x_i \in [0,1]  \forall i=1,N=10
+    !  optimum:
+    !      x_1 \in [0,1]
+    !      x_i = 0, i=2,N=30
+    !  comments:
+    !      nonconvex, nonuniformly spaced pareto front
+    !      front: f2 = 1.0 - f1**2
+    !             f1 \in [0.2807753191, 1.0]
+
+    !  Licensing:
+    !    This original MATLAB code was covered by the following BSD License.
+    !    Copyright (c) 2011, Song Lin
+    !    All rights reserved.
+    !
+    !    This code is distributed under the GNU LGPL license.
+    !
+    !  Author:
+    !    Song Lin Jul 2011
+    !    Modified Sep 2015 Juliane Mai - translated from Matlab
+    !                                  - function, dp, etc.
+    !
+    !  Reference:
+    !    Zitzler, E., Thiele, L., & Deb, K. (2000).
+    !        Comparison of Multiobjective Evolutionary Algorithms: Empirical Results.
+    !        Evolutionary Computation, 8(2), 173–195.
+    !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
+    !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !
+    !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
+    !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt6/
+    !
+    !  Parameters:
+    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
+    !    real(dp)             :: zdt6_2d   -  returns 2d objective function.
+
+    implicit none
+
+    real(dp), dimension(:), intent(in)   :: paraset
+    real(dp), dimension(:), allocatable  :: zdt6_2d
+
+    ! local variables
+    integer(i4)         :: npara, nobj
+    real(dp)            :: gg
+    real(dp), parameter :: pi_dp = 3.141592653589793238462643383279502884197_dp
+
+    npara = size(paraset)
+    nobj  = 2
+
+    allocate(zdt6_2d(nobj))
+
+    ! objective 1
+    zdt6_2d(1) = 1.0_dp - exp(-4.0_dp*paraset(1)) * sin(6.0_dp*pi_dp*paraset(1))**6
+
+    ! objective 2
+    gg = 1.0_dp + 9.0_dp * (sum(paraset(2:npara))/real(npara-1,dp))**0.25_dp
+    zdt6_2d(2) = gg * ( 1.0_dp - (zdt6_2d(1) /gg)**2 )
+
+  end function zdt6_2d
 
 END MODULE mo_opt_functions
