@@ -4726,7 +4726,8 @@ CONTAINS
   ! content/TP_NSGA2/
   ! ------------------------------------------------------------------
 
-  function dtlz2_3d(paraset)
+  subroutine dtlz2_3d(paraset,obj)
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
 
     !  dimensions:
     !      x    is usually used with 10 dimensions
@@ -4761,13 +4762,13 @@ CONTAINS
     !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
-    !    real(dp)             :: dtlz2_3d  -  returns 3d objective function.
+    !    real(dp), intent(in)  :: X(:)      -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 3d objective function.
     
     implicit none
 
-    real(dp), dimension(:),             intent(in) :: paraset
-    real(dp), dimension(:), allocatable            :: dtlz2_3d
+    real(dp), dimension(:),              intent(in)  :: paraset
+    real(dp), dimension(:), allocatable, intent(out) :: obj
 
     ! local variables
     integer(i4)                          :: ii, npara, nobj
@@ -4779,9 +4780,9 @@ CONTAINS
     npara = size(paraset)
     nobj  = 3
 
-    allocate(dtlz2_3d(nobj))
+    allocate(obj(nobj))
 
-    dtlz2_3d = 0.0_dp
+    obj = 0.0_dp
 
     gm = 0.0_dp
     do ii = 1, npara
@@ -4792,21 +4793,23 @@ CONTAINS
 
     ! objective 3
     tt = 1.0_dp + gm
-    dtlz2_3d(nobj) = tt * sin(xx(1))
+    obj(nobj) = tt * sin(xx(1))
 
     ! objective 2
     do ii = nobj-1,2,-1
        tt = tt * cos( xx(nobj-ii) )
-       dtlz2_3d(ii) = tt * sin( xx(nobj-ii+1) )
+       obj(ii) = tt * sin( xx(nobj-ii+1) )
     end do
 
     ! objective 1
-    dtlz2_3d(1) = tt * cos( xx(nobj-1) )
+    obj(1) = tt * cos( xx(nobj-1) )
 
-  end function dtlz2_3d
+  end subroutine dtlz2_3d
 
-  function dtlz2_5d(paraset)
-
+  subroutine dtlz2_5d(paraset,obj)
+    
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
+    
     !  dimensions:
     !      x    is usually used with 10 dimensions
     !      f(x) is 5-dimensional
@@ -4840,13 +4843,13 @@ CONTAINS
     !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
-    !    real(dp)             :: dtlz2_5d  -  returns 5d objective function.
+    !    real(dp), intent(in)  :: X(:)      -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 5d objective function.
     
     implicit none
 
-    real(dp), dimension(:),             intent(in) :: paraset
-    real(dp), dimension(:), allocatable            :: dtlz2_5d
+    real(dp), dimension(:),              intent(in)  :: paraset
+    real(dp), dimension(:), allocatable, intent(out) :: obj
 
     ! local variables
     integer(i4)                          :: ii, npara, nobj
@@ -4858,9 +4861,9 @@ CONTAINS
     npara = size(paraset)
     nobj  = 5
 
-    allocate(dtlz2_5d(nobj))
+    allocate(obj(nobj))
 
-    dtlz2_5d = 0.0_dp
+    obj = 0.0_dp
 
     gm = 0.0_dp
     do ii = 1, npara
@@ -4871,20 +4874,23 @@ CONTAINS
 
     ! objective 5
     tt = 1.0_dp + gm
-    dtlz2_5d(nobj) = tt * sin(xx(1))
+    obj(nobj) = tt * sin(xx(1))
 
     ! objective 4 ... 2
     do ii = nobj-1,2,-1
        tt = tt * cos( xx(nobj-ii) )
-       dtlz2_5d(ii) = tt * sin( xx(nobj-ii+1) )
+       obj(ii) = tt * sin( xx(nobj-ii+1) )
     end do
 
     ! objective 1
-    dtlz2_5d(1) = tt * cos( xx(nobj-1) )
+    obj(1) = tt * cos( xx(nobj-1) )
 
-  end function dtlz2_5d
+  end subroutine dtlz2_5d
 
-  function dtlz2_10d(paraset)
+  subroutine dtlz2_10d(paraset,obj)
+    
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
+    
     !  dimensions:
     !      x    is usually used with 10 dimensions
     !      f(x) is 10-dimensional
@@ -4918,13 +4924,13 @@ CONTAINS
     !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
-    !    real(dp)             :: dtlz2_10d -  returns 10d objective function.
+    !    real(dp), intent(in)  :: X(:)      -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 10d objective function.
     
     implicit none
 
-    real(dp), dimension(:),             intent(in) :: paraset
-    real(dp), dimension(:), allocatable            :: dtlz2_10d
+    real(dp), dimension(:),              intent(in)  :: paraset
+    real(dp), dimension(:), allocatable, intent(out) :: obj
 
     ! local variables
     integer(i4)                          :: ii, npara, nobj
@@ -4936,9 +4942,9 @@ CONTAINS
     npara = size(paraset)
     nobj  = 10
 
-    allocate(dtlz2_10d(nobj))
+    allocate(obj(nobj))
 
-    dtlz2_10d = 0.0_dp
+    obj = 0.0_dp
 
     gm = 0.0_dp
     do ii = 1, npara
@@ -4949,20 +4955,22 @@ CONTAINS
 
     ! objective 10
     tt = 1.0_dp + gm
-    dtlz2_10d(nobj) = tt * sin(xx(1))
+    obj(nobj) = tt * sin(xx(1))
 
     ! objective 9 ... 2
     do ii = nobj-1,2,-1
        tt = tt * cos( xx(nobj-ii) )
-       dtlz2_10d(ii) = tt * sin( xx(nobj-ii+1) )
+       obj(ii) = tt * sin( xx(nobj-ii+1) )
     end do
 
     ! objective 1
-    dtlz2_10d(1) = tt * cos( xx(nobj-1) )
+    obj(1) = tt * cos( xx(nobj-1) )
 
-  end function dtlz2_10d
+  end subroutine dtlz2_10d
 
-  function fon_2d(paraset)
+  subroutine fon_2d(paraset,obj)
+
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
     
     !  dimensions:
     !      x    is 3 dimensional
@@ -4992,13 +5000,13 @@ CONTAINS
     !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)     -  the argument of the objective function.
-    !    real(dp)             :: fon_2d   -  returns 2d objective function.
+    !    real(dp), intent(in)  :: X(:)     -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 2d objective function.
 
     implicit none
 
-    real(dp), dimension(:), intent(in)   :: paraset
-    real(dp), dimension(:), allocatable  :: fon_2d
+    real(dp), dimension(:),              intent(in)  :: paraset
+    real(dp), dimension(:), allocatable, intent(out) :: obj
 
     ! local variables
     integer(i4) :: ii, npara, nobj
@@ -5008,25 +5016,27 @@ CONTAINS
     if (npara .ne. 3) stop('mo_objective: fon_2d: This function requires 3-dimensional parameter sets')
     
     nobj  = 2
-    allocate(fon_2d(nobj))
+    allocate(obj(nobj))
 
     ! objective 1
     gg = 0.0_dp
     do ii=1, npara
        gg = gg + (paraset(ii) - 1.0/sqrt(3.0_dp))**2
     end do
-    fon_2d(1) = 1.0_dp - exp(-gg)
+    obj(1) = 1.0_dp - exp(-gg)
 
     ! objective 2
     gg = 0.0_dp
     do ii=1, npara
        gg = gg + (paraset(ii) + 1.0/sqrt(3.0_dp))**2
     end do
-    fon_2d(2) = 1.0_dp - exp(-gg)
+    obj(2) = 1.0_dp - exp(-gg)
 
-  end function fon_2d
+  end subroutine fon_2d
 
-  function kur_2d(paraset)
+  subroutine kur_2d(paraset,obj)
+
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
     
     !  dimensions:
     !      x    is usually used with 3 dimensions
@@ -5070,13 +5080,13 @@ CONTAINS
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/kur/
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
-    !    real(dp)             :: kur_2d   -  returns 2d objective function.
+    !    real(dp), intent(in)  :: X(:)      -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 2d objective function.
 
     implicit none
 
-    real(dp), dimension(:), intent(in)   :: paraset
-    real(dp), dimension(:), allocatable  :: kur_2d
+    real(dp), dimension(:),              intent(in)  :: paraset
+    real(dp), dimension(:), allocatable, intent(out) :: obj
 
     ! local variables
     integer(i4) :: ii, npara, nobj
@@ -5084,23 +5094,25 @@ CONTAINS
     npara = size(paraset)
     nobj  = 2
 
-    allocate(kur_2d(nobj))
+    allocate(obj(nobj))
 
     ! objective 1
-    kur_2d(1) = 0.0_dp
+    obj(1) = 0.0_dp
     do ii=1, npara-1
-       kur_2d(1) = kur_2d(1) - 10.0_dp * exp(-0.2_dp*sqrt(paraset(ii)**2 + paraset(ii+1)**2) );
+       obj(1) = obj(1) - 10.0_dp * exp(-0.2_dp*sqrt(paraset(ii)**2 + paraset(ii+1)**2) );
     end do
 
     ! objective 2
-    kur_2d(2) = 0.0_dp
+    obj(2) = 0.0_dp
     do ii=1,npara
-       kur_2d(2) = kur_2d(2) + abs(paraset(ii))**0.8_dp + 5.0_dp * sin(paraset(ii)**3);
+       obj(2) = obj(2) + abs(paraset(ii))**0.8_dp + 5.0_dp * sin(paraset(ii)**3);
     end do
 
-  end function kur_2d
+  end subroutine kur_2d
 
-  function pol_2d(paraset)
+  subroutine pol_2d(paraset,obj)
+
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
     
     !  dimensions:
     !      x    is 2 dimensional
@@ -5137,13 +5149,13 @@ CONTAINS
     !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)     -  the argument of the objective function.
-    !    real(dp)             :: pol_2d   -  returns 2d objective function.
+    !    real(dp), intent(in)  :: X(:)     -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 2d objective function.
 
     implicit none
 
-    real(dp), dimension(:), intent(in)   :: paraset
-    real(dp), dimension(:), allocatable  :: pol_2d
+    real(dp), dimension(:),              intent(in)  :: paraset
+    real(dp), dimension(:), allocatable, intent(out) :: obj
 
     ! local variables
     integer(i4) :: npara, nobj
@@ -5153,7 +5165,7 @@ CONTAINS
     if (npara .ne. 2) stop('mo_objective: pol_2d: This function requires 2-dimensional parameter sets')
     
     nobj  = 2
-    allocate(pol_2d(nobj))
+    allocate(obj(nobj))
 
     a1 = 0.5_dp * sin(1.0_dp)     - 2.0_dp * cos(1.0_dp)     + 1.0_dp * sin(2.0_dp)     - 1.5_dp * cos(2.0_dp)
     a2 = 1.5_dp * sin(1.0_dp)     - 1.0_dp * cos(1.0_dp)     + 2.0_dp * sin(2.0_dp)     - 0.5_dp * cos(2.0_dp)
@@ -5161,14 +5173,16 @@ CONTAINS
     b2 = 1.5_dp * sin(paraset(1)) - 1.0_dp * cos(paraset(1)) + 2.0_dp * sin(paraset(2)) - 0.5_dp * cos(paraset(2))
 
     ! objective 1
-    pol_2d(1) = 1.0_dp + (a1-b1)**2 + (a2-b2)**2
+    obj(1) = 1.0_dp + (a1-b1)**2 + (a2-b2)**2
 
     ! objective 2
-    pol_2d(2) = (paraset(1) + 3.0_dp)**2 + (paraset(2) + 1.0_dp)**2
+    obj(2) = (paraset(1) + 3.0_dp)**2 + (paraset(2) + 1.0_dp)**2
 
-  end function pol_2d
+  end subroutine pol_2d
 
-  function sch_2d(paraset)
+  subroutine sch_2d(paraset,obj)
+
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
     
     !  dimensions:
     !      x    is 1-dimensional
@@ -5198,13 +5212,13 @@ CONTAINS
     !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)     -  the argument of the objective function.
-    !    real(dp)             :: sch_2d   -  returns 2d objective function.
+    !    real(dp), intent(in)  :: X(:)     -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 2d objective function.
 
     implicit none
 
-    real(dp), dimension(:), intent(in)   :: paraset
-    real(dp), dimension(:), allocatable  :: sch_2d
+    real(dp), dimension(:),              intent(in)   :: paraset
+    real(dp), dimension(:), allocatable, intent(out)  :: obj
 
     ! local variables
     integer(i4) :: npara, nobj
@@ -5213,17 +5227,19 @@ CONTAINS
     if (npara .ne. 1) stop('mo_objective: sch_2d: This function requires 1-dimensional parameter sets')
     
     nobj  = 2
-    allocate(sch_2d(nobj))
+    allocate(obj(nobj))
 
     ! objective 1
-    sch_2d(1) = paraset(1)**2
+    obj(1) = paraset(1)**2
 
     ! objective 2
-    sch_2d(2) = (paraset(1) - 2.0_dp)**2
+    obj(2) = (paraset(1) - 2.0_dp)**2
 
-  end function sch_2d
+  end subroutine sch_2d
 
-  function zdt1_2d(paraset)
+  subroutine zdt1_2d(paraset, obj)
+
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
     
     !  dimensions:
     !      x    is usually used with 30 dimensions
@@ -5281,37 +5297,39 @@ CONTAINS
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt1/
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
-    !    real(dp)             :: zdt1_2d   -  returns 2d objective function.
+    !    real(dp), intent(in)  :: X(:)      -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 2d objective function.
 
     implicit none
 
-    real(dp), dimension(:), intent(in)   :: paraset
-    real(dp), dimension(:), allocatable  :: zdt1_2d
+    real(dp), dimension(:),              intent(in)  :: paraset
+    real(dp), dimension(:), allocatable, intent(out) :: obj
 
     ! local variables
     integer(i4) :: ii, npara, nobj
     real(dp)    :: gg
 
-    npara = size(paraset)
+    npara = size(paraset,1)
     nobj  = 2
 
-    allocate(zdt1_2d(nobj))
+    allocate(obj(nobj))
 
     ! objective 1
-    zdt1_2d(1) = paraset(1)
+    obj(1) = paraset(1)
 
     ! objective 2
     gg = 0.0_dp
     do ii = 2, npara
        gg = gg + paraset(ii)
     end do
-    gg = 1.0 + 9.0 * gg / real(npara-1,dp)
-    zdt1_2d(2) = gg * (1.0 - sqrt(paraset(1) / gg)) 
+    gg = 1.0_dp + 9.0_dp * gg / real(npara-1,dp)
+    obj(2) = gg * (1.0_dp - sqrt(paraset(1) / gg)) 
 
-  end function zdt1_2d
+  end subroutine zdt1_2d
 
-  function zdt2_2d(paraset)
+  subroutine zdt2_2d(paraset,obj)
+    
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
 
     !  dimensions:
     !      x    is usually used with 30 dimensions
@@ -5349,13 +5367,13 @@ CONTAINS
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt2/
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
-    !    real(dp)             :: zdt2_2d   -  returns 2d objective function.
+    !    real(dp), intent(in)  :: X(:)      -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 2d objective function.
 
     implicit none
 
-    real(dp), dimension(:), intent(in)   :: paraset
-    real(dp), dimension(:), allocatable  :: zdt2_2d
+    real(dp), dimension(:),              intent(in)  :: paraset
+    real(dp), dimension(:), allocatable, intent(out) :: obj
 
     ! local variables
     integer(i4) :: npara, nobj
@@ -5364,19 +5382,21 @@ CONTAINS
     npara = size(paraset)
     nobj  = 2
 
-    allocate(zdt2_2d(nobj))
+    allocate(obj(nobj))
 
     ! objective 1
-    zdt2_2d(1) = paraset(1)
+    obj(1) = paraset(1)
 
     ! objective 2
     gg = 1.0_dp + 9.0_dp * sum(paraset(2:npara))/real(npara-1,dp)
-    zdt2_2d(2) = gg * ( 1.0_dp - (paraset(1)/gg)**2 )
+    obj(2) = gg * ( 1.0_dp - (paraset(1)/gg)**2 )
 
-  end function zdt2_2d
+  end subroutine zdt2_2d
 
-  function zdt3_2d(paraset)
-
+  subroutine zdt3_2d(paraset,obj)
+    
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
+    
     !  dimensions:
     !      x    is usually used with 30 dimensions
     !      f(x) is 2-dimensional
@@ -5417,13 +5437,13 @@ CONTAINS
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt3/
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
-    !    real(dp)             :: zdt3_2d   -  returns 2d objective function.
+    !    real(dp), intent(in)  :: X(:)      -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 2d objective function.
 
     implicit none
 
-    real(dp), dimension(:), intent(in)   :: paraset
-    real(dp), dimension(:), allocatable  :: zdt3_2d
+    real(dp), dimension(:),              intent(in)  :: paraset
+    real(dp), dimension(:), allocatable, intent(out) :: obj
 
     ! local variables
     integer(i4)         :: npara, nobj
@@ -5433,18 +5453,20 @@ CONTAINS
     npara = size(paraset)
     nobj  = 2
 
-    allocate(zdt3_2d(nobj))
+    allocate(obj(nobj))
 
     ! objective 1
-    zdt3_2d(1) = paraset(1)
+    obj(1) = paraset(1)
 
     ! objective 2
     gg = 1.0_dp + 9.0_dp * sum(paraset(2:npara))/real(npara-1,dp)
-    zdt3_2d(2) = gg * ( 1.0_dp - sqrt(paraset(1)/gg) - paraset(1)/gg * sin(10.0_dp*pi_dp*paraset(1)) )
+    obj(2) = gg * ( 1.0_dp - sqrt(paraset(1)/gg) - paraset(1)/gg * sin(10.0_dp*pi_dp*paraset(1)) )
 
-  end function zdt3_2d
+  end subroutine zdt3_2d
 
-  function zdt4_2d(paraset)
+  subroutine zdt4_2d(paraset,obj)
+
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
 
     !  dimensions:
     !      x    is usually used with 10 dimensions
@@ -5483,13 +5505,13 @@ CONTAINS
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt4/
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
-    !    real(dp)             :: zdt4_2d   -  returns 2d objective function.
+    !    real(dp), intent(in)  :: X(:)      -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 2d objective function.
 
     implicit none
 
-    real(dp), dimension(:), intent(in)   :: paraset
-    real(dp), dimension(:), allocatable  :: zdt4_2d
+    real(dp), dimension(:),              intent(in)  :: paraset
+    real(dp), dimension(:), allocatable, intent(out) :: obj
 
     ! local variables
     integer(i4)         :: ii, npara, nobj
@@ -5499,21 +5521,23 @@ CONTAINS
     npara = size(paraset)
     nobj  = 2
 
-    allocate(zdt4_2d(nobj))
+    allocate(obj(nobj))
 
     ! objective 1
-    zdt4_2d(1) = paraset(1)
+    obj(1) = paraset(1)
 
     ! objective 2
     gg = 1.0 + 10.0_dp*real(npara-1,dp)
     do ii = 2, npara
        gg = gg + paraset(ii)**2 - 10.0_dp * cos(4.0_dp*pi_dp*paraset(ii))
     end do
-    zdt4_2d(2) = gg * ( 1.0_dp - sqrt(paraset(1)/gg ) )
+    obj(2) = gg * ( 1.0_dp - sqrt(paraset(1)/gg ) )
 
-  end function zdt4_2d
+  end subroutine zdt4_2d
 
-  function zdt6_2d(paraset)
+  subroutine zdt6_2d(paraset,obj)
+
+    ! Has to be a subroutine because not all compilers can handle allocatable returns of functions, e.g. gnu v4.6
 
     !  dimensions:
     !      x    is usually used with 10 dimensions
@@ -5552,13 +5576,13 @@ CONTAINS
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt6/
     !
     !  Parameters:
-    !    real(dp), intent(in) :: X(:)      -  the argument of the objective function.
-    !    real(dp)             :: zdt6_2d   -  returns 2d objective function.
+    !    real(dp), intent(in)  :: X(:)      -  the argument of the objective function.
+    !    real(dp), intent(out) :: obj       -  returns 2d objective function.
 
     implicit none
 
-    real(dp), dimension(:), intent(in)   :: paraset
-    real(dp), dimension(:), allocatable  :: zdt6_2d
+    real(dp), dimension(:),              intent(in)  :: paraset
+    real(dp), dimension(:), allocatable, intent(out) :: obj
 
     ! local variables
     integer(i4)         :: npara, nobj
@@ -5568,15 +5592,15 @@ CONTAINS
     npara = size(paraset)
     nobj  = 2
 
-    allocate(zdt6_2d(nobj))
+    allocate(obj(nobj))
 
     ! objective 1
-    zdt6_2d(1) = 1.0_dp - exp(-4.0_dp*paraset(1)) * sin(6.0_dp*pi_dp*paraset(1))**6
+    obj(1) = 1.0_dp - exp(-4.0_dp*paraset(1)) * sin(6.0_dp*pi_dp*paraset(1))**6
 
     ! objective 2
     gg = 1.0_dp + 9.0_dp * (sum(paraset(2:npara))/real(npara-1,dp))**0.25_dp
-    zdt6_2d(2) = gg * ( 1.0_dp - (zdt6_2d(1) /gg)**2 )
+    obj(2) = gg * ( 1.0_dp - (obj(1) /gg)**2 )
 
-  end function zdt6_2d
+  end subroutine zdt6_2d
 
 END MODULE mo_opt_functions
