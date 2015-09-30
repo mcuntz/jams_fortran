@@ -122,6 +122,9 @@ MODULE mo_sce
   !>                                                             2, no printing (DEFAULT)
   !>                                                             3, same as 0 but print progress '.' on every function call
   !>                                                             4, same as 1 but print progress '.' on every function call
+  !>        \param[in] "logical, optional       :: mymask(size(pini))"
+  !>                                                        parameter included in optimization (true) or discarded (false)
+  !>                                                             DEFAULT: .true.
   !>        \param[in] "real(dp),    optional :: myalpha"   parameter for reflection  of points in complex\n
   !>                                                             DEFAULT: 0.8_dp
   !>        \param[in] "real(dp),    optional :: mybeta"    parameter for contraction of points in complex\n
