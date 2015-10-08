@@ -83,7 +83,7 @@ MODULE mo_sobol_index
   !>                                                             dim_2 = number of model outputs, e.g. time steps
   !
   !     INTENT(IN), OPTIONAL
-  !>        \param[in] "logical, optional  ::mask(:)"         Mask of model output \n
+  !>        \param[in] "logical, optional :: mask(:)"         Mask of model output \n
   !>                                                          (same for all parameter sets) \n
   !>                                                          (only applicable if ya has at least 2 dims)\n
   !>                                                               dim_1 = number of model outputs, e.g. time steps
@@ -92,12 +92,24 @@ MODULE mo_sobol_index
   !         None
   !
   !     INTENT(OUT), OPTIONAL
-  !>        \param[out] "real(sp/dp)      :: smean(:,:)"      Average index per parameter \n
-  !>                                                             dim_1 = number of parameters \n
-  !>                                                             dim_2 = 2, i.e. SI and STI
-  !>        \param[out] "real(sp/dp)      :: wmean(:,:)"      Variance weighted average index per parameter \n
-  !>                                                             dim_1 = number of parameters \n
-  !>                                                             dim_2 = 2, i.e. SI and STI
+  !>        \param[out] "real(sp/dp), optional :: smean(:,:)"      Average index per parameter \n
+  !>                                                                  dim_1 = number of parameters \n
+  !>                                                                  dim_2 = 2, i.e. SI and STI
+  !>        \param[out] "real(sp/dp), optional :: wmean(:,:)"      Variance weighted average index per parameter \n
+  !>                                                                 dim_1 = number of parameters \n
+  !>                                                                 dim_2 = 2, i.e. SI and STI
+  !>        \param[out] "real(sp/dp), optional :: wmean_frac(:,:)" Nominator and denominator which was used to
+  !>                                                                  calculate wmean \n
+  !>                                                                  (only be callable, if wmean present)\n
+  !>                                                                  dim1 = number of parameters\n
+  !>                                                                  dim2 = 4 (1 - nominator   Si)\n
+  !>                                                                           (2 - denominator Si)\n
+  !>                                                                           (3 - nominator   STi)\n
+  !>                                                                           (4 - denominator STi)\n
+  !>                                                                  be aware that it depends on the method how 
+  !>                                                                  wmean is then calculated, i.e.
+  !>                                                                            nominator/denominator     or
+  !>                                                                     1.0 - nominator/denominator
   !
   !     RETURN
   !         None
@@ -593,52 +605,64 @@ CONTAINS
 
   end subroutine sobol_index_0d_sp
 
-  subroutine sobol_index_1d_dp(ya, yb, yc, si, sti, method, mask, smean, wmean)
+  subroutine sobol_index_1d_dp(ya, yb, yc, si, sti, method, mask, smean, wmean, wmean_frac)
 
-    real(dp), dimension(:,:),                     intent(in)  :: ya     ! Output running model with parameter sets A
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    real(dp), dimension(:,:),                     intent(in)  :: yb     ! Output running model with parameter sets B
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    real(dp), dimension(:,:,:),                   intent(in)  :: yc     ! Output running model with parameter sets C
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   !      = size(ya) = size(yb)
-    !                                                                   ! dim2 = number of parameters
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    logical,  dimension(:),             optional, intent(in)  :: mask   ! Mask of model output
-    !                                                                   ! has to be the same for each parameter set
-    !                                                                   ! dim1 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    real(dp), dimension(size(yc,2),size(yc,3)),   intent(out) :: si     ! Sobol index (main effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    real(dp), dimension(size(yc,2),size(yc,3)),   intent(out) :: sti    ! Sobol index (total effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    integer(i4),                        optional, intent(in)  :: method ! (1) 'Saltelli2008'  needs Ci = B_A
-    !                                                                   ! (2) 'Homma1996'     needs Ci = B_A
-    !                                                                   ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
-    !                                                                   ! (4) 'Saltelli2010'  needs Ci = A_B
-    !                                                                   ! (5) 'Jansen1999'    needs Ci = A_B
-    !                                                                   ! (6) 'Mai2012'       needs Ci = B_A
-    !                                                                   ! (7) 'Mai2013'       needs Ci = A_B
-    !                                                                   ! (8) 'Mai2014'       needs Ci = A_B
-    !                                                                   ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
-    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
-    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: wmean  ! Variance weighted mean Sobol index 
-    !                                                                   ! (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+    real(dp), dimension(:,:),                     intent(in)  :: ya         ! Output running model with parameter sets A
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    real(dp), dimension(:,:),                     intent(in)  :: yb         ! Output running model with parameter sets B
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    real(dp), dimension(:,:,:),                   intent(in)  :: yc         ! Output running model with parameter sets C
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       !      = size(ya) = size(yb)
+    !                                                                       ! dim2 = number of parameters
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    logical,  dimension(:),             optional, intent(in)  :: mask       ! Mask of model output
+    !                                                                       ! has to be the same for each parameter set
+    !                                                                       ! dim1 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    real(dp), dimension(size(yc,2),size(yc,3)),   intent(out) :: si         ! Sobol index (main effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    real(dp), dimension(size(yc,2),size(yc,3)),   intent(out) :: sti        ! Sobol index (total effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    integer(i4),                        optional, intent(in)  :: method     ! (1) 'Saltelli2008'  needs Ci = B_A
+    !                                                                       ! (2) 'Homma1996'     needs Ci = B_A
+    !                                                                       ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
+    !                                                                       ! (4) 'Saltelli2010'  needs Ci = A_B
+    !                                                                       ! (5) 'Jansen1999'    needs Ci = A_B
+    !                                                                       ! (6) 'Mai2012'       needs Ci = B_A
+    !                                                                       ! (7) 'Mai2013'       needs Ci = A_B
+    !                                                                       ! (8) 'Mai2014'       needs Ci = A_B
+    !                                                                       ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
+    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: smean      ! Mean Sobol index (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: wmean      ! Variance weighted mean Sobol index 
+    !                                                                       ! (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(dp), dimension(size(yc,2), 4), optional, intent(out) :: wmean_frac ! Numerator and denominator which was used to
+    !                                                                       ! calculate wmean 
+    !                                                                       ! (only be callable, if wmean present)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 4 (1 - numerator   Si)
+    !                                                                       !          (2 - denominator Si)
+    !                                                                       !          (3 - numerator   STi)
+    !                                                                       !          (4 - denominator STi)
+    !                                                                       ! be aware that it depends on the method how 
+    !                                                                       ! wmean is then calculated, i.e.
+    !                                                                       !           numerator/denominator     or
+    !                                                                       !     1.0 - numerator/denominator
 
     ! local variables
     integer(i4)                                  :: ii, iout
@@ -663,6 +687,10 @@ CONTAINS
        imask = mask
     else
        imask = .true.
+    end if
+
+    if (present(wmean_frac) .and. .not. present(wmean)) then
+       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
     end if
 
     nsets = size(yc,1)
@@ -987,56 +1015,77 @@ CONTAINS
        end select
     end if
 
+    if (present(wmean_frac)) then
+
+       wmean_frac(:,1) = si_num(:)
+       wmean_frac(:,2) = si_denom
+       wmean_frac(:,3) = sti_num(:)
+       wmean_frac(:,4) = sti_denom
+
+    end if
+
     deallocate(si_num, sti_num)
 
   end subroutine sobol_index_1d_dp
 
-  subroutine sobol_index_1d_sp(ya, yb, yc, si, sti, method, mask, smean, wmean)
+  subroutine sobol_index_1d_sp(ya, yb, yc, si, sti, method, mask, smean, wmean, wmean_frac)
 
-    real(sp), dimension(:,:),                     intent(in)  :: ya     ! Output running model with parameter sets A
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    real(sp), dimension(:,:),                     intent(in)  :: yb     ! Output running model with parameter sets B
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    real(sp), dimension(:,:,:),                   intent(in)  :: yc     ! Output running model with parameter sets C
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   !      = size(ya) = size(yb)
-    !                                                                   ! dim2 = number of parameters
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    logical,  dimension(:),             optional, intent(in)  :: mask   ! Mask of model output
-    !                                                                   ! has to be the same for each parameter set
-    !                                                                   ! dim1 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    real(sp), dimension(size(yc,2),size(yc,3)),   intent(out) :: si     ! Sobol index (main effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    real(sp), dimension(size(yc,2),size(yc,3)),   intent(out) :: sti    ! Sobol index (total effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    integer(i4),                        optional, intent(in)  :: method ! (1) 'Saltelli2008'  needs Ci = B_A
-    !                                                                   ! (2) 'Homma1996'     needs Ci = B_A
-    !                                                                   ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
-    !                                                                   ! (4) 'Saltelli2010'  needs Ci = A_B
-    !                                                                   ! (5) 'Jansen1999'    needs Ci = A_B
-    !                                                                   ! (6) 'Mai2012'       needs Ci = B_A
-    !                                                                   ! (7) 'Mai2013'       needs Ci = A_B
-    !                                                                   ! (8) 'Mai2014'       needs Ci = A_B
-    !                                                                   ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
-    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
-    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: wmean  ! Variance weighted mean Sobol index 
-    !                                                                   ! (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+    real(sp), dimension(:,:),                     intent(in)  :: ya         ! Output running model with parameter sets A
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    real(sp), dimension(:,:),                     intent(in)  :: yb         ! Output running model with parameter sets B
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    real(sp), dimension(:,:,:),                   intent(in)  :: yc         ! Output running model with parameter sets C
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       !      = size(ya) = size(yb)
+    !                                                                       ! dim2 = number of parameters
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    logical,  dimension(:),             optional, intent(in)  :: mask       ! Mask of model output
+    !                                                                       ! has to be the same for each parameter set
+    !                                                                       ! dim1 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    real(sp), dimension(size(yc,2),size(yc,3)),   intent(out) :: si         ! Sobol index (main effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    real(sp), dimension(size(yc,2),size(yc,3)),   intent(out) :: sti        ! Sobol index (total effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    integer(i4),                        optional, intent(in)  :: method     ! (1) 'Saltelli2008'  needs Ci = B_A
+    !                                                                       ! (2) 'Homma1996'     needs Ci = B_A
+    !                                                                       ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
+    !                                                                       ! (4) 'Saltelli2010'  needs Ci = A_B
+    !                                                                       ! (5) 'Jansen1999'    needs Ci = A_B
+    !                                                                       ! (6) 'Mai2012'       needs Ci = B_A
+    !                                                                       ! (7) 'Mai2013'       needs Ci = A_B
+    !                                                                       ! (8) 'Mai2014'       needs Ci = A_B
+    !                                                                       ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
+    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: smean      ! Mean Sobol index (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: wmean      ! Variance weighted mean Sobol index 
+    !                                                                       ! (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(sp), dimension(size(yc,2), 4), optional, intent(out) :: wmean_frac ! Numerator and denominator which was used to
+    !                                                                       ! calculate wmean 
+    !                                                                       ! (only be callable, if wmean present)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 4 (1 - numerator   Si)
+    !                                                                       !          (2 - denominator Si)
+    !                                                                       !          (3 - numerator   STi)
+    !                                                                       !          (4 - denominator STi)
+    !                                                                       ! be aware that it depends on the method how 
+    !                                                                       ! wmean is then calculated, i.e.
+    !                                                                       !           numerator/denominator     or
+    !                                                                       !     1.0 - numerator/denominator
 
     ! local variables
     integer(i4)                          :: ii, iout
@@ -1061,6 +1110,10 @@ CONTAINS
        imask = mask
     else
        imask = .true.
+    end if
+
+    if (present(wmean_frac) .and. .not. present(wmean)) then
+       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
     end if
 
     nsets = size(yc,1)
@@ -1385,72 +1438,93 @@ CONTAINS
        end select
     end if
 
+    if (present(wmean_frac)) then
+
+       wmean_frac(:,1) = si_num(:)
+       wmean_frac(:,2) = si_denom
+       wmean_frac(:,3) = sti_num(:)
+       wmean_frac(:,4) = sti_denom
+
+    end if
+
     deallocate(si_num, sti_num)
 
   end subroutine sobol_index_1d_sp
 
-  subroutine sobol_index_2d_dp(ya, yb, yc, si, sti, method, mask, smean, wmean)
+  subroutine sobol_index_2d_dp(ya, yb, yc, si, sti, method, mask, smean, wmean, wmean_frac)
 
-    real(dp), dimension(:,:,:),                   intent(in)  :: ya     ! Output running model with parameter sets A
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    real(dp), dimension(:,:,:),                   intent(in)  :: yb     ! Output running model with parameter sets B
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    real(dp), dimension(:,:,:,:),                 intent(in)  :: yc     ! Output running model with parameter sets C
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   !      = size(ya) = size(yb)
-    !                                                                   ! dim2 = number of parameters
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    logical,  dimension(:,:),           optional, intent(in)  :: mask   ! Mask of model output
-    !                                                                   ! has to be the same for each parameter set
-    !                                                                   ! dim1 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
+    real(dp), dimension(:,:,:),                   intent(in)  :: ya         ! Output running model with parameter sets A
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    real(dp), dimension(:,:,:),                   intent(in)  :: yb         ! Output running model with parameter sets B
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    real(dp), dimension(:,:,:,:),                 intent(in)  :: yc         ! Output running model with parameter sets C
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       !      = size(ya) = size(yb)
+    !                                                                       ! dim2 = number of parameters
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    logical,  dimension(:,:),           optional, intent(in)  :: mask       ! Mask of model output
+    !                                                                       ! has to be the same for each parameter set
+    !                                                                       ! dim1 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
     real(dp), dimension(&
          size(yc,2),size(yc,3), &
-         size(yc,4)),                             intent(out) :: si     ! Sobol index (main effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
+         size(yc,4)),                             intent(out) :: si         ! Sobol index (main effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
     real(dp), dimension(&
          size(yc,2),size(yc,3),&
-         size(yc,4)),                             intent(out) :: sti    ! Sobol index (total effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    integer(i4),                        optional, intent(in)  :: method ! (1) 'Saltelli2008'  needs Ci = B_A
-    !                                                                   ! (2) 'Homma1996'     needs Ci = B_A
-    !                                                                   ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
-    !                                                                   ! (4) 'Saltelli2010'  needs Ci = A_B
-    !                                                                   ! (5) 'Jansen1999'    needs Ci = A_B
-    !                                                                   ! (6) 'Mai2012'       needs Ci = B_A
-    !                                                                   ! (7) 'Mai2013'       needs Ci = A_B
-    !                                                                   ! (8) 'Mai2014'       needs Ci = A_B
-    !                                                                   ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
-    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
-    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: wmean  ! Variance weighted mean Sobol index 
-    !                                                                   ! (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+         size(yc,4)),                             intent(out) :: sti        ! Sobol index (total effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    integer(i4),                        optional, intent(in)  :: method     ! (1) 'Saltelli2008'  needs Ci = B_A
+    !                                                                       ! (2) 'Homma1996'     needs Ci = B_A
+    !                                                                       ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
+    !                                                                       ! (4) 'Saltelli2010'  needs Ci = A_B
+    !                                                                       ! (5) 'Jansen1999'    needs Ci = A_B
+    !                                                                       ! (6) 'Mai2012'       needs Ci = B_A
+    !                                                                       ! (7) 'Mai2013'       needs Ci = A_B
+    !                                                                       ! (8) 'Mai2014'       needs Ci = A_B
+    !                                                                       ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
+    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: smean      ! Mean Sobol index (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: wmean      ! Variance weighted mean Sobol index 
+    !                                                                       ! (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(dp), dimension(size(yc,2), 4), optional, intent(out) :: wmean_frac ! Numerator and denominator which was used to
+    !                                                                       ! calculate wmean 
+    !                                                                       ! (only be callable, if wmean present)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 4 (1 - numerator   Si)
+    !                                                                       !          (2 - denominator Si)
+    !                                                                       !          (3 - numerator   STi)
+    !                                                                       !          (4 - denominator STi)
+    !                                                                       ! be aware that it depends on the method how 
+    !                                                                       ! wmean is then calculated, i.e.
+    !                                                                       !           numerator/denominator     or
+    !                                                                       !     1.0 - numerator/denominator
 
     ! local variables
     integer(i4)                                :: ii, iout1, iout2
@@ -1475,6 +1549,10 @@ CONTAINS
        imask = mask
     else
        imask = .true.
+    end if
+
+    if (present(wmean_frac) .and. .not. present(wmean)) then
+       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
     end if
 
     nsets = size(yc,1)
@@ -1827,72 +1905,93 @@ CONTAINS
        end select
     end if
 
+    if (present(wmean_frac)) then
+
+       wmean_frac(:,1) = si_num(:)
+       wmean_frac(:,2) = si_denom
+       wmean_frac(:,3) = sti_num(:)
+       wmean_frac(:,4) = sti_denom
+
+    end if
+
     deallocate(si_num, sti_num)
 
   end subroutine sobol_index_2d_dp
 
-  subroutine sobol_index_2d_sp(ya, yb, yc, si, sti, method, mask, smean, wmean)
+  subroutine sobol_index_2d_sp(ya, yb, yc, si, sti, method, mask, smean, wmean, wmean_frac)
 
-    real(sp), dimension(:,:,:),                   intent(in)  :: ya     ! Output running model with parameter sets A
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    real(sp), dimension(:,:,:),                   intent(in)  :: yb     ! Output running model with parameter sets B
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    real(sp), dimension(:,:,:,:),                 intent(in)  :: yc     ! Output running model with parameter sets C
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   !      = size(ya) = size(yb)
-    !                                                                   ! dim2 = number of parameters
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    logical,  dimension(:,:),           optional, intent(in)  :: mask   ! Mask of model output
-    !                                                                   ! has to be the same for each parameter set
-    !                                                                   ! dim1 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
+    real(sp), dimension(:,:,:),                   intent(in)  :: ya         ! Output running model with parameter sets A
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    real(sp), dimension(:,:,:),                   intent(in)  :: yb         ! Output running model with parameter sets B
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    real(sp), dimension(:,:,:,:),                 intent(in)  :: yc         ! Output running model with parameter sets C
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       !      = size(ya) = size(yb)
+    !                                                                       ! dim2 = number of parameters
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    logical,  dimension(:,:),           optional, intent(in)  :: mask       ! Mask of model output
+    !                                                                       ! has to be the same for each parameter set
+    !                                                                       ! dim1 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
     real(sp), dimension(&
          size(yc,2),size(yc,3), &
-         size(yc,4)),                             intent(out) :: si     ! Sobol index (main effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
+         size(yc,4)),                             intent(out) :: si         ! Sobol index (main effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
     real(sp), dimension(&
          size(yc,2),size(yc,3),&
-         size(yc,4)),                             intent(out) :: sti    ! Sobol index (total effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    integer(i4),                        optional, intent(in)  :: method ! (1) 'Saltelli2008'  needs Ci = B_A
-    !                                                                   ! (2) 'Homma1996'     needs Ci = B_A
-    !                                                                   ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
-    !                                                                   ! (4) 'Saltelli2010'  needs Ci = A_B
-    !                                                                   ! (5) 'Jansen1999'    needs Ci = A_B
-    !                                                                   ! (6) 'Mai2012'       needs Ci = B_A
-    !                                                                   ! (7) 'Mai2013'       needs Ci = A_B
-    !                                                                   ! (8) 'Mai2014'       needs Ci = A_B
-    !                                                                   ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
-    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
-    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: wmean  ! Variance weighted mean Sobol index 
-    !                                                                   ! (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+         size(yc,4)),                             intent(out) :: sti        ! Sobol index (total effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    integer(i4),                        optional, intent(in)  :: method     ! (1) 'Saltelli2008'  needs Ci = B_A
+    !                                                                       ! (2) 'Homma1996'     needs Ci = B_A
+    !                                                                       ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
+    !                                                                       ! (4) 'Saltelli2010'  needs Ci = A_B
+    !                                                                       ! (5) 'Jansen1999'    needs Ci = A_B
+    !                                                                       ! (6) 'Mai2012'       needs Ci = B_A
+    !                                                                       ! (7) 'Mai2013'       needs Ci = A_B
+    !                                                                       ! (8) 'Mai2014'       needs Ci = A_B
+    !                                                                       ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
+    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: smean      ! Mean Sobol index (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: wmean      ! Variance weighted mean Sobol index 
+    !                                                                       ! (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(sp), dimension(size(yc,2), 4), optional, intent(out) :: wmean_frac ! Numerator and denominator which was used to
+    !                                                                       ! calculate wmean 
+    !                                                                       ! (only be callable, if wmean present)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 4 (1 - numerator   Si)
+    !                                                                       !          (2 - denominator Si)
+    !                                                                       !          (3 - numerator   STi)
+    !                                                                       !          (4 - denominator STi)
+    !                                                                       ! be aware that it depends on the method how 
+    !                                                                       ! wmean is then calculated, i.e.
+    !                                                                       !           numerator/denominator     or
+    !                                                                       !     1.0 - numerator/denominator
 
     ! local variables
     integer(i4)                                :: ii, iout1, iout2
@@ -1917,6 +2016,10 @@ CONTAINS
        imask = mask
     else
        imask = .true.
+    end if
+
+    if (present(wmean_frac) .and. .not. present(wmean)) then
+       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
     end if
 
     nsets = size(yc,1)
@@ -2269,84 +2372,105 @@ CONTAINS
        end select
     end if
 
+    if (present(wmean_frac)) then
+
+       wmean_frac(:,1) = si_num(:)
+       wmean_frac(:,2) = si_denom
+       wmean_frac(:,3) = sti_num(:)
+       wmean_frac(:,4) = sti_denom
+
+    end if
+
     deallocate(si_num, sti_num)
 
   end subroutine sobol_index_2d_sp
 
-  subroutine sobol_index_3d_dp(ya, yb, yc, si, sti, method, mask, smean, wmean)
+  subroutine sobol_index_3d_dp(ya, yb, yc, si, sti, method, mask, smean, wmean, wmean_frac)
 
-    real(dp), dimension(:,:,:,:),                 intent(in)  :: ya     ! Output running model with parameter sets A
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    real(dp), dimension(:,:,:,:),                 intent(in)  :: yb     ! Output running model with parameter sets B
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    real(dp), dimension(:,:,:,:,:),               intent(in)  :: yc     ! Output running model with parameter sets C
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   !      = size(ya) = size(yb)
-    !                                                                   ! dim2 = number of parameters
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim5 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    logical,  dimension(:,:,:),         optional, intent(in)  :: mask   ! Mask of model output
-    !                                                                   ! has to be the same for each parameter set
-    !                                                                   ! dim1 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
+    real(dp), dimension(:,:,:,:),                 intent(in)  :: ya         ! Output running model with parameter sets A
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    real(dp), dimension(:,:,:,:),                 intent(in)  :: yb         ! Output running model with parameter sets B
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    real(dp), dimension(:,:,:,:,:),               intent(in)  :: yc         ! Output running model with parameter sets C
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       !      = size(ya) = size(yb)
+    !                                                                       ! dim2 = number of parameters
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim5 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    logical,  dimension(:,:,:),         optional, intent(in)  :: mask       ! Mask of model output
+    !                                                                       ! has to be the same for each parameter set
+    !                                                                       ! dim1 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
     real(dp), dimension(&
          size(yc,2),size(yc,3), &
-         size(yc,4),size(yc,5)),                  intent(out) :: si     ! Sobol index (main effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
+         size(yc,4),size(yc,5)),                  intent(out) :: si         ! Sobol index (main effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
     real(dp), dimension(&
          size(yc,2),size(yc,3),&
-         size(yc,4),size(yc,5)),                  intent(out) :: sti    ! Sobol index (total effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    integer(i4),                        optional, intent(in)  :: method ! (1) 'Saltelli2008'  needs Ci = B_A
-    !                                                                   ! (2) 'Homma1996'     needs Ci = B_A
-    !                                                                   ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
-    !                                                                   ! (4) 'Saltelli2010'  needs Ci = A_B
-    !                                                                   ! (5) 'Jansen1999'    needs Ci = A_B
-    !                                                                   ! (6) 'Mai2012'       needs Ci = B_A
-    !                                                                   ! (7) 'Mai2013'       needs Ci = A_B
-    !                                                                   ! (8) 'Mai2014'       needs Ci = A_B
-    !                                                                   ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
-    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
-    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: wmean  ! Variance weighted mean Sobol index 
-    !                                                                   ! (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+         size(yc,4),size(yc,5)),                  intent(out) :: sti        ! Sobol index (total effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    integer(i4),                        optional, intent(in)  :: method     ! (1) 'Saltelli2008'  needs Ci = B_A
+    !                                                                       ! (2) 'Homma1996'     needs Ci = B_A
+    !                                                                       ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
+    !                                                                       ! (4) 'Saltelli2010'  needs Ci = A_B
+    !                                                                       ! (5) 'Jansen1999'    needs Ci = A_B
+    !                                                                       ! (6) 'Mai2012'       needs Ci = B_A
+    !                                                                       ! (7) 'Mai2013'       needs Ci = A_B
+    !                                                                       ! (8) 'Mai2014'       needs Ci = A_B
+    !                                                                       ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
+    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: smean      ! Mean Sobol index (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(dp), dimension(size(yc,2), 2), optional, intent(out) :: wmean      ! Variance weighted mean Sobol index 
+    !                                                                       ! (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(dp), dimension(size(yc,2), 4), optional, intent(out) :: wmean_frac ! Numerator and denominator which was used to
+    !                                                                       ! calculate wmean 
+    !                                                                       ! (only be callable, if wmean present)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 4 (1 - numerator   Si)
+    !                                                                       !          (2 - denominator Si)
+    !                                                                       !          (3 - numerator   STi)
+    !                                                                       !          (4 - denominator STi)
+    !                                                                       ! be aware that it depends on the method how 
+    !                                                                       ! wmean is then calculated, i.e.
+    !                                                                       !           numerator/denominator     or
+    !                                                                       !     1.0 - numerator/denominator
 
     ! local variables
     integer(i4)                                           :: ii, iout1, iout2, iout3
@@ -2371,6 +2495,10 @@ CONTAINS
        imask = mask
     else
        imask = .true.
+    end if
+
+    if (present(wmean_frac) .and. .not. present(wmean)) then
+       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
     end if
 
     nsets = size(yc,1)
@@ -2740,84 +2868,105 @@ CONTAINS
        end select
     end if
 
+    if (present(wmean_frac)) then
+
+       wmean_frac(:,1) = si_num(:)
+       wmean_frac(:,2) = si_denom
+       wmean_frac(:,3) = sti_num(:)
+       wmean_frac(:,4) = sti_denom
+
+    end if
+
     deallocate(si_num, sti_num)
 
   end subroutine sobol_index_3d_dp
 
-  subroutine sobol_index_3d_sp(ya, yb, yc, si, sti, method, mask, smean, wmean)
+  subroutine sobol_index_3d_sp(ya, yb, yc, si, sti, method, mask, smean, wmean, wmean_frac)
 
-    real(sp), dimension(:,:,:,:),                 intent(in)  :: ya     ! Output running model with parameter sets A
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    real(sp), dimension(:,:,:,:),                 intent(in)  :: yb     ! Output running model with parameter sets B
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    real(sp), dimension(:,:,:,:,:),               intent(in)  :: yc     ! Output running model with parameter sets C
-    !                                                                   ! dim1 = number of parameter sets 
-    !                                                                   !      = size(ya) = size(yb)
-    !                                                                   ! dim2 = number of parameters
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim5 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    logical,  dimension(:,:,:),         optional, intent(in)  :: mask   ! Mask of model output
-    !                                                                   ! has to be the same for each parameter set
-    !                                                                   ! dim1 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
+    real(sp), dimension(:,:,:,:),                 intent(in)  :: ya         ! Output running model with parameter sets A
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    real(sp), dimension(:,:,:,:),                 intent(in)  :: yb         ! Output running model with parameter sets B
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    real(sp), dimension(:,:,:,:,:),               intent(in)  :: yc         ! Output running model with parameter sets C
+    !                                                                       ! dim1 = number of parameter sets 
+    !                                                                       !      = size(ya) = size(yb)
+    !                                                                       ! dim2 = number of parameters
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim5 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    logical,  dimension(:,:,:),         optional, intent(in)  :: mask       ! Mask of model output
+    !                                                                       ! has to be the same for each parameter set
+    !                                                                       ! dim1 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
     real(sp), dimension(&
          size(yc,2),size(yc,3), &
-         size(yc,4),size(yc,5)),                  intent(out) :: si     ! Sobol index (main effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
+         size(yc,4),size(yc,5)),                  intent(out) :: si         ! Sobol index (main effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
     real(sp), dimension(&
          size(yc,2),size(yc,3),&
-         size(yc,4),size(yc,5)),                  intent(out) :: sti    ! Sobol index (total effect)
-    !                                                                   ! (0.0 at masked entries)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = number of modeloutputs 
-    !                                                                   !        (e.g. number of timesteps)
-    !                                                                   ! dim3 = number of modeloutputs 
-    !                                                                   !        (e.g. number of x coordinates)
-    !                                                                   ! dim4 = number of modeloutputs 
-    !                                                                   !        (e.g. number of y coordinates)
-    integer(i4),                        optional, intent(in)  :: method ! (1) 'Saltelli2008'  needs Ci = B_A
-    !                                                                   ! (2) 'Homma1996'     needs Ci = B_A
-    !                                                                   ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
-    !                                                                   ! (4) 'Saltelli2010'  needs Ci = A_B
-    !                                                                   ! (5) 'Jansen1999'    needs Ci = A_B
-    !                                                                   ! (6) 'Mai2012'       needs Ci = B_A
-    !                                                                   ! (7) 'Mai2013'       needs Ci = A_B
-    !                                                                   ! (8) 'Mai2014'       needs Ci = A_B
-    !                                                                   ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
-    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: smean  ! Mean Sobol index (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
-    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: wmean  ! Variance weighted mean Sobol index 
-    !                                                                   ! (main and total effect)
-    !                                                                   ! dim1 = number of parameters
-    !                                                                   ! dim2 = 2 (i.e. SI and STI)
+         size(yc,4),size(yc,5)),                  intent(out) :: sti        ! Sobol index (total effect)
+    !                                                                       ! (0.0 at masked entries)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = number of modeloutputs 
+    !                                                                       !        (e.g. number of timesteps)
+    !                                                                       ! dim3 = number of modeloutputs 
+    !                                                                       !        (e.g. number of x coordinates)
+    !                                                                       ! dim4 = number of modeloutputs 
+    !                                                                       !        (e.g. number of y coordinates)
+    integer(i4),                        optional, intent(in)  :: method     ! (1) 'Saltelli2008'  needs Ci = B_A
+    !                                                                       ! (2) 'Homma1996'     needs Ci = B_A
+    !                                                                       ! (3) 'Sobol2007'     needs Ci = A_B and B_A --> NA
+    !                                                                       ! (4) 'Saltelli2010'  needs Ci = A_B
+    !                                                                       ! (5) 'Jansen1999'    needs Ci = A_B
+    !                                                                       ! (6) 'Mai2012'       needs Ci = B_A
+    !                                                                       ! (7) 'Mai2013'       needs Ci = A_B
+    !                                                                       ! (8) 'Mai2014'       needs Ci = A_B
+    !                                                                       ! (9) 'Mai1999'       needs Ci = A_B  ----> Default
+    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: smean      ! Mean Sobol index (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(sp), dimension(size(yc,2), 2), optional, intent(out) :: wmean      ! Variance weighted mean Sobol index 
+    !                                                                       ! (main and total effect)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 2 (i.e. SI and STI)
+    real(sp), dimension(size(yc,2), 4), optional, intent(out) :: wmean_frac ! Numerator and denominator which was used to
+    !                                                                       ! calculate wmean 
+    !                                                                       ! (only be callable, if wmean present)
+    !                                                                       ! dim1 = number of parameters
+    !                                                                       ! dim2 = 4 (1 - numerator   Si)
+    !                                                                       !          (2 - denominator Si)
+    !                                                                       !          (3 - numerator   STi)
+    !                                                                       !          (4 - denominator STi)
+    !                                                                       ! be aware that it depends on the method how 
+    !                                                                       ! wmean is then calculated, i.e.
+    !                                                                       !           numerator/denominator     or
+    !                                                                       !     1.0 - numerator/denominator
 
     ! local variables
     integer(i4)                                           :: ii, iout1, iout2, iout3
@@ -2842,6 +2991,10 @@ CONTAINS
        imask = mask
     else
        imask = .true.
+    end if
+
+    if (present(wmean_frac) .and. .not. present(wmean)) then
+       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
     end if
 
     nsets = size(yc,1)
@@ -3212,6 +3365,15 @@ CONTAINS
     end if
 
     deallocate(si_num, sti_num)
+
+    if (present(wmean_frac)) then
+
+       wmean_frac(:,1) = si_num(:)
+       wmean_frac(:,2) = si_denom
+       wmean_frac(:,3) = sti_num(:)
+       wmean_frac(:,4) = sti_denom
+
+    end if
 
   end subroutine sobol_index_3d_sp 
 
