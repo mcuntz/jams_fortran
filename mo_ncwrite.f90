@@ -5663,7 +5663,7 @@ contains
 
     integer(i4), intent(in) :: status
 
-    if (status .ne. nf90_noerr) then
+    if (status /= nf90_noerr) then
        write(*,*) 'mo_ncwrite.check error: ', trim(nf90_strerror(status))
        stop
     end if
