@@ -401,7 +401,7 @@ module mo_netcdf
      ! 
      !     PURPOSE
      !>        \brief Retrieve NcDimension
-     !>        \details Retrieve the NcDimension type for the dimension specified by  
+     !>        \details Retrieve the NcDimension derived type for the dimension specified by  
      !>                 its name or id. The program will teminate abruptly if no such 
      !>                 dimension exists.
      !
@@ -491,7 +491,7 @@ module mo_netcdf
      ! 
      !     PURPOSE
      !>        \brief Retrieve NcVariable
-     !>        \details Retrieve the NcVariable type for the variable specified by its 
+     !>        \details Retrieve the NcVariable derived type for the variable specified by its 
      !>                 name. The program will teminate abruptly if no such dimension
      !>                 exists.
      !
@@ -519,10 +519,6 @@ module mo_netcdf
           getVariableByName
 
   end type NcDataset
-
-  interface NcDataset
-     procedure newNcDataset
-  end interface NcDataset
 
   ! -------------------------------------------------------------------------------------- 
   !
@@ -630,13 +626,11 @@ module mo_netcdf
 
   end type NcDimension
 
-  interface NcDimension
-     procedure newNcDimension
-  end interface NcDimension
 
   interface operator (==)
      procedure equalNcDimensions
   end interface operator (==)
+  
 
   ! -------------------------------------------------------------------------------------- 
   !
@@ -1226,10 +1220,6 @@ module mo_netcdf
 
   end type NcVariable
 
-  interface NcVariable
-     procedure newNcVariable
-  end interface NcVariable
-
 contains
 
   subroutine initNcVariable(self, id, parent, name)
@@ -1373,7 +1363,7 @@ contains
     call check(nf90_def_dim(self%id, name, dimlength, id), &
          "Failed to create dimension: " // name)
 
-    setDimension = NcDimension(id,self,trim(name))
+    setDimension = newNcDimension(id,self,trim(name))
   end function setDimension
 
   function hasVariable(self, name)
@@ -1412,7 +1402,7 @@ contains
          chunksizes, deflate_level, shuffle, fletcher32, endianness, &
          cache_size, cache_nelems, cache_preemption)
     call check(status, "Failed to create variable: " // name)
-    setVariableWithIds = NcVariable(varid,self,name)
+    setVariableWithIds = newNcVariable(varid,self,name)
   end function setVariableWithIds
 
   function setVariableWithNames(self, name, dtype, dimensions, contiguous, &
@@ -1473,7 +1463,7 @@ contains
     write(msg,*) id
     call check(nf90_inquire_dimension(self%id,id,name), &
          "Could not inquire dimension: " // msg)
-    getDimensionById = NcDimension(id,self,name)
+    getDimensionById = newNcDimension(id,self,name)
   end function getDimensionById
 
   function getDimensionByName(self, name)
@@ -1495,7 +1485,7 @@ contains
 
     call check(nf90_inq_varid(self%id,name,id), &
          "Could not inquire variable: " // name)
-    getVariableByName = NcVariable(id,self,name)
+    getVariableByName = newNcVariable(id,self,name)
   end function getVariableByName
 
   function getNoDimensions(self)
