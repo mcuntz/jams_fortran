@@ -1001,6 +1001,7 @@ CONTAINS
        dummy_initial_paraset_mcmc(1:size(para,1)) = initial_paraset_mcmc
 
        ! write restart
+       print*, 'write shape: ',shape(mcmc_paras_3d)
        open(999, file=isrestart_file, status='unknown', action='write', delim='QUOTE')
        write(999, restartnml1)
        write(999, restartnml2)
@@ -1028,10 +1029,16 @@ CONTAINS
        allocate(Ipos(chains), Ineg(chains), accRatio(chains))
        allocate(vDotJ(chains), s2(chains))
        allocate(sqrtR(size(para)))
-       if (present(iter_mcmc_in)) then
-          allocate(mcmc_paras_3d(iter_mcmc-iter_mcmc_in,size(para),chains))
+       if (.not. converged) then
+          if (present(iter_mcmc_in)) then
+             allocate(mcmc_paras_3d(iter_mcmc-iter_mcmc_in,size(para),chains))
+          else
+             print*, 'allocated shape: ',iter_mcmc-1000_i4*n
+             
+             allocate(mcmc_paras_3d(iter_mcmc-1000_i4*n,size(para),chains))
+          end if
        else
-          allocate(mcmc_paras_3d(iter_mcmc-1000_i4*n,size(para),chains))
+          allocate(mcmc_paras_3d(iter_mcmc,size(para),chains))
        end if
 
     endif
@@ -1298,6 +1305,7 @@ CONTAINS
        dummy_initial_paraset_mcmc(1:size(para,1)) = initial_paraset_mcmc
        
        ! write restart
+       print*, 'write shape2: ', shape(mcmc_paras_3d)
        open(999, file=isrestart_file, status='unknown', action='write', delim='QUOTE')
        write(999, restartnml1)
        write(999, restartnml2)
@@ -1307,7 +1315,7 @@ CONTAINS
     
     ! read restart
     open(999, file=isrestart_file, status='unknown', action='read', delim='QUOTE')
-    read(999, restartnml1)          
+    read(999, restartnml1)
     read(999, restartnml2)
     close(999)
 
