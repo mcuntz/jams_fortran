@@ -1001,7 +1001,6 @@ CONTAINS
        dummy_initial_paraset_mcmc(1:size(para,1)) = initial_paraset_mcmc
 
        ! write restart
-       print*, 'write shape: ',shape(mcmc_paras_3d)
        open(999, file=isrestart_file, status='unknown', action='write', delim='QUOTE')
        write(999, restartnml1)
        write(999, restartnml2)
@@ -1033,8 +1032,6 @@ CONTAINS
           if (present(iter_mcmc_in)) then
              allocate(mcmc_paras_3d(iter_mcmc-iter_mcmc_in,size(para),chains))
           else
-             print*, 'allocated shape: ',iter_mcmc-1000_i4*n
-             
              allocate(mcmc_paras_3d(iter_mcmc-1000_i4*n,size(para),chains))
           end if
        else
@@ -1305,7 +1302,6 @@ CONTAINS
        dummy_initial_paraset_mcmc(1:size(para,1)) = initial_paraset_mcmc
        
        ! write restart
-       print*, 'write shape2: ', shape(mcmc_paras_3d)
        open(999, file=isrestart_file, status='unknown', action='write', delim='QUOTE')
        write(999, restartnml1)
        write(999, restartnml2)
