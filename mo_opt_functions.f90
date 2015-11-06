@@ -4785,8 +4785,8 @@ CONTAINS
     obj = 0.0_dp
 
     gm = 0.0_dp
-    do ii = 1, npara
-       gm = gm + (paraset(ii) - 0.5)**2
+    do ii = nobj+1, npara
+       gm = gm + (paraset(ii) - 0.5_dp)**2
     end do
 
     xx = paraset * pi_dp / 2.0_dp
@@ -4797,12 +4797,17 @@ CONTAINS
 
     ! objective 2
     do ii = nobj-1,2,-1
+       ! print*, 'obj2: nobj-ii=',nobj-ii,'   nobj-ii+1=',nobj-ii+1
        tt = tt * cos( xx(nobj-ii) )
        obj(ii) = tt * sin( xx(nobj-ii+1) )
     end do
 
     ! objective 1
     obj(1) = tt * cos( xx(nobj-1) )
+
+    where (abs(obj) < epsilon(1.0_dp))
+       obj = 0.0_dp
+    end where
 
   end subroutine dtlz2_3d
 
@@ -4866,7 +4871,7 @@ CONTAINS
     obj = 0.0_dp
 
     gm = 0.0_dp
-    do ii = 1, npara
+    do ii = nobj+1, npara
        gm = gm + (paraset(ii) - 0.5)**2
     end do
 
@@ -4884,6 +4889,10 @@ CONTAINS
 
     ! objective 1
     obj(1) = tt * cos( xx(nobj-1) )
+
+    where (abs(obj) < epsilon(1.0_dp))
+       obj = 0.0_dp
+    end where
 
   end subroutine dtlz2_5d
 
@@ -4947,7 +4956,7 @@ CONTAINS
     obj = 0.0_dp
 
     gm = 0.0_dp
-    do ii = 1, npara
+    do ii = nobj+1, npara
        gm = gm + (paraset(ii) - 0.5)**2
     end do
 
@@ -4965,6 +4974,10 @@ CONTAINS
 
     ! objective 1
     obj(1) = tt * cos( xx(nobj-1) )
+
+    where (abs(obj) < epsilon(1.0_dp))
+       obj = 0.0_dp
+    end where
 
   end subroutine dtlz2_10d
 
