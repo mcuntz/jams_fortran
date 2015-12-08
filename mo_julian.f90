@@ -66,6 +66,11 @@ MODULE mo_julian
   public :: dec2date360  ! Day, month, year, hour, minute, and second from fractional Julian day in 360 day calendar
   public :: date2dec360  ! Fractional Julian day from day, month, year, hour, minute, and second in 360 day calendar
 
+  public :: caldat365    ! Day , month and year from Julian day in 365 day calendar
+  public :: julday365    ! Julian day from day, month and year in 365 day calendar
+  public :: dec2date365  ! Day, month, year, hour, minute, and second from fractional Julian day in 365 day calendar
+  public :: date2dec365  ! Fractional Julian day from day, month, year, hour, minute, and second in 365 day calendar
+
   ! ------------------------------------------------------------------
 
 CONTAINS
@@ -761,7 +766,7 @@ CONTAINS
 
   !     HISTORY
   !>        \author Written, David Schäfer
-  !>        \date Dec 2015
+  !>        \date Oct 2015
   elemental pure subroutine caldat360(julian,dd,mm,yy)
 
     implicit none
@@ -835,91 +840,6 @@ CONTAINS
     if (yy < 0) julday360 = julday360 * (-1)
 
   end function julday360
-
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         date2dec360
-
-  !     PURPOSE
-  !>        \brief Fractional Julian day from day, month, year, hour, minute, second in 360 day calendar
-
-  !>        \details In this routine date2dec360 returns the fractional Julian Day that begins at noon
-  !>        of the calendar date specified by month mm, day dd, and year yy, all integer variables.
-
-  !>        The zeroth Julian Day is 01.01.0000 at noon.
-
-  !     CALLING SEQUENCE
-  !         date2dec360 = date2dec360(dd, mm, yy, hh, nn, ss)
-
-  !     INTENT(IN)
-  !         None
-
-  !     INTENT(INOUT)
-  !         None
-
-  !     INTENT(OUT)
-  !         None
-
-  !     INTENT(IN), OPTIONAL
-  !>        \param[in] "integer(i4), optional :: dd"         Day in month of Julian day (default: 1)
-  !>        \param[in] "integer(i4), optional :: mm"         Month in year of Julian day (default: 1)
-  !>        \param[in] "integer(i4), optional :: yy"         Year of Julian day (default: 1)
-  !>        \param[in] "integer(i4), optional :: hh"         Hours of Julian day (default: 0)
-  !>        \param[in] "integer(i4), optional :: nn"         Minutes of hour of Julian day (default: 0)
-  !>        \param[in] "integer(i4), optional :: ss"         Secondes of minute of hour of Julian day (default: 0)
-
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-
-  !     INTENT(OUT), OPTIONAL
-  !         None
-
-  !     RETURN
-  !>        \return real(dp) :: date2dec360  !     Fractional Julian day
-
-  !     EXAMPLE
-  !         -> see example in test directory
-
-  !     HISTORY
-  !>        \author Written, David Schaefer
-  !>        \date Jan 2015
-  elemental pure function date2dec360(dd,mm,yy,hh,nn,ss)
-
-    implicit none
-
-    integer(i4), intent(in), optional :: dd, mm, yy
-    integer(i4), intent(in), optional :: hh, nn, ss
-    real(dp)                          :: date2dec360, eps
-    integer(i4)                       :: idd, imm, iyy
-    real(dp)                          :: ihh, inn, iss
-    real(dp)                          :: hour
-
-    ! Presets
-    idd = 1
-    if (present(dd)) idd = dd
-    imm = 1
-    if (present(mm)) imm = mm
-    iyy = 1
-    if (present(yy)) iyy = yy
-    ihh = 0.0_dp
-    if (present(hh)) ihh = real(hh,dp)
-    inn = 0.0_dp
-    if (present(nn)) inn = real(nn,dp)
-    iss = 0.0_dp
-    if (present(ss)) iss = real(ss,dp)
-
-    hour = ihh/24._dp + inn/1440._dp + iss/86400._dp - .5_dp
-
-    ! Fractional Julian day starts at noon
-    date2dec360 = real(julday360(idd,imm,iyy),dp) + hour
-
-    ! Add a small offset (proportional to julian date) for correct re-conversion.
-    eps = epsilon(1.0_dp)
-    eps = max(eps * abs(date2dec360), eps)
-    date2dec360 = date2dec360 + eps
-
-  end function date2dec360
 
   ! ------------------------------------------------------------------
 
@@ -1009,6 +929,393 @@ CONTAINS
     if (present(ss)) ss = second
 
   end subroutine dec2date360
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         date2dec360
+
+  !     PURPOSE
+  !>        \brief Fractional Julian day from day, month, year, hour, minute, second in 360 day calendar
+
+  !>        \details In this routine date2dec360 returns the fractional Julian Day that begins at noon
+  !>        of the calendar date specified by month mm, day dd, and year yy, all integer variables.
+
+  !>        The zeroth Julian Day is 01.01.0000 at noon.
+
+  !     CALLING SEQUENCE
+  !         date2dec360 = date2dec360(dd, mm, yy, hh, nn, ss)
+
+  !     INTENT(IN)
+  !         None
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !>        \param[in] "integer(i4), optional :: dd"         Day in month of Julian day (default: 1)
+  !>        \param[in] "integer(i4), optional :: mm"         Month in year of Julian day (default: 1)
+  !>        \param[in] "integer(i4), optional :: yy"         Year of Julian day (default: 1)
+  !>        \param[in] "integer(i4), optional :: hh"         Hours of Julian day (default: 0)
+  !>        \param[in] "integer(i4), optional :: nn"         Minutes of hour of Julian day (default: 0)
+  !>        \param[in] "integer(i4), optional :: ss"         Secondes of minute of hour of Julian day (default: 0)
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !>        \return real(dp) :: date2dec360  !     Fractional Julian day
+
+  !     EXAMPLE
+  !         -> see example in test directory
+
+  !     HISTORY
+  !>        \author Written, David Schaefer
+  !>        \date Oct 2015
+  elemental pure function date2dec360(dd,mm,yy,hh,nn,ss)
+
+    implicit none
+
+    integer(i4), intent(in), optional :: dd, mm, yy
+    integer(i4), intent(in), optional :: hh, nn, ss
+    real(dp)                          :: date2dec360, eps
+    integer(i4)                       :: idd, imm, iyy
+    real(dp)                          :: ihh, inn, iss
+    real(dp)                          :: hour
+
+    ! Presets
+    idd = 1
+    if (present(dd)) idd = dd
+    imm = 1
+    if (present(mm)) imm = mm
+    iyy = 1
+    if (present(yy)) iyy = yy
+    ihh = 0.0_dp
+    if (present(hh)) ihh = real(hh,dp)
+    inn = 0.0_dp
+    if (present(nn)) inn = real(nn,dp)
+    iss = 0.0_dp
+    if (present(ss)) iss = real(ss,dp)
+
+    hour = ihh/24._dp + inn/1440._dp + iss/86400._dp - .5_dp
+
+    ! Fractional Julian day starts at noon
+    date2dec360 = real(julday360(idd,imm,iyy),dp) + hour
+
+    ! Add a small offset (proportional to julian date) for correct re-conversion.
+    eps = epsilon(1.0_dp)
+    eps = max(eps * abs(date2dec360), eps)
+    date2dec360 = date2dec360 + eps
+
+  end function date2dec360
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         caldat365
+
+  !     PURPOSE
+  !>        \brief Day, month and year from Julian day in a 365 day calendar
+
+  !>        \details Inverse of the function julday365. Here julian is input as a Julian Day Number,
+  !>        and the routine outputs dd, mm, and yy as the day, month, and year on which the specified
+  !>        Julian Day started at noon.
+
+  !>        The zeroth Julian Day here is 01.01.0000 
+
+  !     CALLING SEQUENCE
+  !         call caldat365(julday, dd, mm, yy)
+
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4) :: julday"     Julian day
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !>        \param[out] "integer(i4) :: dd"         Day in month of Julian day
+  !>        \param[out] "integer(i4) :: mm"         Month in year of Julian day
+  !>        \param[out] "integer(i4) :: yy"         Year of Julian day
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     EXAMPLE
+  !         -> see example in test directory
+
+  !     HISTORY
+  !>        \author Written, David Schäfer
+  !>        \date Dec 2015
+  elemental pure subroutine caldat365(julian,dd,mm,yy)
+
+    implicit none
+
+    integer(i4), intent(in)  :: julian
+    integer(i4), intent(out) :: dd, mm, yy
+    integer(i4), parameter   :: year=365
+    integer(i4), dimension(12), parameter   :: months=(/31,28,31,30,31,30,31,31,30,31,30,31/)
+    integer(i4)              :: remainder
+
+    yy = julian/year
+    remainder = mod(abs(julian),year) + 1
+       
+    do mm = 1,size(months) 
+       if (remainder .le. months(mm)) then
+          exit
+       end if
+       remainder = remainder - months(mm)
+    end do
+    
+    dd = remainder 
+
+  end subroutine caldat365
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         julday365
+
+  !     PURPOSE
+  !>        \brief Julian day from day, month and year in a 365_day calendar
+
+  !>        \details In this routine julday365 returns the Julian Day Number that begins at noon of the calendar
+  !>        date specified by month mm, day dd, and year yy, all integer variables.
+
+  !>        The zeroth Julian Day is 01.01.0000 
+
+  !     CALLING SEQUENCE
+  !         julian = julday365(dd, mm, yy)
+
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4) :: dd"         Day in month of Julian day
+  !>        \param[in] "integer(i4) :: mm"         Month in year of Julian day
+  !>        \param[in] "integer(i4) :: yy"         Year of Julian day
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !>        \return integer(i4) :: julian  !     Julian day
+
+  !     EXAMPLE
+  !         -> see example in test directory
+
+  !     HISTORY
+  !>        \author Written, David Schaefer 
+  !>        \date Dec 2015
+  elemental pure function julday365(dd,mm,yy)
+
+    implicit none
+
+    integer(i4), intent(in) :: dd, mm, yy
+    integer(i4)             :: julday365
+    integer(i4), parameter  :: year=365
+    integer(i4),dimension(12),parameter  :: months=(/31,28,31,30,31,30,31,31,30,31,30,31/)
+
+    julday365 = abs(yy)*year +  sum(months(1:mm-1)) + (dd-1)
+    
+    if (yy < 0) julday365 = julday365 * (-1)
+
+  end function julday365
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         dec2date365
+
+  !     PURPOSE
+  !>        \brief Day, month, year, hour, minute, and second from fractional Julian day in a 365_day calendar
+
+  !>        \details Inverse of the function date2dec. Here dec2date365 is input as a fractional Julian Day.
+  !>        The routine outputs dd, mm, yy, hh, nn, ss as the day, month, year, hour, minute, and second
+  !>        on which the specified Julian Day started at noon.
+
+  !>        The zeroth Julian Day is 01.01.0000 at noon.
+
+  !     CALLING SEQUENCE
+  !         call dec2date365(fJulian, dd, mm, yy, hh, nn, ss)
+
+  !     INTENT(IN)
+  !>        \param[in] "real(dp) :: fJulian"     fractional Julian day
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !>        \param[out] "integer(i4), optional :: dd"         Day in month of Julian day
+  !>        \param[out] "integer(i4), optional :: mm"         Month in year of Julian day
+  !>        \param[out] "integer(i4), optional :: yy"         Year of Julian day
+  !>        \param[out] "integer(i4), optional :: hh"         Hour of Julian day
+  !>        \param[out] "integer(i4), optional :: nn"         Minute in hour of Julian day
+  !>        \param[out] "integer(i4), optional :: ss"         Second in minute of hour of Julian day
+
+  !     EXAMPLE
+  !         -> see example in test directory
+
+  !     HISTORY
+  !>        \author Written, David Schaefer
+  !>        \date Dec 2015
+  elemental pure subroutine dec2date365(julian,dd,mm,yy,hh,nn,ss)
+
+    implicit none
+
+    real(dp),    intent(in)            :: julian
+    integer(i4), intent(out), optional :: dd, mm, yy
+    integer(i4), intent(out), optional :: hh, nn, ss
+    integer(i4)                        :: day, month, year
+    real(dp)                           :: fraction, fJulian
+    integer(i4)                        :: hour, minute, second
+
+    fJulian = julian + .5_dp
+    call caldat365(int(floor(fJulian),i4),day,month,year)
+    
+    fraction = fJulian - floor(fJulian) 
+    hour     = min(max(floor(fraction * 24.0_dp), 0), 23)
+    fraction = fraction - real(hour,dp)/24.0_dp
+    minute   = min(max(floor(fraction*1440.0_dp), 0), 59)
+    second   = max(nint((fraction - real(minute,dp)/1440.0_dp)*86400.0_dp), 0)
+
+    ! If seconds==60
+    if (second==60) then
+       second = 0
+       minute = minute + 1
+       if (minute==60) then
+          minute = 0
+          hour   = hour + 1
+          if (hour==24) then
+             hour = 0
+             call caldat365(julday365(day, month, year) + 1, day, month, year)
+          endif
+       endif
+    endif
+    
+    if (present(dd)) dd = day
+    if (present(mm)) mm = month
+    if (present(yy)) yy = year
+    if (present(hh)) hh = hour
+    if (present(nn)) nn = minute
+    if (present(ss)) ss = second
+
+  end subroutine dec2date365
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         date2dec365
+
+  !     PURPOSE
+  !>        \brief Fractional Julian day from day, month, year, hour, minute, second in 365 day calendar
+
+  !>        \details In this routine date2dec365 returns the fractional Julian Day that begins at noon
+  !>        of the calendar date specified by month mm, day dd, and year yy, all integer variables.
+
+  !>        The zeroth Julian Day is 01.01.0000 at noon.
+
+  !     CALLING SEQUENCE
+  !         date2dec365 = date2dec365(dd, mm, yy, hh, nn, ss)
+
+  !     INTENT(IN)
+  !         None
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !>        \param[in] "integer(i4), optional :: dd"         Day in month of Julian day (default: 1)
+  !>        \param[in] "integer(i4), optional :: mm"         Month in year of Julian day (default: 1)
+  !>        \param[in] "integer(i4), optional :: yy"         Year of Julian day (default: 1)
+  !>        \param[in] "integer(i4), optional :: hh"         Hours of Julian day (default: 0)
+  !>        \param[in] "integer(i4), optional :: nn"         Minutes of hour of Julian day (default: 0)
+  !>        \param[in] "integer(i4), optional :: ss"         Secondes of minute of hour of Julian day (default: 0)
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !>        \return real(dp) :: date2dec365  !     Fractional Julian day
+
+  !     EXAMPLE
+  !         -> see example in test directory
+
+  !     HISTORY
+  !>        \author Written, David Schaefer
+  !>        \date Dec 2015
+  elemental pure function date2dec365(dd,mm,yy,hh,nn,ss)
+
+    implicit none
+
+    integer(i4), intent(in), optional :: dd, mm, yy
+    integer(i4), intent(in), optional :: hh, nn, ss
+    real(dp)                          :: date2dec365, eps
+    integer(i4)                       :: idd, imm, iyy
+    real(dp)                          :: ihh, inn, iss
+    real(dp)                          :: hour
+
+    ! Presets
+    idd = 1
+    if (present(dd)) idd = dd
+    imm = 1
+    if (present(mm)) imm = mm
+    iyy = 1
+    if (present(yy)) iyy = yy
+    ihh = 0.0_dp
+    if (present(hh)) ihh = real(hh,dp)
+    inn = 0.0_dp
+    if (present(nn)) inn = real(nn,dp)
+    iss = 0.0_dp
+    if (present(ss)) iss = real(ss,dp)
+
+    hour = ihh/24._dp + inn/1440._dp + iss/86400._dp - .5_dp
+
+    ! Fractional Julian day starts at noon
+    date2dec365 = real(julday365(idd,imm,iyy),dp) + hour
+
+    ! Add a small offset (proportional to julian date) for correct re-conversion.
+    eps = epsilon(1.0_dp)
+    eps = max(eps * abs(date2dec365), eps)
+    date2dec365 = date2dec365 + eps
+
+  end function date2dec365
+
 
 ! ------------------------------------------------------------------
 
