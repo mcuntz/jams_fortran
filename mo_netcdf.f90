@@ -2403,7 +2403,7 @@ contains
        end if
     end if
 
-    if (count(datashape .gt. 1) .ne. datarank) then
+    if (count(datashape .ge. 1) .ne. datarank) then
        write(*,*) "Given read parameters do not match output variable rank!"
        stop 1
     end if
