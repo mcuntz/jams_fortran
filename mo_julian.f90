@@ -27,6 +27,8 @@ MODULE mo_julian
   ! Modified Matthias Cuntz, May 2014 - changed to new algorithm with astronomical units
   !                                     removed numerical recipes
   ! Modified David Schaefer, Oct 2015 - addded 360 day calendar procedures
+  ! Modified David Schaefer, Jan 2016 - addded 365 day calendar procedures
+  ! Modified David Schaefer, Feb 2016 - implemented wrapper function and the module calendar state
 
   ! License
   ! -------
@@ -54,36 +56,382 @@ MODULE mo_julian
 
   PRIVATE
 
-  PUBLIC :: caldat       ! Day , month and year from Julian day
+  PUBLIC :: caldat
   PUBLIC :: date2dec     ! Fractional Julian day from day, month, year, hour, minute, and second
   PUBLIC :: dec2date     ! Day, month, year, hour, minute, and second from fractional Julian day
   PUBLIC :: julday       ! Julian day from day, month and year
   PUBLIC :: ndays        ! IMSL Julian day from day, month and year
   PUBLIC :: ndyin        ! Day, month and year from IMSL Julian day
+  public :: setCalendar
 
-  public :: caldat360    ! Day , month and year from Julian day in 360 day calendar
-  public :: julday360    ! Julian day from day, month and year in 360 day calendar
-  public :: dec2date360  ! Day, month, year, hour, minute, and second from fractional Julian day in 360 day calendar
-  public :: date2dec360  ! Fractional Julian day from day, month, year, hour, minute, and second in 360 day calendar
+  integer(i4), save, private :: calendar=1
 
-  public :: caldat365    ! Day , month and year from Julian day in 365 day calendar
-  public :: julday365    ! Julian day from day, month and year in 365 day calendar
-  public :: dec2date365  ! Day, month, year, hour, minute, and second from fractional Julian day in 365 day calendar
-  public :: date2dec365  ! Fractional Julian day from day, month, year, hour, minute, and second in 365 day calendar
+  interface setCalendar
+     module procedure setCalendarInteger, setCalendarString
+  end interface setCalendar
+  
+CONTAINS
+
 
   ! ------------------------------------------------------------------
 
-CONTAINS
+  !     NAME
+  !         setCalendarString
 
+  !     PURPOSE
+  !>        \brief Set module private variable calendar
+
+  !     CALLING SEQUENCE
+  !         call caldat(selector)
+
+  !     INTENT(IN)
+  !>        \param[in] "character(len=*) :: selector"     {"julian"|"365day"|"360day"}
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     HISTORY
+  !>        \author Written, David Schäfer
+  !>        \date Jan 2015
+   subroutine setCalendarString(selector)
+    character(*), intent(in) :: selector
+    
+    select case(selector)
+    case("julian")
+       call setCalendarInteger(1)  
+    case("365day")
+       call setCalendarInteger(2)  
+    case("360day")
+       call setCalendarInteger(3)  
+    case default
+       print*, "Unknown selector! Select on of 'julian', '365day', '360day'."
+       stop 1
+    end select
+  end subroutine setCalendarString
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         setCalendarString
+
+  !     PURPOSE
+  !>        \brief Set module private variable calendar
+
+  !     CALLING SEQUENCE
+  !         call caldat(selector)
+
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4) :: selector"     {1|2|3}
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     HISTORY
+  !>        \author Written, David Schäfer
+  !>        \date Jan 2015
+   subroutine setCalendarInteger(selector)
+    integer(i4), intent(in) :: selector
+
+    if ((selector .lt. 1) .or. (selector .gt. 3)) then
+       print*, "Unknown selector! Select on of 1, 2, 3."
+       stop 1
+    end if
+    calendar = selector
+
+  end subroutine setCalendarInteger
+  
   ! ------------------------------------------------------------------
 
   !     NAME
   !         caldat
 
   !     PURPOSE
+  !>        \brief Day, month and year from Julian day in the current calendar
+
+  !>        \details Wrapper around the calendar specific caldat procedures.
+  !>        Inverse of the function julday. Here julian is input as a Julian Day Number,
+  !>        and the routine outputs d0d, mm, and yy as the day, month, and year on which the specified
+  !>        Julian Day started at noon.
+
+  !>        The zeroth Julian Day depends on the called procedure. See their documentation for details.
+
+  !     CALLING SEQUENCE
+  !         call caldat(julday, dd, mm, yy)
+
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4) :: julday"     Julian day
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !>        \param[out] "integer(i4) :: dd"         Day in month of Julian day
+  !>        \param[out] "integer(i4) :: mm"         Month in year of Julian day
+  !>        \param[out] "integer(i4) :: yy"         Year of Julian day
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     EXAMPLE
+  !         -> see example in test directory
+
+  !     HISTORY
+  !>        \author Written, David Schäfer
+  !>        \date Jan 2015
+  elemental subroutine caldat(julian, dd, mm, yy)
+
+    implicit none
+
+    integer(i4), intent(in)  :: julian
+    integer(i4), intent(out) :: dd, mm, yy
+
+    select case(calendar)
+    case(1)
+       call caldatJulian(julian,dd,mm,yy)
+    case(2)
+       call caldat365(julian,dd,mm,yy)
+    case(3)
+       call caldat360(julian,dd,mm,yy)
+    end select
+
+  end subroutine caldat
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         dec2date
+
+  !     PURPOSE
+  !>        \brief Day, month, year, hour, minute, and second from fractional Julian day in the current calendar
+
+  !>        \details Wrapper around the calendar specific dec2date procedures.
+  !>        Inverse of the function date2dec. Here dec2date is input as a fractional Julian Day.
+  !>        The routine outputs dd, mm, yy, hh, nn, ss as the day, month, year, hour, minute, and second
+  !>        on which the specified Julian Day started at noon.
+
+  !>        The zeroth Julian Day depends on the called procedure. See their documentation for details.
+
+  !     CALLING SEQUENCE
+  !         call dec2date(fJulian, dd, mm, yy, hh, nn, ss)
+
+  !     INTENT(IN)
+  !>        \param[in] "real(dp) :: fJulian"     fractional Julian day
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !>        \param[out] "integer(i4), optional :: dd"         Day in month of Julian day
+  !>        \param[out] "integer(i4), optional :: mm"         Month in year of Julian day
+  !>        \param[out] "integer(i4), optional :: yy"         Year of Julian day
+  !>        \param[out] "integer(i4), optional :: hh"         Hour of Julian day
+  !>        \param[out] "integer(i4), optional :: nn"         Minute in hour of Julian day
+  !>        \param[out] "integer(i4), optional :: ss"         Second in minute of hour of Julian day
+
+  !     EXAMPLE
+  !         -> see example in test directory
+
+  !     HISTORY
+  !>        \author Written, David Schaefer
+  !>        \date Jan 2015
+  elemental subroutine dec2date(julian, dd, mm, yy, hh, nn, ss)
+
+    implicit none
+
+    real(dp),    intent(in)            :: julian
+    integer(i4), intent(out), optional :: dd, mm, yy, hh, nn, ss
+
+    select case(calendar)
+    case(1)
+       call dec2dateJulian(julian, dd, mm, yy, hh, nn, ss)
+    case(2)
+       call dec2date365(julian, dd, mm, yy, hh, nn, ss)
+    case(3)
+       call dec2date360(julian, dd, mm, yy, hh, nn, ss)
+    end select
+    
+  end subroutine dec2date
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         date2dec
+
+  !     PURPOSE
+  !>        \brief Fractional Julian day from day, month, year, hour, minute, second in the current calendar
+
+  !>        \details Wrapper around the calendar specific date2dec procedures.
+  !>        In this routine date2dec returns the fractional Julian Day that begins at noon
+  !>        of the calendar date specified by month mm, day dd, and year yy, all integer variables.
+
+  !>        The zeroth Julian Day depends on the called procedure. See their documentation for details.
+
+  !     CALLING SEQUENCE
+  !         date2dec = date2dec(dd, mm, yy, hh, nn, ss)
+
+  !     INTENT(IN)
+  !         None
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !>        \param[in] "integer(i4), optional :: dd"         Day in month of Julian day (default: 1)
+  !>        \param[in] "integer(i4), optional :: mm"         Month in year of Julian day (default: 1)
+  !>        \param[in] "integer(i4), optional :: yy"         Year of Julian day (default: 1)
+  !>        \param[in] "integer(i4), optional :: hh"         Hours of Julian day (default: 0)
+  !>        \param[in] "integer(i4), optional :: nn"         Minutes of hour of Julian day (default: 0)
+  !>        \param[in] "integer(i4), optional :: ss"         Secondes of minute of hour of Julian day (default: 0)
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !>        \return real(dp) :: date2dec  !     Fractional Julian day
+
+  !     EXAMPLE
+  !         -> see example in test directory
+
+  !     HISTORY
+  !>        \author Written, David Schaefer
+  !>        \date Jan 2015
+  elemental function date2dec(dd, mm, yy, hh, nn, ss)
+
+    implicit none
+
+    integer(i4), intent(in), optional :: dd, mm, yy
+    integer(i4), intent(in), optional :: hh, nn, ss
+    real(dp)                          :: date2dec
+
+    select case(calendar)
+    case(1)
+       date2dec = date2decJulian(dd, mm, yy, hh, nn, ss)
+    case(2)
+       date2dec = date2dec365(dd, mm, yy, hh, nn, ss)
+    case(3)
+       date2dec = date2dec360(dd, mm, yy, hh, nn, ss)
+    end select
+
+  end function date2dec
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         julday
+
+  !     PURPOSE
+  !>        \brief Julian day from day, month and year in the current calendar
+
+  !>        \details Wrapper around the calendar specific julday procedures.
+  !>        In this routine julday returns the Julian Day Number that begins at noon of the calendar
+  !>        date specified by month mm, day dd, and year yy, all integer variables.
+
+  !>        The zeroth Julian Day depends on the called procedure. See their documentation for details.
+
+  !     CALLING SEQUENCE
+  !         julian = julday(dd, mm, yy)
+
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4) :: dd"         Day in month of Julian day
+  !>        \param[in] "integer(i4) :: mm"         Month in year of Julian day
+  !>        \param[in] "integer(i4) :: yy"         Year of Julian day
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !>        \return integer(i4) :: julian  !     Julian day
+
+  !     EXAMPLE
+  !         -> see example in test directory
+
+  !     HISTORY
+  !>        \author Written, David Schaefer 
+  !>        \date Jan 2015
+  elemental function julday(dd,mm,yy)
+
+    implicit none
+
+    integer(i4), intent(in) :: dd, mm, yy
+    integer(i4)             :: julday
+
+    select case(calendar)
+    case(1)
+       julday = juldayJulian(dd, mm, yy)
+    case(2)
+       julday = julday365(dd, mm, yy)
+    case(3)
+       julday = julday360(dd, mm, yy)
+    end select
+
+  end function julday
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         caldatJulian
+
+  !     PURPOSE
   !>        \brief Day, month and year from Julian day
 
-  !>        \details Inverse of the function julday. Here julian is input as a Julian Day Number,
+  !>        \details Inverse of the function juldayJulian. Here julian is input as a Julian Day Number,
   !>        and the routine outputs id, mm, and yy as the day, month, and year on which the specified
   !>        Julian Day started at noon.
 
@@ -95,7 +443,7 @@ CONTAINS
   !>        This means that Julian day definition starts as 01.01.-4712 in astronomical units.\n
 
   !     CALLING SEQUENCE
-  !         call caldat(Julday, dd, mm, yy)
+  !         call caldatJulian(Julday, dd, mm, yy)
 
   !     INTENT(IN)
   !>        \param[in] "integer(i4) :: Julday"     Julian day
@@ -124,13 +472,13 @@ CONTAINS
   !>        This means that Julian day definition starts as 01.01.-4712 in astronomical units.\n
   !>        \n
   !>        julday and caldat start at midnight of the 1st January 4713 BC.
-  !>        So date2dec and julday as well as dec2date and caldat are shifted by half a day.\n
-  !>        Use date2dec with dec2date together for fractional Julian dates
-  !>        and use julday with caldat together for integer Julian days.
+  !>        So date2decJulian and juldayJulian as well as dec2dateJulian and caldatJulian are shifted by half a day.\n
+  !>        Use date2decJulian with dec2dateJulian together for fractional Julian dates
+  !>        and use juldayJulian with caldatJulian together for integer Julian days.
 
   !     EXAMPLE
   !         ! 2415021 is 01.01.1900
-  !         call caldat(2415021, dd, mm, yy)
+  !         call caldatJulian(2415021, dd, mm, yy)
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -144,8 +492,8 @@ CONTAINS
   !>        \date Dec 2011
   !>        Modified Matthias Cuntz, May 2014 - changed to new algorithm with astronomical units
   !>                                            removed numerical recipes
-
-  ELEMENTAL PURE SUBROUTINE caldat(julian,dd,mm,yy)
+  !>                 David Schaefer, Jan 2016 - renamed procodure
+  ELEMENTAL SUBROUTINE caldatJulian(julian,dd,mm,yy)
 
     IMPLICIT NONE
 
@@ -181,18 +529,18 @@ CONTAINS
        yy = int(C - 4715_i8, i4)
     endif
 
-  END SUBROUTINE caldat
+  END SUBROUTINE caldatJulian
 
 
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         date2dec
+  !         date2decJulian
 
   !     PURPOSE
   !>        \brief Fractional Julian day from day, month, year, hour, minute, second
 
-  !>        \details In this routine date2dec returns the fractional Julian Day that begins at noon
+  !>        \details In this routine date2decJulian returns the fractional Julian Day that begins at noon
   !>        of the calendar date specified by month mm, day dd, and year yy, all integer variables.
 
   !>        The zeroth Julian Day is 01.01.-4712 at noon, i.e. the 1st January 4713 BC 12:00:00 h.
@@ -203,7 +551,7 @@ CONTAINS
   !>        This means that Julian day definition starts as 01.01.-4712 in astronomical units.\n
 
   !     CALLING SEQUENCE
-  !         date2dec = date2dec(dd, mm, yy, hh, nn, ss)
+  !         date2dec = date2decJulian(dd, mm, yy, hh, nn, ss)
 
   !     INTENT(IN)
   !         None
@@ -237,16 +585,16 @@ CONTAINS
   !>        i.e. the year 1 BC (historic) is counted as 0 (astronomic), 2 BC is -1, etc.\n
   !>        This means that Julian day definition starts as 01.01.-4712 in astronomical units.\n
   !>        \n
-  !>        julday and caldat start at midnight of the 1st January 4713 BC.
-  !>        So date2dec and julday as well as dec2date and caldat are shifted by half a day.\n
-  !>        Use date2dec with dec2date together for fractional Julian dates
-  !>        and use julday with caldat together for integer Julian days.
+  !>        juldayJulian and caldatJulian start at midnight of the 1st January 4713 BC.
+  !>        So date2decJulian and juldayJulian as well as dec2dateJulian and caldatJulian are shifted by half a day.\n
+  !>        Use date2decJulian with dec2dateJulian together for fractional Julian dates
+  !>        and use juldayJulian with caldatJulian together for integer Julian days.
 
   !     EXAMPLE
   !         ! 2415020.5 is 01.01.1900 00:00
-  !         julian = date2dec(01,01,1990)
+  !         julian = date2decJulian(01,01,1990)
   !         ! 2415021.0 is 01.01.1900 12:00
-  !         julian = date2dec(01,01,1990,12,00)
+  !         julian = date2decJulian(01,01,1990,12,00)
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -262,14 +610,14 @@ CONTAINS
   !>        \date Jan 2013
   !>        Modified Matthias Cuntz, May 2014 - changed to new algorithm with astronomical units
   !>                                            removed numerical recipes
-
-  ELEMENTAL PURE FUNCTION date2dec(dd,mm,yy,hh,nn,ss)
+  !>                 David Schaefer, Jan 2016 - renamed procodure
+  ELEMENTAL FUNCTION date2decJulian(dd,mm,yy,hh,nn,ss)
 
     IMPLICIT NONE
 
     INTEGER(i4), INTENT(IN), OPTIONAL :: dd, mm, yy
     INTEGER(i4), INTENT(IN), OPTIONAL :: hh, nn, ss
-    REAL(dp)                          :: date2dec
+    REAL(dp)                          :: date2decJulian
 
     INTEGER(i4), PARAMETER :: IGREG2 = 15 + 31*(10+12*1582)
     INTEGER(i4), PARAMETER :: IGREG1 =  4 + 31*(10+12*1582)
@@ -315,24 +663,24 @@ CONTAINS
     endif
     
     ! Fractional Julian day starts at noon
-    date2dec = floor(365.25_dp*real(jy+4716_i8,dp)) + floor(30.6001_dp*real(jm+1_i8,dp)) + jd + H + real(B,dp) - 1524.5_dp
+    date2decJulian = floor(365.25_dp*real(jy+4716_i8,dp)) + floor(30.6001_dp*real(jm+1_i8,dp)) + jd + H + real(B,dp) - 1524.5_dp
 
     ! Add a small offset (proportional to julian date) for correct re-conversion.
     eps = epsilon(1.0_dp)
-    eps = max(eps * abs(date2dec), eps)
-    date2dec = date2dec + eps
+    eps = max(eps * abs(date2decJulian), eps)
+    date2decJulian = date2decJulian + eps
 
-  END FUNCTION date2dec
+  END FUNCTION date2decJulian
 
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         dec2date
+  !         dec2dateJulian
 
   !     PURPOSE
   !>        \brief Day, month, year, hour, minute, and second from fractional Julian day
 
-  !>        \details Inverse of the function date2dec. Here dec2date is input as a fractional Julian Day,
+  !>        \details Inverse of the function date2decJulian. Here dec2dateJulian is input as a fractional Julian Day,
   !>        which starts at noon of the 1st January 4713 BC, i.e. 01.01.-4712.
   !>        The routine outputs dd, mm, yy, hh, nn, ss as the day, month, year, hour, minute, and second
   !>        on which the specified Julian Day started at noon.
@@ -345,7 +693,7 @@ CONTAINS
   !>        This means that Julian day definition starts as 01.01.-4712 in astronomical units.\n
 
   !     CALLING SEQUENCE
-  !         call dec2date(fJulian, dd, mm, yy, hh, nn, ss)
+  !         call dec2dateJulian(fJulian, dd, mm, yy, hh, nn, ss)
 
   !     INTENT(IN)
   !>        \param[in] "real(dp) :: fJulian"     fractional Julian day
@@ -376,16 +724,16 @@ CONTAINS
   !>        i.e. the year 1 BC (historic) is counted as 0 (astronomic), 2 BC is -1, etc.\n
   !>        This means that Julian day definition starts as 01.01.-4712 in astronomical units.\n
   !>        \n
-  !>        julday and caldat start at midnight of the 1st January 4713 BC.
-  !>        So date2dec and julday as well as dec2date and caldat are shifted by half a day.\n
-  !>        Use date2dec with dec2date together for fractional Julian dates
-  !>        and use julday with caldat together for integer Julian days.
+  !>        juldayJulian and caldatJulian start at midnight of the 1st January 4713 BC.
+  !>        So date2decJulian and juldayJulian as well as dec2dateJulian and caldatJulian are shifted by half a day.\n
+  !>        Use date2decJulian with dec2dateJulian together for fractional Julian dates
+  !>        and use juldayJulian with caldatJulian together for integer Julian days.
 
   !     EXAMPLE
   !         ! 2415020.5 is 01.01.1900 00:00
-  !         call caldat(2415020.5, dd, mm, yy, hh, nn)
+  !         call caldatJulian(2415020.5, dd, mm, yy, hh, nn)
   !         ! 2415021.0 is 01.01.1900 12:00
-  !         call caldat(2415021., dd, mm, yy, hh, nn, ss)
+  !         call caldatJulian(2415021., dd, mm, yy, hh, nn, ss)
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -400,8 +748,8 @@ CONTAINS
   !>        \date Jan 2013
   !>        Modified Matthias Cuntz, May 2014 - changed to new algorithm with astronomical units
   !>                                            removed numerical recipes
-
-  ELEMENTAL PURE SUBROUTINE dec2date(julian,dd,mm,yy,hh,nn,ss)
+  !>                 David Schaefer, Jan 2016 - renamed procodure
+  ELEMENTAL SUBROUTINE dec2dateJulian(julian,dd,mm,yy,hh,nn,ss)
 
     IMPLICIT NONE
 
@@ -481,17 +829,17 @@ CONTAINS
     if (present(nn)) nn = minute
     if (present(ss)) ss = second
 
-  END SUBROUTINE dec2date
+  END SUBROUTINE dec2dateJulian
 
   ! ------------------------------------------------------------------
 
   !     NAME
-  !         julday
+  !         juldayJulian
 
   !     PURPOSE
   !>        \brief Julian day from day, month and year
 
-  !>        \details In this routine julday returns the Julian Day Number that begins at noon of the calendar
+  !>        \details In this routine juldayJulian returns the Julian Day Number that begins at noon of the calendar
   !>        date specified by month mm, day dd, and year yy, all integer variables.
 
   !>        The zeroth Julian Day is 01.01.-4712 at noon, i.e. the 1st January 4713 BC 12:00:00 h.
@@ -502,7 +850,7 @@ CONTAINS
   !>        This means that Julian day definition starts as 01.01.-4712 in astronomical units.\n
 
   !     CALLING SEQUENCE
-  !         julian = julday(dd, mm, yy)
+  !         julian = juldayJulian(dd, mm, yy)
 
   !     INTENT(IN)
   !>        \param[in] "integer(i4) :: dd"         Day in month of Julian day
@@ -533,15 +881,15 @@ CONTAINS
   !>        i.e. the year 1 BC (historic) is counted as 0 (astronomic), 2 BC is -1, etc.\n
   !>        This means that Julian day definition starts as 01.01.-4712 in astronomical units.\n
   !>        \n
-  !>        julday and caldat start at midnight of the 1st January 4713 BC.
-  !>        So date2dec and julday as well as dec2date and caldat are shifted by half a day.\n
-  !>        Use date2dec with dec2date together for fractional Julian dates
-  !>        and use julday with caldat together for integer Julian days.
+  !>        juldayJulian and caldatJulian start at midnight of the 1st January 4713 BC.
+  !>        So date2decJulian and juldayJulian as well as dec2dateJulian and caldatJulian are shifted by half a day.\n
+  !>        Use date2decJulian with dec2dateJulian together for fractional Julian dates
+  !>        and use juldayJulian with caldatJulian together for integer Julian days.
 
   !     EXAMPLE
   !         ! 2415021 is 01.01.1900
   !         ! 2440588 is 01.01.1970
-  !         julian = julday(01,01,1990)
+  !         julian = juldayJulian(01,01,1990)
   !         -> see also example in test directory
 
   !     LITERATURE
@@ -555,13 +903,13 @@ CONTAINS
   !>        \date Dec 2011
   !>        Modified Matthias Cuntz, May 2014 - changed to new algorithm with astronomical units
   !>                                            removed numerical recipes
-
-  ELEMENTAL PURE FUNCTION julday(dd,mm,yy)
+  !>                 David Schaefer, Jan 2016 - renamed procodure
+  ELEMENTAL FUNCTION juldayJulian(dd,mm,yy)
 
     IMPLICIT NONE
 
     INTEGER(i4), INTENT(IN) :: dd, mm, yy
-    INTEGER(i4) :: julday
+    INTEGER(i4) :: juldayJulian
 
     INTEGER(i4), PARAMETER :: IGREG2 = 15 + 31*(10+12*1582)
     INTEGER(i4), PARAMETER :: IGREG1 =  4 + 31*(10+12*1582)
@@ -588,10 +936,11 @@ CONTAINS
     endif
     
     ! add 0.5 to Wiki formula because formula was for fractional day
-    ! julday = int(365.25_dp*real(jy+4716_i8,dp) + real(int(30.6001*real(jm+1_i8,dp),i8),dp) + real(jd+B,dp) - 1524.5_dp, i4)
-    julday = int(365.25_dp*real(jy+4716_i8,dp) + real(int(30.6001*real(jm+1_i8,dp),i8),dp) + real(jd+B,dp) - 1524.5_dp + 0.5_dp, i4)
+    ! juldayJulian = int(365.25_dp*real(jy+4716_i8,dp) + real(int(30.6001*real(jm+1_i8,dp),i8),dp) + real(jd+B,dp) - 1524.5_dp, i4)
+    juldayJulian = int(365.25_dp*real(jy+4716_i8,dp) + real(int(30.6001*real(jm+1_i8,dp),i8),dp) &
+         + real(jd+B,dp) - 1524.5_dp + 0.5_dp, i4)
 
-  END FUNCTION julday
+  END FUNCTION juldayJulian
 
   ! ------------------------------------------------------------------
 
@@ -647,7 +996,7 @@ CONTAINS
   !>        \author Written, Matthias Cuntz
   !>        \date Dec 2011
 
-  ELEMENTAL PURE FUNCTION ndays(dd,mm,yy)
+  ELEMENTAL FUNCTION ndays(dd,mm,yy)
 
     IMPLICIT NONE
 
@@ -711,7 +1060,7 @@ CONTAINS
   !>        \author Written, Matthias Cuntz
   !>        \date Dec 2011
 
-  ELEMENTAL PURE SUBROUTINE ndyin(julian,dd,mm,yy)
+  ELEMENTAL SUBROUTINE ndyin(julian,dd,mm,yy)
 
     IMPLICIT NONE
 
@@ -767,7 +1116,7 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schäfer
   !>        \date Oct 2015
-  elemental pure subroutine caldat360(julian,dd,mm,yy)
+  elemental subroutine caldat360(julian,dd,mm,yy)
 
     implicit none
 
@@ -828,7 +1177,7 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schaefer 
   !>        \date Oct 2015
-  elemental pure function julday360(dd,mm,yy)
+  elemental function julday360(dd,mm,yy)
 
     implicit none
 
@@ -849,7 +1198,7 @@ CONTAINS
   !     PURPOSE
   !>        \brief Day, month, year, hour, minute, and second from fractional Julian day in a 360_day calendar
 
-  !>        \details Inverse of the function date2dec. Here dec2date360 is input as a fractional Julian Day.
+  !>        \details Inverse of the function date2dec360. Here dec2date360 is input as a fractional Julian Day.
   !>        The routine outputs dd, mm, yy, hh, nn, ss as the day, month, year, hour, minute, and second
   !>        on which the specified Julian Day started at noon.
 
@@ -887,7 +1236,7 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schaefer
   !>        \date Oct 2015
-  elemental pure subroutine dec2date360(julian,dd,mm,yy,hh,nn,ss)
+  elemental subroutine dec2date360(julian,dd,mm,yy,hh,nn,ss)
 
     implicit none
 
@@ -978,7 +1327,7 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schaefer
   !>        \date Oct 2015
-  elemental pure function date2dec360(dd,mm,yy,hh,nn,ss)
+  elemental function date2dec360(dd,mm,yy,hh,nn,ss)
 
     implicit none
 
@@ -1058,7 +1407,7 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schäfer
   !>        \date Dec 2015
-  elemental pure subroutine caldat365(julian,dd,mm,yy)
+  elemental subroutine caldat365(julian,dd,mm,yy)
 
     implicit none
 
@@ -1127,7 +1476,7 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schaefer 
   !>        \date Dec 2015
-  elemental pure function julday365(dd,mm,yy)
+  elemental function julday365(dd,mm,yy)
 
     implicit none
 
@@ -1188,7 +1537,7 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schaefer
   !>        \date Dec 2015
-  elemental pure subroutine dec2date365(julian,dd,mm,yy,hh,nn,ss)
+  elemental subroutine dec2date365(julian,dd,mm,yy,hh,nn,ss)
 
     implicit none
 
@@ -1279,7 +1628,7 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schaefer
   !>        \date Dec 2015
-  elemental pure function date2dec365(dd,mm,yy,hh,nn,ss)
+  elemental function date2dec365(dd,mm,yy,hh,nn,ss)
 
     implicit none
 
