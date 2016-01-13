@@ -63,8 +63,9 @@ MODULE mo_julian
   PUBLIC :: ndays        ! IMSL Julian day from day, month and year
   PUBLIC :: ndyin        ! Day, month and year from IMSL Julian day
   public :: setCalendar
-
-  integer(i4), save, private :: calendar=1
+  public :: caldatJulian
+  
+  integer(i4), save, private :: calendar = 1
 
   interface setCalendar
      module procedure setCalendarInteger, setCalendarString
@@ -163,14 +164,63 @@ CONTAINS
     calendar = selector
 
   end subroutine setCalendarInteger
-  
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         selectCalendar
+
+  !     PURPOSE
+  !>        \brief Select a calendar
+
+  !>        \details Returns a valid calendar index, based on the given optional argument
+  !>        and/or the module global private variable calendar. If an invalid selector is passed,
+  !>        its value is ignored and the global calendar value retuned instead.
+
+  !     CALLING SEQUENCE
+  !         idx = selectCalendar(3)
+
+  !     INTENT(IN)
+  !         None
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !>        \param[in] "integer(i4), optional :: selector"     Calendar selector {1|2|3}
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     HISTORY
+  !>        \author Written, David Schäfer
+  !>        \date Jan 2015
+  pure function selectCalendar(selector)
+    integer(i4), intent(in), optional :: selector
+    integer(i4)                       :: selectCalendar
+
+    selectCalendar = calendar
+    if (present(selector)) then
+       if ((selector .gt. 0) .and. (selector .lt. 4)) then
+          selectCalendar = selector
+       end if
+    end if
+   
+  end function selectCalendar
+
   ! ------------------------------------------------------------------
 
   !     NAME
   !         caldat
 
   !     PURPOSE
-  !>        \brief Day, month and year from Julian day in the current calendar
+  !>        \brief Day, month and year from Julian day in the current or given calendar
 
   !>        \details Wrapper around the calendar specific caldat procedures.
   !>        Inverse of the function julday. Here julian is input as a Julian Day Number,
@@ -194,7 +244,8 @@ CONTAINS
   !>        \param[out] "integer(i4) :: yy"         Year of Julian day
 
   !     INTENT(IN), OPTIONAL
-  !         None
+  !>        \param[in] "integer(i4) :: calendar"   The calendar to use, the global calendar
+  !>                                                will be used by default
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -208,14 +259,15 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schäfer
   !>        \date Jan 2015
-  elemental subroutine caldat(julian, dd, mm, yy)
+  elemental subroutine caldat(julian, dd, mm, yy, calendar)
 
     implicit none
 
-    integer(i4), intent(in)  :: julian
-    integer(i4), intent(out) :: dd, mm, yy
-
-    select case(calendar)
+    integer(i4), intent(in)           :: julian
+    integer(i4), intent(out)          :: dd, mm, yy
+    integer(i4), intent(in), optional :: calendar
+    
+    select case(selectCalendar(calendar))
     case(1)
        call caldatJulian(julian,dd,mm,yy)
     case(2)
@@ -232,7 +284,7 @@ CONTAINS
   !         dec2date
 
   !     PURPOSE
-  !>        \brief Day, month, year, hour, minute, and second from fractional Julian day in the current calendar
+  !>        \brief Day, month, year, hour, minute, and second from fractional Julian day in the current or given calendar
 
   !>        \details Wrapper around the calendar specific dec2date procedures.
   !>        Inverse of the function date2dec. Here dec2date is input as a fractional Julian Day.
@@ -254,7 +306,8 @@ CONTAINS
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !         None
+  !>        \param[in] "integer(i4) :: calendar"   The calendar to use, the global calendar
+  !>                                                will be used by default
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -273,14 +326,15 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schaefer
   !>        \date Jan 2015
-  elemental subroutine dec2date(julian, dd, mm, yy, hh, nn, ss)
+  elemental subroutine dec2date(julian, dd, mm, yy, hh, nn, ss, calendar)
 
     implicit none
 
     real(dp),    intent(in)            :: julian
     integer(i4), intent(out), optional :: dd, mm, yy, hh, nn, ss
-
-    select case(calendar)
+    integer(i4), intent(in), optional  :: calendar
+    
+    select case(selectCalendar(calendar))
     case(1)
        call dec2dateJulian(julian, dd, mm, yy, hh, nn, ss)
     case(2)
@@ -324,6 +378,8 @@ CONTAINS
   !>        \param[in] "integer(i4), optional :: hh"         Hours of Julian day (default: 0)
   !>        \param[in] "integer(i4), optional :: nn"         Minutes of hour of Julian day (default: 0)
   !>        \param[in] "integer(i4), optional :: ss"         Secondes of minute of hour of Julian day (default: 0)
+  !>        \param[in] "integer(i4), optional :: calendar"   The calendar to use, the global calendar
+  !>                                                         will be used by default
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -340,15 +396,16 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schaefer
   !>        \date Jan 2015
-  elemental function date2dec(dd, mm, yy, hh, nn, ss)
+  elemental function date2dec(dd, mm, yy, hh, nn, ss, calendar)
 
     implicit none
 
     integer(i4), intent(in), optional :: dd, mm, yy
     integer(i4), intent(in), optional :: hh, nn, ss
+    integer(i4), intent(in), optional :: calendar
     real(dp)                          :: date2dec
 
-    select case(calendar)
+    select case(selectCalendar(calendar))
     case(1)
        date2dec = date2decJulian(dd, mm, yy, hh, nn, ss)
     case(2)
@@ -365,7 +422,7 @@ CONTAINS
   !         julday
 
   !     PURPOSE
-  !>        \brief Julian day from day, month and year in the current calendar
+  !>        \brief Julian day from day, month and year in the current or given calendar
 
   !>        \details Wrapper around the calendar specific julday procedures.
   !>        In this routine julday returns the Julian Day Number that begins at noon of the calendar
@@ -388,7 +445,8 @@ CONTAINS
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !         None
+  !>        \param[in] "integer(i4), optional :: calendar"   The calendar to use, the global calendar
+  !>                                                         will be used by default
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -405,14 +463,15 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schaefer 
   !>        \date Jan 2015
-  elemental function julday(dd,mm,yy)
+  elemental function julday(dd, mm, yy, calendar)
 
     implicit none
 
-    integer(i4), intent(in) :: dd, mm, yy
-    integer(i4)             :: julday
-
-    select case(calendar)
+    integer(i4), intent(in)           :: dd, mm, yy
+    integer(i4), intent(in), optional :: calendar
+    integer(i4)                       :: julday
+    
+    select case(selectCalendar(calendar))
     case(1)
        julday = juldayJulian(dd, mm, yy)
     case(2)
