@@ -126,17 +126,17 @@ PROGRAM main
   ! ----------------------
   ! 360days calendar tests
 
-  call setCalendar("360day")
-  
   ! julday360, caldat360
   do jj=0, 792000 ! 01.01.2200
-     call caldat(jj,dd,mm,yy)
-     ss = julday(dd,mm,yy)
+     call caldat(jj, dd, mm, yy, calendar=3)
+     ss = julday(dd, mm, yy, calendar=3)
      if (jj /= ss) isgood = .false.
   end do
-  if (julday(01,01,1900) /= 684000) isgood = .false.
-  call caldat(684000, dd, mm, yy)
+  if (julday(01, 01, 1900, calendar=3) /= 684000) isgood = .false.
+  call caldat(684000, dd, mm, yy, calendar=3)
   if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 1900)) isgood = .false.
+
+  call setCalendar("360day")
 
   ! date2dec360
   if (abs(date2dec(01,01,1900,12,0)-684000.0_dp) > epsilon(1.0_dp)*684000.0_dp*10.0_dp) isgood = .false.
@@ -252,19 +252,21 @@ PROGRAM main
   call dec2date(date2dec(01,02,-100,11,11,11), dd, mm, yy, hh, nn, ss)
   if ((dd /= 1) .or. (mm /= 2) .or. (yy /= -100) .or. (hh /= 11) .or. (nn /= 11) .or. (ss /= 11)) isgood = .false.
 
+  call setCalendar("julian")
+  
   ! date2dec365, dec2date365 - vector
   do jj=1, 803000 ! 01.01.2200
      call random_number(ff1)
      rr1 = real(jj) + ff1
-     call dec2date(rr1,dd1,mm1,yy1,hh1,nn1,ss1)
-     gg1 = date2dec(dd1,mm1,yy1,hh1,nn1,ss1)
-     call dec2date(gg1,dd12,mm12,yy12,hh12,nn12,ss12)
+     call dec2date(rr1, dd1, mm1, yy1, hh1, nn1, ss1, calendar=2)
+     gg1 = date2dec(dd1, mm1, yy1, hh1, nn1, ss1, calendar=2)
+     call dec2date(gg1, dd12, mm12, yy12, hh12, nn12, ss12, calendar=2)
      if (any(dd1 /= dd12) .or. any(mm1 /= mm12) .or. any(yy1 /= yy12) .or. &
           any(hh1 /= hh12) .or. any(nn1 /= nn12) .or. any(ss1 /= ss12)) isgood = .false.
   end do
 
-  call dec2date(date2dec((/01,10,27/),(/02,12,03/),(/-100,1,2000/),(/11,23,00/),(/11,57,47/),(/11,12,59/)), &
-       dd1, mm1, yy1, hh1, nn1, ss1)
+  call dec2date(date2dec((/01,10,27/),(/02,12,03/),(/-100,1,2000/),(/11,23,00/),(/11,57,47/),(/11,12,59/), calendar=2), &
+       dd1, mm1, yy1, hh1, nn1, ss1, calendar=2)
   if ((dd1(1) /= 1) .or. (mm1(1) /= 2) .or. (yy1(1) /= -100) .or. &
        (hh1(1) /= 11) .or. (nn1(1) /= 11) .or. (ss1(1) /= 11)) isgood = .false.
   if ((dd1(2) /= 10) .or. (mm1(2) /= 12) .or. (yy1(2) /= 1) .or. &
@@ -280,14 +282,14 @@ PROGRAM main
   do jj=1, 803000 ! 01.01.2200
      call random_number(ff1)
      rr1 = real(jj) + ff1
-     call dec2date(rr1,dd1,mm1,yy1,hh1,nn1,ss1)
-     gg1 = date2dec(dd1(1),mm1(1),yy1(1),hh1,nn1,ss1)
-     call dec2date(gg1,dd12,mm12,yy12,hh12,nn12,ss12)
+     call dec2date(rr1, dd1, mm1, yy1, hh1, nn1, ss1, calendar=2)
+     gg1 = date2dec(dd1(1), mm1(1), yy1(1), hh1, nn1, ss1, calendar=2)
+     call dec2date(gg1, dd12, mm12, yy12, hh12, nn12, ss12, calendar=2)
      if (any(dd1(1) /= dd12) .or. any(mm1(1) /= mm12) .or. any(yy1(1) /= yy12) .or. &
           any(hh1 /= hh12) .or. any(nn1 /= nn12) .or. any(ss1 /= ss12)) isgood = .false.
   end do
-  dec1 = date2dec(01,12,2000,(/11,12,13/),11,59)
-  call dec2date(dec1, dd1, mm1, yy1, hh1, nn1, ss1)
+  dec1 = date2dec(01, 12, 2000, (/11,12,13/), 11, 59, calendar=2)
+  call dec2date(dec1, dd1, mm1, yy1, hh1, nn1, ss1, calendar=2)
   if ((dd1(1) /= 1) .or. (mm1(1) /= 12) .or. (yy1(1) /= 2000) .or. &
        (hh1(1) /= 11) .or. (nn1(1) /= 11) .or. (ss1(1) /= 59)) isgood = .false.
   if ((dd1(2) /= 1) .or. (mm1(2) /= 12) .or. (yy1(2) /= 2000) .or. &
@@ -297,8 +299,8 @@ PROGRAM main
 
   ! Mix
   do jj=1, 803000 ! 01.01.2200
-     call caldat(jj,dd,mm,yy)
-     ss = int(date2dec(dd,mm,yy,12,0,0), i4)
+     call caldat(jj, dd, mm, yy, calendar=2)
+     ss = int(date2dec(dd, mm, yy, 12, 0, 0, calendar=2), i4)
      if (jj /= ss) isgood = .false.
   end do
 
