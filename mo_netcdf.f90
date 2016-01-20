@@ -17,6 +17,10 @@ module mo_netcdf
   ! This module provides a thin wrapper around the NetCDF Fortran 90 interface,
   ! following a somehow object-oriented approach.
 
+  ! Written  David Schaefer, Jul 2015
+  !
+  ! Modified Matthias Cuntz, Jan 2015 - compiled with PGI Fortran rev 15.9 - no automatic allocation of right-hand-side
+
   ! License
   ! -------
   ! This file is part of the UFZ Fortran library.
@@ -35,7 +39,7 @@ module mo_netcdf
   ! along with the UFZ Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011-2015 David Schaefer
+  ! Copyright 2015 David Schaefer
 
   use mo_kind,         only: i2, i4, sp, dp
   use netcdf,          only: &
@@ -1506,20 +1510,21 @@ contains
          "Could not inquire variable: " // self%name)
   end function getNoDimensions
 
-  function getVariableDimensions (self)
+  function getVariableDimensions(self)
     class(NcVariable), intent(in)  :: self
     type(NcDimension), allocatable :: getVariableDimensions(:)
     integer(i4)      , allocatable :: dimids(:)
     integer(i4)                    :: ii , ndims
 
     ndims = self%getNoDimensions()
-    allocate(dimids(ndims),getVariableDimensions (ndims))
+    allocate(dimids(ndims), getVariableDimensions(ndims))
     call check(nf90_inquire_variable(self%parent%id,self%id,dimids=dimids), &
          "Could not inquire variable: " // self%name)
 
-    do ii=1,ndims
-       getVariableDimensions (ii) = self%parent%getDimension(dimids(ii))
+    do ii=1, ndims
+       getVariableDimensions(ii) = self%parent%getDimension(dimids(ii))
     end do
+
   end function getVariableDimensions
 
   function getVariableShape(self)
@@ -1528,12 +1533,16 @@ contains
     type(NcDimension), allocatable :: dims(:)
     integer(i4)                    :: ii
 
+#ifdef pgiFortran
+    allocate(dims(self%getNoDimensions()))
+#endif
     dims = self%getDimensions()
     allocate(getVariableShape(size(dims)))
-
-    do ii = 1,size(dims)
+    
+    do ii=1, size(dims)
        getVariableShape(ii) = dims(ii)%getLength()
     end do
+
   end function getVariableShape
 
   function getVariableDtype(self)
@@ -2097,6 +2106,9 @@ contains
     integer(i2)      , intent(out), allocatable :: data(:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(1))
+#endif
     datashape = getReadDataShape(self,1,start,count,stride)
     allocate(data(datashape(1)) )
 
@@ -2110,6 +2122,9 @@ contains
     integer(i2)      , intent(out), allocatable :: data(:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(2))
+#endif
     datashape = getReadDataShape(self,2,start,count,stride)
     allocate(data(datashape(1),datashape(2)))
 
@@ -2123,6 +2138,9 @@ contains
     integer(i2)      , intent(out), allocatable :: data(:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3)))
 
@@ -2136,6 +2154,9 @@ contains
     integer(i2)      , intent(out), allocatable :: data(:,:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3),datashape(4)))
 
@@ -2149,6 +2170,9 @@ contains
     integer(i2)      , intent(out), allocatable :: data(:,:,:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3),datashape(4),datashape(5)))
 
@@ -2173,8 +2197,11 @@ contains
     integer(i4)      , intent(out), allocatable :: data(:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(1))
+#endif
     datashape = getReadDataShape(self,1,start,count,stride)
-    allocate(data(datashape(1)) )
+    allocate(data(datashape(1)))
 
     call check (nf90_get_var(self%parent%id, self%id, data, start, count, stride, map), &
          "Could not read data from variable: "//trim(self%name))
@@ -2186,6 +2213,9 @@ contains
     integer(i4)      , intent(out), allocatable :: data(:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(2))
+#endif
     datashape = getReadDataShape(self,2,start,count,stride)
     allocate(data(datashape(1),datashape(2)))
 
@@ -2199,6 +2229,9 @@ contains
     integer(i4)      , intent(out), allocatable :: data(:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3)))
 
@@ -2212,6 +2245,9 @@ contains
     integer(i4)      , intent(out), allocatable :: data(:,:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3),datashape(4)))
 
@@ -2225,6 +2261,9 @@ contains
     integer(i4)      , intent(out), allocatable :: data(:,:,:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3),datashape(4),datashape(5)))
 
@@ -2249,6 +2288,9 @@ contains
     real(sp)         , intent(out), allocatable :: data(:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(1))
+#endif
     datashape = getReadDataShape(self,1,start,count,stride)
     allocate(data(datashape(1)))
 
@@ -2262,6 +2304,9 @@ contains
     real(sp)         , intent(out), allocatable :: data(:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(2))
+#endif
     datashape = getReadDataShape(self,2,start,count,stride)
     allocate(data(datashape(1),datashape(2)))
 
@@ -2275,6 +2320,9 @@ contains
     real(sp)         , intent(out), allocatable :: data(:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3)))
 
@@ -2288,6 +2336,9 @@ contains
     real(sp)         , intent(out), allocatable :: data(:,:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3),datashape(4)))
 
@@ -2301,6 +2352,9 @@ contains
     real(sp)         , intent(out), allocatable :: data(:,:,:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3),datashape(4),datashape(5)))
 
@@ -2325,6 +2379,9 @@ contains
     real(dp)         , intent(out), allocatable :: data(:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(1))
+#endif
     datashape = getReadDataShape(self,1,start,count,stride)
     allocate(data(datashape(1)))
 
@@ -2338,6 +2395,9 @@ contains
     real(dp)         , intent(out), allocatable :: data(:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(2))
+#endif
     datashape = getReadDataShape(self,2,start,count,stride)
     allocate(data(datashape(1),datashape(2)))
 
@@ -2351,6 +2411,9 @@ contains
     real(dp)         , intent(out), allocatable :: data(:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3)))
 
@@ -2364,6 +2427,9 @@ contains
     real(dp)         , intent(out), allocatable :: data(:,:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3),datashape(4)))
 
@@ -2377,6 +2443,9 @@ contains
     real(dp)         , intent(out), allocatable :: data(:,:,:,:,:)
     integer(i4)                   , allocatable :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(3))
+#endif
     datashape = getReadDataShape(self,3,start,count,stride)
     allocate(data(datashape(1),datashape(2),datashape(3),datashape(4),datashape(5)))
 
@@ -2391,6 +2460,9 @@ contains
     integer(i4)                            :: getReadDataShape(datarank)
     integer(i4)     , allocatable          :: datashape(:)
 
+#ifdef pgiFortran
+    allocate(datashape(datarank))
+#endif
     datashape = var%getShape()
     if (present(incount)) then
        datashape = incount

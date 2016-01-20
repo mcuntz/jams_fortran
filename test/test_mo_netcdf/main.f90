@@ -10,8 +10,6 @@
 
 program test_mo_netcdf
 
-#ifndef pgiFortran
-
   use mo_kind  , only : i4, sp, dp
   use mo_netcdf, only : newNcDataset, NcDataset, NcDimension, NcVariable
   use mo_utils , only : equal
@@ -259,8 +257,5 @@ program test_mo_netcdf
   else
      print*, "mo_netcdf failed."
   endif
-#else
-  print*, "mo_netcdf not supported for pgfortran because of too modern features"
-#endif
 
 end program test_mo_netcdf
