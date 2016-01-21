@@ -11,7 +11,7 @@
 program test_mo_netcdf
 
   use mo_kind  , only : i4, sp, dp
-  use mo_netcdf, only : newNcDataset, NcDataset, NcDimension, NcVariable
+  use mo_netcdf, only : NcDataset, NcDimension, NcVariable
   use mo_utils , only : equal
   
   implicit none
@@ -60,7 +60,7 @@ program test_mo_netcdf
   ! --------------------------------------------
   
   ! 1.1 create a file
-  nc = newNcDataset(fname, "w")
+  nc = NcDataset(fname, "w")
 
   ! create dimensions
   dim_x    = nc%setDimension("x",    nx) ! lenght < 0 -> unlimited dimension
@@ -105,7 +105,7 @@ program test_mo_netcdf
   ! --------------------------
 
   ! open dataset
-  nc = newNcDataset(fname,"r")
+  nc = NcDataset(fname,"r")
 
   ! acces the variable
   var_time = nc%getVariable(vname_time)
@@ -145,7 +145,7 @@ program test_mo_netcdf
   ! --------------
   !
   ! open dataset
-  nc = newNcDataset(fname,"a")
+  nc = NcDataset(fname,"a")
 
   ! acces variable
   var_time = nc%getVariable(vname_time)
@@ -164,7 +164,7 @@ program test_mo_netcdf
   ! ---------------------------
   !
   ! open dataset
-  nc = newNcDataset(fname,"r")
+  nc = NcDataset(fname,"r")
 
   ! acces the variable
   var_time = nc%getVariable(vname_time)
@@ -191,7 +191,7 @@ program test_mo_netcdf
 
   ! Fast dump
   ! open a file
-  nc = newNcDataset(fname, "w")
+  nc = NcDataset(fname, "w")
 
   ! create variable and dimensions
   var_data = nc%setVariable(vname_data, "f64", (/ &
@@ -209,7 +209,7 @@ program test_mo_netcdf
   
   ! Fast dump with additional time dimension
   ! open a file
-  nc = newNcDataset(fname, "w")
+  nc = NcDataset(fname, "w")
 
   ! create variable and dimensions
   dim_time = nc%setDimension("time", -1)
@@ -231,7 +231,7 @@ program test_mo_netcdf
   ! 3.2 Read the dumped data
   ! --------------------------
   ! open dataset
-  nc = newNcDataset(fname,"r")
+  nc = NcDataset(fname,"r")
 
   ! ! acces the variable
   var_time = nc%getVariable(vname_time)
