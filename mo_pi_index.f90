@@ -120,10 +120,10 @@ MODULE mo_pi_index
   !     LITERATURE
   !         Vajda, S., Valko, P., & Turanyi, T. (2004). 
   !              Principal component analysis of kinetic models. 
-  !              International Journal of Chemical Kinetics, 17(1), 55–81.
-  !         Göhler, M., Mai, J., & Cuntz, M. (2013). 
+  !              International Journal of Chemical Kinetics, 17(1), 55-81.
+  !         Goehler, M., Mai, J., & Cuntz, M. (2013). 
   !              Use of eigendecomposition in a parameter sensitivity analysis of the Community Land Model. 
-  !              Journal of Geophysical Research: Biogeosciences, 118(2), 904–921. doi:10.1002/jgrg.20072
+  !              Journal of Geophysical Research: Biogeosciences, 118(2), 904-921. doi:10.1002/jgrg.20072
 
   !     HISTORY
   !>        \author Juliane Mai
@@ -212,7 +212,7 @@ CONTAINS
           
           mask     = .true.
           ! mask = .false. if entry in S matrix is zero (i.e. no response of model to change)
-          where (abs(s) .lt. epsilon(1.0_dp))
+          where (abs(s) .lt. tiny(1.0_dp))
              mask = .false.
           end where
           ! maskpara = true,  if there are not only zeros in column of matrix S 
@@ -435,7 +435,7 @@ CONTAINS
           
           mask     = .true.
           ! mask = .false. if entry in S matrix is zero (i.e. no response of model to change)
-          where (abs(s) .lt. epsilon(1.0_sp))
+          where (abs(s) .lt. tiny(1.0_sp))
              mask = .false.
           end where
           ! maskpara = true,  if there are not only zeros in column of matrix S 
