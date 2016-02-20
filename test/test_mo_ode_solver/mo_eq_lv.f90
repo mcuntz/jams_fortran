@@ -9,7 +9,7 @@
 module mo_eq_lv
 
     ! ------------------------------------------------------------------
-    ! The LotkaÐVolterra equations, also known as the predatorÐprey equations, are a pair of first-order, non-linear,
+    ! The Lotka Volterra equations, also known as the predator-prey equations, are a pair of first-order, non-linear,
     ! differential equations frequently used to describe the dynamics of biological systems in which two species interact,
     ! one a predator and one its prey. They evolve in time according to the following of equations
     ! ------------------------------------------------------------------
@@ -65,7 +65,7 @@ contains
         ! does not depend on time  --> 0.0 * x (to avoid warnings of unused variables)
         ! ============================================================================
 
-        dydx(1) = y(1) - epsilonn*mu*y(2)        + 0.0_sp*x    
+        dydx(1) = y(1) - epsilonn*mu*y(2)        + 0.0_sp*x
         dydx(2) = (mu/epsilonn)*y(1) + eta*y(2)  + 0.0_sp*x
 
     end subroutine LV_eqn_sp
@@ -137,7 +137,7 @@ contains
         ! does not depend on time  --> 0.0 * x (to avoid warnings of unused variables)
         ! ============================================================================
 
-        dydx(1) = y(1) - para(1)*para(2)*y(2)           + 0.0_sp*x    
+        dydx(1) = y(1) - para(1)*para(2)*y(2)           + 0.0_sp*x
         dydx(2) = (para(2)/para(1))*y(1) + para(3)*y(2) + 0.0_sp*x
 
     end subroutine LV_eqn_para_sp
@@ -154,7 +154,7 @@ contains
         real(dp), dimension(:), intent(out) :: dydx     ! derivatives of y
 
         real(dp), dimension(:), intent(in) :: para      ! parameter
-        
+
 !        real(dp), parameter :: epsilonn = 0.5_dp        ! regulates the relationship between the two species
 !                                                        ! keeping the optimum balance
 
@@ -209,11 +209,11 @@ contains
         real(sp), dimension(:),     intent(in)  :: y        ! unknowns of the equations
         real(sp), dimension(:),     intent(out) :: dfdx     ! derivatives of f for x
         real(sp), dimension(:,:),   intent(out) :: dfdy     ! derivatives of f for y
-        
-        
+
+
         dfdx(1)     = 0.0_sp
         dfdx(2)     = 0.0_sp
-        
+
         dfdy(1,1)   = 998.0_sp
         dfdy(1,2)   = 1998.0_sp
         dfdy(2,1)   = -999.0_sp
@@ -230,7 +230,7 @@ contains
         real(sp), intent(in) :: x                       ! time
         real(sp), dimension(:), intent(in) :: y         ! unknowns of the equations
         real(sp), dimension(:), intent(out) :: dydx     ! derivatives of y
-        
+
 
         dydx(1) = (-0.013_sp-1000.0_sp*y(3))*y(1)
         dydx(2) = -2500.0_sp*y(3)*y(2)
@@ -248,12 +248,12 @@ contains
         real(sp), dimension(:),     intent(in)  :: y        ! unknowns of the equations
         real(sp), dimension(:),     intent(out) :: dfdx     ! derivatives of f for x
         real(sp), dimension(:,:),   intent(out) :: dfdy     ! derivatives of f for y
-        
-        
+
+
         dfdx(1)     = 0.0_sp
         dfdx(2)     = 0.0_sp
         dfdx(3)     = 0.0_sp
-        
+
         dfdy(1,1)   = -0.013_sp-1000.0_sp*y(3)
         dfdy(1,2)   = 0.0_sp
         dfdy(1,3)   = -1000.0_sp*y(1)
@@ -277,7 +277,7 @@ contains
         real(sp), dimension(:), intent(out) :: dydx     ! derivatives of y
 
         real(sp), dimension(:), intent(in) :: para      ! parameter
-        
+
 
         dydx(1) = (-0.013_sp-para(1)*y(3))*y(1)
         dydx(2) = -2500.0_sp*y(3)*y(2)
@@ -297,12 +297,12 @@ contains
         real(sp), dimension(:,:),   intent(out) :: dfdy     ! derivatives of f for y
 
         real(sp), dimension(:),     intent(in)  :: para      ! parameter
-        
-        
+
+
         dfdx(1)     = 0.0_sp
         dfdx(2)     = 0.0_sp
         dfdx(3)     = 0.0_sp
-        
+
         dfdy(1,1)   = -0.013_sp-para(1)*y(3)
         dfdy(1,2)   = 0.0_sp
         dfdy(1,3)   = -1000.0_sp*y(1)
@@ -342,11 +342,11 @@ contains
         real(dp), dimension(:),     intent(in)  :: y        ! unknowns of the equations
         real(dp), dimension(:),     intent(out) :: dfdx     ! derivatives of f for x
         real(dp), dimension(:,:),   intent(out) :: dfdy     ! derivatives of f for y
-        
-        
+
+
         dfdx(1)     = 0.0_dp
         dfdx(2)     = 0.0_dp
-        
+
         dfdy(1,1)   = 998.0_dp
         dfdy(1,2)   = 1998.0_dp
         dfdy(2,1)   = -999.0_dp
@@ -363,7 +363,7 @@ contains
         real(dp), intent(in) :: x                       ! time
         real(dp), dimension(:), intent(in) :: y         ! unknowns of the equations
         real(dp), dimension(:), intent(out) :: dydx     ! derivatives of y
-        
+
 
         dydx(1) = (-0.013_dp-1000.0_dp*y(3))*y(1)
         dydx(2) = -2500.0_dp*y(3)*y(2)
@@ -381,12 +381,12 @@ contains
         real(dp), dimension(:),     intent(in)  :: y        ! unknowns of the equations
         real(dp), dimension(:),     intent(out) :: dfdx     ! derivatives of f for x
         real(dp), dimension(:,:),   intent(out) :: dfdy     ! derivatives of f for y
-        
-        
+
+
         dfdx(1)     = 0.0_dp
         dfdx(2)     = 0.0_dp
         dfdx(3)     = 0.0_dp
-        
+
         dfdy(1,1)   = -0.013_dp-1000.0_dp*y(3)
         dfdy(1,2)   = 0.0_dp
         dfdy(1,3)   = -1000.0_dp*y(1)
@@ -410,7 +410,7 @@ contains
         real(dp), dimension(:), intent(out) :: dydx     ! derivatives of y
 
         real(dp), dimension(:), intent(in) :: para      ! parameter
-        
+
 
         dydx(1) = (-0.013_dp-para(1)*y(3))*y(1)
         dydx(2) = -2500.0_dp*y(3)*y(2)
@@ -430,12 +430,12 @@ contains
         real(dp), dimension(:,:),   intent(out) :: dfdy     ! derivatives of f for y
 
         real(dp), dimension(:),     intent(in)  :: para      ! parameter
-        
-        
+
+
         dfdx(1)     = 0.0_dp
         dfdx(2)     = 0.0_dp
         dfdx(3)     = 0.0_dp
-        
+
         dfdy(1,1)   = -0.013_dp-para(1)*y(3)
         dfdy(1,2)   = 0.0_dp
         dfdy(1,3)   = -1000.0_dp*y(1)
