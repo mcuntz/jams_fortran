@@ -6,7 +6,7 @@
 !>          and matrixes onto existing arrays.
 
 !> \author Juliane Mai
-!> \date Aug 2012
+!> \date Aug 2012 
 
 MODULE mo_append
 
