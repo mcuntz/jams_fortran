@@ -421,6 +421,70 @@ CONTAINS
   END FUNCTION inverse_dp
 
 
+  ! FUNCTION inverse_sp(matrix, condition)
+
+  !   IMPLICIT NONE
+
+  !   REAL(sp), DIMENSION(:,:), INTENT(IN)  :: matrix
+  !   LOGICAL,  OPTIONAL,       INTENT(IN)  :: condition
+  !   REAL(sp), DIMENSION(:,:), allocatable :: inverse_sp
+
+  !   INTEGER(i4) :: i, nn
+  !   real(sp),    dimension(:), allocatable :: scale_cols    ! scale matrix for better conditioning
+  !   integer(i4), dimension(:), allocatable :: ipiv          ! needed for dgetrf lapack routine
+  !   integer(i4)                            :: info          !              "
+  !   real(sp),    dimension(:), allocatable :: work          ! needed for dgetri lapack routine
+  !   integer(i4)                            :: lwork         !              "
+  !   logical :: icondition
+
+  !   external :: sgetrf ! Lapack routine to compute LU factorization of a general matrix
+  !   external :: sgetri ! Lapack routine to compute inverse of matrix using the LU factorization computed by DGETRF
+
+  !   nn = size(matrix,1)
+  !   if (size(matrix,2) /= nn) stop 'inverse_sp: matrix must be square.'
+  !   if (.not. allocated(inverse_sp)) allocate(inverse_sp(nn,nn))
+  !   inverse_sp = matrix
+
+  !   if (present(condition)) then
+  !      icondition = condition
+  !   else
+  !      icondition = .true.
+  !   endif
+
+  !   if (icondition) then
+  !      ! Condition columns
+  !      allocate(scale_cols(nn))
+  !      scale_cols(:) = maxval(abs(inverse_sp(:,:)),1)
+  !      where (scale_cols(:) < tiny(1.0_sp)) scale_cols(:) = 1.0_sp
+  !      scale_cols(:) = 1.0_sp / scale_cols(:)
+  !      forall(i=1:nn) inverse_sp(:,i) = inverse_sp(:,i) * scale_cols(i)
+  !   endif
+
+  !   ! LU factorisation of imatrix
+  !   allocate(ipiv(nn))
+  !   call sgetrf(nn, nn, inverse_sp, nn, ipiv, info)
+  !   if (info /= 0) stop 'inverse_sp: LU factorisation did not work.'
+  !   ! Inverse of LU factorisation of imatrix
+  !   allocate(work(1))
+  !   call sgetri(nn, inverse_sp, nn, ipiv, work, -1, info)
+  !   if (info /= 0) stop 'inverse_sp: determination of working matrix dimensions did not work.'
+  !   lwork = int(work(1),i4)
+  !   deallocate(work)
+  !   allocate(work(lwork))
+  !   call sgetri(nn, inverse_sp, nn, ipiv, work, lwork, info)
+  !   if (info /= 0) stop 'inverse_sp: Inversion did not work.'
+  !   deallocate(work)
+
+  !   if (icondition) then
+  !      ! rescale result
+  !      forall(i=1:nn) inverse_sp(i,:) = inverse_sp(i,:) * scale_cols(i)
+  !      deallocate(scale_cols)
+  !   endif
+
+  !   deallocate(ipiv)
+
+  ! END FUNCTION inverse_sp
+
   FUNCTION inverse_sp(matrix, condition)
 
     IMPLICIT NONE
@@ -429,59 +493,8 @@ CONTAINS
     LOGICAL,  OPTIONAL,       INTENT(IN)  :: condition
     REAL(sp), DIMENSION(:,:), allocatable :: inverse_sp
 
-    INTEGER(i4) :: i, nn
-    real(sp),    dimension(:),   allocatable :: scale_cols    ! scale matrix for better conditioning
-    integer(i4), dimension(:),   allocatable :: ipiv          ! needed for dgetrf lapack routine
-    integer(i4)                              :: info          !              "
-    real(sp),    dimension(:),   allocatable :: work          ! needed for dgetri lapack routine
-    integer(i4)                              :: lwork         !              "
-    logical :: icondition
-
-    external :: sgetrf ! Lapack routine to compute LU factorization of a general matrix
-    external :: sgetri ! Lapack routine to compute inverse of matrix using the LU factorization computed by DGETRF
-
-    nn = size(matrix,2)
-    if (size(matrix,1) /= nn) stop 'inverse_sp: matrix must be square.'
-    if (.not. allocated(inverse_sp)) allocate(inverse_sp(nn,nn))
-    inverse_sp = matrix
-
-    if (present(condition)) then
-       icondition = condition
-    else
-       icondition = .true.
-    endif
-
-    if (icondition) then
-       ! Condition columns
-       allocate(scale_cols(nn))
-       scale_cols(:) = maxval(abs(inverse_sp(:,:)),1)
-       where (scale_cols(:) < tiny(1.0_sp)) scale_cols(:) = 1.0_sp
-       scale_cols(:) = 1.0_sp / scale_cols(:)
-       forall(i=1:nn) inverse_sp(:,i) = inverse_sp(:,i) * scale_cols(i)
-    endif
-
-    ! LU factorisation of imatrix
-    allocate(ipiv(nn))
-    call sgetrf(nn, nn, inverse_sp, nn, ipiv, info)
-    if (info /= 0) stop 'inverse_sp: LU factorisation did not work.'
-    ! Inverse of LU factorisation of imatrix
-    allocate(work(1))
-    call sgetri(nn, inverse_sp, nn, ipiv, work, -1, info)
-    lwork = int(work(1),i4)
-    deallocate(work)
-    allocate(work(lwork))
-    call sgetri(nn, inverse_sp, nn, ipiv, work, lwork, info)
-    if (info /= 0) stop 'hdmr_hessian: Inversion did not work.'
-
-    if (icondition) then
-       ! rescale result
-       forall(i=1:nn) inverse_sp(i,:) = inverse_sp(i,:) * scale_cols(i)
-
-       deallocate(scale_cols)
-    endif
-
-    deallocate(ipiv)
-
+    inverse_sp = real(inverse_dp(real(matrix,dp), condition), sp)
+    
   END FUNCTION inverse_sp
 
   ! ------------------------------------------------------------------
@@ -557,6 +570,76 @@ CONTAINS
   END FUNCTION solve_linear_equations_1_dp
 
 
+  ! FUNCTION solve_linear_equations_1_sp(lhs, rhs, condition)
+
+  !   IMPLICIT NONE
+
+  !   REAL(sp), DIMENSION(:,:), INTENT(IN) :: lhs
+  !   REAL(sp), DIMENSION(:),   INTENT(IN) :: rhs
+  !   LOGICAL,  OPTIONAL,       INTENT(IN) :: condition
+  !   REAL(sp), DIMENSION(:), allocatable  :: solve_linear_equations_1_sp
+
+  !   INTEGER(i4) :: ii, nZeilen
+  !   real(sp),    dimension(:,:), allocatable :: ilhs          ! internal lhs
+  !   real(sp),    dimension(:),   allocatable :: irhs          ! internal rhs
+  !   real(sp),    dimension(:),   allocatable :: scale_cols    ! scale matrix for better conditioning
+  !   real(sp),    dimension(:),   allocatable :: scale_rows    !              "
+  !   integer(i4), dimension(:),   allocatable :: ipiv          ! needed for dgesv lapack routine
+  !   integer(i4)                              :: info          !              "
+  !   logical :: icondition
+
+  !   external :: sgesv  ! Lapack routine to compute solution of real system of linear equations
+
+  !   nZeilen = size(lhs,1)
+  !   if (size(lhs,2) /= nZeilen) stop 'solve_linear_equations_1_sp: left hand side must be squared matrix.'
+  !   if (size(rhs,1) /= nZeilen) stop 'solve_linear_equations_1_sp: right hand side must have same size as left hand side.'
+  !   ! internal arrays
+  !   allocate(ilhs(nZeilen,nZeilen), irhs(nZeilen))
+  !   ilhs = lhs
+  !   irhs = rhs
+
+  !   if (present(condition)) then
+  !      icondition = condition
+  !   else
+  !      icondition = .true.
+  !   endif
+
+  !   if (icondition) then
+  !      ! Condition of matrix
+  !      allocate(scale_cols(nZeilen), scale_rows(nZeilen))
+  !      ! Condition columns
+  !      scale_cols(:) = maxval(abs(ilhs(:,:)),1)
+  !      where (scale_cols(:) < tiny(1.0_sp)) scale_cols(:) = 1.0_sp
+  !      scale_cols(:) = 1.0_sp / scale_cols(:)
+  !      forall(ii=1:nZeilen) ilhs(:,ii) = ilhs(:,ii) * scale_cols(ii)
+  !      ! Condition rows
+  !      scale_rows(:) = maxval(abs(ilhs(:,:)),2)
+  !      where (scale_rows(:) < tiny(1.0_sp)) scale_rows(:) = 1.0_sp
+  !      scale_rows(:) = 1.0_sp / scale_rows(:)
+  !      forall(ii=1:nZeilen) ilhs(ii,:) = ilhs(ii,:) * scale_rows(ii)
+  !      irhs(:) = irhs(:) * scale_rows(:)
+  !   endif
+
+  !   ! solve linear system of equations
+  !   allocate(ipiv(nZeilen))
+  !   call sgesv(nZeilen, 1, ilhs, nZeilen, ipiv, irhs, nZeilen, info)
+  !   if (info /= 0) stop 'solve_linear_equations_1_sp: Solving of linear system did not work.'
+
+  !   if (.not. allocated(solve_linear_equations_1_sp)) allocate(solve_linear_equations_1_sp(nZeilen))
+  !   solve_linear_equations_1_sp = irhs
+
+  !   if (icondition) then
+  !      ! rescale result
+  !      solve_linear_equations_1_sp(:) = solve_linear_equations_1_sp(:) * scale_cols(:)
+
+  !      deallocate(scale_cols, scale_rows)
+  !   endif
+
+  !   deallocate(ilhs, irhs)
+  !   deallocate(ipiv)
+
+  ! END FUNCTION solve_linear_equations_1_sp
+
   FUNCTION solve_linear_equations_1_sp(lhs, rhs, condition)
 
     IMPLICIT NONE
@@ -566,64 +649,7 @@ CONTAINS
     LOGICAL,  OPTIONAL,       INTENT(IN) :: condition
     REAL(sp), DIMENSION(:), allocatable  :: solve_linear_equations_1_sp
 
-    INTEGER(i4) :: ii, nZeilen
-    real(sp),    dimension(:,:), allocatable :: ilhs          ! internal lhs
-    real(sp),    dimension(:),   allocatable :: irhs          ! internal rhs
-    real(sp),    dimension(:),   allocatable :: scale_cols    ! scale matrix for better conditioning
-    real(sp),    dimension(:),   allocatable :: scale_rows    !              "
-    integer(i4), dimension(:),   allocatable :: ipiv          ! needed for dgesv lapack routine
-    integer(i4)                              :: info          !              "
-    logical :: icondition
-
-    external :: sgesv  ! Lapack routine to compute solution of real system of linear equations
-
-    nZeilen = size(lhs,1)
-    if (size(lhs,2) /= nZeilen) stop 'solve_linear_equations_1_sp: left hand side must be squared matrix.'
-    if (size(rhs,1) /= nZeilen) stop 'solve_linear_equations_1_sp: right hand side must have same size as left hand side.'
-    ! internal arrays
-    allocate(ilhs(nZeilen,nZeilen), irhs(nZeilen))
-    ilhs = lhs
-    irhs = rhs
-
-    if (present(condition)) then
-       icondition = condition
-    else
-       icondition = .true.
-    endif
-
-    if (icondition) then
-       ! Condition of matrix
-       allocate(scale_cols(nZeilen), scale_rows(nZeilen))
-       ! Condition columns
-       scale_cols(:) = maxval(abs(ilhs(:,:)),1)
-       where (scale_cols(:) < tiny(1.0_sp)) scale_cols(:) = 1.0_sp
-       scale_cols(:) = 1.0_sp / scale_cols(:)
-       forall(ii=1:nZeilen) ilhs(:,ii) = ilhs(:,ii) * scale_cols(ii)
-       ! Condition rows
-       scale_rows(:) = maxval(abs(ilhs(:,:)),2)
-       where (scale_rows(:) < tiny(1.0_sp)) scale_rows(:) = 1.0_sp
-       scale_rows(:) = 1.0_sp / scale_rows(:)
-       forall(ii=1:nZeilen) ilhs(ii,:) = ilhs(ii,:) * scale_rows(ii)
-       irhs(:) = irhs(:) * scale_rows(:)
-    endif
-
-    ! solve linear system of equations
-    allocate(ipiv(nZeilen))
-    call sgesv(nZeilen, 1, ilhs, nZeilen, ipiv, irhs, nZeilen, info)
-    if (info /= 0) stop 'solve_linear_equations_1_sp: Solving of linear system did not work.'
-
-    if (.not. allocated(solve_linear_equations_1_sp)) allocate(solve_linear_equations_1_sp(nZeilen))
-    solve_linear_equations_1_sp = irhs
-
-    if (icondition) then
-       ! rescale result
-       solve_linear_equations_1_sp(:) = solve_linear_equations_1_sp(:) * scale_cols(:)
-
-       deallocate(scale_cols, scale_rows)
-    endif
-
-    deallocate(ilhs, irhs)
-    deallocate(ipiv)
+    solve_linear_equations_1_sp = real(solve_linear_equations_1_dp(real(lhs,dp), real(rhs,dp), condition), sp)
 
   END FUNCTION solve_linear_equations_1_sp
 
@@ -714,6 +740,90 @@ CONTAINS
   END FUNCTION solve_linear_equations_svd_1_dp
 
 
+  ! FUNCTION solve_linear_equations_svd_1_sp(lhs, rhs, condition)
+
+  !   IMPLICIT NONE
+
+  !   REAL(sp), DIMENSION(:,:), INTENT(IN) :: lhs
+  !   REAL(sp), DIMENSION(:),   INTENT(IN) :: rhs
+  !   LOGICAL,  OPTIONAL,       INTENT(IN) :: condition
+  !   REAL(sp), DIMENSION(:), allocatable  :: solve_linear_equations_svd_1_sp
+
+  !   INTEGER(i4) :: ii, nZeilen
+  !   real(sp),    dimension(:,:), allocatable :: ilhs          ! internal lhs
+  !   real(sp),    dimension(:),   allocatable :: irhs          ! internal rhs
+  !   real(sp),    dimension(:),   allocatable :: scale_cols    ! scale matrix for better conditioning
+  !   real(sp),    dimension(:),   allocatable :: scale_rows    !              "
+  !   real(sp),    dimension(:),   allocatable :: work          ! needed for dgesvd lapack routine
+  !   real(sp),    dimension(:),   allocatable :: svdw          !              "
+  !   real(sp),    dimension(:,:), allocatable :: svdu          !              "
+  !   real(sp),    dimension(:,:), allocatable :: svdv          !              "
+  !   integer(i4)                              :: lwork         !              "
+  !   integer(i4)                              :: info          !              "
+  !   real(sp),    parameter                   :: svdtol = 1.0e-5_sp ! if <svdtol*maxval(svdw), then set svdw=0
+  !   logical :: icondition
+
+  !   external :: sgesvd ! Lapack routine to compute singular value decomposition of matrix
+
+  !   nZeilen = size(lhs,1)
+  !   if (size(lhs,2) /= nZeilen) stop 'solve_linear_equations_svd_1_sp: left hand side must be squared matrix.'
+  !   if (size(rhs,1) /= nZeilen) stop 'solve_linear_equations_svd_1_sp: right hand side must have same size as left hand side.'
+  !   ! internal arrays
+  !   allocate(ilhs(nZeilen,nZeilen), irhs(nZeilen))
+  !   ilhs = lhs
+  !   irhs = rhs
+
+  !   if (present(condition)) then
+  !      icondition = condition
+  !   else
+  !      icondition = .true.
+  !   endif
+
+  !   if (icondition) then
+  !      ! Condition of matrix
+  !      allocate(scale_cols(nZeilen), scale_rows(nZeilen))
+  !      ! Condition columns
+  !      scale_cols(:) = maxval(abs(ilhs(:,:)),1)
+  !      where (scale_cols(:) < tiny(1.0_sp)) scale_cols(:) = 1.0_sp
+  !      scale_cols(:) = 1.0_sp / scale_cols(:)
+  !      forall(ii=1:nZeilen) ilhs(:,ii) = ilhs(:,ii) * scale_cols(ii)
+  !      ! Condition rows
+  !      scale_rows(:) = maxval(abs(ilhs(:,:)),2)
+  !      where (scale_rows(:) < tiny(1.0_sp)) scale_rows(:) = 1.0_sp
+  !      scale_rows(:) = 1.0_sp / scale_rows(:)
+  !      forall(ii=1:nZeilen) ilhs(ii,:) = ilhs(ii,:) * scale_rows(ii)
+  !      irhs(:) = irhs(:) * scale_rows(:)
+  !   endif
+
+  !   ! solve linear system of equations
+  !   ! Use Lapack singular value decomposition and Numerical Recipes solution
+  !   allocate(work(1))
+  !   allocate(svdu(nZeilen,nZeilen), svdv(nZeilen,nZeilen), svdw(nZeilen))
+  !   call sgesvd('A', 'A', nZeilen, nZeilen, ilhs, nZeilen, svdw, svdu, nZeilen, svdv, nZeilen, work, -1, info)
+  !   lwork = int(work(1),i4)
+  !   deallocate(work)
+  !   allocate(work(lwork))
+  !   call sgesvd('A', 'A', nZeilen, nZeilen, ilhs, nZeilen, svdw, svdu, nZeilen, svdv, nZeilen, work, lwork, info)
+  !   if (info /= 0) stop 'solve_linear_equations_svd_1_sp: Solving of linear system did not work.'
+  !   ! write(*,*) 'Matrix condition ', maxval(abs(svdw))/minval(abs(svdw))
+  !   where (svdw < svdtol*maxval(svdw)) svdw = 0.0_sp
+
+  !   if (.not. allocated(solve_linear_equations_svd_1_sp)) allocate(solve_linear_equations_svd_1_sp(nZeilen))
+  !   ! svdv is V**T from dgesvd, svdksb wants V
+  !   solve_linear_equations_svd_1_sp = svdksb(svdu,svdw,transpose(svdv),irhs)
+
+  !   if (icondition) then
+  !      ! rescale result
+  !      solve_linear_equations_svd_1_sp(:) = solve_linear_equations_svd_1_sp(:) * scale_cols(:)
+
+  !      deallocate(scale_cols, scale_rows)
+  !   endif
+
+  !   deallocate(ilhs, irhs)
+  !   deallocate(work, svdu, svdv, svdw)
+
+  ! END FUNCTION solve_linear_equations_svd_1_sp
+
   FUNCTION solve_linear_equations_svd_1_sp(lhs, rhs, condition)
 
     IMPLICIT NONE
@@ -723,78 +833,7 @@ CONTAINS
     LOGICAL,  OPTIONAL,       INTENT(IN) :: condition
     REAL(sp), DIMENSION(:), allocatable  :: solve_linear_equations_svd_1_sp
 
-    INTEGER(i4) :: ii, nZeilen
-    real(sp),    dimension(:,:), allocatable :: ilhs          ! internal lhs
-    real(sp),    dimension(:),   allocatable :: irhs          ! internal rhs
-    real(sp),    dimension(:),   allocatable :: scale_cols    ! scale matrix for better conditioning
-    real(sp),    dimension(:),   allocatable :: scale_rows    !              "
-    real(sp),    dimension(:),   allocatable :: work          ! needed for dgesvd lapack routine
-    real(sp),    dimension(:),   allocatable :: svdw          !              "
-    real(sp),    dimension(:,:), allocatable :: svdu          !              "
-    real(sp),    dimension(:,:), allocatable :: svdv          !              "
-    integer(i4)                              :: lwork         !              "
-    integer(i4)                              :: info          !              "
-    real(sp),    parameter                   :: svdtol = 1.0e-5_sp ! if <svdtol*maxval(svdw), then set svdw=0
-    logical :: icondition
-
-    external :: sgesvd ! Lapack routine to compute singular value decomposition of matrix
-
-    nZeilen = size(lhs,1)
-    if (size(lhs,2) /= nZeilen) stop 'solve_linear_equations_svd_1_sp: left hand side must be squared matrix.'
-    if (size(rhs,1) /= nZeilen) stop 'solve_linear_equations_svd_1_sp: right hand side must have same size as left hand side.'
-    ! internal arrays
-    allocate(ilhs(nZeilen,nZeilen), irhs(nZeilen))
-    ilhs = lhs
-    irhs = rhs
-
-    if (present(condition)) then
-       icondition = condition
-    else
-       icondition = .true.
-    endif
-
-    if (icondition) then
-       ! Condition of matrix
-       allocate(scale_cols(nZeilen), scale_rows(nZeilen))
-       ! Condition columns
-       scale_cols(:) = maxval(abs(ilhs(:,:)),1)
-       where (scale_cols(:) < tiny(1.0_sp)) scale_cols(:) = 1.0_sp
-       scale_cols(:) = 1.0_sp / scale_cols(:)
-       forall(ii=1:nZeilen) ilhs(:,ii) = ilhs(:,ii) * scale_cols(ii)
-       ! Condition rows
-       scale_rows(:) = maxval(abs(ilhs(:,:)),2)
-       where (scale_rows(:) < tiny(1.0_sp)) scale_rows(:) = 1.0_sp
-       scale_rows(:) = 1.0_sp / scale_rows(:)
-       forall(ii=1:nZeilen) ilhs(ii,:) = ilhs(ii,:) * scale_rows(ii)
-       irhs(:) = irhs(:) * scale_rows(:)
-    endif
-
-    ! solve linear system of equations
-    ! Use Lapack singular value decomposition and Numerical Recipes solution
-    allocate(work(1))
-    allocate(svdu(nZeilen,nZeilen), svdv(nZeilen,nZeilen), svdw(nZeilen))
-    call sgesvd('A', 'A', nZeilen, nZeilen, ilhs, nZeilen, svdw, svdu, nZeilen, svdv, nZeilen, work, -1, info)
-    lwork = int(work(1),i4)
-    deallocate(work)
-    allocate(work(lwork))
-    call sgesvd('A', 'A', nZeilen, nZeilen, ilhs, nZeilen, svdw, svdu, nZeilen, svdv, nZeilen, work, lwork, info)
-    if (info /= 0) stop 'solve_linear_equations_svd_1_sp: Solving of linear system did not work.'
-    ! write(*,*) 'Matrix condition ', maxval(abs(svdw))/minval(abs(svdw))
-    where (svdw < svdtol*maxval(svdw)) svdw = 0.0_sp
-
-    if (.not. allocated(solve_linear_equations_svd_1_sp)) allocate(solve_linear_equations_svd_1_sp(nZeilen))
-    ! svdv is V**T from dgesvd, svdksb wants V
-    solve_linear_equations_svd_1_sp = svdksb(svdu,svdw,transpose(svdv),irhs)
-
-    if (icondition) then
-       ! rescale result
-       solve_linear_equations_svd_1_sp(:) = solve_linear_equations_svd_1_sp(:) * scale_cols(:)
-
-       deallocate(scale_cols, scale_rows)
-    endif
-
-    deallocate(ilhs, irhs)
-    deallocate(work, svdu, svdv, svdw)
+    solve_linear_equations_svd_1_sp = real(solve_linear_equations_svd_1_dp(real(lhs,dp), real(rhs,dp), condition), sp)
 
   END FUNCTION solve_linear_equations_svd_1_sp
 
