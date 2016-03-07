@@ -43,7 +43,7 @@ program write_netcdf
   character(256), dimension(:,:), allocatable :: attributes
 
   isgood   = .true.
-  Filename = '../FORTRAN_chs_lib/test/test_mo_ncwrite/pr_1961-2000.nc'
+  Filename = '../fortran/test/test_mo_ncwrite/pr_1961-2000.nc'
   oriFilename = trim(Filename)
 
 

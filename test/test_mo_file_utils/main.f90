@@ -11,8 +11,8 @@ PROGRAM main
   Write(*,*) 'Test mo_file_utils.f90'
 
   isgood = .true.
-  open(unit=20, file="../FORTRAN_chs_lib/test/test_mo_file_utils/main.f90", action="read", status="old", form="formatted")
-  open(unit=21, file="../FORTRAN_chs_lib/test/test_mo_file_utils/mo_file_utils.f90", action="read", status="old", form="formatted")
+  open(unit=20, file="../fortran/test/test_mo_file_utils/main.f90", action="read", status="old", form="formatted")
+  open(unit=21, file="../fortran/test/test_mo_file_utils/mo_file_utils.f90", action="read", status="old", form="formatted")
   inew = find_next_unit(20,30)
   if (inew /= 22) isgood =.false.
 

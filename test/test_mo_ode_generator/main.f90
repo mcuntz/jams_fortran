@@ -7,7 +7,7 @@
 !! Version     	: 1.0
 !! Copyright   	: 2012-2014 Giovanni Dalmasso
 !! Description 	: main for testing ODE generator
-!! Note         : the following module from the FORTRAN_chs_lib are needed:
+!! Note         : the following module from the fortran are needed:
 !!                  - mo_constant.f90
 !!                  - mo_kind.f90
 !!                  - mo_nrutil.f90

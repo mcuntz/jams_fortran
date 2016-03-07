@@ -6,7 +6,7 @@ PROGRAM main
   IMPLICIT NONE
   
   INTEGER, PARAMETER :: nnml = 100
-  CHARACTER(len=*), PARAMETER :: nfile = '../FORTRAN_chs_lib/test/test_mo_nml/namelist.txt'
+  CHARACTER(len=*), PARAMETER :: nfile = '../fortran/test/test_mo_nml/namelist.txt'
   INTEGER(i4) :: stat
 
   LOGICAL :: isgood

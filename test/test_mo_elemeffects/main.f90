@@ -14,9 +14,9 @@ PROGRAM elemeffects_test
 
   ! Data Files
   ! file: Morris samples
-  character(len=*), parameter :: fileParasets    = '../FORTRAN_chs_lib/test/test_mo_elemeffects/data/Morris_parasets.dat'
+  character(len=*), parameter :: fileParasets    = '../fortran/test/test_mo_elemeffects/data/Morris_parasets.dat'
   ! file: changed parameter in Morris samples
-  character(len=*), parameter :: fileChangedPara = '../FORTRAN_chs_lib/test/test_mo_elemeffects/data/Morris_changedpara.dat'
+  character(len=*), parameter :: fileChangedPara = '../fortran/test/test_mo_elemeffects/data/Morris_changedpara.dat'
 
   ! Samples and Model Output
   real(dp),    dimension(nsets,npara) :: MorrisSample                    ! array: Morris samples

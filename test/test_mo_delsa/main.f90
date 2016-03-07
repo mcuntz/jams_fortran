@@ -27,12 +27,12 @@ PROGRAM main
 
   ! Data Files for delsa(parbase,parpert,outbase,outpert,varprior,delsafirst)
   ! read text files which were created externally:
-  character(len=*), parameter :: fileparbase    = '../FORTRAN_chs_lib/test/test_mo_delsa/dummy_data/parbase.txt'  
-  character(len=*), parameter :: fileparpert1   = '../FORTRAN_chs_lib/test/test_mo_delsa/dummy_data/parpert1.txt'
-  character(len=*), parameter :: fileparpert2   = '../FORTRAN_chs_lib/test/test_mo_delsa/dummy_data/parpert2.txt'   
-  character(len=*), parameter :: fileoutbase    = '../FORTRAN_chs_lib/test/test_mo_delsa/dummy_data/outbase.txt'
-  character(len=*), parameter :: fileoutpert    = '../FORTRAN_chs_lib/test/test_mo_delsa/dummy_data/outpert.txt'
-  character(len=*), parameter :: filetestoutput = '../FORTRAN_chs_lib/test/test_mo_delsa/dummy_data/test_output.txt'
+  character(len=*), parameter :: fileparbase    = '../fortran/test/test_mo_delsa/dummy_data/parbase.txt'  
+  character(len=*), parameter :: fileparpert1   = '../fortran/test/test_mo_delsa/dummy_data/parpert1.txt'
+  character(len=*), parameter :: fileparpert2   = '../fortran/test/test_mo_delsa/dummy_data/parpert2.txt'   
+  character(len=*), parameter :: fileoutbase    = '../fortran/test/test_mo_delsa/dummy_data/outbase.txt'
+  character(len=*), parameter :: fileoutpert    = '../fortran/test/test_mo_delsa/dummy_data/outpert.txt'
+  character(len=*), parameter :: filetestoutput = '../fortran/test/test_mo_delsa/dummy_data/test_output.txt'
 
   ! ************************************************************************
   ! read parameter sets and corresponding model outputs

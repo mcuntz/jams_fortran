@@ -24,7 +24,7 @@ PROGRAM main
 
   out = qhull(points, outfile=ofile)
 
-  open(unit=101, file='../FORTRAN_chs_lib/test/test_mo_qhull/qhull.res', action='read')
+  open(unit=101, file='../fortran/test/test_mo_qhull/qhull.res', action='read')
   open(unit=102, file=ofile, action='read')
   do i=1, 11
      read(101,*) str1
