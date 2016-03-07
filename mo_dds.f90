@@ -10,7 +10,7 @@
 !> Matthias Cuntz and Juliane Mai for the module, MDDS, etc.
 !> \date Jul 2012
 
-module mo_dds
+module mo_dds 
 
   ! This module contains routines for Dynamically Dimensioned Search (DDS)
 
