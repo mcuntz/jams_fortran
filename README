@@ -1,21 +1,10 @@
 
-This is the FORTRAN library of the
-
-Department Computational Hydrosystems
-Helmholtz Centre for Environmental Research - UFZ
-Permoserstr. 15
-04318 Leipzig, Germany
+This is the FORTRAN library of JAMS.
 
 One can produce a browseable html of the library in the directory html by calling: make SRCPATH=. html
 
-The library is maintained with a subversion system at:
-https://svn.ufz.de/svn/chs-svn/FORTRAN_chs_lib/
-
-The documentation of the library is maintained as a wiki at:
-https://svn.ufz.de/chs-svn/wiki/WikiFortran
-
-The above wiki will be printed to a PDF file from time to time, which is provided in wiki.pdf.
-Be aware that the current PDF is almost never up to date.
+The library is maintained with a git repository at:
+    https://bitbucket.org/mcuntz/jams_fortran
 
 For running on Windows under Cygwin:
 The link files on the SVN server are *nix style. One has to redo them on Windows.
@@ -25,15 +14,14 @@ In cygwin, in the directory FORTRAN_chs_lib do:
     cd test/test_mo_kernel ; ln -sf ../../nr_chs/golden.f90 ; cd ../..
 Please do not commit these files because it will break the Library everywhere else except on Cygwin.
 
-
 Created 11.11.2011 by Juliane Mai and Matthias Cuntz
-Copyright 2011-2014 UFZ CHS
+Copyright 2011-2016 JAMS
 Contact Matthias Cuntz - mc (at) macu.de
 
 
 License
 -------
-This file is part of the UFZ Fortran library.
+This file is part of the JAMS Fortran library.
 
 Not all files in the library are free software. The license is given in the 'License' section
 of the docstring of each routine.
@@ -41,7 +29,7 @@ of the docstring of each routine.
 There are 3 possibilities:
 1. The routine is not yet released under the GNU Lesser General Public License.
    This is marked by a text such as
-        This file is part of the UFZ Fortran library.
+        This file is part of the JAMS Fortran library.
 
         It is NOT released under the GNU Lesser General Public License, yet.
 
@@ -58,18 +46,18 @@ There are 3 possibilities:
             J Geophys Res 188, 904-921, doi:10.1002/jgrg.20072
 
 3. The routine is released under the GNU Lesser General Public License. The following applies:
-   The UFZ Fortran library is free software: you can redistribute it and/or modify
+   The JAMS Fortran library is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
-   The UFZ Fortran library is distributed in the hope that it will be useful,
+   The JAMS Fortran library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with the UFZ Fortran library (cf. gpl.txt and lgpl.txt).
+   along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
    If not, see <http://www.gnu.org/licenses/>.
 
    Copyright 2011-2014 Matthias Cuntz

@@ -5,14 +5,14 @@ MODULE mo_specan
 
   ! License
   ! -------
-  ! This file is part of the UFZ Fortran library.
+  ! This file is part of the JAMS Fortran library.
 
   ! It is NOT released under the GNU Lesser General Public License, yet.
 
   ! If you use this routine, please contact Philipp Bosecker.
 
   ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the UFZ Fortran library. If not, see <http://www.gnu.org/licenses/>.
+  ! along with the JAMS Fortran library. If not, see <http://www.gnu.org/licenses/>.
 
   ! Copyright 2013 Philipp Bosecker
 

@@ -9,7 +9,7 @@
 !> \date Nov 2011
 MODULE mo_template
 
-  ! This module is a template for the UFZ CHS Fortran library.
+  ! This module is a template for the JAMS CHS Fortran library.
 
   ! The module provides an example procedures and demonstrates the agreed coding standard:
   !     - Use mo_kind, only: i4, sp, dp, lgt, etc.
@@ -32,7 +32,7 @@ MODULE mo_template
   !       This means you do on the command prompt in the test directory:
   !         ln -s ../mo_kind.f90
   !         ln -s ../mo_xxx.f90
-  !     - Always include the license terms of the UFZ Fortran library (below)
+  !     - Always include the license terms of the JAMS Fortran library (below)
   !     - Add the "Note on Numerical Recipes License" if you use Numerical Recipes code in you module
   !     - Add a Copyright with the developping years and all names of developpers (see License below)
 
@@ -43,20 +43,20 @@ MODULE mo_template
 
   ! License
   ! -------
-  ! This file is part of the UFZ Fortran library.
+  ! This file is part of the JAMS Fortran library.
 
-  ! The UFZ Fortran library is free software: you can redistribute it and/or modify
+  ! The JAMS Fortran library is free software: you can redistribute it and/or modify
   ! it under the terms of the GNU Lesser General Public License as published by
   ! the Free Software Foundation, either version 3 of the License, or
   ! (at your option) any later version.
 
-  ! The UFZ Fortran library is distributed in the hope that it will be useful,
+  ! The JAMS Fortran library is distributed in the hope that it will be useful,
   ! but WITHOUT ANY WARRANTY; without even the implied warranty of
   ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   ! GNU Lesser General Public License for more details.
 
   ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the UFZ Fortran library (cf. gpl.txt and lgpl.txt).
+  ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
   ! Copyright 2011-2012 Matthias Cuntz, Juliane Mai

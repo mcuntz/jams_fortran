@@ -1,7 +1,7 @@
 MODULE mo_anneal
 
   ! This module is minimizing a cost function via Simulated Annealing
-  ! and is part of the UFZ CHS Fortran library.
+  ! and is part of the JAMS CHS Fortran library.
 
 
   ! Written  Juliane Mai, Mar 2012 : module implementation
@@ -27,7 +27,7 @@ MODULE mo_anneal
 
   ! License
   ! -------
-  ! This file is part of the UFZ Fortran library.
+  ! This file is part of the JAMS Fortran library.
 
   ! It is NOT released under the GNU Lesser General Public License, yet.
 

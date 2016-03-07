@@ -2,10 +2,13 @@ PROGRAM main
 
   ! \ls mo_*.f90 | sed -e 's/mo_/  USE mo_/' -e 's/.f90//' | \
   !    sed -e 's/USE mo_minpack/!USE mo_minpack/' -e 's/USE mo_template/!USE mo_template/' \
-  !        -e 's/USE mo_nr$/!USE mo_nr/' -e 's/USE mo_pumpingtests/!USE mo_pumpingtests/'
-  ! make EXCLUDE_FILES='mo_minpack.f90 mo_nr.f90 mo_pumpingtests.f90 mo_template.f90' 
+  !        -e 's/USE mo_nr$/!USE mo_nr/' -e 's/USE mo_pumpingtests/!USE mo_pumpingtests/' \
+  !        -e 's/USE mo_qhull/!USE mo_qhull/' \
+  ! make SRCPATH=~/prog/jams/fortran EXCLUDE_FILES='../fortran/mo_minpack.f90 ../fortran/mo_nr.f90 \
+  !     ../fortran/mo_template.f90 ../fortran/mo_pumpingtests.f90 ../fortran/mo_qhull.f90'
   USE mo_anneal
   USE mo_append
+  USE mo_bootstrapping_sensitivity_analysis
   USE mo_boxcox
   USE mo_combinatorics
   USE mo_constants
@@ -32,9 +35,11 @@ PROGRAM main
   USE mo_message
   !USE mo_minpack
   USE mo_moment
+  USE mo_mpi_stubs
   USE mo_ncread
   USE mo_ncwrite
   USE mo_nelmin
+  USE mo_netcdf
   USE mo_nml
   !USE mo_nr
   USE mo_nrutil
@@ -46,11 +51,13 @@ PROGRAM main
   USE mo_pi_index
   USE mo_poly
   !USE mo_pumpingtests
+  !USE mo_qhull
   USE mo_quicksort
   USE mo_random_field
   USE mo_remap
   USE mo_sampling
   USE mo_sce
+  USE mo_select_distant_entries
   USE mo_sobol
   USE mo_sobol_index
   USE mo_sort

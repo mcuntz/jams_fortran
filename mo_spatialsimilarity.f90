@@ -17,7 +17,7 @@ MODULE mo_spatialsimilarity
 
   ! License
   ! -------
-  ! This file is part of the UFZ Fortran library.
+  ! This file is part of the JAMS Fortran library.
 
   ! It is NOT released under the GNU Lesser General Public License, yet. 
   ! If you use this routine, please contact Matthias Zink or Juliane Mai. 

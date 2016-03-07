@@ -1,5 +1,5 @@
 
-This file is part of the UFZ Fortran library.
+This file is part of the JAMS Fortran library.
 
 Not all files in the library are free software. The license is given in the 'License' section
 of the docstring of each routine.
@@ -7,7 +7,7 @@ of the docstring of each routine.
 There are 3 possibilities:
 1. The routine is not yet released under the GNU Lesser General Public License.
    This is marked by a text such as
-        This file is part of the UFZ Fortran library.
+        This file is part of the JAMS Fortran library.
 
         It is NOT released under the GNU Lesser General Public License, yet.
 
@@ -24,18 +24,18 @@ There are 3 possibilities:
             J Geophys Res 188, 904-921, doi:10.1002/jgrg.20072
 
 3. The routine is released under the GNU Lesser General Public License. The following applies:
-   The UFZ Fortran library is free software: you can redistribute it and/or modify
+   The JAMS Fortran library is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
-   The UFZ Fortran library is distributed in the hope that it will be useful,
+   The JAMS Fortran library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License
-   along with the UFZ makefile project (cf. gpl.txt and lgpl.txt).
+   along with the JAMS makefile project (cf. gpl.txt and lgpl.txt).
    If not, see <http://www.gnu.org/licenses/>.
 
    Copyright 2011-2014 Matthias Cuntz

@@ -19,7 +19,7 @@
 MODULE mo_kernel
 
   ! This module provides functions for kernel regression and kernel density estimation and
-  ! is part of the UFZ CHS Fortran library.
+  ! is part of the JAMS CHS Fortran library.
 
   ! Written  Juliane Mai,    Mar 2013
   ! Modified Stephan Thober, Mar 2013
@@ -29,7 +29,7 @@ MODULE mo_kernel
 
   ! License
   ! -------
-  ! This file is part of the UFZ Fortran library.
+  ! This file is part of the JAMS Fortran library.
 
   ! It is NOT released under the GNU Lesser General Public License, yet.
 
@@ -366,7 +366,7 @@ MODULE mo_kernel
   !>        If the regression for other datapoints than x is needed the optional argument xout has to be specified.
   !>        The result will than be of the same size and precision as xout.\n
   !>        \n
-  !>        The code is adapted from the kernel_regression.py of the UFZ CHS Python library.
+  !>        The code is adapted from the kernel_regression.py of the JAMS CHS Python library.
   !
   !     INTENT(IN)
   !>        \param[in] "real(sp/dp) :: x(:)/x(:,:)"  1D or ND array with independent variables
@@ -468,7 +468,7 @@ MODULE mo_kernel
   !>        The dataset x can be single or double precision. The result will have the same numerical precision.\n
   !>        The result of this function can be used as the optional input for kernel_regression.\n
   !>        \n
-  !>        The code is adapted from the kernel_regression.py of the UFZ CHS Python library.
+  !>        The code is adapted from the kernel_regression.py of the JAMS CHS Python library.
   !
   !     INTENT(IN)
   !>        \param[in] "real(sp/dp) :: x(:)/x(:,:)"  1D or ND array with independent variables

@@ -1,13 +1,13 @@
 MODULE mo_histo
 
   ! This module calculates the Histogram of data
-  ! and is part of the UFZ CHS Fortran library.
+  ! and is part of the JAMS CHS Fortran library.
   !
   ! Written  Juliane Mai, Feb 2012
 
   ! License
   ! -------
-  ! This file is part of the UFZ Fortran library.
+  ! This file is part of the JAMS Fortran library.
 
   ! It is NOT released under the GNU Lesser General Public License, yet.
 
