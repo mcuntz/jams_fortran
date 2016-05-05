@@ -27,7 +27,7 @@ MODULE mo_bootstrapping_sensitivity_analysis
   ! GNU Lesser General Public License for more details.
 
   ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the JAMS makefile project (cf. gpl.txt and lgpl.txt).
+  ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
   ! Copyright 2014 Leonie Bruckert

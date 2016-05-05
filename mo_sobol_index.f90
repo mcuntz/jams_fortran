@@ -210,7 +210,7 @@ CONTAINS
        ! 'Saltelli2008' - The formulation presented in 'The Primer'. (yc=f(B_A))
        !                  Si  = (1/n*sum_j(f(A)_j*f(B_A^i)_j) - mean(f(A))^2)/var(f(A))
        !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(A))^2))/var(f(A))
-       var_a  = variance(ya)
+       var_a  = variance(ya, ddof=1_i4)
        mean_a = sum( ya(:) ) / real(nsets,dp)
        if ( var_a .gt. tiny(1.0_dp) ) then
           ! model outputs are different (usual case)
@@ -227,7 +227,7 @@ CONTAINS
        ! 'Homma1996'    - Si takes mixed A, B term for squared mean in nominator. (yc=f(B_A))
        !                  Si  = 1/n*sum_j(f(A)_j*(f(B_A^i)_j - f(B)_j))/var(f(A))
        !                  STi as Saltelli2008
-       var_a  = variance(ya)
+       var_a  = variance(ya, ddof=1_i4)
        mean_a = sum( ya(:) ) / real(nsets,dp)
        if ( var_a .gt. tiny(1.0_dp) ) then
           ! model outputs are different (usual case)
@@ -246,7 +246,7 @@ CONTAINS
        ! 'Saltelli2010' - Si takes B, A_B instead of A, B_A (yc=f(A_B))
        !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var(f(A))
        !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j-f(A_B^i)_j))/var(f(A))
-       var_a  = variance(ya)
+       var_a  = variance(ya, ddof=1_i4)
        if ( var_a .gt. tiny(1.0_dp) ) then
           ! model outputs are different (usual case)
           do ii=1, npara
@@ -262,7 +262,7 @@ CONTAINS
        ! 'Jansen1999'   - Calculate Si and STi by expectation(variance) instead of variance(expectation) (yc=f(A_B))
        !                  Si  = (var(f(A)) - 1/2n*sum_j(f(B)_j - f(A_B^i)_j)^2)/var(f(A))
        !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
-       var_a  = variance(ya)
+       var_a  = variance(ya, ddof=1_i4)
        if ( var_a .gt. tiny(1.0_dp) ) then
           ! model outputs are different (usual case)
           do ii=1, npara
@@ -282,8 +282,8 @@ CONTAINS
        allocate(yab(2*nsets))
        yab(      1:  nsets) = ya
        yab(nsets+1:2*nsets) = yb
-       var_ab = variance(yab)
-       var_b  = variance(yb)
+       var_ab = variance(yab, ddof=1_i4)
+       var_b  = variance(yb, ddof=1_i4)
 
        mean_ab = dot_product(ya,yb) / real(nsets,dp)
        mean_b  = sum(yb) / real(nsets,dp)
@@ -307,8 +307,8 @@ CONTAINS
        allocate(yab(2*nsets))
        yab(      1:  nsets) = ya
        yab(nsets+1:2*nsets) = yb
-       var_ab = variance(yab)
-       var_a  = variance(ya)
+       var_ab = variance(yab, ddof=1_i4)
+       var_a  = variance(ya, ddof=1_i4)
 
        if ( var_ab .gt. tiny(1.0_dp) ) then
           ! model outputs are different (usual case)
@@ -329,8 +329,8 @@ CONTAINS
        allocate(yab(2*nsets))
        yab(      1:  nsets) = ya
        yab(nsets+1:2*nsets) = yb
-       var_ab = variance(yab)
-       var_a  = variance(ya)
+       var_ab = variance(yab, ddof=1_i4)
+       var_a  = variance(ya, ddof=1_i4)
 
        if ( var_ab .gt. tiny(1.0_dp) ) then
           ! model outputs are different (usual case)
@@ -351,8 +351,8 @@ CONTAINS
        allocate(yab(2*nsets))
        yab(      1:  nsets) = ya
        yab(nsets+1:2*nsets) = yb
-       var_ab = variance(yab)
-       var_a  = variance(ya)
+       var_ab = variance(yab, ddof=1_i4)
+       var_a  = variance(ya, ddof=1_i4)
 
        if ( var_ab .gt. tiny(1.0_dp) ) then
           ! model outputs are different (usual case)
@@ -433,7 +433,7 @@ CONTAINS
        ! 'Saltelli2008' - The formulation presented in 'The Primer'. (yc=f(B_A))
        !                  Si  = (1/n*sum_j(f(A)_j*f(B_A^i)_j) - mean(f(A))^2)/var(f(A))
        !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(A))^2))/var(f(A))
-       var_a  = variance(ya)
+       var_a  = variance(ya, ddof=1_i4)
        mean_a = sum( ya(:) ) / real(nsets,sp)
        if ( var_a .gt. tiny(1.0_sp) ) then
           ! model outputs are different (usual case)
@@ -450,7 +450,7 @@ CONTAINS
        ! 'Homma1996'    - Si takes mixed A, B term for squared mean in nominator. (yc=f(B_A))
        !                  Si  = 1/n*sum_j(f(A)_j*(f(B_A^i)_j - f(B)_j))/var(f(A))
        !                  STi as Saltelli2008
-       var_a  = variance(ya)
+       var_a  = variance(ya, ddof=1_i4)
        mean_a = sum( ya(:) ) / real(nsets,sp)
        if ( var_a .gt. tiny(1.0_sp) ) then
           ! model outputs are different (usual case)
@@ -469,7 +469,7 @@ CONTAINS
        ! 'Saltelli2010' - Si takes B, A_B instead of A, B_A (yc=f(A_B))
        !                  Si  = 1/n*sum_j(f(B)_j*(f(A_B^i)_j - f(A)_j))/var(f(A))
        !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j-f(A_B^i)_j))/var(f(A))
-       var_a  = variance(ya)
+       var_a  = variance(ya, ddof=1_i4)
        if ( var_a .gt. tiny(1.0_sp) ) then
           ! model outputs are different (usual case)
           do ii=1, npara
@@ -485,7 +485,7 @@ CONTAINS
        ! 'Jansen1999'   - Calculate Si and STi by expectation(variance) instead of variance(expectation) (yc=f(A_B))
        !                  Si  = (var(f(A)) - 1/2n*sum_j(f(B)_j - f(A_B^i)_j)^2)/var(f(A))
        !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
-       var_a  = variance(ya)
+       var_a  = variance(ya, ddof=1_i4)
        if ( var_a .gt. tiny(1.0_sp) ) then
           ! model outputs are different (usual case)
           do ii=1, npara
@@ -505,8 +505,8 @@ CONTAINS
        allocate(yab(2*nsets))
        yab(      1:  nsets) = ya
        yab(nsets+1:2*nsets) = yb
-       var_ab = variance(yab)
-       var_b  = variance(yb)
+       var_ab = variance(yab, ddof=1_i4)
+       var_b  = variance(yb, ddof=1_i4)
 
        mean_ab = dot_product(ya,yb) / real(nsets,sp)
        mean_b  = sum(yb) / real(nsets,sp)
@@ -530,8 +530,8 @@ CONTAINS
        allocate(yab(2*nsets))
        yab(      1:  nsets) = ya
        yab(nsets+1:2*nsets) = yb
-       var_ab = variance(yab)
-       var_a  = variance(ya)
+       var_ab = variance(yab, ddof=1_i4)
+       var_a  = variance(ya, ddof=1_i4)
 
        if ( var_ab .gt. tiny(1.0_sp) ) then
           ! model outputs are different (usual case)
@@ -552,8 +552,8 @@ CONTAINS
        allocate(yab(2*nsets))
        yab(      1:  nsets) = ya
        yab(nsets+1:2*nsets) = yb
-       var_ab = variance(yab)
-       var_a  = variance(ya)
+       var_ab = variance(yab, ddof=1_i4)
+       var_a  = variance(ya, ddof=1_i4)
 
        if ( var_ab .gt. tiny(1.0_sp) ) then
           ! model outputs are different (usual case)
@@ -574,8 +574,8 @@ CONTAINS
        allocate(yab(2*nsets))
        yab(      1:  nsets) = ya
        yab(nsets+1:2*nsets) = yb
-       var_ab = variance(yab)
-       var_a  = variance(ya)
+       var_ab = variance(yab, ddof=1_i4)
+       var_a  = variance(ya, ddof=1_i4)
 
        if ( var_ab .gt. tiny(1.0_sp) ) then
           ! model outputs are different (usual case)
@@ -715,7 +715,7 @@ CONTAINS
        !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(A))^2))/var(f(A))
        do iout=1, nout
           if (imask(iout)) then
-             var_a  = variance(ya(:,iout))
+             var_a  = variance(ya(:,iout), ddof=1_i4)
              mean_a  = sum(ya(:,iout)) / real(nsets,dp)
 
              si_denom   = si_denom  + var_a
@@ -746,7 +746,7 @@ CONTAINS
        !                  STi as Saltelli2008
        do iout=1, nout
           if (imask(iout)) then
-             var_a  = variance(ya(:,iout))
+             var_a  = variance(ya(:,iout), ddof=1_i4)
              mean_a  = sum(ya(:,iout)) / real(nsets,dp)
 
              si_denom   = si_denom  + var_a
@@ -779,7 +779,7 @@ CONTAINS
        !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j-f(A_B^i)_j))/var(f(A))
        do iout=1, nout
           if (imask(iout)) then
-             var_a  = variance(ya(:,iout))
+             var_a  = variance(ya(:,iout), ddof=1_i4)
 
              si_denom   = si_denom  + var_a
              sti_denom  = sti_denom + var_a
@@ -809,7 +809,7 @@ CONTAINS
        !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
        do iout=1, nout
           if (imask(iout)) then
-             var_a  = variance(ya(:,iout))
+             var_a  = variance(ya(:,iout), ddof=1_i4)
 
              si_denom   = si_denom  + var_a
              sti_denom  = sti_denom + var_a
@@ -843,8 +843,8 @@ CONTAINS
           if (imask(iout)) then
              yab(      1:  nsets) = ya(:,iout)
              yab(nsets+1:2*nsets) = yb(:,iout)
-             var_ab = variance(yab)
-             var_b  = variance(yb(:,iout))
+             var_ab = variance(yab, ddof=1_i4)
+             var_b  = variance(yb(:,iout), ddof=1_i4)
 
              mean_ab = dot_product(ya(:,iout),yb(:,iout)) / real(nsets,dp)
              mean_b  = sum(yb(:,iout)) / real(nsets,dp)
@@ -881,8 +881,8 @@ CONTAINS
           if (imask(iout)) then
              yab(      1:  nsets) = ya(:,iout)
              yab(nsets+1:2*nsets) = yb(:,iout)
-             var_ab = variance(yab)
-             var_a  = variance(ya(:,iout))
+             var_ab = variance(yab, ddof=1_i4)
+             var_a  = variance(ya(:,iout), ddof=1_i4)
 
              si_denom   = si_denom  + var_ab
              sti_denom  = sti_denom + var_a
@@ -916,8 +916,8 @@ CONTAINS
           if (imask(iout)) then
              yab(      1:  nsets) = ya(:,iout)
              yab(nsets+1:2*nsets) = yb(:,iout)
-             var_ab = variance(yab)
-             var_a  = variance(ya(:,iout))
+             var_ab = variance(yab, ddof=1_i4)
+             var_a  = variance(ya(:,iout), ddof=1_i4)
 
              si_denom   = si_denom  + var_ab
              sti_denom  = sti_denom + var_a
@@ -951,8 +951,8 @@ CONTAINS
           if (imask(iout)) then
              yab(      1:  nsets) = ya(:,iout)
              yab(nsets+1:2*nsets) = yb(:,iout)
-             var_ab = variance(yab)
-             var_a  = variance(ya(:,iout))
+             var_ab = variance(yab, ddof=1_i4)
+             var_a  = variance(ya(:,iout), ddof=1_i4)
 
              si_denom   = si_denom  + var_ab
              sti_denom  = sti_denom + var_a
@@ -1138,7 +1138,7 @@ CONTAINS
        !                  STi = (var(f(A))-(1/n*sum_j(f(B)_j*f(B_A^i)_j) - mean(f(A))^2))/var(f(A))
        do iout=1, nout
           if (imask(iout)) then
-             var_a  = variance(ya(:,iout))
+             var_a  = variance(ya(:,iout), ddof=1_i4)
              mean_a  = sum(ya(:,iout)) / real(nsets,sp)
 
              si_denom   = si_denom  + var_a
@@ -1169,7 +1169,7 @@ CONTAINS
        !                  STi as Saltelli2008
        do iout=1, nout
           if (imask(iout)) then
-             var_a  = variance(ya(:,iout))
+             var_a  = variance(ya(:,iout), ddof=1_i4)
              mean_a  = sum(ya(:,iout)) / real(nsets,sp)
 
              si_denom   = si_denom  + var_a
@@ -1202,7 +1202,7 @@ CONTAINS
        !                  STi = 1/n*sum_j(f(A)_j*(f(A)_j-f(A_B^i)_j))/var(f(A))
        do iout=1, nout
           if (imask(iout)) then
-             var_a  = variance(ya(:,iout))
+             var_a  = variance(ya(:,iout), ddof=1_i4)
 
              si_denom   = si_denom  + var_a
              sti_denom  = sti_denom + var_a
@@ -1232,7 +1232,7 @@ CONTAINS
        !                  STi = 1/2n*sum_j(f(A)_j - f(A_B^i)_j)^2/var(f(A))
        do iout=1, nout
           if (imask(iout)) then
-             var_a  = variance(ya(:,iout))
+             var_a  = variance(ya(:,iout), ddof=1_i4)
 
              si_denom   = si_denom  + var_a
              sti_denom  = sti_denom + var_a
@@ -1266,8 +1266,8 @@ CONTAINS
           if (imask(iout)) then
              yab(      1:  nsets) = ya(:,iout)
              yab(nsets+1:2*nsets) = yb(:,iout)
-             var_ab = variance(yab)
-             var_b  = variance(yb(:,iout))
+             var_ab = variance(yab, ddof=1_i4)
+             var_b  = variance(yb(:,iout), ddof=1_i4)
 
              mean_ab = dot_product(ya(:,iout),yb(:,iout)) / real(nsets,sp)
              mean_b  = sum(yb(:,iout)) / real(nsets,sp)
@@ -1304,8 +1304,8 @@ CONTAINS
           if (imask(iout)) then
              yab(      1:  nsets) = ya(:,iout)
              yab(nsets+1:2*nsets) = yb(:,iout)
-             var_ab = variance(yab)
-             var_a  = variance(ya(:,iout))
+             var_ab = variance(yab, ddof=1_i4)
+             var_a  = variance(ya(:,iout), ddof=1_i4)
 
              si_denom   = si_denom  + var_ab
              sti_denom  = sti_denom + var_a
@@ -1339,8 +1339,8 @@ CONTAINS
           if (imask(iout)) then
              yab(      1:  nsets) = ya(:,iout)
              yab(nsets+1:2*nsets) = yb(:,iout)
-             var_ab = variance(yab)
-             var_a  = variance(ya(:,iout))
+             var_ab = variance(yab, ddof=1_i4)
+             var_a  = variance(ya(:,iout), ddof=1_i4)
 
              si_denom   = si_denom  + var_ab
              sti_denom  = sti_denom + var_a
@@ -1374,8 +1374,8 @@ CONTAINS
           if (imask(iout)) then
              yab(      1:  nsets) = ya(:,iout)
              yab(nsets+1:2*nsets) = yb(:,iout)
-             var_ab = variance(yab)
-             var_a  = variance(ya(:,iout))
+             var_ab = variance(yab, ddof=1_i4)
+             var_a  = variance(ya(:,iout), ddof=1_i4)
 
              si_denom   = si_denom  + var_ab
              sti_denom  = sti_denom + var_a
@@ -1579,7 +1579,7 @@ CONTAINS
        do iout1=1, nout1
           do iout2=1, nout2
              if (imask(iout1,iout2)) then
-                var_a  = variance(ya(:,iout1,iout2))
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
                 mean_a  = sum(ya(:,iout1,iout2)) / real(nsets,dp)
 
                 si_denom   = si_denom  + var_a
@@ -1614,7 +1614,7 @@ CONTAINS
        do iout1=1, nout1
           do iout2=1, nout2
              if (imask(iout1,iout2)) then
-                var_a  = variance(ya(:,iout1,iout2))
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
                 mean_a  = sum(ya(:,iout1,iout2)) / real(nsets,dp)
 
                 si_denom   = si_denom  + var_a
@@ -1651,7 +1651,7 @@ CONTAINS
        do iout1=1, nout1
           do iout2=1, nout2
              if (imask(iout1,iout2)) then
-                var_a  = variance(ya(:,iout1,iout2))
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
 
                 si_denom   = si_denom  + var_a
                 sti_denom  = sti_denom + var_a
@@ -1685,7 +1685,7 @@ CONTAINS
        do iout1=1, nout1
           do iout2=1, nout2
              if (imask(iout1,iout2)) then
-                var_a  = variance(ya(:,iout1,iout2))
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
 
                 si_denom   = si_denom  + var_a
                 sti_denom  = sti_denom + var_a
@@ -1721,8 +1721,8 @@ CONTAINS
              if (imask(iout1,iout2)) then
                 yab(      1:  nsets) = ya(:,iout1,iout2)
                 yab(nsets+1:2*nsets) = yb(:,iout1,iout2)
-                var_ab = variance(yab)
-                var_b  = variance(yb(:,iout1,iout2))
+                var_ab = variance(yab, ddof=1_i4)
+                var_b  = variance(yb(:,iout1,iout2), ddof=1_i4)
 
                 mean_ab = dot_product(ya(:,iout1,iout2),yb(:,iout1,iout2)) / real(nsets,dp)
                 mean_b  = sum(yb(:,iout1,iout2)) / real(nsets,dp)
@@ -1763,8 +1763,8 @@ CONTAINS
              if (imask(iout1,iout2)) then
                 yab(      1:  nsets) = ya(:,iout1,iout2)
                 yab(nsets+1:2*nsets) = yb(:,iout1,iout2)
-                var_ab = variance(yab)
-                var_a  = variance(ya(:,iout1,iout2))
+                var_ab = variance(yab, ddof=1_i4)
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
 
                 si_denom   = si_denom  + var_ab
                 sti_denom  = sti_denom + var_a
@@ -1802,8 +1802,8 @@ CONTAINS
              if (imask(iout1,iout2)) then
                 yab(      1:  nsets) = ya(:,iout1,iout2)
                 yab(nsets+1:2*nsets) = yb(:,iout1,iout2)
-                var_ab = variance(yab)
-                var_a  = variance(ya(:,iout1,iout2))
+                var_ab = variance(yab, ddof=1_i4)
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
 
                 si_denom   = si_denom  + var_ab
                 sti_denom  = sti_denom + var_a
@@ -1839,8 +1839,8 @@ CONTAINS
              if (imask(iout1,iout2)) then
                 yab(      1:  nsets) = ya(:,iout1,iout2)
                 yab(nsets+1:2*nsets) = yb(:,iout1,iout2)
-                var_ab = variance(yab)
-                var_a  = variance(ya(:,iout1,iout2))
+                var_ab = variance(yab, ddof=1_i4)
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
 
                 si_denom   = si_denom  + var_ab
                 sti_denom  = sti_denom + var_a
@@ -2046,7 +2046,7 @@ CONTAINS
        do iout1=1, nout1
           do iout2=1, nout2
              if (imask(iout1,iout2)) then
-                var_a  = variance(ya(:,iout1,iout2))
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
                 mean_a  = sum(ya(:,iout1,iout2)) / real(nsets,sp)
 
                 si_denom   = si_denom  + var_a
@@ -2081,7 +2081,7 @@ CONTAINS
        do iout1=1, nout1
           do iout2=1, nout2
              if (imask(iout1,iout2)) then
-                var_a  = variance(ya(:,iout1,iout2))
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
                 mean_a  = sum(ya(:,iout1,iout2)) / real(nsets,sp)
 
                 si_denom   = si_denom  + var_a
@@ -2118,7 +2118,7 @@ CONTAINS
        do iout1=1, nout1
           do iout2=1, nout2
              if (imask(iout1,iout2)) then
-                var_a  = variance(ya(:,iout1,iout2))
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
 
                 si_denom   = si_denom  + var_a
                 sti_denom  = sti_denom + var_a
@@ -2152,7 +2152,7 @@ CONTAINS
        do iout1=1, nout1
           do iout2=1, nout2
              if (imask(iout1,iout2)) then
-                var_a  = variance(ya(:,iout1,iout2))
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
 
                 si_denom   = si_denom  + var_a
                 sti_denom  = sti_denom + var_a
@@ -2188,8 +2188,8 @@ CONTAINS
              if (imask(iout1,iout2)) then
                 yab(      1:  nsets) = ya(:,iout1,iout2)
                 yab(nsets+1:2*nsets) = yb(:,iout1,iout2)
-                var_ab = variance(yab)
-                var_b  = variance(yb(:,iout1,iout2))
+                var_ab = variance(yab, ddof=1_i4)
+                var_b  = variance(yb(:,iout1,iout2), ddof=1_i4)
 
                 mean_ab = dot_product(ya(:,iout1,iout2),yb(:,iout1,iout2)) / real(nsets,sp)
                 mean_b  = sum(yb(:,iout1,iout2)) / real(nsets,sp)
@@ -2230,8 +2230,8 @@ CONTAINS
              if (imask(iout1,iout2)) then
                 yab(      1:  nsets) = ya(:,iout1,iout2)
                 yab(nsets+1:2*nsets) = yb(:,iout1,iout2)
-                var_ab = variance(yab)
-                var_a  = variance(ya(:,iout1,iout2))
+                var_ab = variance(yab, ddof=1_i4)
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
 
                 si_denom   = si_denom  + var_ab
                 sti_denom  = sti_denom + var_a
@@ -2269,8 +2269,8 @@ CONTAINS
              if (imask(iout1,iout2)) then
                 yab(      1:  nsets) = ya(:,iout1,iout2)
                 yab(nsets+1:2*nsets) = yb(:,iout1,iout2)
-                var_ab = variance(yab)
-                var_a  = variance(ya(:,iout1,iout2))
+                var_ab = variance(yab, ddof=1_i4)
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
 
                 si_denom   = si_denom  + var_ab
                 sti_denom  = sti_denom + var_a
@@ -2306,8 +2306,8 @@ CONTAINS
              if (imask(iout1,iout2)) then
                 yab(      1:  nsets) = ya(:,iout1,iout2)
                 yab(nsets+1:2*nsets) = yb(:,iout1,iout2)
-                var_ab = variance(yab)
-                var_a  = variance(ya(:,iout1,iout2))
+                var_ab = variance(yab, ddof=1_i4)
+                var_a  = variance(ya(:,iout1,iout2), ddof=1_i4)
 
                 si_denom   = si_denom  + var_ab
                 sti_denom  = sti_denom + var_a
@@ -2527,7 +2527,7 @@ CONTAINS
           do iout2=1, nout2
              do iout3=1, nout3
                 if (imask(iout1,iout2,iout3)) then
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
                    mean_a  = sum(ya(:,iout1,iout2,iout3)) / real(nsets,dp)
 
                    si_denom   = si_denom  + var_a
@@ -2564,7 +2564,7 @@ CONTAINS
           do iout2=1, nout2
              do iout3=1, nout3
                 if (imask(iout1,iout2,iout3)) then
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
                    mean_a  = sum(ya(:,iout1,iout2,iout3)) / real(nsets,dp)
 
                    si_denom   = si_denom  + var_a
@@ -2603,7 +2603,7 @@ CONTAINS
           do iout2=1, nout2
              do iout3=1, nout3
                 if (imask(iout1,iout2,iout3)) then
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
 
                    si_denom   = si_denom  + var_a
                    sti_denom  = sti_denom + var_a
@@ -2639,7 +2639,7 @@ CONTAINS
           do iout2=1, nout2
              do iout3=1, nout3
                 if (imask(iout1,iout2,iout3)) then
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
 
                    si_denom   = si_denom  + var_a
                    sti_denom  = sti_denom + var_a
@@ -2677,8 +2677,8 @@ CONTAINS
                 if (imask(iout1,iout2,iout3)) then
                    yab(      1:  nsets) = ya(:,iout1,iout2,iout3)
                    yab(nsets+1:2*nsets) = yb(:,iout1,iout2,iout3)
-                   var_ab = variance(yab)
-                   var_b  = variance(yb(:,iout1,iout2,iout3))
+                   var_ab = variance(yab, ddof=1_i4)
+                   var_b  = variance(yb(:,iout1,iout2,iout3), ddof=1_i4)
 
                    mean_ab = dot_product(ya(:,iout1,iout2,iout3),yb(:,iout1,iout2,iout3)) / real(nsets,dp)
                    mean_b  = sum(yb(:,iout1,iout2,iout3)) / real(nsets,dp)
@@ -2721,8 +2721,8 @@ CONTAINS
                 if (imask(iout1,iout2,iout3)) then
                    yab(      1:  nsets) = ya(:,iout1,iout2,iout3)
                    yab(nsets+1:2*nsets) = yb(:,iout1,iout2,iout3)
-                   var_ab = variance(yab)
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_ab = variance(yab, ddof=1_i4)
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
 
                    si_denom   = si_denom  + var_ab
                    sti_denom  = sti_denom + var_a
@@ -2762,8 +2762,8 @@ CONTAINS
                 if (imask(iout1,iout2,iout3)) then
                    yab(      1:  nsets) = ya(:,iout1,iout2,iout3)
                    yab(nsets+1:2*nsets) = yb(:,iout1,iout2,iout3)
-                   var_ab = variance(yab)
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_ab = variance(yab, ddof=1_i4)
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
 
                    si_denom   = si_denom  + var_ab
                    sti_denom  = sti_denom + var_a
@@ -2801,8 +2801,8 @@ CONTAINS
                 if (imask(iout1,iout2,iout3)) then
                    yab(      1:  nsets) = ya(:,iout1,iout2,iout3)
                    yab(nsets+1:2*nsets) = yb(:,iout1,iout2,iout3)
-                   var_ab = variance(yab)
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_ab = variance(yab, ddof=1_i4)
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
 
                    si_denom   = si_denom  + var_ab
                    sti_denom  = sti_denom + var_a
@@ -3023,7 +3023,7 @@ CONTAINS
           do iout2=1, nout2
              do iout3=1, nout3
                 if (imask(iout1,iout2,iout3)) then
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
                    mean_a  = sum(ya(:,iout1,iout2,iout3)) / real(nsets,sp)
 
                    si_denom   = si_denom  + var_a
@@ -3060,7 +3060,7 @@ CONTAINS
           do iout2=1, nout2
              do iout3=1, nout3
                 if (imask(iout1,iout2,iout3)) then
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
                    mean_a  = sum(ya(:,iout1,iout2,iout3)) / real(nsets,sp)
 
                    si_denom   = si_denom  + var_a
@@ -3099,7 +3099,7 @@ CONTAINS
           do iout2=1, nout2
              do iout3=1, nout3
                 if (imask(iout1,iout2,iout3)) then
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
 
                    si_denom   = si_denom  + var_a
                    sti_denom  = sti_denom + var_a
@@ -3135,7 +3135,7 @@ CONTAINS
           do iout2=1, nout2
              do iout3=1, nout3
                 if (imask(iout1,iout2,iout3)) then
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
 
                    si_denom   = si_denom  + var_a
                    sti_denom  = sti_denom + var_a
@@ -3173,8 +3173,8 @@ CONTAINS
                 if (imask(iout1,iout2,iout3)) then
                    yab(      1:  nsets) = ya(:,iout1,iout2,iout3)
                    yab(nsets+1:2*nsets) = yb(:,iout1,iout2,iout3)
-                   var_ab = variance(yab)
-                   var_b  = variance(yb(:,iout1,iout2,iout3))
+                   var_ab = variance(yab, ddof=1_i4)
+                   var_b  = variance(yb(:,iout1,iout2,iout3), ddof=1_i4)
 
                    mean_ab = dot_product(ya(:,iout1,iout2,iout3),yb(:,iout1,iout2,iout3)) / real(nsets,sp)
                    mean_b  = sum(yb(:,iout1,iout2,iout3)) / real(nsets,sp)
@@ -3217,8 +3217,8 @@ CONTAINS
                 if (imask(iout1,iout2,iout3)) then
                    yab(      1:  nsets) = ya(:,iout1,iout2,iout3)
                    yab(nsets+1:2*nsets) = yb(:,iout1,iout2,iout3)
-                   var_ab = variance(yab)
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_ab = variance(yab, ddof=1_i4)
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
 
                    si_denom   = si_denom  + var_ab
                    sti_denom  = sti_denom + var_a
@@ -3258,8 +3258,8 @@ CONTAINS
                 if (imask(iout1,iout2,iout3)) then
                    yab(      1:  nsets) = ya(:,iout1,iout2,iout3)
                    yab(nsets+1:2*nsets) = yb(:,iout1,iout2,iout3)
-                   var_ab = variance(yab)
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_ab = variance(yab, ddof=1_i4)
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
 
                    si_denom   = si_denom  + var_ab
                    sti_denom  = sti_denom + var_a
@@ -3297,8 +3297,8 @@ CONTAINS
                 if (imask(iout1,iout2,iout3)) then
                    yab(      1:  nsets) = ya(:,iout1,iout2,iout3)
                    yab(nsets+1:2*nsets) = yb(:,iout1,iout2,iout3)
-                   var_ab = variance(yab)
-                   var_a  = variance(ya(:,iout1,iout2,iout3))
+                   var_ab = variance(yab, ddof=1_i4)
+                   var_a  = variance(ya(:,iout1,iout2,iout3), ddof=1_i4)
 
                    si_denom   = si_denom  + var_ab
                    sti_denom  = sti_denom + var_a

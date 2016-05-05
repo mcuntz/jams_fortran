@@ -2,13 +2,18 @@ MODULE mo_corr
 
   ! This module provides auto- and crosscorrelation function calculations
 
+  ! Note routines work with optional ddof, i.e. "Delta Degrees of Freedom":
+  ! the divisor used in the calculations is n-ddof, where n represents the number of (non-masked) elements.
+  ! By default ddof is zero.
+
   ! Literature
   !   Corr, FFT
   !       WH Press, SA Teukolsky, WT Vetterling, BP Flannery,
   !           Numerical Recipes in Fortran 90 - The Art of Parallel Scientific Computing, 2nd Edition
   !           Volume 2 of Fortran Numerical Recipes, Cambridge University Press, UK, 1996
 
-  ! Written March 2011, Matthias Cuntz
+  ! Written  March 2011, Matthias Cuntz
+  ! Modified May 2016,   Matthias Cuntz - ddof
 
   ! License
   ! -------
@@ -28,7 +33,7 @@ MODULE mo_corr
   ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011 Matthias Cuntz
+  ! Copyright 2011-2016 Matthias Cuntz
 
 
   ! Note on Numerical Recipes License
@@ -63,6 +68,7 @@ MODULE mo_corr
 
   USE mo_kind,      ONLY: i4, sp, dp, spc, dpc
   USE mo_constants, ONLY: TWOPI_sp, TWOPI_dp, PI_dp
+  USE mo_utils,     ONLY: swap
 
   Implicit NONE
 
@@ -86,7 +92,7 @@ MODULE mo_corr
   !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         ak = autocoeffk(x, k, mask=mask)
+  !         ak = autocoeffk(x, k, mask=mask, ddof=ddof)
 
   !     INTENT(IN)
   !         real(sp/dp) :: x(:)        Time series
@@ -101,6 +107,8 @@ MODULE mo_corr
   !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(vec).
   !                                    If present, only those locations in vec corresponding to the true values in mask are used.
+  !         integer(i4) :: ddof       Delta Degrees of Freedom. The divisor used in calculations is n-ddof,
+  !                                   where n represents the number of (non-masked) elements. By default ddof is zero.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -204,35 +212,35 @@ MODULE mo_corr
   !
   !         Optional high-pass filtering of the time series in Fourier space is implemented.
   !
-  !         Note covariance(x,y) = corr(x,y)/n
+  !         Note covariance(x,y) = corr(x,y)/(n-ddof)
 
   !     CALLING SEQUENCE
   !         cfunc = corr(data1,data2,nadjust=nadjust,nhigh=nhigh,nwin=nwin)
 
   !     INTENT(IN)
-  !         real(sp/dp) :: data1(:)             1st time series
-  !         real(sp/dp) :: data2(:)             2nd time series
+  !         real(sp/dp) :: data1(:)   1st time series
+  !         real(sp/dp) :: data2(:)   2nd time series
 
   !     INTENT(INOUT)
   !         None
 
   !     INTENT(OUT)
-  !         real(sp/dp) :: corr(size(data1))    Correlation function between data1 and data2 in wrap-around order
+  !         real(sp/dp) :: corr(size(data1))   Correlation function between data1 and data2 in wrap-around order
 
   !     INTENT(IN), OPTIONAL
-  !         integer(i4) :: nhigh                If >0 then nhigh upper frequencies are filtered. nwin then defines
-  !                                             the used window function for filtering. (default: 0)
-  !         integer(i4) :: nwin                 Window function for highpass filtering (default: 1)
-  !                                             0: no filtering
-  !                                             1: ideal highpass, i.e. cut out the nhigh upper frequencies
-  !                                             2: linear interpolation of 0 to 1 from highest to highest-nhigh
-  !                                                frequency; similar Bartlett window
+  !         integer(i4) :: nhigh      If >0 then nhigh upper frequencies are filtered. nwin then defines
+  !                                   the used window function for filtering. (default: 0)
+  !         integer(i4) :: nwin       Window function for highpass filtering (default: 1)
+  !                                   0: no filtering
+  !                                   1: ideal highpass, i.e. cut out the nhigh upper frequencies
+  !                                   2: linear interpolation of 0 to 1 from highest to highest-nhigh
+  !                                      frequency; similar Bartlett window
 
   !     INTENT(INOUT), OPTIONAL
   !         None
 
   !     INTENT(OUT), OPTIONAL
-  !         integer(i4) :: nadjust              Actual used number of elements.
+  !         integer(i4) :: nadjust    Actual used number of elements.
 
   !     RESTRICTIONS
   !         None
@@ -269,7 +277,7 @@ MODULE mo_corr
   !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         ck = crosscoeffk(x, y, k, mask=mask)
+  !         ck = crosscoeffk(x, y, k, mask=mask, ddof=ddof)
 
   !     INTENT(IN)
   !         real(sp/dp) :: x(:)        1st time series
@@ -285,6 +293,8 @@ MODULE mo_corr
   !     INTENT(IN), OPTIONAL
   !         logical     :: mask(:)     1D-array of logical values with size(vec).
   !                                    If present, only those locations in vec corresponding to the true values in mask are used.
+  !         integer(i4) :: ddof       Delta Degrees of Freedom. The divisor used in calculations is n-ddof,
+  !                                   where n represents the number of (non-masked) elements. By default ddof is zero.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -386,22 +396,9 @@ MODULE mo_corr
   INTERFACE realft
      MODULE PROCEDURE realft_sp, realft_dp
   END INTERFACE realft
-  INTERFACE swap
-     MODULE PROCEDURE & ! swap_i4, &
-          !swap_sp, swap_1d_sp, &
-          !swap_dp, & !swap_1d_dp, &
-          ! swap_spc, &
-          swap_1d_spc, &
-          ! swap_dpc, &
-          swap_1d_dpc !, &
-          ! masked_swap_sp, masked_swap_1d_sp, masked_swap_2d_sp, &
-          ! masked_swap_dp, masked_swap_1d_dp, masked_swap_2d_dp, &
-          ! masked_swap_spc, masked_swap_1d_spc, masked_swap_2d_spc, &
-          ! masked_swap_dpc, masked_swap_1d_dpc, masked_swap_2d_dpc
-  END INTERFACE swap
-  !INTERFACE zroots_unity
-  !   MODULE PROCEDURE zroots_unity_sp, zroots_unity_dp
-  !END INTERFACE zroots_unity
+  ! INTERFACE zroots_unity
+  !    MODULE PROCEDURE zroots_unity_sp, zroots_unity_dp
+  ! END INTERFACE zroots_unity
 
   INTEGER(i4), PARAMETER :: NPAR_ARTH=16, NPAR2_ARTH=8
 
@@ -517,87 +514,67 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION autocoeffk_dp(x, k, mask)
+  FUNCTION autocoeffk_dp(x, k, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: x
-    INTEGER(i4),                      INTENT(IN)  :: k
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: autocoeffk_dp
+    REAL(dp), DIMENSION(:),           INTENT(IN) :: x
+    INTEGER(i4),                      INTENT(IN) :: k
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(dp)                                     :: autocoeffk_dp
 
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocoeffk_dp: size(mask) /= size(x)'
-       autocoeffk_dp = crosscoeffk(x, x, k, mask)
-    else
-       autocoeffk_dp = crosscoeffk(x, x, k)
-    endif
+    autocoeffk_dp = crosscoeffk(x, x, k, mask, ddof)
 
   END FUNCTION autocoeffk_dp
 
 
-  FUNCTION autocoeffk_sp(x, k, mask)
+  FUNCTION autocoeffk_sp(x, k, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: x
-    INTEGER(i4),                      INTENT(IN)  :: k
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: autocoeffk_sp
+    REAL(sp), DIMENSION(:),           INTENT(IN) :: x
+    INTEGER(i4),                      INTENT(IN) :: k
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(sp)                                     :: autocoeffk_sp
 
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocoeffk_sp: size(mask) /= size(x)'
-       autocoeffk_sp = crosscoeffk(x, x, k, mask)
-    else
-       autocoeffk_sp = crosscoeffk(x, x, k)
-    endif
+    autocoeffk_sp = crosscoeffk(x, x, k, mask, ddof)
 
   END FUNCTION autocoeffk_sp
 
-  FUNCTION autocoeffk_1d_dp(x, k, mask) result(acf)
+  FUNCTION autocoeffk_1d_dp(x, k, mask, ddof) result(acf)
 
     IMPLICIT NONE
 
-    REAL(dp),    DIMENSION(:),           INTENT(IN)  :: x
-    INTEGER(i4), DIMENSION(:),           INTENT(IN)  :: k
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    INTEGER(i4)                                      :: i
-    REAL(dp),    DIMENSION(size(k))                  :: acf
+    REAL(dp),    DIMENSION(:),           INTENT(IN) :: x
+    INTEGER(i4), DIMENSION(:),           INTENT(IN) :: k
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: ddof
+    INTEGER(i4)                                     :: i
+    REAL(dp),    DIMENSION(size(k))                 :: acf
 
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocoeffk_1d_dp: size(mask) /= size(x)'
-       do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i), mask)
-       end do
-    else
-       do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i))
-       end do
-    endif
+    do i = 1, size(k)
+       acf(i) = crosscoeffk(x, x, k(i), mask, ddof)
+    end do
 
   END FUNCTION autocoeffk_1d_dp
 
 
-  FUNCTION autocoeffk_1d_sp(x, k, mask) result(acf)
+  FUNCTION autocoeffk_1d_sp(x, k, mask, ddof) result(acf)
 
     IMPLICIT NONE
 
-    REAL(sp),    DIMENSION(:),           INTENT(IN)  :: x
-    INTEGER(i4), DIMENSION(:),           INTENT(IN)  :: k
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    INTEGER(i4)                                      :: i
-    REAL(sp),    DIMENSION(size(k))                  :: acf
+    REAL(sp),    DIMENSION(:),           INTENT(IN) :: x
+    INTEGER(i4), DIMENSION(:),           INTENT(IN) :: k
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: ddof
+    INTEGER(i4)                                     :: i
+    REAL(sp),    DIMENSION(size(k))                 :: acf
 
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocoeffk_1d_sp: size(mask) /= size(x)'
-       do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i), mask)
-       end do
-    else
-       do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i))
-       end do
-    endif
+    do i = 1, size(k)
+       acf(i) = crosscoeffk(x, x, k(i), mask, ddof)
+    end do
 
   END FUNCTION autocoeffk_1d_sp
 
@@ -612,12 +589,7 @@ CONTAINS
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(dp)                                      :: autocorr_dp
 
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocorr_1d_dp: size(mask) /= size(x)'
-       autocorr_dp = crosscoeffk(x, x, k, mask) / crosscoeffk(x, x, 0, mask)
-    else
-       autocorr_dp = crosscoeffk(x, x, k) / crosscoeffk(x, x, 0)
-    endif
+    autocorr_dp = crosscoeffk(x, x, k, mask) / crosscoeffk(x, x, 0, mask)
 
   END FUNCTION autocorr_dp
 
@@ -631,12 +603,7 @@ CONTAINS
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(sp)                                      :: autocorr_sp
 
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocorr_1d_sp: size(mask) /= size(x)'
-       autocorr_sp = crosscoeffk(x, x, k, mask) / crosscoeffk(x, x, 0, mask)
-    else
-       autocorr_sp = crosscoeffk(x, x, k) / crosscoeffk(x, x, 0)
-    endif
+    autocorr_sp = crosscoeffk(x, x, k, mask) / crosscoeffk(x, x, 0, mask)
 
   END FUNCTION autocorr_sp
 
@@ -651,18 +618,10 @@ CONTAINS
     REAL(dp),   DIMENSION(size(k))                  :: acf
     REAL(dp)                                        :: c0
 
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocorr_dp: size(mask) /= size(x)'
-       c0 = crosscoeffk(x, x, 0, mask)
-       do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i), mask) / c0
-       end do
-    else
-       c0 = crosscoeffk(x, x, 0)
-       do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i)) / c0
-       end do
-    endif
+    c0 = crosscoeffk(x, x, 0, mask)
+    do i = 1, size(k)
+       acf(i) = crosscoeffk(x, x, k(i), mask) / c0
+    end do
 
   END FUNCTION autocorr_1d_dp
 
@@ -677,18 +636,10 @@ CONTAINS
     REAL(sp),   DIMENSION(size(k))                  :: acf
     REAL(sp)                                        :: c0
 
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error autocorr_sp: size(mask) /= size(x)'
-       c0 = crosscoeffk(x, x, 0, mask)
-       do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i), mask) / c0
-       end do
-    else
-       c0 = crosscoeffk(x, x, 0)
-       do i = 1, size(k)
-          acf(i) = crosscoeffk(x, x, k(i)) / c0
-       end do
-    endif
+    c0 = crosscoeffk(x, x, 0, mask)
+    do i = 1, size(k)
+       acf(i) = crosscoeffk(x, x, k(i), mask) / c0
+    end do
 
   END FUNCTION autocorr_1d_sp
 
@@ -913,15 +864,16 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION crosscoeffk_dp(x, y, k, mask)
+  FUNCTION crosscoeffk_dp(x, y, k, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: x
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: y
-    INTEGER(i4),                      INTENT(IN)  :: k
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: crosscoeffk_dp
+    REAL(dp), DIMENSION(:),           INTENT(IN) :: x
+    REAL(dp), DIMENSION(:),           INTENT(IN) :: y
+    INTEGER(i4),                      INTENT(IN) :: k
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(dp)                                     :: crosscoeffk_dp
 
     INTEGER(i4) :: nn  ! number of true values in mask
     INTEGER(i4) :: nnn ! number of true values in mask .and. shifted mask by lag k
@@ -957,19 +909,21 @@ CONTAINS
     kk = abs(k)
     nnn = size(x,1)
     n  = real(count(maske(1:nnn-kk).and.maske(1+kk:nnn)),dp)
+    if (present(ddof)) n = n-real(ddof,dp)
     crosscoeffk_dp = sum(xdash(1:nnn-kk)*ydash(1+kk:nnn), mask=(maske(1:nnn-kk).and.maske(1+kk:nnn))) / n
     
   END FUNCTION crosscoeffk_dp
 
-  FUNCTION crosscoeffk_sp(x, y, k, mask)
+  FUNCTION crosscoeffk_sp(x, y, k, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: x
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: y
-    INTEGER(i4),                      INTENT(IN)  :: k
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: crosscoeffk_sp
+    REAL(sp), DIMENSION(:),           INTENT(IN) :: x
+    REAL(sp), DIMENSION(:),           INTENT(IN) :: y
+    INTEGER(i4),                      INTENT(IN) :: k
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(sp)                                     :: crosscoeffk_sp
 
     INTEGER(i4) :: nn  ! number of true values in mask
     INTEGER(i4) :: nnn ! number of true values in mask .and. shifted mask by lag k
@@ -1005,6 +959,7 @@ CONTAINS
     kk = abs(k)
     nnn = size(x,1)
     n  = real(count(maske(1:nnn-kk).and.maske(1+kk:nnn)),sp)
+    if (present(ddof)) n = n-real(ddof,sp)
     crosscoeffk_sp = sum(xdash(1:nnn-kk)*ydash(1+kk:nnn), mask=(maske(1:nnn-kk).and.maske(1+kk:nnn))) / n
     
   END FUNCTION crosscoeffk_sp
@@ -1021,13 +976,7 @@ CONTAINS
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(dp)                                      :: crosscorr_dp
 
-    if (size(x) /= size(y)) stop 'Error crosscorr_dp: size(x) /= size(y)'
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error crosscorr_dp: size(mask) /= size(x)'
-       crosscorr_dp = crosscoeffk(x, y, k, mask) / crosscoeffk(x, y, 0, mask)
-    else
-       crosscorr_dp = crosscoeffk(x, y, k) / crosscoeffk(x, y, 0)
-    endif
+    crosscorr_dp = crosscoeffk(x, y, k, mask) / crosscoeffk(x, y, 0, mask)
 
   END FUNCTION crosscorr_dp
 
@@ -1041,13 +990,7 @@ CONTAINS
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
     REAL(sp)                                      :: crosscorr_sp
 
-    if (size(x) /= size(y)) stop 'Error crosscorr_sp: size(x) /= size(y)'
-    if (present(mask)) then
-       if (size(mask) /= size(x)) stop 'Error crosscorr_sp: size(mask) /= size(x)'
-       crosscorr_sp = crosscoeffk(x, y, k, mask) / crosscoeffk(x, y, 0, mask)
-    else
-       crosscorr_sp = crosscoeffk(x, y, k) / crosscoeffk(x, y, 0)
-    endif
+    crosscorr_sp = crosscoeffk(x, y, k, mask) / crosscoeffk(x, y, 0, mask)
 
   END FUNCTION crosscorr_sp
 
@@ -1366,237 +1309,6 @@ CONTAINS
     end if
 
   END SUBROUTINE realft_sp
-
-  ! ------------------------------------------------------------------
-
-  ! From numerical recipes documentation
-  ! Swaps the corresponding elements of a and b. If mask is present, performs
-  ! the swap only where mask is true. (Following code is the unmasked case.
-  ! For speed at runtime, the masked case is implemented by overloading, not
-  ! by testing for the optional argument.)
-  ! SUBROUTINE swap_i4(a,b)
-  !   INTEGER(i4), INTENT(INOUT) :: a,b
-  !   INTEGER(i4) :: dum
-  !   dum=a
-  !   a=b
-  !   b=dum
-  ! END SUBROUTINE swap_i4
-
-
-  ! SUBROUTINE swap_sp(a,b)
-  !   REAL(sp), INTENT(INOUT) :: a,b
-  !   REAL(sp) :: dum
-  !   dum=a
-  !   a=b
-  !   b=dum
-  ! END SUBROUTINE swap_sp
-
-
-  ! SUBROUTINE masked_swap_sp(a,b,mask)
-  !   REAL(sp), INTENT(INOUT) :: a,b
-  !   LOGICAL, INTENT(IN) :: mask
-  !   REAL(sp) :: swp
-  !   if (mask) then
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end if
-  ! END SUBROUTINE masked_swap_sp
-
-
-  ! SUBROUTINE masked_swap_1d_sp(a,b,mask)
-  !   REAL(sp), DIMENSION(:), INTENT(INOUT) :: a,b
-  !   LOGICAL, DIMENSION(:), INTENT(IN) :: mask
-  !   REAL(sp), DIMENSION(size(a)) :: swp
-  !   where (mask)
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end where
-  ! END SUBROUTINE masked_swap_1d_sp
-
-
-  ! SUBROUTINE masked_swap_2d_sp(a,b,mask)
-  !   REAL(sp), DIMENSION(:,:), INTENT(INOUT) :: a,b
-  !   LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
-  !   REAL(sp), DIMENSION(size(a,1),size(a,2)) :: swp
-  !   where (mask)
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end where
-  ! END SUBROUTINE masked_swap_2d_sp
-
-
-  ! SUBROUTINE swap_1d_sp(a,b)
-  !   REAL(sp), DIMENSION(:), INTENT(INOUT) :: a,b
-  !   REAL(sp), DIMENSION(SIZE(a)) :: dum
-  !   dum=a
-  !   a=b
-  !   b=dum
-  ! END SUBROUTINE swap_1d_sp
-
-
-  ! SUBROUTINE swap_dp(a,b)
-  !   REAL(dp), INTENT(INOUT) :: a,b
-  !   REAL(dp) :: dum
-  !   dum=a
-  !   a=b
-  !   b=dum
-  ! END SUBROUTINE swap_dp
-
-
-  ! SUBROUTINE swap_1d_dp(a,b)
-  !   REAL(dp), DIMENSION(:), INTENT(INOUT) :: a,b
-  !   REAL(dp), DIMENSION(SIZE(a)) :: dum
-  !   dum=a
-  !   a=b
-  !   b=dum
-  ! END SUBROUTINE swap_1d_dp
-
-
-  ! SUBROUTINE masked_swap_dp(a,b,mask)
-  !   REAL(dp), INTENT(INOUT) :: a,b
-  !   LOGICAL, INTENT(IN) :: mask
-  !   REAL(dp) :: swp
-  !   if (mask) then
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end if
-  ! END SUBROUTINE masked_swap_dp
-
-
-  ! SUBROUTINE masked_swap_1d_dp(a,b,mask)
-  !   REAL(dp), DIMENSION(:), INTENT(INOUT) :: a,b
-  !   LOGICAL, DIMENSION(:), INTENT(IN) :: mask
-  !   REAL(dp), DIMENSION(size(a)) :: swp
-  !   where (mask)
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end where
-  ! END SUBROUTINE masked_swap_1d_dp
-
-
-  ! SUBROUTINE masked_swap_2d_dp(a,b,mask)
-  !   REAL(dp), DIMENSION(:,:), INTENT(INOUT) :: a,b
-  !   LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
-  !   REAL(dp), DIMENSION(size(a,1),size(a,2)) :: swp
-  !   where (mask)
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end where
-  ! END SUBROUTINE masked_swap_2d_dp
-
-
-  ! SUBROUTINE swap_spc(a,b)
-  !   COMPLEX(spc), INTENT(INOUT) :: a,b
-  !   COMPLEX(spc) :: dum
-  !   dum=a
-  !   a=b
-  !   b=dum
-  ! END SUBROUTINE swap_spc
-
-
-  ! SUBROUTINE masked_swap_spc(a,b,mask)
-  !   COMPLEX(spc), INTENT(INOUT) :: a,b
-  !   LOGICAL, INTENT(IN) :: mask
-  !   COMPLEX(spc) :: swp
-  !   if (mask) then
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end if
-  ! END SUBROUTINE masked_swap_spc
-
-
-  ! SUBROUTINE masked_swap_1d_spc(a,b,mask)
-  !   COMPLEX(spc), DIMENSION(:), INTENT(INOUT) :: a,b
-  !   LOGICAL, DIMENSION(:), INTENT(IN) :: mask
-  !   COMPLEX(spc), DIMENSION(size(a)) :: swp
-  !   where (mask)
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end where
-  ! END SUBROUTINE masked_swap_1d_spc
-
-
-  ! SUBROUTINE masked_swap_2d_spc(a,b,mask)
-  !   COMPLEX(spc), DIMENSION(:,:), INTENT(INOUT) :: a,b
-  !   LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
-  !   COMPLEX(spc), DIMENSION(size(a,1),size(a,2)) :: swp
-  !   where (mask)
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end where
-  ! END SUBROUTINE masked_swap_2d_spc
-
-
-  SUBROUTINE swap_1d_spc(a,b)
-    COMPLEX(spc), DIMENSION(:), INTENT(INOUT) :: a,b
-    COMPLEX(spc), DIMENSION(SIZE(a)) :: dum
-    dum=a
-    a=b
-    b=dum
-  END SUBROUTINE swap_1d_spc
-
-
-  ! SUBROUTINE swap_dpc(a,b)
-  !   COMPLEX(dpc), INTENT(INOUT) :: a,b
-  !   COMPLEX(dpc) :: dum
-  !   dum=a
-  !   a=b
-  !   b=dum
-  ! END SUBROUTINE swap_dpc
-
-
-  ! SUBROUTINE masked_swap_dpc(a,b,mask)
-  !   COMPLEX(dpc), INTENT(INOUT) :: a,b
-  !   LOGICAL, INTENT(IN) :: mask
-  !   COMPLEX(dpc) :: swp
-  !   if (mask) then
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end if
-  ! END SUBROUTINE masked_swap_dpc
-
-
-  ! SUBROUTINE masked_swap_1d_dpc(a,b,mask)
-  !   COMPLEX(dpc), DIMENSION(:), INTENT(INOUT) :: a,b
-  !   LOGICAL, DIMENSION(:), INTENT(IN) :: mask
-  !   COMPLEX(dpc), DIMENSION(size(a)) :: swp
-  !   where (mask)
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end where
-  ! END SUBROUTINE masked_swap_1d_dpc
-
-
-  ! SUBROUTINE masked_swap_2d_dpc(a,b,mask)
-  !   COMPLEX(dpc), DIMENSION(:,:), INTENT(INOUT) :: a,b
-  !   LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
-  !   COMPLEX(dpc), DIMENSION(size(a,1),size(a,2)) :: swp
-  !   where (mask)
-  !      swp=a
-  !      a=b
-  !      b=swp
-  !   end where
-  ! END SUBROUTINE masked_swap_2d_dpc
-
-
-  SUBROUTINE swap_1d_dpc(a,b)
-    COMPLEX(dpc), DIMENSION(:), INTENT(INOUT) :: a,b
-    COMPLEX(dpc), DIMENSION(SIZE(a)) :: dum
-    dum=a
-    a=b
-    b=dum
-  END SUBROUTINE swap_1d_dpc
 
   ! ------------------------------------------------------------------
 

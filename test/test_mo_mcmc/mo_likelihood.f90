@@ -81,7 +81,7 @@ CONTAINS
     likelihood_stddev_dp = exp(-0.5_dp * sum( errors(:) * errors(:) / stddev_in**2 ))
 
     ! optional out
-    stddev_err = stddev(errors)
+    stddev_err = stddev(errors, ddof=1)
     if (present( stddev_new )) then
        stddev_new = stddev_err
     end if
@@ -110,7 +110,7 @@ CONTAINS
     loglikelihood_stddev_dp = -0.5_dp * sum( errors(:) * errors(:) / stddev_in**2 )
 
     ! optional out
-    stddev_err = stddev(errors)
+    stddev_err = stddev(errors, ddof=1)
     if (present( stddev_new )) then
        stddev_new = stddev_err
     end if

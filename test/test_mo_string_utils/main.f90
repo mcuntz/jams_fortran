@@ -2,7 +2,7 @@ PROGRAM main
   
   USE mo_kind,   ONLY: i4, i8, dp, sp
   USE mo_string_utils, ONLY: tolower, toupper, separator, num2str, nonull, compress
-  USE mo_string_utils, ONLY: startsWith, equalStrings, splitString
+  USE mo_string_utils, ONLY: startsWith, equalStrings, splitString, countsubstring
 #ifndef ABSOFT
   USE mo_string_utils, ONLY: DIVIDE_STRING
 #endif
@@ -52,45 +52,44 @@ PROGRAM main
   if (.not. (equalStrings("Thisis","Thisis") .and. equalStrings("test*_<","test*_<"))) isgood = .false.
   if ((equalStrings("Thisis","THISIS") .or. equalStrings("test*_<","est*_<"))) isgood = .false.
   ! splitString
-#ifdef pgiFortran
-  call divide_string('I want to test this routine!', ' ', strArr)
-#else
+  if (.not. isgood) write(*,*) 'mo_string_utils failed after equalstrings'
+  if (allocated(strArr)) deallocate(strArr)
+  allocate(strArr(countsubstring('I want to test this routine!', ' ')))
   strArr = splitString('I want to test this routine!', ' ')
-#endif
   isgood = isgood .and. (strArr(1) .eq. 'I')
   isgood = isgood .and. (strArr(2) .eq. 'want')
   isgood = isgood .and. (strArr(3) .eq. 'to')
   isgood = isgood .and. (strArr(4) .eq. 'test')
   isgood = isgood .and. (strArr(5) .eq. 'this')
   isgood = isgood .and. (strArr(6) .eq. 'routine!')
-#ifdef pgiFortran
-  call divide_string('I,want,to,test,this,routine!', ',', strArr)
-#else
+  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 1'
+  if (allocated(strArr)) deallocate(strArr)
+  allocate(strArr(countsubstring('I,want,to,test,this,routine!', ',')))
   strArr = splitString('I,want,to,test,this,routine!', ',')
-#endif
   isgood = isgood .and. (strArr(1) .EQ. 'I')
   isgood = isgood .and. (strArr(2) .EQ. 'want')
   isgood = isgood .and. (strArr(3) .EQ. 'to')
   isgood = isgood .and. (strArr(4) .EQ. 'test')
   isgood = isgood .and. (strArr(5) .EQ. 'this')
   isgood = isgood .and. (strArr(6) .EQ. 'routine!')
-#ifdef pgiFortran
-  call divide_string('w!hat_s-a+bout=-sp.eci,al-chara<cte>rs?', '-', strArr)
-#else
+  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 2'
+  if (allocated(strArr)) deallocate(strArr)
+  allocate(strArr(countsubstring('w!hat_s-a+bout=-sp.eci,al-chara<cte>rs?', '-')))
   strArr = splitString('w!hat_s-a+bout=-sp.eci,al-chara<cte>rs?', '-')
-#endif
   isgood = isgood .and. (strArr(1) .EQ. 'w!hat_s')
   isgood = isgood .and. (strArr(2) .EQ. 'a+bout=')
   isgood = isgood .and. (strArr(3) .EQ. 'sp.eci,al')
   isgood = isgood .and. (strArr(4) .EQ. 'chara<cte>rs?')
-#ifndef pgiFortran
+  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 3'
   ! divide_string does not allow multi-character splits, so pgi does not work
+  if (allocated(strArr)) deallocate(strArr)
+  allocate(strArr(countsubstring('multi_+character_*splits_+should work_+', '_+')))
   strArr = splitString('multi_+character_*splits_+should work_+', '_+')
   isgood = isgood .and. (strArr(1) .EQ. 'multi')
   isgood = isgood .and. (strArr(2) .EQ. 'character_*splits')
   isgood = isgood .and. (strArr(3) .EQ. 'should work')
   isgood = isgood .and. (strArr(4) .EQ. '')
-#endif
+  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 4'
 
 #ifndef ABSOFT
   call DIVIDE_STRING('I want to test this routine!', ' ', strArr)
@@ -113,6 +112,8 @@ PROGRAM main
   isgood = isgood .and. (strArr(3) .EQ. 'sp.eci,al')
   isgood = isgood .and. (strArr(4) .EQ. 'chara<cte>rs?')
 #endif
+
+  if (allocated(strArr)) deallocate(strArr)
 
   Write(*,*) ''
   if (isgood) then

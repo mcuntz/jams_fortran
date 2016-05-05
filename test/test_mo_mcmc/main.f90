@@ -65,7 +65,7 @@ program test_mcmc
   write(*,*) 'Mean parameter value +/- standard deviation'
   do i=1,size(parabest)
      if (maskpara(i)) then
-        write(*,*) 'para #',i, ' = ',mean(mcmc_paras(:,i)), '+/-',stddev(mcmc_paras(:,i))
+        write(*,*) 'para #',i, ' = ',mean(mcmc_paras(:,i)), '+/-',stddev(mcmc_paras(:,i), ddof=1)
      end if
   end do
 
@@ -75,9 +75,9 @@ program test_mcmc
   ! para # 3  =    2.8306538403277148 +/-   0.1384711293432960
   write(*,*) ''
   write(*,*) '-----------------------------------'
-  if ( (nint(stddev(mcmc_paras(:,1))*10000000,i4) .eq. 583_i4)   .and. &
-       (nint(stddev(mcmc_paras(:,2))*10000000,i4) .eq. 60238_i4) .and. &
-       (nint(stddev(mcmc_paras(:,3))*10000000,i4) .eq. 1384711_i4) ) then
+  if ( (nint(stddev(mcmc_paras(:,1), ddof=1)*10000000,i4) .eq. 583_i4)   .and. &
+       (nint(stddev(mcmc_paras(:,2), ddof=1)*10000000,i4) .eq. 60238_i4) .and. &
+       (nint(stddev(mcmc_paras(:,3), ddof=1)*10000000,i4) .eq. 1384711_i4) ) then
      write(*,*) 'mo_mcmc: mcmc o.k.'
   else
      write(*,*) 'mo_mcmc: mcmc failed '
@@ -109,7 +109,7 @@ program test_mcmc
   write(*,*) 'Mean parameter value +/- standard deviation'
   do i=1,size(parabest)
      if (maskpara(i)) then
-        write(*,*) 'para #',i, ' = ',mean(mcmc_paras(:,i)), '+/-',stddev(mcmc_paras(:,i))
+        write(*,*) 'para #',i, ' = ',mean(mcmc_paras(:,i)), '+/-',stddev(mcmc_paras(:,i), ddof=1)
      end if
   end do
 
@@ -119,9 +119,9 @@ program test_mcmc
   ! para # 3  =    2.8306538403277148 +/-   0.1384711293432960
   write(*,*) ''
   write(*,*) '-----------------------------------'
-  if ( (nint(stddev(mcmc_paras(:,1))*10000000,i4) .eq. 583_i4)   .and. &
-       (nint(stddev(mcmc_paras(:,2))*10000000,i4) .eq. 60238_i4) .and. &
-       (nint(stddev(mcmc_paras(:,3))*10000000,i4) .eq. 1384711_i4) ) then
+  if ( (nint(stddev(mcmc_paras(:,1), ddof=1)*10000000,i4) .eq. 583_i4)   .and. &
+       (nint(stddev(mcmc_paras(:,2), ddof=1)*10000000,i4) .eq. 60238_i4) .and. &
+       (nint(stddev(mcmc_paras(:,3), ddof=1)*10000000,i4) .eq. 1384711_i4) ) then
      write(*,*) 'mo_mcmc: mcmc with restart o.k.'
   else
      write(*,*) 'mo_mcmc: mcmc with restart failed '
@@ -172,7 +172,7 @@ program test_mcmc
   write(*,*) 'Mean parameter value +/- standard deviation'
   do i=1,size(parabest)
      if (maskpara(i)) then
-        write(*,*) 'para #',i, ' = ',mean(mcmc_paras(:,i)), '+/-',stddev(mcmc_paras(:,i))
+        write(*,*) 'para #',i, ' = ',mean(mcmc_paras(:,i)), '+/-',stddev(mcmc_paras(:,i), ddof=1)
      end if
   end do
 
@@ -182,9 +182,9 @@ program test_mcmc
   ! para # 3  =    2.8654065450088502 +/-   0.1498533843248984
   write(*,*) ''
   write(*,*) '-----------------------------------'
-  if ( (nint(stddev(mcmc_paras(:,1))*10000000,i4) .eq. 632_i4)   .and. &
-       (nint(stddev(mcmc_paras(:,2))*10000000,i4) .eq. 66281_i4) .and. &
-       (nint(stddev(mcmc_paras(:,3))*10000000,i4) .eq. 1498534_i4) ) then
+  if ( (nint(stddev(mcmc_paras(:,1), ddof=1)*10000000,i4) .eq. 632_i4)   .and. &
+       (nint(stddev(mcmc_paras(:,2), ddof=1)*10000000,i4) .eq. 66281_i4) .and. &
+       (nint(stddev(mcmc_paras(:,3), ddof=1)*10000000,i4) .eq. 1498534_i4) ) then
      write(*,*) 'mo_mcmc: mcmc_stddev o.k.'
   else
      write(*,*) 'mo_mcmc: mcmc_stddev failed '

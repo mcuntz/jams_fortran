@@ -12,7 +12,7 @@
 MODULE mo_standard_score
 
   ! This module contains routines for the masked calculation of
-  ! the standard_score of a time series (centralized and standarsized time series).
+  ! the standard_score of a time series (centralized and standardized time series).
 
   ! Literature
 
@@ -67,8 +67,8 @@ MODULE mo_standard_score
   !>          \f[ standard\_score = \frac{x - \mu_x}{\sigma_x} \f]
   !>           where \f$ \mu_x \f$ is the mean of a population \f$ x \f$ and \f$ \sigma_x \f$ its standard deviation.
   !>
-  !>           If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
-  !>           data can be single or double precision. The result will have the same numerical precision.
+  !>           If an optional mask is given, the calculations are over those locations that correspond
+  !>           to true values in the mask.
 
   !     CALLING SEQUENCE
   !         out = standard_score(data, mask=mask)
@@ -142,7 +142,6 @@ MODULE mo_standard_score
   !>           is the mean of all members of a class \f$ c_{x_i} \f$ and \f$ \sigma_{c_{x_i}} \f$ its standard deviation.
   !>
   !>           If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
-  !>           data can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
   !         out = classified_standard_score(data, mask=mask)
@@ -225,7 +224,7 @@ CONTAINS
     ! check if enough values (>1) are available
     if (count(maske) .LE. 2) stop '***Error: standard_score_sp: less than 2 elements avaiable'
     
-    standard_score_sp = ( data(:) - average(data, mask=maske) ) / stddev(data,mask=maske)
+    standard_score_sp = ( data(:) - average(data, mask=maske) ) / stddev(data, mask=maske, ddof=1_i4)
 
   END FUNCTION standard_score_sp
 
@@ -254,7 +253,7 @@ CONTAINS
     ! check if enough values (>1) are available
     if (count(maske) .LE. 2) stop '***Error: standard_score_dp: less than 2 elements avaiable'
     
-    standard_score_dp = ( data(:) - average(data, mask=maske) ) / stddev(data,mask=maske)
+    standard_score_dp = ( data(:) - average(data, mask=maske) ) / stddev(data, mask=maske, ddof=1_i4)
 
   END FUNCTION standard_score_dp
 
@@ -292,7 +291,7 @@ CONTAINS
     endif
 
     ! check if enough values (>1) are available
-    if (count(maske) .LE. 2) stop '***Error: classified_standard_score_sp: less than 2 elements avaiable'
+    if (count(maske) .LE. 2) stop '***Error: classified_standard_score_sp: less than 2 elements available'
 
     ! initialization
     classified_standard_score_sp = 0.0_sp
@@ -307,7 +306,7 @@ CONTAINS
        ! calculate mean and standard deviation for class
        mask_class_maske = (maske .AND. (classes==unique_classes(iclass)))
        class_mean   = average(data, mask=mask_class_maske)
-       class_stddev =  stddev(data, mask=mask_class_maske)
+       class_stddev = stddev(data, mask=mask_class_maske, ddof=1_i4)
        ! loop over array elements
        do ielem = 1, size(data, dim=1)
           if (.NOT. mask_class_maske(ielem)) cycle ! skip masked values and other classes
@@ -363,7 +362,7 @@ CONTAINS
        ! calculate mean and standard deviation for class
        mask_class_maske = (maske .AND. (classes==unique_classes(iclass)))
        class_mean   = average(data, mask=mask_class_maske)
-       class_stddev =  stddev(data, mask=mask_class_maske)
+       class_stddev = stddev(data, mask=mask_class_maske, ddof=1_i4)
        ! loop over array elements
        do ielem = 1, size(data, dim=1)
           if (.NOT. mask_class_maske(ielem)) cycle ! skip masked values and other classes

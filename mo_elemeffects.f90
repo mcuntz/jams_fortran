@@ -14,7 +14,6 @@ MODULE mo_elemeffects
   ! using parameter sets sampled by the Morris method.
 
   ! Written    Juliane Mai,   Mar 2012
-  ! Modified
 
   ! License
   ! -------

@@ -7,9 +7,9 @@
 !>          So far only a Gaussian kernel is implemented (Nadaraya-Watson)
 !>          which can be used for one- and multidimensional data.\n
 !>          Furthermore, the estimation of the bandwith needed for kernel methods is provided
-!>          by either Silverman''s rule of thumb or a Cross-Vaildation approach.\n
-!>          The Cross-Validation method is actually an optimization of the bandwith and
-!>          might be the most costly part of the kernel smoother.
+!>          by either Silverman''s rule of thumb or a Cross-Validation approach.\n
+!>          The Cross-Validation method is an optimization of the bandwith and
+!>          is the most costly part of the kernel smoother.
 !>          Therefore, the bandwith estimation is not necessarily part of the kernel smoothing
 !>          but can be determined first and given as an optional argument to the smoother.
 
@@ -23,7 +23,8 @@ MODULE mo_kernel
 
   ! Written  Juliane Mai,    Mar 2013
   ! Modified Stephan Thober, Mar 2013
-  !          Matthias Cuntz, Mar 2013  !          Matthias Cuntz, May 2014 - sort -> qsort
+  !          Matthias Cuntz, Mar 2013
+  !          Matthias Cuntz, May 2014 - sort -> qsort
   !          Matthias Cuntz, May 2014 - module procedure golden
   !          Stephan Thober, Jul 2015 - using sort_index in favor of qsort_index
 
@@ -659,7 +660,7 @@ CONTAINS
     allocate(kernel_cumdensity_1d_dp(nout))
 
     ! calculate standard deviation of x to determine left side starting point for integration of PDF
-    lower_x = minval(x) - 3.0_dp * stddev(x)
+    lower_x = minval(x) - 3.0_dp * stddev(x, ddof=1_i4)
 
     ! loop through all regression points
     do ii = 1, nout
@@ -789,7 +790,7 @@ CONTAINS
     allocate(kernel_cumdensity_1d_sp(nout))
 
     ! calculate standard deviation of x to determine left side starting point for integration of PDF
-    lower_x = minval(x) - 3.0_sp * stddev(x)
+    lower_x = minval(x) - 3.0_sp * stddev(x, ddof=1_i4)
 
     ! loop through all regression points
     do ii = 1, nout
@@ -1065,7 +1066,7 @@ CONTAINS
     ! Default: Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     !h(1) = (4._dp/3._dp/real(nn,dp))**(0.2_dp) * stddev_x
-    h = pre_h/(nn**0.2_dp) * stddev(x(:))
+    h = pre_h/(nn**0.2_dp) * stddev(x(:), ddof=1_i4)
 
     if (present(silverman)) then
        if (.not. silverman) then
@@ -1116,7 +1117,7 @@ CONTAINS
     ! Default: Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     !h(1) = (4._sp/3._sp/real(nn,sp))**(0.2_sp) * stddev_x
-    h = pre_h/(nn**0.2_sp) * stddev(x(:))
+    h = pre_h/(nn**0.2_sp) * stddev(x(:), ddof=1_i4)
 
     if (present(silverman)) then
        if (.not. silverman) then
@@ -1582,7 +1583,7 @@ CONTAINS
     ! Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     !h(1) = (4._dp/3._dp/real(nn,dp))**(0.2_dp) * stddev_x
-    h(1) = pre_h/(nn**0.2_dp) * stddev(x(:))
+    h(1) = pre_h/(nn**0.2_dp) * stddev(x(:), ddof=1_i4)
 
     if (present(silverman)) then
        if (.not. silverman) then
@@ -1637,7 +1638,7 @@ CONTAINS
     ! Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     !h(1) = (4._sp/3._sp/real(nn,sp))**(0.2_sp) * stddev_x
-    h(1) = pre_h/(nn**0.2_sp) * stddev(x(:))
+    h(1) = pre_h/(nn**0.2_sp) * stddev(x(:), ddof=1_i4)
 
     if (present(silverman)) then
        if (.not. silverman) then
@@ -1691,7 +1692,7 @@ CONTAINS
     ! Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     do ii=1,dims
-       stddev_x(ii) = stddev(x(:,ii))
+       stddev_x(ii) = stddev(x(:,ii), ddof=1_i4)
     end do
     h(:) = (4.0_dp/real(dims+2,dp)/real(nn,dp))**(1.0_dp/real(dims+4,dp)) * stddev_x(:)
 
@@ -1747,7 +1748,7 @@ CONTAINS
     ! Silverman's rule of thumb by
     ! Silvermann (1986), Scott (1992), Bowman and Azzalini (1997)
     do ii=1,dims
-       stddev_x(ii) = stddev(x(:,ii))
+       stddev_x(ii) = stddev(x(:,ii), ddof=1_i4)
     end do
     h(:) = (4.0_sp/real(dims+2,sp)/real(nn,sp))**(1.0_sp/real(dims+4,sp)) * stddev_x(:)
 
@@ -2109,7 +2110,7 @@ CONTAINS
     allocate(outIntegral(mesh_n))
 
     ! integral of squared density function, i.e. L2-norm of kernel^2
-    stddev_x = stddev(global_x_dp(:,1))
+    stddev_x = stddev(global_x_dp(:,1), ddof=1_i4)
     xMeshed  = mesh(minval(global_x_dp) - 3.0_dp*stddev_x, maxval(global_x_dp) + 3.0_dp*stddev_x, mesh_n, delta)
 
     multiplier = 1.0_dp/(real(nn,dp)*h)
@@ -2191,7 +2192,7 @@ CONTAINS
     allocate(outIntegral(mesh_n))
 
     ! integral of squared density function, i.e. L2-norm of kernel^2
-    stddev_x = stddev(global_x_sp(:,1))
+    stddev_x = stddev(global_x_sp(:,1), ddof=1_i4)
     xMeshed  = mesh(minval(global_x_sp) - 3.0_sp*stddev_x, maxval(global_x_sp) + 3.0_sp*stddev_x, mesh_n, delta)
 
     multiplier = 1.0_sp/(real(nn,sp)*h)

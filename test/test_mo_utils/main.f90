@@ -10,21 +10,22 @@ program test_utils
   real(sp) :: a_sp
   real(sp) :: b_sp
 
-  integer(i4), parameter :: nn = 100
-  real(dp), dimension(nn) :: dat1, dat2, dat3
-  real(sp), dimension(nn) :: sat1, sat2, sat3
+  integer(i4), parameter     :: nn = 100
+  real(dp),    dimension(nn) :: dat1, dat2, dat3
+  real(sp),    dimension(nn) :: sat1, sat2, sat3
   integer(i4), dimension(nn) :: iat1, iat2, iat3
+  logical,     dimension(nn) :: mask
 
-  real(dp) :: d1
-  real(dp), dimension(5) :: d5
-  real(sp) :: s1
-  real(sp), dimension(5) :: s5
+  real(dp)    :: d1
+  real(dp),    dimension(5) :: d5
+  real(sp)    :: s1
+  real(sp),    dimension(5) :: s5
   integer(i4) :: ii1
   integer(i4), dimension(5) :: ii5
 
   integer(i4) :: i
-  logical  :: isgood
-  logical  :: compare
+  logical     :: isgood
+  logical     :: compare
 
   isgood = .true.
 
@@ -220,6 +221,8 @@ program test_utils
   write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
   isgood = isgood .and. (.not. compare)
 
+  if (.not. isgood) write(*,*) 'mo_utils failed comparisons'
+
   ! -----------------------------------------------------
   ! Swap
 
@@ -228,20 +231,58 @@ program test_utils
   dat3 = dat1
   call swap(dat1, dat2)
   isgood = isgood .and. all(eq(dat2,dat3))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_dp'
+  dat3 = dat1
+  mask    = .true.
+  mask(1) = .false.
+  call swap(dat1, dat2, mask=mask)
+  isgood = isgood .and. all(eq(dat2(2:),dat3(2:)))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_dp 1'
+  isgood = isgood .and. eq(dat1(1),dat3(1))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_dp 2'
 
+  dat3 = dat2
   call swap(dat2, 1, nn)
   call swap(dat2, nn, 1)
   isgood = isgood .and. all(eq(dat2,dat3))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_dp'
+  call swap(dat2, 1, nn, mask=.true.)
+  call swap(dat2, nn, 1, mask=.true.)
+  isgood = isgood .and. all(eq(dat2,dat3))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_dp'
+  call swap(dat2, 1, nn, mask=.false.)
+  call swap(dat2, nn, 1, mask=.false.)
+  isgood = isgood .and. all(eq(dat2,dat3))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_dp'
 
   call random_number(sat1)
   call random_number(sat2)
   sat3 = sat1
   call swap(sat1, sat2)
   isgood = isgood .and. all(eq(sat2,sat3))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_sp'
+  sat3 = sat1
+  mask    = .true.
+  mask(1) = .false.
+  call swap(sat1, sat2, mask=mask)
+  isgood = isgood .and. all(eq(sat2(2:),sat3(2:)))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_sp 1'
+  isgood = isgood .and. eq(sat1(1),sat3(1))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_sp 2'
 
+  sat3 = sat2
   call swap(sat2, 1, nn)
   call swap(sat2, nn, 1)
   isgood = isgood .and. all(eq(sat2,sat3))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_dp'
+  call swap(sat2, 1, nn, mask=.true.)
+  call swap(sat2, nn, 1, mask=.true.)
+  isgood = isgood .and. all(eq(sat2,sat3))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_sp'
+  call swap(sat2, 1, nn, mask=.false.)
+  call swap(sat2, nn, 1, mask=.false.)
+  isgood = isgood .and. all(eq(sat2,sat3))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_sp'
 
   call random_number(dat1)
   call random_number(dat2)
@@ -250,10 +291,29 @@ program test_utils
   iat3 = iat1
   call swap(iat1, iat2)
   isgood = isgood .and. all(iat2 == iat3)
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_i4'
+  iat3 = iat1
+  mask    = .true.
+  mask(1) = .false.
+  call swap(iat1, iat2, mask=mask)
+  isgood = isgood .and. all(iat2(2:) == iat3(2:))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_i4 1'
+  isgood = isgood .and. (iat1(1) == iat3(1))
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_i4 2'
 
+  iat3 = iat2
   call swap(iat2, 1, nn)
   call swap(iat2, nn, 1)
   isgood = isgood .and. all(iat2 == iat3)
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_i4'
+  call swap(iat2, 1, nn, mask=.true.)
+  call swap(iat2, nn, 1, mask=.true.)
+  isgood = isgood .and. all(iat2 == iat3)
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_i4'
+  call swap(iat2, 1, nn, mask=.false.)
+  call swap(iat2, nn, 1, mask=.false.)
+  isgood = isgood .and. all(iat2 == iat3)
+  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_i4'
 
   ! -----------------------------------------------------
   ! Locate

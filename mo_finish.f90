@@ -13,6 +13,7 @@ MODULE mo_finish
   ! This module supplies a routine to finish a program gracefully.
 
   ! Written Jan 2011, Matthias Cuntz - Adapted from Echam5, (C) MPI-MET, Hamburg, Germany
+  ! Modified May 2016, Matthias Cuntz - copied separator from mo_string_utils
 
   ! License
   ! -------
@@ -32,15 +33,17 @@ MODULE mo_finish
   ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011 Matthias Cuntz
-
-  USE mo_string_utils, ONLY: separator
+  ! Copyright 2011-2016 Matthias Cuntz
 
   IMPLICIT NONE
 
   PRIVATE
 
   PUBLIC :: finish     ! Write out error message and stop program
+
+  ! ------------------------------------------------------------------
+
+  CHARACTER(len=*), PARAMETER :: separator = repeat('-',70)
 
   ! ------------------------------------------------------------------
 
@@ -55,7 +58,7 @@ CONTAINS
   !>        \brief Finish a program gracefully
 
   !>        \details Stop a program but writing out a message first that is separated
-  !>        from earlier output by -------------- (i.e. the separator of mo_string_utils)
+  !>        from earlier output by -------------- (i.e. the separator)
 
   !     CALLING SEQUENCE
   !         call finish(name, text=text, unit=unit)

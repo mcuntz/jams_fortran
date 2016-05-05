@@ -908,10 +908,10 @@ CONTAINS
     mu_Obs = average(x, mask=maske) 
     mu_Sim = average(y, mask=maske)  
     ! Standard Deviation
-    sigma_Obs = stddev(x, mask=maske)
-    sigma_Sim = stddev(y, mask=maske)
-    ! Pearson product-moment correlation coefficient is with (N-1) not N
-    pearson_coor = correlation(x, y, mask=maske) * real(n,sp) / real(n-1,sp)
+    sigma_Obs = stddev(x, mask=maske, ddof=1_i4)
+    sigma_Sim = stddev(y, mask=maske, ddof=1_i4)
+    ! Pearson product-moment correlation coefficient
+    pearson_coor = correlation(x, y, mask=maske, ddof=1_i4)
     ! 
     KGE_sp_1d = 1.0 - SQRT( &
          ( 1.0_sp - (mu_Sim/mu_Obs)       )**2 + &
@@ -966,16 +966,15 @@ CONTAINS
     ! Standard Deviation
     sigma_Obs = stddev( &
          reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/)))
+         mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/)), ddof=1_i4)
     sigma_Sim = stddev( &
          reshape(y(:,:), (/size(y, dim=1)*size(y, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/))) 
-    ! Pearson product-moment correlation coefficient is with (N-1) not N
+         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)), ddof=1_i4) 
+    ! Pearson product-moment correlation coefficient
     pearson_coor = correlation(&
          reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
          reshape(y(:,:), (/size(y, dim=1)*size(y, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/))) * &
-         real(n,sp) / real(n-1,sp)
+         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)), ddof=1_i4)
     ! 
     KGE_sp_2d = 1.0 - SQRT( &
          ( 1.0_sp - (mu_Sim/mu_Obs)       )**2 + &
@@ -1030,16 +1029,15 @@ CONTAINS
     ! Standard Deviation
     sigma_Obs = stddev( &
          reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
+         mask=reshape(maske(:,:,:),  (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), ddof=1_i4)
     sigma_Sim = stddev( &
          reshape(y(:,:,:), (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/))) 
-    ! Pearson product-moment correlation coefficient is with (N-1) not N
+         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), ddof=1_i4) 
+    ! Pearson product-moment correlation coefficient
     pearson_coor = correlation(&
          reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
          reshape(y(:,:,:), (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/))) * &
-         real(n,sp) / real(n-1,sp)
+         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), ddof=1_i4)
     ! 
     KGE_sp_3d = 1.0 - SQRT( &
          ( 1.0_sp - (mu_Sim/mu_Obs)       )**2 + &
@@ -1089,10 +1087,10 @@ CONTAINS
     mu_Obs = average(x, mask=maske) 
     mu_Sim = average(y, mask=maske)  
     ! Standard Deviation
-    sigma_Obs = stddev(x, mask=maske)
-    sigma_Sim = stddev(y, mask=maske)
-    ! Pearson product-moment correlation coefficient is with (N-1) not N
-    pearson_coor = correlation(x, y, mask=maske) * real(n,dp) / real(n-1,dp)
+    sigma_Obs = stddev(x, mask=maske, ddof=1_i4)
+    sigma_Sim = stddev(y, mask=maske, ddof=1_i4)
+    ! Pearson product-moment correlation coefficient
+    pearson_coor = correlation(x, y, mask=maske, ddof=1_i4)
     ! 
     KGE_dp_1d = 1.0 - SQRT( &
          ( 1.0_dp - (mu_Sim/mu_Obs)       )**2 + &
@@ -1147,16 +1145,15 @@ CONTAINS
     ! Standard Deviation
     sigma_Obs = stddev( &
          reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/)))
+         mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/)), ddof=1_i4)
     sigma_Sim = stddev( &
          reshape(y(:,:), (/size(y, dim=1)*size(y, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/))) 
-    ! Pearson product-moment correlation coefficient is with (N-1) not N
+         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)), ddof=1_i4) 
+    ! Pearson product-moment correlation coefficient
     pearson_coor = correlation(&
          reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
          reshape(y(:,:), (/size(y, dim=1)*size(y, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/))) * &
-         real(n,dp) / real(n-1,dp)
+         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)), ddof=1_i4)
     ! 
     KGE_dp_2d = 1.0 - SQRT( &
          ( 1.0_dp - (mu_Sim/mu_Obs)       )**2 + &
@@ -1211,16 +1208,15 @@ CONTAINS
     ! Standard Deviation
     sigma_Obs = stddev( &
          reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
+         mask=reshape(maske(:,:,:),  (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), ddof=1_i4)
     sigma_Sim = stddev( &
          reshape(y(:,:,:), (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/))) 
-    ! Pearson product-moment correlation coefficient is with (N-1) not N
+         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), ddof=1_i4) 
+    ! Pearson product-moment correlation coefficient
     pearson_coor = correlation(&
          reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
          reshape(y(:,:,:), (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/))) * &
-         real(n,dp) / real(n-1,dp)
+         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), ddof=1_i4)
     ! 
     KGE_dp_3d = 1.0 - SQRT( &
          ( 1.0_dp - (mu_Sim/mu_Obs)       )**2 + &

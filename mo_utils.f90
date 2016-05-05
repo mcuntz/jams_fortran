@@ -33,24 +33,23 @@ MODULE mo_utils
 
   ! Copyright 2014 Matthias Cuntz, Juliane Mai
 
-  USE mo_kind,         only: sp, dp, i4
-  USE mo_string_utils, only: toupper
+  USE mo_kind,         only: sp, dp, i4, spc, dpc
 
   IMPLICIT NONE
 
-  PUBLIC :: equal        ! a == b, a .eq. b
-  PUBLIC :: greaterequal ! a >= b, a .ge. b
-  PUBLIC :: lesserequal  ! a <= b, a .le. b
-  PUBLIC :: notequal     ! a /= b, a .ne. b
-  PUBLIC :: eq           ! a == b, a .eq. b
-  PUBLIC :: ge           ! a >= b, a .ge. b
-  PUBLIC :: le           ! a <= b, a .le. b
-  PUBLIC :: ne           ! a /= b, a .ne. b
-  PUBLIC :: is_finite    ! .true. if not IEEE Inf and not IEEE NaN
-  PUBLIC :: is_nan       ! .true. if IEEE NaN
-  PUBLIC :: is_normal    ! .true. if not IEEE Inf and not IEEE NaN
-  PUBLIC :: locate       ! Find closest values in a monotonic series
-  PUBLIC :: swap         ! swaps arrays or elements of an array
+  PUBLIC :: equal         ! a == b, a .eq. b
+  PUBLIC :: greaterequal  ! a >= b, a .ge. b
+  PUBLIC :: lesserequal   ! a <= b, a .le. b
+  PUBLIC :: notequal      ! a /= b, a .ne. b
+  PUBLIC :: eq            ! a == b, a .eq. b
+  PUBLIC :: ge            ! a >= b, a .ge. b
+  PUBLIC :: le            ! a <= b, a .le. b
+  PUBLIC :: ne            ! a /= b, a .ne. b
+  PUBLIC :: is_finite     ! .true. if not IEEE Inf and not IEEE NaN
+  PUBLIC :: is_nan        ! .true. if IEEE NaN
+  PUBLIC :: is_normal     ! .true. if not IEEE Inf and not IEEE NaN
+  PUBLIC :: locate        ! Find closest values in a monotonic series
+  PUBLIC :: swap          ! swaps arrays or elements of an array
   PUBLIC :: special_value ! Special IEEE values
 
   ! ------------------------------------------------------------------
@@ -272,32 +271,38 @@ MODULE mo_utils
   !         swap
 
   !     PURPOSE
-  !         Swap to values/arrays or two elements in 1D-array.
+  !         Swap two values/arrays or two elements in 1D-array.
   !
-  !>        \brief Swap to values or two elements in array.
+  !>        \brief Swap two values or exchange two elements in array.
   !
   !>        \details Swaps either two entities, i.e. scalars, vectors, matrices,
-  !>                 or two elements in a vector.
+  !>                 or exchanges two elements in a vector.
+  !>                 If an optinal mask is given, the only elements with mask==.true. will be exchanged.\n
   !>                 The call is either \n
-  !>                   call swap(x,y) \n
+  !>                   call swap(x, y, mask=mask) \n
   !>                 or \n
-  !>                   call swap(vec,i,j)
+  !>                   call swap(vec, i, j, mask=mask)
   !
   !     INTENT(IN)
-  !>        \param[in] "integer(i4)    :: i"               Index of first element to be swapped with second [case swap(vec,i,j)]
-  !>        \param[in] "integer(i4)    :: j"               Index of second element to be swapped with first [case swap(vec,i,j)]
+  !>        \param[in] "integer(i4)    :: i"   Index of first element to be swapped with second [case swap(vec,i,j)]
+  !>        \param[in] "integer(i4)    :: j"   Index of second element to be swapped with first [case swap(vec,i,j)]
   !
   !     INTENT(INOUT)
-  !>        \param[inout] "real(sp/dp/i4) :: x[(:,...)]"   First scalar or array to swap with second [case swap(x,y)]
-  !>        \param[inout] "real(sp/dp/i4) :: y[(:[,:])]"   Second scalar or array to swap with first [case swap(x,y)]
+  !>        \param[inout] "real(sp/dp)/integer(i4)/complex(spc/dpc) :: x[(:,...)]"
+  !>                       First scalar or array to swap with second [case swap(x,y)]
+  !>        \param[inout] "real(sp/dp)/integer(i4)/complex(spc/dpc) :: y[(:[,:])]"
+  !>                       Second scalar or array to swap with first [case swap(x,y)]
   !>
-  !>        \param[inout] "real(sp/dp/i4) :: x(:)"         Vector of which to elements are swapped [case swap(vec,i,j)]
-
+  !>        \param[inout] "real(sp/dp)/integer(i4)/complex(spc/dpc) :: x(:)"
+  !>                       Vector of which to elements are swapped [case swap(vec,i,j)]
+  !
   !     INTENT(OUT)
   !         None
   !
   !     INTENT(IN), OPTIONAL
-  !         None
+  !>       \param[in] "logical, optional :: mask[(:,...)]" scalar or array logical mask\n
+  !>                                                 If present, only those elements will be swapped
+  !>                                                 where mask==.true.
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -306,12 +311,12 @@ MODULE mo_utils
   !         None
   !
   !     RESTRICTIONS
-  !         No mask or undef.
+  !         None
   !
   !     EXAMPLE
   !         vec1 = (/ 1., 2., 3., -999., 5., 6. /)
   !         vec2 = (/ 1., 1., 3., -999., 10., 6. /)
-  !         call swap(vec1, vec2)
+  !         call swap(vec1, vec2, mask=(vec==-999.))
   !         call swap(vec1, 1, 3)
   !         -> see also example in test directory
 
@@ -323,8 +328,10 @@ MODULE mo_utils
   !>        \date May 2014
   INTERFACE swap
      MODULE PROCEDURE &
-          swap_xy_dp, swap_xy_sp, swap_xy_i4, &
-          swap_vec_dp, swap_vec_sp, swap_vec_i4
+          swap_xy_dp,       swap_xy_sp,       swap_xy_i4,       swap_xy_dpc,       swap_xy_spc, &
+          swap_xy_mask_dp,  swap_xy_mask_sp,  swap_xy_mask_i4,  swap_xy_mask_dpc,  swap_xy_mask_spc, &
+          swap_vec_dp,      swap_vec_sp,      swap_vec_i4,      swap_vec_dpc,      swap_vec_spc,&
+          swap_vec_mask_dp, swap_vec_mask_sp, swap_vec_mask_i4, swap_vec_mask_dpc, swap_vec_mask_spc
   END INTERFACE swap
 
   
@@ -413,6 +420,76 @@ MODULE mo_utils
   ! ------------------------------------------------------------------
 
 CONTAINS
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         toupper_
+
+  !     PURPOSE
+  !         \brief Convert to upper case
+
+  !         \details Convert all lower case letters in string to upper case letters.
+
+  !     CALLING SEQUENCE
+  !         up = toupper_(lower)
+
+  !     INTENT(IN)
+  !         \param[in] "character(len=*) :: lower"    String
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !         \return character(len=len_trim(lower)) :: up  &mdash;  String where all lowercase in input is converted to uppercase
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         ! Returns 'HALLO'
+  !         up = toupper_('Hallo')
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
+  !         \date Dec 2011
+
+  FUNCTION toupper_(lower)
+
+    IMPLICIT NONE
+
+    CHARACTER(LEN=*)              ,INTENT(in) :: lower
+    CHARACTER(LEN=LEN_TRIM(lower))            :: toupper_
+
+    INTEGER            :: i
+    INTEGER, PARAMETER :: idel = ICHAR('A')-ICHAR('a')
+
+    DO i=1,LEN_TRIM(lower)
+       IF (ICHAR(lower(i:i)) >= ICHAR('a') .AND. &
+            ICHAR(lower(i:i)) <= ICHAR('z')) THEN
+          toupper_(i:i) = CHAR( ICHAR(lower(i:i)) + idel )
+       ELSE
+          toupper_(i:i) = lower(i:i)
+       END IF
+    END DO
+
+  END FUNCTION toupper_
 
   ! ------------------------------------------------------------------
 
@@ -764,12 +841,12 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  elemental pure subroutine swap_xy_dp(x,y)
+  elemental pure subroutine swap_xy_dp(x, y)
 
     implicit none
 
-    real(dp), intent(inout) :: x
-    real(dp), intent(inout) :: y
+    real(dp),          intent(inout) :: x
+    real(dp),          intent(inout) :: y
 
     real(dp) :: z
 
@@ -779,12 +856,12 @@ CONTAINS
 
   end subroutine swap_xy_dp
 
-  elemental pure subroutine swap_xy_sp(x,y)
+  elemental pure subroutine swap_xy_sp(x, y)
 
     implicit none
 
-    real(sp), intent(inout) :: x
-    real(sp), intent(inout) :: y
+    real(sp),          intent(inout) :: x
+    real(sp),          intent(inout) :: y
 
     real(sp) :: z
 
@@ -794,12 +871,12 @@ CONTAINS
 
   end subroutine swap_xy_sp
 
-  elemental pure subroutine swap_xy_i4(x,y)
+  elemental pure subroutine swap_xy_i4(x, y)
 
     implicit none
 
-    integer(i4), intent(inout) :: x
-    integer(i4), intent(inout) :: y
+    integer(i4),       intent(inout) :: x
+    integer(i4),       intent(inout) :: y
 
     integer(i4) :: z
 
@@ -808,6 +885,126 @@ CONTAINS
     y = z
 
   end subroutine swap_xy_i4
+
+  elemental pure subroutine swap_xy_dpc(x, y)
+
+    implicit none
+
+    complex(dpc),          intent(inout) :: x
+    complex(dpc),          intent(inout) :: y
+
+    complex(dpc) :: z
+
+    z = x
+    x = y
+    y = z
+
+  end subroutine swap_xy_dpc
+
+  elemental pure subroutine swap_xy_spc(x, y)
+
+    implicit none
+
+    complex(spc),          intent(inout) :: x
+    complex(spc),          intent(inout) :: y
+
+    complex(spc) :: z
+
+    z = x
+    x = y
+    y = z
+
+  end subroutine swap_xy_spc
+
+  elemental pure subroutine swap_xy_mask_dp(x, y, mask)
+
+    implicit none
+
+    real(dp), intent(inout) :: x
+    real(dp), intent(inout) :: y
+    logical,  intent(in)    :: mask
+
+    real(dp) :: z
+
+    if (mask) then
+       z = x
+       x = y
+       y = z
+    endif
+
+  end subroutine swap_xy_mask_dp
+
+  elemental pure subroutine swap_xy_mask_sp(x, y, mask)
+
+    implicit none
+
+    real(sp), intent(inout) :: x
+    real(sp), intent(inout) :: y
+    logical,  intent(in)    :: mask
+
+    real(sp) :: z
+
+    if (mask) then
+       z = x
+       x = y
+       y = z
+    endif
+
+  end subroutine swap_xy_mask_sp
+
+  elemental pure subroutine swap_xy_mask_i4(x, y, mask)
+
+    implicit none
+
+    integer(i4), intent(inout) :: x
+    integer(i4), intent(inout) :: y
+    logical,     intent(in)    :: mask
+
+    integer(i4) :: z
+
+    if (mask) then
+       z = x
+       x = y
+       y = z
+    endif
+
+  end subroutine swap_xy_mask_i4
+
+  elemental pure subroutine swap_xy_mask_dpc(x, y, mask)
+
+    implicit none
+
+    complex(dpc), intent(inout) :: x
+    complex(dpc), intent(inout) :: y
+    logical,  intent(in)    :: mask
+
+    complex(dpc) :: z
+
+    if (mask) then
+       z = x
+       x = y
+       y = z
+    endif
+
+  end subroutine swap_xy_mask_dpc
+
+  elemental pure subroutine swap_xy_mask_spc(x, y, mask)
+
+    implicit none
+
+    complex(spc), intent(inout) :: x
+    complex(spc), intent(inout) :: y
+    logical,  intent(in)    :: mask
+
+    complex(spc) :: z
+
+    if (mask) then
+       z = x
+       x = y
+       y = z
+    endif
+
+  end subroutine swap_xy_mask_spc
 
 
   subroutine swap_vec_dp(x,i1,i2)
@@ -858,6 +1055,133 @@ CONTAINS
 
   end subroutine swap_vec_i4
 
+  subroutine swap_vec_dpc(x,i1,i2)
+
+    implicit none
+
+    complex(dpc),    dimension(:), intent(inout) :: x
+    integer(i4),               intent(in)    :: i1
+    integer(i4),               intent(in)    :: i2
+
+    complex(dpc) :: z
+
+    z     = x(i1)
+    x(i1) = x(i2)
+    x(i2) = z
+
+  end subroutine swap_vec_dpc
+
+  subroutine swap_vec_spc(x,i1,i2)
+
+    implicit none
+
+    complex(spc),    dimension(:), intent(inout) :: x
+    integer(i4),               intent(in)    :: i1
+    integer(i4),               intent(in)    :: i2
+
+    complex(spc) :: z
+
+    z     = x(i1)
+    x(i1) = x(i2)
+    x(i2) = z
+
+  end subroutine swap_vec_spc
+
+  subroutine swap_vec_mask_dp(x, i1, i2, mask)
+
+    implicit none
+
+    real(dp),    dimension(:), intent(inout) :: x
+    integer(i4),               intent(in)    :: i1
+    integer(i4),               intent(in)    :: i2
+    logical,                   intent(in)    :: mask
+
+    real(dp) :: z
+
+    if (mask) then
+       z     = x(i1)
+       x(i1) = x(i2)
+       x(i2) = z
+    endif
+
+  end subroutine swap_vec_mask_dp
+
+  subroutine swap_vec_mask_sp(x, i1, i2, mask)
+
+    implicit none
+
+    real(sp),    dimension(:), intent(inout) :: x
+    integer(i4),               intent(in)    :: i1
+    integer(i4),               intent(in)    :: i2
+    logical,                   intent(in)    :: mask
+
+    real(sp) :: z
+
+    if (mask) then
+       z     = x(i1)
+       x(i1) = x(i2)
+       x(i2) = z
+    endif
+
+  end subroutine swap_vec_mask_sp
+
+  subroutine swap_vec_mask_i4(x, i1, i2, mask)
+
+    implicit none
+
+    integer(i4),    dimension(:), intent(inout) :: x
+    integer(i4),               intent(in)    :: i1
+    integer(i4),               intent(in)    :: i2
+    logical,                   intent(in)    :: mask
+
+    integer(i4) :: z
+
+    if (mask) then
+       z     = x(i1)
+       x(i1) = x(i2)
+       x(i2) = z
+    endif
+
+  end subroutine swap_vec_mask_i4
+
+  subroutine swap_vec_mask_dpc(x, i1, i2, mask)
+
+    implicit none
+
+    complex(dpc),    dimension(:), intent(inout) :: x
+    integer(i4),               intent(in)    :: i1
+    integer(i4),               intent(in)    :: i2
+    logical,                   intent(in)    :: mask
+
+    complex(dpc) :: z
+
+    if (mask) then
+       z     = x(i1)
+       x(i1) = x(i2)
+       x(i2) = z
+    endif
+
+  end subroutine swap_vec_mask_dpc
+
+  subroutine swap_vec_mask_spc(x, i1, i2, mask)
+
+    implicit none
+
+    complex(spc),    dimension(:), intent(inout) :: x
+    integer(i4),               intent(in)    :: i1
+    integer(i4),               intent(in)    :: i2
+    logical,                   intent(in)    :: mask
+
+    complex(spc) :: z
+
+    if (mask) then
+       z     = x(i1)
+       x(i1) = x(i2)
+       x(i2) = z
+    endif
+
+  end subroutine swap_vec_mask_spc
+
   ! ------------------------------------------------------------------
 
   function special_value_dp(x, ieee)
@@ -888,7 +1212,7 @@ CONTAINS
     real(dp) :: tmp
 #endif
 
-    ieee_up = toupper(ieee)
+    ieee_up = toupper_(ieee)
 #ifndef GFORTRAN
     select case(trim(ieee_up))
     case('IEEE_SIGNALING_NAN')
@@ -975,7 +1299,7 @@ CONTAINS
     real(sp) :: tmp
 #endif
 
-    ieee_up = toupper(ieee)
+    ieee_up = toupper_(ieee)
 #ifndef GFORTRAN
     select case(trim(ieee_up))
     case('IEEE_SIGNALING_NAN')

@@ -1,6 +1,5 @@
 MODULE mo_nelmin
 
-
   ! This module provides NELMIN, which minimizes a function using the Nelder-Mead algorithm
   ! with the Applied Statistics algorithms No. 047.
 

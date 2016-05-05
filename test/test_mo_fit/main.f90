@@ -2,7 +2,7 @@ PROGRAM main
   
   USE mo_kind, ONLY: dp, sp
   USE mo_fit,  ONLY: fitfun, fpoly_dp, fpoly_sp, polyfit, svdfit
-  USE mo_fit,  ONLY: linfit, polyval
+  USE mo_fit,  ONLY: polyval
 
   IMPLICIT NONE
   
@@ -18,7 +18,6 @@ PROGRAM main
   real(dp), dimension(degree+1,degree+1) :: dv
   real(dp)                               :: dchisq
   real(dp), dimension(2)                 :: dla
-  real(dp)                               :: da1, db1
   real(dp)                               :: xdp = 3
   real(dp), dimension(4)                 :: xdpvec = (/ 0, 1, 2, 3 /)
   real(dp), dimension(3)                 :: polydp = (/ 1, 2, 1 /)
@@ -30,7 +29,6 @@ PROGRAM main
   real(sp), dimension(degree+1,degree+1) :: sv
   real(sp)                               :: schisq
   real(sp), dimension(2)                 :: sla
-  real(sp)                               :: sa1, sb1
   real(sp)                               :: xsp = 3
   real(sp), dimension(4)                 :: xspvec = (/ 0, 1, 2, 3 /)
   real(sp), dimension(3)                 :: polysp = (/ 1, 2, 1 /)
@@ -58,10 +56,6 @@ PROGRAM main
   Write(*,*) ''
   dla = polyfit(dx, dy, 1)
   write(*,*) dla
-  ! use variable dsig for dummy output
-  dsig = linfit(dx, dy, a=da1, b=db1)
-  write(*,*) da1, db1
-  isgood = isgood .and. all(nint((dla-(/da1, db1/))*1000._dp) == 0)
   Write(*,*) ''
   Write(*,*) 'Output should read 16 & 1 4 9 16'
   Write(*,*) ''
@@ -93,10 +87,6 @@ PROGRAM main
   Write(*,*) ''
   sla = polyfit(sx, sy, 1)
   write(*,*) sla
-  ! use variable ssig for dummy output
-  ssig = linfit(sx, sy, a=sa1, b=sb1)
-  write(*,*) sa1, sb1
-  isgood = isgood .and. all(nint((sla-(/sa1, sb1/))*1000._sp) == 0)
   Write(*,*) ''
   Write(*,*) 'Output should read 16 & 1 4 9 16'
   Write(*,*) ''

@@ -29,25 +29,26 @@ MODULE mo_string_utils
   ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011-2015 Matthias Cuntz
+  ! Copyright 2011-2016 Matthias Cuntz
 
   USE mo_kind, ONLY: i4, i8, sp, dp
 
   IMPLICIT NONE
 
-  PUBLIC :: compress      ! Conversion   : 'A b C x Y z' -> 'AbCxYz'
+  PUBLIC :: compress       ! Conversion   : 'A b C x Y z' -> 'AbCxYz'
+  PUBLIC :: countsubstring ! Count number of occurences of substring
 #ifndef ABSOFT
-  PUBLIC :: divide_string ! split string in substring with the help of delimiter
+  PUBLIC :: divide_string  ! subroutine split string at delimiter
 #endif
-  PUBLIC :: equalStrings  ! compares two strings
-  PUBLIC :: nonull        ! Check if string is still NULL
-  PUBLIC :: num2str       ! Convert a number to a string
-  PUBLIC :: separator     ! Format string: '-----...-----'
-  PUBLIC :: splitString   ! splits string at given delimiter
-  PUBLIC :: startsWith    ! checks if string starts with a certain string
-  PUBLIC :: str2num       ! Converts string into an array of its numerical representation
-  PUBLIC :: tolower       ! Conversion   : 'ABCXYZ' -> 'abcxyz'
-  PUBLIC :: toupper       ! Conversion   : 'abcxyz' -> 'ABCXYZ'
+  PUBLIC :: equalStrings   ! compares two strings
+  PUBLIC :: nonull         ! Check if string is still NULL
+  PUBLIC :: num2str        ! Convert a number to a string
+  PUBLIC :: separator      ! Format string: '-----...-----'
+  PUBLIC :: splitString    ! function split string at delimiter
+  PUBLIC :: startsWith     ! checks if string starts with a certain string
+  PUBLIC :: str2num        ! Converts string into an array of its numerical representation
+  PUBLIC :: tolower        ! Conversion   : 'ABCXYZ' -> 'abcxyz'
+  PUBLIC :: toupper        ! Conversion   : 'abcxyz' -> 'ABCXYZ'
   
   ! public :: numarray2str
 
@@ -277,6 +278,79 @@ CONTAINS
 
     end function compress
 
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         countsubstring
+
+  !     PURPOSE
+  !         \brief Count occurences of substring in string
+
+  !         \details Count the number of occurences of a substring in a given string
+
+  !     CALLING SEQUENCE
+  !         count = countsubstring(string, substring)
+
+  !     INTENT(IN)
+  !         \param[in] "character(len=*) :: string"     String
+  !         \param[in] "character(len=*) :: substring"  String
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         None
+
+  !     INTENT(IN), OPTIONAL
+  !         None
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RETURN
+  !         \return integer(i4) :: countsubstring
+
+  !     RESTRICTIONS
+  !         None
+
+  !     EXAMPLE
+  !         None
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         \author Matthias Cuntz
+  !         \date May 2016
+
+  function countsubstring(string, substring)
+    
+    implicit none
+    
+    character(len=*), intent(in) :: string
+    character(len=*), intent(in) :: substring
+    integer(i4)                  :: countsubstring
+
+    integer(i4), allocatable :: string_array(:), substring_array(:)
+    integer(i4)              :: i
+
+    allocate(string_array(len(string//substring)))
+    allocate(substring_array(len(substring)))
+    string_array    = str2num(string//substring)
+    substring_array = str2num(substring)
+
+    countsubstring = 0
+    do i=1, size(string_array) - size(substring_array) + 1
+       if (all(string_array(i:i+size(substring_array)-1) .eq. substring_array)) then
+          countsubstring = countsubstring + 1
+       end if
+    end do
+
+  end function countsubstring
+
 #ifndef ABSOFT
   ! ------------------------------------------------------------------
 
@@ -421,6 +495,7 @@ CONTAINS
   !     HISTORY
   !         \author David Schaefer
   !         \date Mar 2015
+  !         Modified Matthias Cuntz, May 2016 - allocate str2num output
 
   function equalStrings(string1,string2)
     implicit none
@@ -430,6 +505,8 @@ CONTAINS
     integer(i4)                      :: i
     logical                          :: equalStrings
 
+    allocate(array1(len_trim(string1)))
+    allocate(array2(len_trim(string2)))
     array1 = str2num(trim(string1))
     array2 = str2num(trim(string2))
     equalStrings = .false.
@@ -556,29 +633,41 @@ CONTAINS
   !     HISTORY
   !         \author David Schaefer
   !         \date Mar 2015
+  !         Modified Matthias Cuntz, May 2016 - rm append
+  !                  Matthias Cuntz, May 2016 - allocate str2num output
 
   function splitString(string,delim) result(out)
     
-    use mo_append, only : append    
     implicit none
     
     character(len=*),   intent(in)        :: string
     character(len=*),   intent(in)        :: delim
     character(len=256), allocatable       :: out(:)
+    character(len=256), allocatable       :: tmpout(:)
     integer(i4),        allocatable       :: string_array(:), delim_array(:)
-    integer(i4)                           :: i, start
-    !
-    if (allocated(out)) deallocate(out)
-    string_array = str2num(string//delim)
-    delim_array = str2num(delim)
-    start = 1
+    integer(i4)                           :: i, start, zaehl
 
+    if (allocated(out)) deallocate(out)
+    allocate(string_array(len(string//delim)))
+    allocate(delim_array(len(delim)))
+    string_array = str2num(string//delim)
+    delim_array  = str2num(delim)
+
+    start = 1
+    zaehl = 1
+    allocate(tmpout(size(string_array) - size(delim_array) + 1))
     do i=1, size(string_array) - size(delim_array) + 1
        if (all(string_array(i:i+size(delim_array)-1) .eq. delim_array)) then
-          call append(out, numarray2str(string_array(start:i-1)))
+          tmpout(zaehl) = numarray2str(string_array(start:i-1))
           start = i + size(delim_array)
+          zaehl = zaehl + 1
        end if
     end do
+    ! out array
+    zaehl = zaehl - 1
+    allocate(out(zaehl))
+    out(1:zaehl) = tmpout(1:zaehl)
+    deallocate(tmpout)
     !
   end function splitString
 
@@ -629,6 +718,7 @@ CONTAINS
   !     HISTORY
   !         \author David Schaefer
   !         \date Mar 2015
+  !         Modified Matthias Cuntz, May 2016 - allocate str2num output
 
   function startsWith(string, start)
     
@@ -638,8 +728,10 @@ CONTAINS
     integer(i4), allocatable         :: string_array(:), start_array(:)
     logical                          :: startsWith
 
+    allocate(string_array(len_trim(string)))
+    allocate(start_array(len_trim(start)))
     string_array = str2num(string)
-    start_array = str2num(start)
+    start_array  = str2num(start)
 
     startsWith = .false.
     if (all(string_array(1:1+size(start_array)-1) .eq. start_array)) then 

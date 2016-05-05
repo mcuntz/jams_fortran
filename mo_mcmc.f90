@@ -941,7 +941,7 @@ CONTAINS
                 accRatio_n = size(history_accRatio,1)
                 if ( accRatio_n .ge. 10_i4 ) then
                    idummy = accRatio_n-9_i4
-                   accRatio_stddev = stddev( history_accRatio(idummy:accRatio_n) )
+                   accRatio_stddev = stddev( history_accRatio(idummy:accRatio_n), ddof=1_i4 )
 
                    ! Check of Convergence
                    if ( (accRatio_stddev .lt. Sqrt( 1._dp/12._dp * 0.05_dp**2 )) ) then

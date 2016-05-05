@@ -30,24 +30,28 @@ program test
   ! standard_score
   control(:) = (/26518, -92813, 71267, 101100, -3315, -122645, -137562, 11602, 145849/)
   isgood  = isgood .and. all(nint(100000.0_sp * standard_score(real(vec1(:),sp)              )) .EQ. control)
+  if (.not. isgood) write(*,*) 'mo_standard_score 1'
   isgood  = isgood .and. all(nint(100000.0_sp * standard_score(real(vec1(:),sp), mask=masking)) .EQ. control)
+  if (.not. isgood) write(*,*) 'mo_standard_score 2'
 
   ! classified_standard_score
   classes =(/3,2,3,2,2,3,1,1,3/)
   control(:) = (/-3295, -97340, 36240, 102463, -5123, -135075, -70711, 70711, 102130/)
   isgood  = isgood .and. all(nint(100000.0_sp * classified_standard_score(real(vec1(:),sp), classes) ).EQ. control)
-  
+  if (.not. isgood) write(*,*) 'mo_standard_score 3'
+
   masking(:) = (/.TRUE., .TRUE., .FALSE., .FALSE., .TRUE., .TRUE., .TRUE., .TRUE., .FALSE./)
 
   ! dp with mask  
   ! standard_score
   control(:) = (/109170, -54585, 170578, 211517, 68231, -95524, -115993, 88701, 272925/)
-  isgood  = isgood .and. all(nint(100000.0_dp *            standard_score(     vec1(:),     mask=masking)) .EQ. control)  
+  isgood  = isgood .and. all(nint(100000.0_dp *            standard_score(     vec1(:),     mask=masking)) .EQ. control)
+  if (.not. isgood) write(*,*) 'mo_standard_score 4'
 
   ! classified_standard_score
   control = (/70711, -70711, 0, 0, 70711, -70711, -70711, 70711, 0/)
-  isgood  = isgood .and. all(nint(100000.0_dp * classified_standard_score(vec1, classes, mask=masking) ) &
-       .EQ. control)
+  isgood  = isgood .and. all(nint(100000.0_dp * classified_standard_score(vec1, classes, mask=masking) ) .EQ. control)
+  if (.not. isgood) write(*,*) 'mo_standard_score 5'
 
   if (isgood) then
      write(*,*) 'mo_standard_score o.k.'

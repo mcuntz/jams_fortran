@@ -3,8 +3,10 @@ MODULE mo_moment
   ! This module contains routines for the masked calculation of
   ! statistical properties such as moments and mixed moments of input vectors
 
-  ! Note: all except variance and standard deviation are population and not sample moments,
-  !       i.e. they are normally divided by n and not (n-1)
+  ! Note routines work with optional ddof, i.e. "Delta Degrees of Freedom":
+  ! the divisor used in the calculations is n-ddof, where n represents the number of (non-masked) elements.
+  ! By default ddof is zero, i.e. variance and standard deviations are population and not sample moments,
+  ! i.e. they are divided by n and not (n-1).
 
   ! Literature
   !   Moments (incl. mean, stddev, etc.) - Chapter 14 of
@@ -16,8 +18,9 @@ MODULE mo_moment
   !           Experiments in Fluids 22, 129-136, 1996
 
   ! Written Nov 2011, Matthias Cuntz
-  !         Modified, MC, Dec 2011 - mod. correlation, covariance
+  !         Modified, Matthias Cuntz, Dec 2011 - mod. correlation, covariance
   !         Modified by M. Schroen, Sep 2015, average/mean for single value
+  !         Modified, Matthias Cuntz, May 2016 - ddof
 
   ! License
   ! -------
@@ -37,7 +40,7 @@ MODULE mo_moment
   ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011-2012 Matthias Cuntz
+  ! Copyright 2011-2016 Matthias Cuntz
 
   USE mo_kind, ONLY: i4, sp, dp
 
@@ -65,13 +68,13 @@ MODULE mo_moment
 
   !     PURPOSE
   !         Calculates the mean absolute deviations from the mean
-  !             absdev = sum(abs(x-mean(x)))/n
+  !             absdev = sum(abs(x-mean(x)))/(n-ddof)
   !
   !         If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
   !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         out = absdev(dat, mask=mask)
+  !         out = absdev(dat, mask=mask, ddof=ddof)
 
   !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
@@ -85,6 +88,8 @@ MODULE mo_moment
   !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
+  !         integer(i4) :: ddof       Delta Degrees of Freedom. The divisor used in calculations is n-ddof,
+  !                                   where n represents the number of (non-masked) elements. By default ddof is zero.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -171,14 +176,14 @@ MODULE mo_moment
 
   !     PURPOSE
   !         Calculates the central moment of a vector, i.e. the r-central moment of a series of numbers:
-  !             central_moment = sum((x-mean(x))**r)/n
+  !             central_moment = sum((x-mean(x))**r)/(n-ddof)
   !         Note that the variance is the second central moment: variance(x) = central_moment(x,2)
   !
   !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
   !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         out = central_moment(x, r, mask=mask)
+  !         out = central_moment(x, r, mask=mask, ddof=ddof)
 
   !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
@@ -193,6 +198,8 @@ MODULE mo_moment
   !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+  !         integer(i4) :: ddof       Delta Degrees of Freedom. The divisor used in calculations is n-ddof,
+  !                                   where n represents the number of (non-masked) elements. By default ddof is zero.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -231,7 +238,7 @@ MODULE mo_moment
   !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         out = central_moment_var(x, r, nin=nin, mask=mask)
+  !         out = central_moment_var(x, r, nin=nin, mask=mask, ddof=ddof)
 
   !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
@@ -246,6 +253,8 @@ MODULE mo_moment
   !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+  !         integer(i4) :: ddof       Delta Degrees of Freedom. The divisor used in calculations is n-ddof,
+  !                                   where n represents the number of (non-masked) elements. By default ddof is zero.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -279,13 +288,13 @@ MODULE mo_moment
 
   !     PURPOSE
   !         Calculates the correlation between two input vectors, i.e. the covariance divided by the standard deviations:
-  !             correlation = (sum((x-mean(x))*(y-mean(y)))/n) / (stddev(x)*stddev(y))
+  !             correlation = (sum((x-mean(x))*(y-mean(y)))/(n-ddof)) / (stddev(x)*stddev(y))
   !
   !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
   !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         out = correlation(x, y, mask=mask)
+  !         out = correlation(x, y, mask=mask, ddof=ddof)
 
   !     INTENT(IN)
   !         real(sp/dp) :: x(:)     First 1D-array with input numbers
@@ -300,6 +309,8 @@ MODULE mo_moment
   !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+  !         integer(i4) :: ddof       Delta Degrees of Freedom. The divisor used in calculations is n-ddof,
+  !                                   where n represents the number of (non-masked) elements. By default ddof is zero.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -498,14 +509,14 @@ MODULE mo_moment
 
   !     PURPOSE
   !         Calculates the r,s-th mixed central moment between two vectors:
-  !             mixed_central_moment = sum((x-mean(x))**r * (y-mean(y))**s)/n
+  !             mixed_central_moment = sum((x-mean(x))**r * (y-mean(y))**s)/(n-ddof)
   !         Note that covariace(x,y) = mixed_central_moment(x,y,1,1)
   !
   !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
   !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         out = mixed_central_moment(x, y, r, s, mask=mask)
+  !         out = mixed_central_moment(x, y, r, s, mask=mask, ddof=ddof)
 
   !     INTENT(IN)
   !         real(sp/dp) :: x(:)       First 1D-array
@@ -522,6 +533,8 @@ MODULE mo_moment
   !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+  !         integer(i4) :: ddof       Delta Degrees of Freedom. The divisor used in calculations is n-ddof,
+  !                                   where n represents the number of (non-masked) elements. By default ddof is zero.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -562,7 +575,7 @@ MODULE mo_moment
   !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         out = mixed_central_moment_var(x, y, r, s, mask=mask)
+  !         out = mixed_central_moment_var(x, y, r, s, mask=mask, ddof=ddof)
 
   !     INTENT(IN)
   !         real(sp/dp) :: x(:)       First 1D-array
@@ -579,6 +592,8 @@ MODULE mo_moment
   !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(x).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+  !         integer(i4) :: ddof       Delta Degrees of Freedom. The divisor used in calculations is n-ddof,
+  !                                   where n represents the number of (non-masked) elements. By default ddof is zero.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -615,11 +630,11 @@ MODULE mo_moment
   !         Calculates the first four sample moments of a vector, i.e. mean, variance, skewness, and kurtosis,
   !         as well as standard deviation and mean absolute devation.
   !            mean = sum(x)/n
-  !            variance = sum((x-mean(x))**2)/(n-1)
+  !            variance = sum((x-mean(x))**2)/(n-ddof)
   !            skewness = sum(((x-mean(x))/stddev(x))**3)/n
   !            kurtosis = sum(((x-mean(x))/stddev(x))**4)/n - 3
   !            stddev   = sqrt(variance)
-  !            absdev   = sum(abs(x-mean(x)))/n
+  !            absdev   = sum(abs(x-mean(x)))/(n-ddof)
   !
   !         All output is optional.
   !         If an optinal mask is given, the calculations are over those locations that correspond to true values in the mask.
@@ -627,7 +642,7 @@ MODULE mo_moment
 
   !     CALLING SEQUENCE
   !         call moment(dat, average=average, variance=variance, skewness=skewness, kurtosis=kurtosis, &
-  !                     mean=mean, stddev=stddev, absdev=absdev, mask=mask)
+  !                     mean=mean, stddev=stddev, absdev=absdev, mask=mask, ddof=ddof)
 
   !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
@@ -641,6 +656,8 @@ MODULE mo_moment
   !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in vec corresponding to the true values in mask are used.
+  !         integer(i4) :: ddof       Delta Degrees of Freedom. The divisor used in calculations is n-ddof,
+  !                                   where n represents the number of (non-masked) elements. By default ddof is zero.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -651,7 +668,7 @@ MODULE mo_moment
   !         real(sp/dp) :: skewness   skewness of input vector
   !         real(sp/dp) :: kurtosis   excess kurtosis of input vector
   !         real(sp/dp) :: mean       same as average
-  !         real(sp/dp) :: stddev     sqaure root of variance
+  !         real(sp/dp) :: stddev     square root of variance
   !         real(sp/dp) :: absdev     mean absolute deviations from average
 
   !     RESTRICTIONS
@@ -733,13 +750,13 @@ MODULE mo_moment
 
   !     PURPOSE
   !         Calculates the sample standard deviation of a vector, i.e. the square root of the second moment
-  !             stddev = sqrt(sum((x-mean(x))**2)/(n-1))
+  !             stddev = sqrt(sum((x-mean(x))**2)/(n-ddof))
   !
   !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
   !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         out = stddev(dat, mask=mask)
+  !         out = stddev(dat, mask=mask, ddof=ddof)
 
   !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
@@ -753,6 +770,8 @@ MODULE mo_moment
   !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+  !         integer(i4) :: ddof       Delta Degrees of Freedom. The divisor used in calculations is n-ddof,
+  !                                   where n represents the number of (non-masked) elements. By default ddof is zero.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -762,8 +781,6 @@ MODULE mo_moment
 
   !     RESTRICTIONS
   !         Input values must be floating points.
-  !         This is the sample standard deviation. The population standard deviation is:
-  !             popstddev = stddev * sqrt((n-1)/n)
 
   !     EXAMPLE
   !         vec = (/ 1., 2, 3., -999., 5., 6. /)
@@ -788,13 +805,13 @@ MODULE mo_moment
 
   !     PURPOSE
   !         Calculates the sample variance of a vector, i.e. the second moment
-  !             variance = sum((x-mean(x))**2)/(n-1)
+  !             variance = sum((x-mean(x))**2)/(n-ddof)
   !
   !         If an optinal mask is given, the average is only over those locations that correspond to true values in the mask.
   !         x can be single or double precision. The result will have the same numerical precision.
 
   !     CALLING SEQUENCE
-  !         out = variance(dat, mask=mask)
+  !         out = variance(dat, mask=mask, ddof=ddof)
 
   !     INTENT(IN)
   !         real(sp/dp) :: dat(:)     1D-array with input numbers
@@ -808,6 +825,8 @@ MODULE mo_moment
   !     INTENT(IN), OPTIONAL
   !         logical :: mask(:)        1D-array of logical values with size(dat).
   !                                   If present, only those locations in dat corresponding to the true values in mask are used.
+  !         integer(i4) :: ddof       Delta Degrees of Freedom. The divisor used in calculations is n-ddof,
+  !                                   where n represents the number of (non-masked) elements. By default ddof is zero.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -817,8 +836,6 @@ MODULE mo_moment
 
   !     RESTRICTIONS
   !         Input values must be floating points.
-  !         This is the sample variance. The population variance is:
-  !             var = variance * (n-1)/n
 
   !     EXAMPLE
   !         vec = (/ 1., 2, 3., -999., 5., 6. /)
@@ -846,13 +863,14 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION absdev_dp(dat, mask)
+  FUNCTION absdev_dp(dat, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: absdev_dp
+    REAL(dp), DIMENSION(:),           INTENT(IN) :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(dp)                                     :: absdev_dp
 
     REAL(dp) :: n
 
@@ -867,7 +885,8 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),dp)
     endif
-    if (n .le. (1.0_dp+tiny(1.0_dp))) stop 'absdev_dp: n must be at least 2'
+    if (present(ddof)) n = n-real(ddof,dp)
+    if (n < 1.0_dp) stop 'absdev_dp: n-ddof must be at least 1'
 
     ! Average
     ave  = sum(dat(:), mask=maske)/n
@@ -877,13 +896,14 @@ CONTAINS
   END FUNCTION absdev_dp
 
 
-  FUNCTION absdev_sp(dat, mask)
+  FUNCTION absdev_sp(dat, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: absdev_sp
+    REAL(sp), DIMENSION(:),           INTENT(IN) :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(sp)                                     :: absdev_sp
 
     REAL(sp) :: n
 
@@ -898,7 +918,8 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),sp)
     endif
-    if (n .le. (1.0_sp+tiny(1.0_sp))) stop 'absdev_sp: n must be at least 2'
+    if (present(ddof)) n = n-real(ddof,sp)
+    if (n < 1.0_sp) stop 'absdev_sp: n-ddof must be at least 1'
 
     ! Average
     ave  = sum(dat(:), mask=maske)/n
@@ -962,23 +983,24 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION central_moment_dp(x, r, mask)
+  FUNCTION central_moment_dp(x, r, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(dp),    DIMENSION(:),           INTENT(IN)  :: x
-    INTEGER(i4),                         INTENT(IN)  :: r
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                         :: central_moment_dp
+    REAL(dp),    DIMENSION(:),           INTENT(IN) :: x
+    INTEGER(i4),                         INTENT(IN) :: r
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: ddof
+    REAL(dp)                                        :: central_moment_dp
 
     REAL(dp)                    :: n, mx
     LOGICAL, DIMENSION(size(x)) :: maske
 
-    if (r .lt. 0) then
+    if (r < 0) then
        central_moment_dp = 0.0_dp
        return
     endif
-    if (r .eq. 0) then
+    if (r == 0) then
        central_moment_dp = 1.0_dp
        return
     endif
@@ -991,7 +1013,8 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),dp)
     endif
-    if (n .le. (2.0_dp+tiny(2.0_dp))) stop 'central_moment_dp: n must be at least 3'
+    if (present(ddof)) n = n-real(ddof,dp)
+    if (n < 1.0_dp) stop 'central_moment_dp: n-ddof must be at least 1'
 
     ! average
     mx = sum(x, mask=maske) / n
@@ -1001,23 +1024,24 @@ CONTAINS
   END FUNCTION central_moment_dp
 
 
-  FUNCTION central_moment_sp(x, r, mask)
+  FUNCTION central_moment_sp(x, r, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(sp),    DIMENSION(:),           INTENT(IN)  :: x
-    INTEGER(i4),                         INTENT(IN)  :: r
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                         :: central_moment_sp
+    REAL(sp),    DIMENSION(:),           INTENT(IN) :: x
+    INTEGER(i4),                         INTENT(IN) :: r
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: ddof
+    REAL(sp)                                        :: central_moment_sp
 
     REAL(sp) :: n, mx
     LOGICAL, DIMENSION(size(x)) :: maske
 
-    if (r .lt. 0) then
+    if (r < 0) then
        central_moment_sp = 0.0_sp
        return
     endif
-    if (r .eq. 0) then
+    if (r == 0) then
        central_moment_sp = 1.0_sp
        return
     endif
@@ -1030,7 +1054,8 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),sp)
     endif
-    if (n .le. (2.0_sp+tiny(2.0_sp))) stop 'central_moment_sp: n must be at least 3'
+    if (present(ddof)) n = n-real(ddof,sp)
+    if (n < 1.0_sp) stop 'central_moment_sp: n-ddof must be at least 1'
 
     ! average
     mx = sum(x, mask=maske) / n
@@ -1041,19 +1066,20 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION central_moment_var_dp(x, r, mask)
+  FUNCTION central_moment_var_dp(x, r, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(dp),    DIMENSION(:),           INTENT(IN)  :: x
-    INTEGER(i4),                         INTENT(IN)  :: r
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                         :: central_moment_var_dp
+    REAL(dp),    DIMENSION(:),           INTENT(IN) :: x
+    INTEGER(i4),                         INTENT(IN) :: r
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: ddof
+    REAL(dp)                                        :: central_moment_var_dp
 
     REAL(dp) :: n, rr, u2r, ur, urm1, urp1, u2
     LOGICAL, DIMENSION(size(x)) :: maske
 
-    if (r.le.1) then
+    if (r <= 1) then
        central_moment_var_dp = 0.0_dp
        return
     endif
@@ -1066,32 +1092,34 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),dp)
     endif
-    if (n .le. (2.0_dp+tiny(2.0_dp))) stop 'central_moment_var_dp: n must be at least 3'
+    if (present(ddof)) n = n-real(ddof,dp)
+    if (n < 1.0_dp) stop 'central_moment_var_dp: n-ddof must be at least 1'
 
-    u2r  = central_moment(x, 2*r, mask=maske)
-    ur   = central_moment(x, r,   mask=maske)
-    urm1 = central_moment(x, r-1, mask=maske)
-    u2   = central_moment(x, 2,   mask=maske)
-    urp1 = central_moment(x, r+1, mask=maske)
+    u2r  = central_moment(x, 2*r, mask=maske, ddof=ddof)
+    ur   = central_moment(x, r,   mask=maske, ddof=ddof)
+    urm1 = central_moment(x, r-1, mask=maske, ddof=ddof)
+    u2   = central_moment(x, 2,   mask=maske, ddof=ddof)
+    urp1 = central_moment(x, r+1, mask=maske, ddof=ddof)
     rr   = real(r,dp)
     central_moment_var_dp = (u2r - ur*ur + rr*rr*urm1*urm1*u2 - 2.0_dp*rr*urp1*urm1) / n
 
   END FUNCTION central_moment_var_dp
 
 
-  FUNCTION central_moment_var_sp(x, r, mask)
+  FUNCTION central_moment_var_sp(x, r, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(sp),    DIMENSION(:),           INTENT(IN)  :: x
-    INTEGER(i4),                         INTENT(IN)  :: r
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                         :: central_moment_var_sp
+    REAL(sp),    DIMENSION(:),           INTENT(IN) :: x
+    INTEGER(i4),                         INTENT(IN) :: r
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: ddof
+    REAL(sp)                                        :: central_moment_var_sp
 
     REAL(sp) :: n, rr, u2r, ur, urm1, urp1, u2
     LOGICAL, DIMENSION(size(x)) :: maske
 
-    if (r.le.1) then
+    if (r <= 1) then
        central_moment_var_sp = 0.0_sp
        return
     endif
@@ -1104,13 +1132,14 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),sp)
     endif
-    if (n .le. (2.0_sp+tiny(2.0_sp))) stop 'central_moment_var_sp: n must be at least 3'
+    if (present(ddof)) n = n-real(ddof,sp)
+    if (n < 1.0_sp) stop 'central_moment_var_sp: n-ddof must be at least 1'
 
-    u2r  = central_moment(x, 2*r, mask=maske)
-    ur   = central_moment(x, r,   mask=maske)
-    urm1 = central_moment(x, r-1, mask=maske)
-    u2   = central_moment(x, 2,   mask=maske)
-    urp1 = central_moment(x, r+1, mask=maske)
+    u2r  = central_moment(x, 2*r, mask=maske, ddof=ddof)
+    ur   = central_moment(x, r,   mask=maske, ddof=ddof)
+    urm1 = central_moment(x, r-1, mask=maske, ddof=ddof)
+    u2   = central_moment(x, 2,   mask=maske, ddof=ddof)
+    urp1 = central_moment(x, r+1, mask=maske, ddof=ddof)
     rr   = real(r,sp)
     central_moment_var_sp = (u2r - ur*ur + rr*rr*urm1*urm1*u2 - 2.0_sp*rr*urp1*urm1) / n
 
@@ -1118,14 +1147,15 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION correlation_dp(x, y, mask)
+  FUNCTION correlation_dp(x, y, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: x
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: y
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: correlation_dp
+    REAL(dp), DIMENSION(:),           INTENT(IN) :: x
+    REAL(dp), DIMENSION(:),           INTENT(IN) :: y
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(dp)                                     :: correlation_dp
 
     REAL(dp)    :: n
     REAL(dp)    :: mx, my
@@ -1141,11 +1171,12 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),dp)
     endif
-    if (n .le. (1.0_dp+tiny(1.0_dp))) stop 'correlation_dp: n must be at least 2'
+    if (present(ddof)) n = n-real(ddof,dp)
+    if (n < 1.0_dp) stop 'correlation_dp: n-ddof must be at least 1'
 
     ! Mean and Stddev of x and y
-    call moment(x, mx, stddev=sx, mask=maske)
-    call moment(y, my, stddev=sy, mask=maske)
+    call moment(x, mx, stddev=sx, mask=maske, ddof=ddof)
+    call moment(y, my, stddev=sy, mask=maske, ddof=ddof)
     covar = sum((x-mx)*(y-my), mask=maske) / n
     ! correlation
     correlation_dp  = covar / (sx*sy)
@@ -1153,14 +1184,15 @@ CONTAINS
   END FUNCTION correlation_dp
 
 
-  FUNCTION correlation_sp(x, y, mask)
+  FUNCTION correlation_sp(x, y, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: x
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: y
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: correlation_sp
+    REAL(sp), DIMENSION(:),           INTENT(IN) :: x
+    REAL(sp), DIMENSION(:),           INTENT(IN) :: y
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(sp)                                     :: correlation_sp
 
     REAL(sp)    :: n
     REAL(sp)    :: mx, my
@@ -1176,11 +1208,12 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),sp)
     endif
-    if (n .le. (1.0_sp+tiny(1.0_sp))) stop 'correlation_sp: n must be at least 2'
+    if (present(ddof)) n = n-real(ddof,sp)
+    if (n < 1.0_sp) stop 'correlation_sp: n-ddof must be at least 1'
 
     ! Mean and Stddev of x and y
-    call moment(x, mx, stddev=sx, mask=maske)
-    call moment(y, my, stddev=sy, mask=maske)
+    call moment(x, mx, stddev=sx, mask=maske, ddof=ddof)
+    call moment(y, my, stddev=sy, mask=maske, ddof=ddof)
     covar = sum((x-mx)*(y-my), mask=maske) / n
     ! correlation
     correlation_sp  = covar / (sx*sy)
@@ -1189,14 +1222,15 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION covariance_dp(x, y, mask)
+  FUNCTION covariance_dp(x, y, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: x
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: y
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: covariance_dp
+    REAL(dp), DIMENSION(:),           INTENT(IN) :: x
+    REAL(dp), DIMENSION(:),           INTENT(IN) :: y
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(dp)                                     :: covariance_dp
 
     REAL(dp)    :: n
     REAL(dp)    :: mx, my
@@ -1211,7 +1245,8 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),dp)
     endif
-    if (n .le. (1.0_dp+tiny(1.0_dp))) stop 'covariance_dp: n must be at least 2'
+    if (present(ddof)) n = n-real(ddof,dp)
+    if (n < 1.0_dp) stop 'covariance_dp: n-ddof must be at least 1'
 
     ! Mean of x and y
     mx = mean(x, mask=maske)
@@ -1221,14 +1256,15 @@ CONTAINS
   END FUNCTION covariance_dp
 
 
-  FUNCTION covariance_sp(x, y, mask)
+  FUNCTION covariance_sp(x, y, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: x
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: y
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: covariance_sp
+    REAL(sp), DIMENSION(:),           INTENT(IN) :: x
+    REAL(sp), DIMENSION(:),           INTENT(IN) :: y
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(sp)                                     :: covariance_sp
 
     REAL(sp)    :: n
     REAL(sp)    :: mx, my
@@ -1243,7 +1279,8 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),sp)
     endif
-    if (n .le. (1.0_sp+tiny(1.0_sp))) stop 'covariance_sp: n must be at least 2'
+    if (present(ddof)) n = n-real(ddof,sp)
+    if (n < 1.0_sp) stop 'covariance_sp: n-ddof must be at least 1'
 
     ! Mean of x and y
     mx = mean(x, mask=maske)
@@ -1276,7 +1313,7 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),dp)
     endif
-    if (n .le. (1.0_dp+tiny(1.0_dp))) stop 'kurtosis_dp: n must be at least 2'
+    if (n < 2.0_dp) stop 'kurtosis_dp: n must be at least 2'
 
     ! Average
     ave  = sum(dat(:), mask=maske)/n
@@ -1286,7 +1323,7 @@ CONTAINS
     p(:) = s(:)*s(:)
     var = sum(p(:), mask=maske)
     var = (var-ep*ep/n)/(n-1.0_dp)
-    if (abs(var) .lt. tiny(0.0_dp)) stop 'kurtosis_dp: no kurtosis when zero variance'
+    if (abs(var) < tiny(0.0_dp)) stop 'kurtosis_dp: no kurtosis when zero variance'
     ! Kurtosis
     p(:) = p(:)*s(:)*s(:)
     kurtosis_dp = sum(p(:), mask=maske)
@@ -1317,7 +1354,7 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),sp)
     endif
-    if (n .le. (1.0_sp+tiny(1.0_sp))) stop 'kurtosis_sp: n must be at least 2'
+    if (n < 2.0_sp) stop 'kurtosis_sp: n must be at least 2'
 
     ! Average
     ave  = sum(dat(:), mask=maske)/n
@@ -1327,7 +1364,7 @@ CONTAINS
     p(:) = s(:)*s(:)
     var = sum(p(:), mask=maske)
     var = (var-ep*ep/n)/(n-1.0_sp)
-    if (abs(var) .lt. tiny(0.0_sp)) stop 'kurtosis_sp: no kurtosis when zero variance'
+    if (abs(var) < tiny(0.0_sp)) stop 'kurtosis_sp: no kurtosis when zero variance'
     ! Kurtosis
     p(:) = p(:)*s(:)*s(:)
     kurtosis_sp = sum(p(:), mask=maske)
@@ -1392,22 +1429,23 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION mixed_central_moment_dp(x, y, r, s, mask)
+  FUNCTION mixed_central_moment_dp(x, y, r, s, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(dp),    DIMENSION(:),           INTENT(IN)  :: x
-    REAL(dp),    DIMENSION(:),           INTENT(IN)  :: y
-    INTEGER(i4),                         INTENT(IN)  :: r
-    INTEGER(i4),                         INTENT(IN)  :: s
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                         :: mixed_central_moment_dp
+    REAL(dp),    DIMENSION(:),           INTENT(IN) :: x
+    REAL(dp),    DIMENSION(:),           INTENT(IN) :: y
+    INTEGER(i4),                         INTENT(IN) :: r
+    INTEGER(i4),                         INTENT(IN) :: s
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: ddof
+    REAL(dp)                                        :: mixed_central_moment_dp
 
     REAL(dp)                     :: n, mx, my
     REAL(dp), DIMENSION(size(x)) :: xx, yy
     LOGICAL,  DIMENSION(size(x)) :: maske
 
-    if (r.lt.0 .or. s.lt.0) then
+    if (r<0 .or. s<0) then
        mixed_central_moment_dp = 0.0_dp
        return
     endif
@@ -1421,11 +1459,12 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),dp)
     endif
-    if (n .le. (2.0_dp+tiny(2.0_dp))) stop 'mixed_central_moment_dp: n must be at least 3'
+    if (present(ddof)) n = n-real(ddof,dp)
+    if (n < 1.0_dp) stop 'mixed_central_moment_dp: n-ddof must be at least 1'
 
     ! Averages of x and y
-    mx = sum(x, mask=maske) / n
-    my = sum(y, mask=maske) / n
+    mx = mean(x, mask=maske)
+    my = mean(y, mask=maske)
     ! Mixed central moment
     if (r>0) then
        xx = (x-mx)**r
@@ -1442,22 +1481,23 @@ CONTAINS
   END FUNCTION mixed_central_moment_dp
 
 
-  FUNCTION mixed_central_moment_sp(x, y, r, s, mask)
+  FUNCTION mixed_central_moment_sp(x, y, r, s, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(sp),    DIMENSION(:),           INTENT(IN)  :: x
-    REAL(sp),    DIMENSION(:),           INTENT(IN)  :: y
-    INTEGER(i4),                         INTENT(IN)  :: r
-    INTEGER(i4),                         INTENT(IN)  :: s
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                         :: mixed_central_moment_sp
+    REAL(sp),    DIMENSION(:),           INTENT(IN) :: x
+    REAL(sp),    DIMENSION(:),           INTENT(IN) :: y
+    INTEGER(i4),                         INTENT(IN) :: r
+    INTEGER(i4),                         INTENT(IN) :: s
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: ddof
+    REAL(sp)                                        :: mixed_central_moment_sp
 
     REAL(sp)                     :: n, mx, my
     REAL(sp), DIMENSION(size(x)) :: xx, yy
     LOGICAL,  DIMENSION(size(x)) :: maske
 
-    if (r.lt.0 .or. s.lt.0) then
+    if (r<0 .or. s<0) then
        mixed_central_moment_sp = 0.0_sp
        return
     endif
@@ -1471,11 +1511,12 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),sp)
     endif
-    if (n .le. (2.0_sp+tiny(2.0_sp))) stop 'mixed_central_moment_sp: n must be at least 3'
+    if (present(ddof)) n = n-real(ddof,sp)
+    if (n < 1.0_sp) stop 'mixed_central_moment_sp: n-ddof must be at least 1'
 
     ! Averages of x and y
-    mx = sum(x, mask=maske) / n
-    my = sum(y, mask=maske) / n
+    mx = mean(x, mask=maske)
+    my = mean(y, mask=maske)
     ! Mixed central moment
     if (r>0) then
        xx = (x-mx)**r
@@ -1493,16 +1534,17 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION mixed_central_moment_var_dp(x, y, r, s, mask)
+  FUNCTION mixed_central_moment_var_dp(x, y, r, s, mask, ddof)
     ! Error variance of mixed central moment (Benedict & Gould 1996)
     IMPLICIT NONE
 
-    REAL(dp),    DIMENSION(:),           INTENT(IN)  :: x
-    REAL(dp),    DIMENSION(:),           INTENT(IN)  :: y
-    INTEGER(i4),                         INTENT(IN)  :: r
-    INTEGER(i4),                         INTENT(IN)  :: s
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                         :: mixed_central_moment_var_dp
+    REAL(dp),    DIMENSION(:),           INTENT(IN) :: x
+    REAL(dp),    DIMENSION(:),           INTENT(IN) :: y
+    INTEGER(i4),                         INTENT(IN) :: r
+    INTEGER(i4),                         INTENT(IN) :: s
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: ddof
+    REAL(dp)                                        :: mixed_central_moment_var_dp
 
     REAL(dp) :: u2r2s, urs, urm1s, u20, urp1s, ursm1, u02, ursp1, u11
     REAL(dp) :: n, rr, ss
@@ -1517,17 +1559,18 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),dp)
     endif
-    if (n .le. (2.0_dp+tiny(2.0_dp))) stop 'mixed_central_moment_var_dp: n must be at least 3'
+    if (present(ddof)) n = n-real(ddof,dp)
+    if (n < 1.0_dp) stop 'mixed_central_moment_var_dp: n-ddof must be at least 1'
 
-    u2r2s = mixed_central_moment(x, y, 2*r, 2*s, mask=maske)
-    urs   = mixed_central_moment(x, y, r,   s,   mask=maske)
-    urm1s = mixed_central_moment(x, y, r-1, s,   mask=maske)
-    u20   = mixed_central_moment(x, y, 2,   0,   mask=maske)
-    urp1s = mixed_central_moment(x, y, r+1, s,   mask=maske)
-    ursm1 = mixed_central_moment(x, y, r,   s-1, mask=maske)
-    u02   = mixed_central_moment(x, y, 0,   2,   mask=maske)
-    ursp1 = mixed_central_moment(x, y, r,   s+1, mask=maske)
-    u11   = mixed_central_moment(x, y, 1,   1,   mask=maske)
+    u2r2s = mixed_central_moment(x, y, 2*r, 2*s, mask=maske, ddof=ddof)
+    urs   = mixed_central_moment(x, y, r,   s,   mask=maske, ddof=ddof)
+    urm1s = mixed_central_moment(x, y, r-1, s,   mask=maske, ddof=ddof)
+    u20   = mixed_central_moment(x, y, 2,   0,   mask=maske, ddof=ddof)
+    urp1s = mixed_central_moment(x, y, r+1, s,   mask=maske, ddof=ddof)
+    ursm1 = mixed_central_moment(x, y, r,   s-1, mask=maske, ddof=ddof)
+    u02   = mixed_central_moment(x, y, 0,   2,   mask=maske, ddof=ddof)
+    ursp1 = mixed_central_moment(x, y, r,   s+1, mask=maske, ddof=ddof)
+    u11   = mixed_central_moment(x, y, 1,   1,   mask=maske, ddof=ddof)
     rr = real(r,dp)
     ss = real(s,dp)
 
@@ -1539,16 +1582,17 @@ CONTAINS
   END FUNCTION mixed_central_moment_var_dp
 
 
-  FUNCTION mixed_central_moment_var_sp(x, y, r, s, mask)
+  FUNCTION mixed_central_moment_var_sp(x, y, r, s, mask, ddof)
     ! Error variance of mixed central moment (Benedict & Gould 1996)
     IMPLICIT NONE
 
-    REAL(sp),    DIMENSION(:),           INTENT(IN)  :: x
-    REAL(sp),    DIMENSION(:),           INTENT(IN)  :: y
-    INTEGER(i4),                         INTENT(IN)  :: r
-    INTEGER(i4),                         INTENT(IN)  :: s
-    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                         :: mixed_central_moment_var_sp
+    REAL(sp),    DIMENSION(:),           INTENT(IN) :: x
+    REAL(sp),    DIMENSION(:),           INTENT(IN) :: y
+    INTEGER(i4),                         INTENT(IN) :: r
+    INTEGER(i4),                         INTENT(IN) :: s
+    LOGICAL,     DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),               OPTIONAL, INTENT(IN) :: ddof
+    REAL(sp)                                        :: mixed_central_moment_var_sp
 
     REAL(sp) :: u2r2s, urs, urm1s, u20, urp1s, ursm1, u02, ursp1, u11
     REAL(sp) :: n, rr, ss
@@ -1563,17 +1607,18 @@ CONTAINS
        maske(:) = .true.
        n = real(size(x),sp)
     endif
-    if (n .le. (2.0_sp+tiny(2.0_sp))) stop 'mixed_central_moment_var_sp: n must be at least 3'
+    if (present(ddof)) n = n-real(ddof,sp)
+    if (n < 1.0_sp) stop 'mixed_central_moment_var_sp: n-ddof must be at least 1'
 
-    u2r2s = mixed_central_moment(x, y, 2*r, 2*s, mask=maske)
-    urs   = mixed_central_moment(x, y, r,   s,   mask=maske)
-    urm1s = mixed_central_moment(x, y, r-1, s,   mask=maske)
-    u20   = mixed_central_moment(x, y, 2,   0,   mask=maske)
-    urp1s = mixed_central_moment(x, y, r+1, s,   mask=maske)
-    ursm1 = mixed_central_moment(x, y, r,   s-1, mask=maske)
-    u02   = mixed_central_moment(x, y, 0,   2,   mask=maske)
-    ursp1 = mixed_central_moment(x, y, r,   s+1, mask=maske)
-    u11   = mixed_central_moment(x, y, 1,   1,   mask=maske)
+    u2r2s = mixed_central_moment(x, y, 2*r, 2*s, mask=maske, ddof=ddof)
+    urs   = mixed_central_moment(x, y, r,   s,   mask=maske, ddof=ddof)
+    urm1s = mixed_central_moment(x, y, r-1, s,   mask=maske, ddof=ddof)
+    u20   = mixed_central_moment(x, y, 2,   0,   mask=maske, ddof=ddof)
+    urp1s = mixed_central_moment(x, y, r+1, s,   mask=maske, ddof=ddof)
+    ursm1 = mixed_central_moment(x, y, r,   s-1, mask=maske, ddof=ddof)
+    u02   = mixed_central_moment(x, y, 0,   2,   mask=maske, ddof=ddof)
+    ursp1 = mixed_central_moment(x, y, r,   s+1, mask=maske, ddof=ddof)
+    u11   = mixed_central_moment(x, y, 1,   1,   mask=maske, ddof=ddof)
     rr = real(r,sp)
     ss = real(s,sp)
 
@@ -1586,7 +1631,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  SUBROUTINE moment_dp(dat, average, variance, skewness, kurtosis, mean, stddev, absdev, mask)
+  SUBROUTINE moment_dp(dat, average, variance, skewness, kurtosis, mean, stddev, absdev, mask, ddof)
 
     IMPLICIT NONE
 
@@ -1599,8 +1644,9 @@ CONTAINS
     REAL(dp),               OPTIONAL, INTENT(OUT) :: stddev
     REAL(dp),               OPTIONAL, INTENT(OUT) :: absdev
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN)  :: ddof
 
-    REAL(dp) :: n
+    REAL(dp) :: n, n1
 
     REAL(dp) :: ep, ave, var
     REAL(dp), DIMENSION(size(dat)) :: p, s
@@ -1614,7 +1660,12 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),sp)
     endif
-    if (n .le. (1.0_sp+tiny(1.0_sp))) stop 'moment_dp: n must be at least 2'
+    if (present(ddof)) then
+       n1 = n-real(ddof,dp)
+    else
+       n1 = n
+    endif
+    if (n1 < 1.0_dp) stop 'moment_dp: n-ddof must be at least 1'
 
     ! Any optional argument
     if (.not. (present(average) .or. present(variance) .or. present(skewness) .or. &
@@ -1627,20 +1678,20 @@ CONTAINS
          present(kurtosis) .or. present(stddev) .or. present(absdev))) return
     ! Absolute deviation
     s(:) = dat(:)-ave
-    if (present(absdev)) absdev = sum(abs(s(:)), mask=maske)/n
+    if (present(absdev)) absdev = sum(abs(s(:)), mask=maske)/n1
     ! Variance / Standard deviation
     if (.not. (present(variance) .or. present(skewness) .or. &
          present(kurtosis) .or. present(stddev))) return
     ep   = sum(s(:), mask=maske)
     p(:) = s(:)*s(:)
     var = sum(p(:), mask=maske)
-    var = (var-ep*ep/n)/(n-1.0_dp)
+    var = (var-ep*ep/n)/n1
     if (present(variance)) variance = var
     ! Standard deviation
-    if (present(stddev))   stddev   = sqrt(var)
+    if (present(stddev)) stddev   = sqrt(var)
     if (.not. (present(skewness) .or. present(kurtosis))) return
     ! Skewness
-    if (abs(var) .lt. tiny(0.0_dp)) stop 'moment_dp: no skewness or kurtosis when zero variance'
+    if (abs(var) < tiny(0.0_dp)) stop 'moment_dp: no skewness or kurtosis when zero variance'
     p(:) = p(:)*s(:)
     if (present(skewness)) then
        skewness = sum(p(:), mask=maske)
@@ -1656,7 +1707,7 @@ CONTAINS
   END SUBROUTINE moment_dp
 
 
-  SUBROUTINE moment_sp(dat, average, variance, skewness, kurtosis, mean, stddev, absdev, mask)
+  SUBROUTINE moment_sp(dat, average, variance, skewness, kurtosis, mean, stddev, absdev, mask, ddof)
 
     IMPLICIT NONE
 
@@ -1669,8 +1720,9 @@ CONTAINS
     REAL(sp),               OPTIONAL, INTENT(OUT) :: stddev
     REAL(sp),               OPTIONAL, INTENT(OUT) :: absdev
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN)  :: ddof
 
-    REAL(sp) :: n
+    REAL(sp) :: n, n1
 
     REAL(sp) :: ep, ave, var
     REAL(sp), DIMENSION(size(dat)) :: p, s
@@ -1684,7 +1736,12 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),sp)
     endif
-    if (n .le. (1.0_sp+tiny(1.0_sp))) stop 'moment_sp: n must be at least 2'
+    if (present(ddof)) then
+       n1 = n-real(ddof,sp)
+    else
+       n1 = n
+    endif
+    if (n1 < 1.0_sp) stop 'moment_sp: n-ddof must be at least 1'
 
     ! Any optional argument
     if (.not. (present(average) .or. present(variance) .or. present(skewness) .or. &
@@ -1697,20 +1754,20 @@ CONTAINS
          present(kurtosis) .or. present(stddev) .or. present(absdev))) return
     ! Absolute deviation
     s(:) = dat(:)-ave
-    if (present(absdev)) absdev = sum(abs(s(:)), mask=maske)/n
+    if (present(absdev)) absdev = sum(abs(s(:)), mask=maske)/n1
     ! Variance / Standard deviation
     if (.not. (present(variance) .or. present(skewness) .or. &
          present(kurtosis) .or. present(stddev))) return
     ep   = sum(s(:), mask=maske)
     p(:) = s(:)*s(:)
     var = sum(p(:), mask=maske)
-    var = (var-ep*ep/n)/(n-1.0_sp)
+    var = (var-ep*ep/n)/n1
     if (present(variance)) variance = var
     ! Standard deviation
-    if (present(stddev))   stddev   = sqrt(var)
+    if (present(stddev)) stddev   = sqrt(var)
     if (.not. (present(skewness) .or. present(kurtosis))) return
     ! Skewness
-    if (abs(var) .lt. tiny(0.0_sp)) stop 'moment_sp: no skewness or kurtosis when zero variance'
+    if (abs(var) < tiny(0.0_sp)) stop 'moment_sp: no skewness or kurtosis when zero variance'
     p(:) = p(:)*s(:)
     if (present(skewness)) then
        skewness = sum(p(:), mask=maske)
@@ -1727,15 +1784,16 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION stddev_dp(dat, mask)
+  FUNCTION stddev_dp(dat, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: stddev_dp
+    REAL(dp), DIMENSION(:),           INTENT(IN) :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(dp)                                     :: stddev_dp
 
-    REAL(dp) :: n
+    REAL(dp) :: n, n1
 
     REAL(dp) :: ep, ave, var
     REAL(dp), DIMENSION(size(dat)) :: p, s
@@ -1749,30 +1807,36 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),dp)
     endif
-    if (n .le. (1.0_dp+tiny(1.0_dp))) stop 'stddev_dp: n must be at least 2'
+    if (present(ddof)) then
+       n1 = n-real(ddof,dp)
+    else
+       n1 = n
+    endif
+    if (n1 < 1.0_dp) stop 'stddev_dp: n-ddof must be at least 1'
 
     ! Average
-    ave  = sum(dat(:), mask=maske)/n
+    ave  = mean(dat(:), mask=maske)
     s(:) = dat(:)-ave
     ! Variance / Standard deviation
     ep   = sum(s(:), mask=maske)
     p(:) = s(:)*s(:)
     var = sum(p(:), mask=maske)
-    var = (var-ep*ep/n)/(n-1.0_dp)
+    var = (var-ep*ep/n)/n1
     stddev_dp = sqrt(var)
 
   END FUNCTION stddev_dp
 
 
-  FUNCTION stddev_sp(dat, mask)
+  FUNCTION stddev_sp(dat, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: stddev_sp
+    REAL(sp), DIMENSION(:),           INTENT(IN) :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(sp)                                     :: stddev_sp
 
-    REAL(sp) :: n
+    REAL(sp) :: n, n1
 
     REAL(sp) :: ep, ave, var
     REAL(sp), DIMENSION(size(dat)) :: p, s
@@ -1786,16 +1850,21 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),sp)
     endif
-    if (n .le. (1.0_sp+tiny(1.0_sp))) stop 'stddev_sp: n must be at least 2'
+    if (present(ddof)) then
+       n1 = n-real(ddof,sp)
+    else
+       n1 = n
+    endif
+    if (n1 < 1.0_sp) stop 'stddev_sp: n-ddof must be at least 1'
 
     ! Average
-    ave  = sum(dat(:), mask=maske)/n
+    ave  = mean(dat(:), mask=maske)
     s(:) = dat(:)-ave
     ! Variance / Standard deviation
     ep   = sum(s(:), mask=maske)
     p(:) = s(:)*s(:)
     var = sum(p(:), mask=maske)
-    var = (var-ep*ep/n)/(n-1.0_sp)
+    var = (var-ep*ep/n)/n1
     stddev_sp = sqrt(var)
 
   END FUNCTION stddev_sp
@@ -1824,7 +1893,7 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),dp)
     endif
-    if (n .le. (1.0_dp+tiny(1.0_dp))) stop 'skewness_dp: n must be at least 2'
+    if (n < 2.0_dp) stop 'skewness_dp: n must be at least 2'
 
     ! Average
     ave  = sum(dat(:), mask=maske)/n
@@ -1836,7 +1905,7 @@ CONTAINS
     var = (var-ep*ep/n)/(n-1.0_dp)
     stddev = sqrt(var)
     ! Skewness
-    if (abs(var) .lt. tiny(0.0_dp)) stop 'skewness_dp: no skewness when zero variance'
+    if (abs(var) < tiny(0.0_dp)) stop 'skewness_dp: no skewness when zero variance'
     p(:) = p(:)*s(:)
     skewness_dp = sum(p(:), mask=maske)
     skewness_dp = skewness_dp/(n*stddev*stddev*stddev)
@@ -1866,7 +1935,7 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),sp)
     endif
-    if (n .le. (1.0_sp+tiny(1.0_sp))) stop 'skewness_sp: n must be at least 2'
+    if (n < 2.0_sp) stop 'skewness_sp: n must be at least 2'
 
     ! Average
     ave  = sum(dat(:), mask=maske)/n
@@ -1878,7 +1947,7 @@ CONTAINS
     var = (var-ep*ep/n)/(n-1.0_sp)
     stddev = sqrt(var)
     ! Skewness
-    if (abs(var) .lt. tiny(0.0_sp)) stop 'skewness_sp: no skewness when zero variance'
+    if (abs(var) < tiny(0.0_sp)) stop 'skewness_sp: no skewness when zero variance'
     p(:) = p(:)*s(:)
     skewness_sp = sum(p(:), mask=maske)
     skewness_sp = skewness_sp/(n*stddev*stddev*stddev)
@@ -1887,15 +1956,16 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION variance_dp(dat, mask)
+  FUNCTION variance_dp(dat, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(dp), DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: variance_dp
+    REAL(dp), DIMENSION(:),           INTENT(IN) :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(dp)                                     :: variance_dp
 
-    REAL(dp) :: n
+    REAL(dp) :: n, n1
 
     REAL(dp) :: ep, ave, var
     REAL(dp), DIMENSION(size(dat)) :: p, s
@@ -1909,29 +1979,35 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),dp)
     endif
-    if (n .le. (1.0_dp+tiny(1.0_dp))) stop 'variance_dp: n must be at least 2'
+    if (present(ddof)) then
+       n1 = n-real(ddof,dp)
+    else
+       n1 = n
+    endif
+    if (n1 < 1.0_dp) stop 'variance_dp: n-ddof must be at least 1'
 
     ! Average
-    ave  = sum(dat(:), mask=maske)/n
+    ave  = mean(dat(:), mask=maske)
     s(:) = dat(:)-ave
     ! Variance / Standard deviation
     ep   = sum(s(:), mask=maske)
     p(:) = s(:)*s(:)
     var = sum(p(:), mask=maske)
-    variance_dp = (var-ep*ep/n)/(n-1.0_dp)
+    variance_dp = (var-ep*ep/n)/n1
 
   END FUNCTION variance_dp
 
 
-  FUNCTION variance_sp(dat, mask)
+  FUNCTION variance_sp(dat, mask, ddof)
 
     IMPLICIT NONE
 
-    REAL(sp), DIMENSION(:),           INTENT(IN)  :: dat
-    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: variance_sp
+    REAL(sp), DIMENSION(:),           INTENT(IN) :: dat
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN) :: mask
+    INTEGER(i4),            OPTIONAL, INTENT(IN) :: ddof
+    REAL(sp)                                     :: variance_sp
 
-    REAL(sp) :: n
+    REAL(sp) :: n, n1
 
     REAL(sp) :: ep, ave, var
     REAL(sp), DIMENSION(size(dat)) :: p, s
@@ -1945,16 +2021,21 @@ CONTAINS
        maske(:) = .true.
        n = real(size(dat),sp)
     endif
-    if (n .le. (1.0_sp+tiny(1.0_sp))) stop 'variance_sp: n must be at least 2'
+    if (present(ddof)) then
+       n1 = n-real(ddof,sp)
+    else
+       n1 = n
+    endif
+    if (n1 < 1.0_sp) stop 'variance_sp: n-ddof must be at least 1'
 
     ! Average
-    ave  = sum(dat(:), mask=maske)/n
+    ave  = mean(dat(:), mask=maske)
     s(:) = dat(:)-ave
     ! Variance / Standard deviation
     ep   = sum(s(:), mask=maske)
     p(:) = s(:)*s(:)
     var = sum(p(:), mask=maske)
-    variance_sp = (var-ep*ep/n)/(n-1.0_sp)
+    variance_sp = (var-ep*ep/n)/n1
 
   END FUNCTION variance_sp
 

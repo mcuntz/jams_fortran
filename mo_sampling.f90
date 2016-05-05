@@ -9,7 +9,7 @@
 
 module mo_sampling
 
-  ! This module is a template for the JAMS CHS Fortran library.
+  ! This module provides random and latin hypercube sampling routines.
 
   ! Written  Giovanni Dalmasso, Apr 2013
 

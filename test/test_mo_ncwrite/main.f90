@@ -16,11 +16,12 @@ program write_netcdf
   use mo_NcWrite, only: create_netcdf, close_netcdf, write_static_netcdf, write_dynamic_netcdf, V, dump_netcdf, var2nc
   use mo_mainvar, only: lat, lon, data, t
   use mo_utils,   only: notequal
-  use mo_timer,   only: max_timers, timers_init, timer_clear, timer_start, timer_stop, timer_get
+  ! use mo_timer,   only: max_timers, timers_init, timer_clear, timer_start, timer_stop, timer_get
 
   implicit none
 
-  integer(i4)                             :: ncid, i, j, n
+  integer(i4)                             :: ncid, i, j
+  ! integer(i4)                             :: n
   integer(i4), dimension(5)               :: dimlen
   character(256)                          :: Filename
   character(256)                          :: Varname
@@ -34,7 +35,7 @@ program write_netcdf
   real(sp), dimension(:,:,:,:,:), allocatable :: data9, data10
   real(dp), dimension(:,:,:),     allocatable :: ddata2
   real(dp), dimension(:,:),       allocatable :: ddata5
-  real(dp), dimension(:,:,:,:,:), allocatable :: ddata9
+  ! real(dp), dimension(:,:,:,:,:), allocatable :: ddata9
   integer(i4), dimension(:,:,:),  allocatable :: idata2
   real(dp),    dimension(:,:),       allocatable :: lon1, lat1
   integer(i4), dimension(:),         allocatable :: x1, y1

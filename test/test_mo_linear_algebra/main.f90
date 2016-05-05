@@ -55,12 +55,10 @@ PROGRAM main
 
   ! diag
   isgood = .true.
-#ifdef pgiFortran
   allocate(ddat(nn))
   allocate(dsat(nn))
   allocate(di4at(nn))
   allocate(di8at(nn))
-#endif
   ddat  = diag(dat)
   dsat  = diag(sat)
   di4at = diag(i4at)
@@ -81,10 +79,8 @@ PROGRAM main
 
   ! inverse
   isgood = .true.
-#ifdef pgiFortran
   allocate(idat(nn,nn))
   allocate(isat(nn,nn))
-#endif
   idat = inverse(dat)
   isat = inverse(sat)
   ! allow eps in each element of diag -> very close but can be slightly higher -> *100
@@ -109,10 +105,8 @@ PROGRAM main
   isgood = .true.
   bdat = matmul(dat,ddat)
   bsat = matmul(sat,dsat)
-#ifdef pgiFortran
   allocate(xdat(nn))
   allocate(xsat(nn))
-#endif
   xdat = solve_linear_equations(dat, bdat)
   xsat = solve_linear_equations(sat, bsat)
   ! allow eps in each element of matrix -> very close but can be slightly higher -> *100

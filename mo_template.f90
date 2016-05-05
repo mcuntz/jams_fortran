@@ -1,6 +1,6 @@
 !> \file mo_template.f90
 
-!> \brief Template for future module developments.
+!> \brief Template for future module development.
 
 !> \details This module serves as a template for future model developments.
 !> It shows the module structure, coding style, and documentation.
@@ -9,7 +9,7 @@
 !> \date Nov 2011
 MODULE mo_template
 
-  ! This module is a template for the JAMS CHS Fortran library.
+  ! This module is a template for the JAMS Fortran library.
 
   ! The module provides an example procedures and demonstrates the agreed coding standard:
   !     - Use mo_kind, only: i4, sp, dp, lgt, etc.
@@ -22,8 +22,8 @@ MODULE mo_template
   !     - Give 1-line descriptions after the public definition.
   !     - Documentation:
   !       * document before the individual routines;
-  !       * but document before the module interface not the seprate routines,
-  !         i.e. do one documentation per interface, no separate docu for sp and dp;
+  !       * but document before the module interface not the separate routines,
+  !         i.e. only one documentation per interface, no separate docu for sp and dp;
   !       * follow the documentation structure before the interface of mean in mo_template.f90;
   !       * break comment lines at column 130 at most as well.
   !     - Sort routines alphabetically in the file and in the public definitions.
@@ -59,7 +59,7 @@ MODULE mo_template
   ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011-2012 Matthias Cuntz, Juliane Mai
+  ! Copyright 2011-2016 Matthias Cuntz, Juliane Mai
 
 
   ! Note on Numerical Recipes License
