@@ -45,17 +45,17 @@ program main_test_mo_ode_solver
     logical                                 :: isgood
 
 
-    isgood = .true.     ! test variable
+    isgood = .true.       ! test variable
 
-!sp
-    test   = 1e4_sp     ! test variable
+    ! sp
+    test   = 1.0e4_sp     ! test variable
 
-    nEq    = 2_i4       ! number of equations
-    x1     = 0._sp      ! intial time
-    x2     = 10._sp     ! final time
-    h      = 0.1_sp     ! incremental time step
-    hmin   = h*1e-11_sp ! minimum allowed stepsize
-    eps    = 1e-8_sp    ! accuracy
+    nEq    = 2_i4         ! number of equations
+    x1     = 0._sp        ! intial time
+    x2     = 10._sp       ! final time
+    h      = 0.1_sp       ! incremental time step
+    hmin   = h*1.0e-11_sp ! minimum allowed stepsize
+    eps    = 1e-8_sp      ! accuracy
 
     para   = (/0.5_sp, 2.0_sp, -1.0_sp/)
 
@@ -74,12 +74,15 @@ program main_test_mo_ode_solver
 
     ! 4th order RUNGE-KUTTA Adaptive Step-size
     call RK4as( yi, x1, x2, h, LV_eqn_sp, xout, yout, hmin=hmin, eps=eps )
-#ifdef pgiFortran
-    ! PGI compiler other rounding errors in single precision
-    if ( nint(xout(2)*test*1e-1) .ne. 58_i4 .or. any(nint(yout(2,:)*test*1e-1) .ne. (/ 995_i4, 1169_i4 /)) ) isgood = .false.
+	
+#if defined (pgiFortran) || defined (INTEL)
+    ! PGI compiler other rounding errors in single precision, Intel in release mode
+    if ( nint(xout(2)*test*1.0e-1_sp) .ne. 58_i4 .or. &
+         any(nint(yout(2,:)*test*1.0e-1_sp) .ne. (/ 995_i4, 1169_i4 /)) ) isgood = .false.
 #else
-    if ( nint(xout(2)*test) .ne. 580_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9950_i4, 11687_i4 /)) ) isgood = .false.     ! test
+    if ( nint(xout(2)*test) .ne. 580_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9950_i4, 11687_i4 /)) ) isgood = .false.
 #endif
+    ! test
     if (.not. isgood) write(*,*) "rk-as sp"
 
     ! Rosenbrock Method
@@ -100,7 +103,7 @@ program main_test_mo_ode_solver
 
     ! 4th order RUNGE-KUTTA method with parameter
     call RK4( yi, x1, x2, h, LV_eqn_para_sp, para, xout, yout )
-#ifdef pgiFortran
+#if defined (pgiFortran) || defined (INTEL)
     if ( nint(xout(2)*test*1e-1) .ne. 100_i4 .or. any(nint(yout(2,:)*test*1e-1) .ne. (/ 985_i4, 1284_i4 /)) ) isgood = .false.     ! test
 #else
     if ( nint(xout(2)*test) .ne. 1000_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9850_i4, 12835_i4 /)) ) isgood = .false.     ! test
@@ -109,7 +112,7 @@ program main_test_mo_ode_solver
 
     ! 4th order RUNGE-KUTTA Adaptive Step-size with parameter
     call RK4as( yi, x1, x2, h, LV_eqn_para_sp, para, xout, yout, hmin=hmin, eps=eps )
-#ifdef pgiFortran
+#if defined (pgiFortran) || defined (INTEL)
     if ( nint(xout(2)*test*1e-1) .ne. 58_i4 .or. any(nint(yout(2,:)*test*1e-1) .ne. (/ 995_i4, 1169_i4 /)) ) isgood = .false.     ! test
 #else
     if ( nint(xout(2)*test) .ne. 580_i4 .or. any(nint(yout(2,:)*test) .ne. (/ 9950_i4, 11687_i4 /)) ) isgood = .false.     ! test
@@ -119,7 +122,7 @@ program main_test_mo_ode_solver
     ! Rosenbrock Method with parameter
     call RBstiff( (/1.0_sp,1.0_sp,0.0_sp/), 0.0_sp, 50.0_sp, 2.9e-4_sp, deriv2_testRB_para_sp,&
                     jacobn2_testRB_para_sp, (/1000.0_sp/), xout, yout, hmin=hmin, eps=1e-4_sp )
-#ifdef pgiFortran
+#if defined (pgiFortran) || defined (INTEL)
     if (    nint(xout(2)*test*1e-1) .ne. 0_i4 .or.&
             any(nint(yout(2,:)*test*1e-1) .ne. (/ 1000_i4, 1000_i4, 0_i4 /)) )&
        isgood = .false.    ! test

@@ -42,8 +42,8 @@ program main_mo_sampling
     allocate( dist(Npar) )
     allocate( seed(Npar) )
 
-    isgood = .true.                 ! test variable
-    test = 10._sp**7_i4             ! test variable
+    isgood = .true.  ! test variable
+    test = 1.0e6_sp  ! test variable
 
     ! distributions
     dist = (/ .false., .true., .false. /)
@@ -55,13 +55,14 @@ program main_mo_sampling
     ! test random sampling
     randomTest = random( Nsample, Npar, save_the_setup_rnd, dist=dist )
     ! isgood test
-    if ( any(nint(randomTest(1,:)*test) .ne. (/ 6412920_i4, 2272641_i4, 1618950_i4 /)) ) isgood = .false.    ! test
+    if ( any(nint(randomTest(1,:)*test) .ne. (/ 641292_i4, 227264_i4, 161895_i4 /)) ) isgood = .false.    ! test
 
     ! setup xor4096
     call setupxor( Npar, save_the_setup_lhs, seed=seed )
     ! test Latin Hypercube Sampling
     lhsTest = lhs( Nsample, Npar, save_the_setup_lhs, dist=dist )
-    if ( any(nint(lhsTest(1,:)*test) .ne. (/ 6340542_i4, 7369056_i4, 6339383_i4 /)) ) isgood = .false.    ! test
+    print*, 'Ha01 ', lhsTest(1,:)*test
+    if ( any(nint(lhsTest(1,:)*test) .ne. (/ 634054_i4, 736906_i4, 633938_i4 /)) ) isgood = .false.    ! test
 
     ! Is the program running properly?
     write(*,*) ''

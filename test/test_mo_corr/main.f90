@@ -1,15 +1,15 @@
 PROGRAM main
   
-  USE mo_kind,   ONLY: dp, sp
+  USE mo_kind,   ONLY: dp, sp, i4
   USE mo_corr,   ONLY: autocoeffk, autocorr, corr, crosscoeffk, crosscorr
   USE mo_moment, ONLY: mean, variance, covariance
 
   IMPLICIT NONE
   
-  INTEGER, PARAMETER :: n = 1500
+  INTEGER(i4), PARAMETER :: n = 1500_i4
   REAL(dp), DIMENSION(n) :: dat1, dat2, dc
   REAL(sp), DIMENSION(n) :: sat1, sat2, sc
-  INTEGER :: i, nout
+  INTEGER(i4) :: i, nout
 
   LOGICAL :: isgood
   
@@ -20,8 +20,8 @@ PROGRAM main
   forall(i=1:n) dat1(i) = real(i,dp)
   dat2 = dat1 + sin(dat1)
   isgood = .true.
-  if (abs(variance(dat2)*real(n-1,dp)/real(n,dp) - autocoeffk(dat2,0)) > epsilon(1.0_dp)) &
-       isgood =.false.
+  if (abs(variance(dat2) - autocoeffk(dat2,0)) > epsilon(1.0_dp)) isgood = .false.
+  if (abs(variance(dat2, ddof=1_i4) - autocoeffk(dat2,0, ddof=1_i4)) > epsilon(1.0_dp)) isgood = .false.
   if (abs(autocorr(dat2,0) - 1.0_dp) > epsilon(1.0_dp)) isgood =.false.
   if (abs(covariance(dat1,dat2) - crosscoeffk(dat1,dat2,0))> epsilon(1.0_dp)) isgood =.false.
   if (abs(autocorr(dat1,10) - crosscorr(dat1,dat1,10))> epsilon(1.0_dp)) isgood =.false.
@@ -41,8 +41,8 @@ PROGRAM main
   forall(i=1:n) sat1(i) = real(i,sp)
   sat2 = sat1 + sin(sat1)
   isgood = .true.
-  if (nint(variance(sat2)*real(n-1,sp)/real(n,sp)) /= nint(autocoeffk(sat2,0))) &
-       isgood =.false.
+  if (nint(variance(sat2)) /= nint(autocoeffk(sat2,0))) isgood =.false.
+  if (abs(variance(sat2, ddof=1_i4) - autocoeffk(sat2,0, ddof=1_i4)) > epsilon(1.0_sp)) isgood = .false.
   if (abs(autocorr(sat2,0) - 1.0_sp) > epsilon(1.0_sp)) isgood =.false.
   if (abs(covariance(sat1,sat2) - crosscoeffk(sat1,sat2,0))> epsilon(1.0_sp)) isgood =.false.
   if (abs(autocorr(sat1,10) - crosscorr(sat1,sat1,10))> epsilon(1.0_sp)) isgood =.false.

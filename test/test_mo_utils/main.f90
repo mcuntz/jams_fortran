@@ -401,6 +401,9 @@ program test_utils
   iat1    = arange(-1,nn-2)
   isgood  = isgood .and. all(iat1==iat2)
   ! allocatable out
+#ifdef pgiFortran
+  allocate(adat1(nn))
+#endif
   adat1 = arange(real(nn,dp))
 
   ! -----------------------------------------------------

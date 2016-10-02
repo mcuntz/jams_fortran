@@ -31,8 +31,6 @@ program test_kernel
   !$  write(*,*) ' It will run using ',n_threads,' threads'
   !$  write(*,*) '--------------------------------------------------'
 
-  isgood = .true.
-
   nn = size(x,1)
   forall(ii=1:nn) x(ii,1) = real(ii-1,dp)/9.0_dp
   forall(ii=1:nn) x(ii,2) = 1.0_dp / (real(ii-1,dp)/9.0_dp + 0.1_dp)
@@ -120,8 +118,10 @@ program test_kernel
   ! With normalisation: test1 = (/ 8847_i4, 4544_i4, 6062_i4, 4544_i4, 2363_i4, 3437_i4, 9332_i4, 6490_i4, 0607_i4, 0_i4 /)
   test1 = (/ 8461_i4, 4744_i4, 6055_i4, 4744_i4, 2861_i4, 3789_i4, 8880_i4, 6425_i4, 1344_i4, 819_i4 /)
   do ii=1,10
+     print*, int(yin_1d(ii)*10000.0_dp,i4), test1(ii), yin_1d(ii)
      if (int(yin_1d(ii)*10000.0_dp,i4) .ne. test1(ii)) isgood = .false.
   end do
+  if (.not. isgood) print*, 'Ha08'
 
   write(*,*) ' '
 
