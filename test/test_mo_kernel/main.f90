@@ -109,9 +109,9 @@ program test_kernel
 
   ! ---------------------------------------------------------------------------------
   write(*,*) 'Testing kernel cum. density (CDF) estimation'
-
-  yin_1d = kernel_cumdensity(xin_1d, h=h(1), silverman=.false.)
-
+  
+  yin_1d = kernel_cumdensity(xin_1d, h=h(1), silverman=.false., romberg=.false.)
+  
   write(*,'(A4,A7,A4,A7)') '    ','x      ','    ','cdf(x) '
   do ii=1,size(yin_1d)
      write(*,'(A4,F7.4,A4,F8.5)') '    ', xin_1d(ii), '    ',yin_1d(ii)

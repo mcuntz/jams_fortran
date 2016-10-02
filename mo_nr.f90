@@ -1893,14 +1893,20 @@ MODULE mo_nr
        REAL(DP), DIMENSION(size(u,1),size(u,1)) :: lop
      END FUNCTION lop
   END INTERFACE
-  INTERFACE
-     SUBROUTINE lubksb(a,indx,b)
+  INTERFACE lubksb
+     SUBROUTINE lubksb_sp(a,indx,b)
        USE mo_kind
        REAL(SP), DIMENSION(:,:), INTENT(IN) :: a
        INTEGER(I4), DIMENSION(:), INTENT(IN) :: indx
        REAL(SP), DIMENSION(:), INTENT(INOUT) :: b
-     END SUBROUTINE lubksb
-  END INTERFACE
+     END SUBROUTINE lubksb_sp
+     SUBROUTINE lubksb_dp(a,indx,b)
+       USE mo_kind
+       REAL(DP), DIMENSION(:,:), INTENT(IN) :: a
+       INTEGER(I4), DIMENSION(:), INTENT(IN) :: indx
+       REAL(DP), DIMENSION(:), INTENT(INOUT) :: b
+     END SUBROUTINE lubksb_dp
+  END INTERFACE lubksb
   INTERFACE ludcmp
      SUBROUTINE ludcmp_sp(a,indx,d)
        USE mo_kind

@@ -1,1 +1,1 @@
-../../nr_chs/ei.f90
+../../nr_jams/ei.f90

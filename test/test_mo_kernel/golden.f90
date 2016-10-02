@@ -1,1 +1,1 @@
-../../nr_chs/golden.f90
+../../nr_jams/golden.f90

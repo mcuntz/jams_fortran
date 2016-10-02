@@ -14,7 +14,11 @@ In cygwin, in the directory FORTRAN_chs_lib do:
     cd test/test_mo_kernel ; ln -sf ../../nr_chs/golden.f90 ; cd ../..
 Please do not commit these files because it will break the Library everywhere else except on Cygwin.
 
-Created 11.11.2011 by Juliane Mai and Matthias Cuntz
+Created 11.11.2011 by Juliane Mai and Matthias Cuntz at the
+Department Computational Hydrosystems
+Helmholtz Centre for Environmental Research - UFZ
+Permoserstr. 15, 04318 Leipzig, Germany
+
 Copyright 2011-2016 JAMS
 Contact Matthias Cuntz - mc (at) macu.de
 

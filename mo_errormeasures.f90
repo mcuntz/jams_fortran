@@ -32,10 +32,13 @@ MODULE mo_errormeasures
 
   IMPLICIT NONE
 
-  PUBLIC :: BIAS                         ! bias
+  PUBLIC :: BIAS                         ! Bias
   PUBLIC :: KGE                          ! Kling-Gupta efficiency measure
   PUBLIC :: LNNSE                        ! Logarithmic Nash Sutcliffe efficiency
   PUBLIC :: MAE                          ! Mean of absolute errors
+  PUBLIC :: MAE_PROB_ONE ! Mean absolute error of occurence probability with ONE cdf for obs and mod
+  !MC until mo_empcdf commited
+  ! PUBLIC :: MAE_PROB_TWO ! Mean absolute error of occurence probability with TWO separate cdfs for obs and mod
   PUBLIC :: MSE                          ! Mean of squared errors
   PUBLIC :: NSE                          ! Nash Sutcliffe efficiency
   PUBLIC :: SSE                          ! Sum of squared errors
@@ -310,6 +313,119 @@ MODULE mo_errormeasures
   INTERFACE MAE
      MODULE PROCEDURE MAE_sp_1d, MAE_dp_1d, MAE_sp_2d, MAE_dp_2d, MAE_sp_3d, MAE_dp_3d
   END INTERFACE MAE
+
+  ! ! ------------------------------------------------------------------
+
+  ! !     NAME
+  ! !         MAE_PROB_TWO
+
+  ! !     PURPOSE
+  ! !         Calculate mean absolute error of occurence probabilities
+  ! !             MAE_PROB_TWO = mean( |P_sim(Q_obs(t)) - P_obs(Q_obs(t))| )
+  ! !
+  ! !         If an optional mask is given, the calculations are over those locations that correspond to true values in the mask.
+  ! !         x and y have to be double precision. The result will have the same numerical precision.
+
+  ! !     CALLING SEQUENCE
+  ! !         out = MAE_PROB_TWO(dat, mask=mask)
+
+  ! !     INTENT(IN)
+  ! !         real(sp/dp), dimension(:)     :: x, y    1D-array with input numbers
+
+  ! !     INTENT(INOUT)
+  ! !         None
+
+  ! !     INTENT(OUT)
+  ! !         real(sp/dp) :: BIAS        bias
+
+  ! !     INTENT(IN), OPTIONAL
+  ! !         logical     :: mask(:)     1D-array of logical values with size(x/y).
+  ! !
+  ! !         If present, only those locations in vec corresponding to the true values in mask are used.
+
+  ! !     INTENT(INOUT), OPTIONAL
+  ! !         None
+
+  ! !     INTENT(OUT), OPTIONAL
+  ! !         None
+
+  ! !     RESTRICTIONS
+  ! !         Input values must be floating points.
+
+  ! !     EXAMPLE
+  ! !         vec1 = (/ 1., 2, 3., -9999., 5., 6. /)
+  ! !         vec2 = (/ 1., 2, 3., -9999., 5., 6. /)
+  ! !         m   = MAE_PROB_TWO(vec1, vec2, )
+  ! !         -> see also example in test directory
+
+  ! !     LITERATURE
+  ! !         None
+
+  ! !     HISTORY
+  ! !         Written,  Stephan Thober, May 2016
+  ! INTERFACE MAE_PROB_TWO
+  !    MODULE PROCEDURE MAE_PROB_TWO_1D_DP
+  ! END INTERFACE MAE_PROB_TWO
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         MAE_PROB_ONE
+
+  !     PURPOSE
+  !         Calculate mean absolute error of occurence probabilities
+  !             MAE_PROB_ONE = mean( |P_obs(Q_obs(t)) - P_obs(Q_sim(t))| )
+  !
+  !         If an optional mask is given, the calculations are over those locations that correspond to true values in the mask.
+  !         x and y have to be double precision. The result will have the same numerical precision.
+
+  !     CALLING SEQUENCE
+  !         out = MAE_PROB_ONE(dat, mask=mask)
+
+  !     INTENT(IN)
+  !         real(sp/dp), dimension(:)     :: x, y    1D-array with input numbers
+
+  !     INTENT(INOUT)
+  !         None
+
+  !     INTENT(OUT)
+  !         real(sp/dp) :: BIAS        bias
+
+  !     INTENT(IN), OPTIONAL
+  !         logical                   :: mask(:)     1D-array of logical values with size(x/y).
+  !                                                  If present, only those locations in vec corresponding to
+  !                                                  the true values in mask are used.
+  !         real(sp/dp), dimension(:) :: cdfx        1D-array with kernel_cumdensity of x
+  !         real(sp/dp)               :: h           Silverman estimate of kernel_density bandwidth for x
+  !
+
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+
+  !     INTENT(OUT), OPTIONAL
+  !         None
+
+  !     RESTRICTIONS
+  !         Input values must be floating points.
+
+  !     EXAMPLE
+  !           m   = MAE_PROB(x, y, mask=mask)
+  !         same as
+  !           h    = kernel_density_h(x, silverman=.true., mask=mask)
+  !           cdfx = kernel_cumdensity(x, xout=x, h=h, mask=mask)
+  !           m    = MAE_PROB(vec1, vec2, mask=vec1, cdfx=cdf, h=h)
+  !         but cumdensity of x is calculated outside and h is reused.
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !         Written,  Stephan Thober, May 2016
+  !         Modified, Matthias Cuntz, Jun 2016 - rm dummy=pack(x), cdfx, h
+  INTERFACE MAE_PROB_ONE
+     MODULE PROCEDURE MAE_PROB_ONE_1D_DP
+  END INTERFACE MAE_PROB_ONE
 
   ! ------------------------------------------------------------------
 
@@ -1769,6 +1885,104 @@ CONTAINS
     MAE_dp_3d = SAE_dp_3d(x,y,mask=maske) / real(n, dp)
 
   END FUNCTION MAE_dp_3d
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION MAE_PROB_ONE_1d_dp(x, y, mask, cdfx, h)
+
+    USE mo_moment, ONLY: average
+    USE mo_kernel, ONLY: kernel_cumdensity
+
+    IMPLICIT NONE
+
+    REAL(dp), DIMENSION(:),           INTENT(IN)  :: x, y
+    LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+    REAL(dp), DIMENSION(:), OPTIONAL, INTENT(IN)  :: cdfx
+    REAL(dp),               OPTIONAL, INTENT(IN)  :: h
+    REAL(dp)                                      :: MAE_PROB_ONE_1d_dp
+
+    INTEGER(i4)                                   :: n
+    INTEGER(i4), DIMENSION(size(shape(x)) )       :: shapemask
+    LOGICAL,     DIMENSION(size(x))               :: maske
+
+    if (present(mask)) then
+       shapemask = shape(mask)
+    else
+       shapemask = shape(x)
+    end if
+
+    if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
+         stop 'MAE_PROB_1d_dp: shapes of inputs(x,y) or mask are not matching'
+
+    if (present(mask)) then
+       maske = mask
+       n = count(maske)
+    else
+       maske = .true.
+       n = size(x)
+    endif
+    if (n .LE. 1_i4) stop 'MAE_PROB_1d_dp: number of arguments must be at least 2'
+
+    if (present(cdfx)) then
+       if (present(h)) then
+          MAE_PROB_ONE_1d_dp = average(abs(cdfx - &
+               kernel_cumdensity(x, xout=y, h=h, mask=maske, romberg=.true., epsint=1.0e-4_dp)))
+       else
+          MAE_PROB_ONE_1d_dp = average(abs(cdfx - &
+               kernel_cumdensity(x, xout=y, silverman=.true., mask=maske, romberg=.true., epsint=1.0e-4_dp)))
+       endif
+    else
+       if (present(h)) then
+          MAE_PROB_ONE_1d_dp = average(abs(kernel_cumdensity(x, xout=x, h=h, mask=maske, romberg=.true., epsint=1.0e-4_dp) &
+               - kernel_cumdensity(x, xout=y, h=h, mask=maske, romberg=.true., epsint=1.0e-4_dp)))
+       else
+          MAE_PROB_ONE_1d_dp = average(abs( &
+               kernel_cumdensity(x, xout=x, silverman=.true., mask=maske, romberg=.true., epsint=1.0e-4_dp) &
+               - kernel_cumdensity(x, xout=y, silverman=.true., mask=maske, romberg=.true., epsint=1.0e-4_dp)))
+       endif
+    endif
+    MAE_PROB_ONE_1d_dp = MAE_PROB_ONE_1d_dp * 100._dp ! unit is [%]
+    
+  END FUNCTION MAE_PROB_ONE_1d_dp
+
+  ! ------------------------------------------------------------------
+
+  ! FUNCTION MAE_PROB_TWO_1d_dp(x, y, mask)
+
+  !   USE mo_moment, ONLY: average
+  !   USE mo_empcdf, ONLY: empcdf
+
+  !   IMPLICIT NONE
+
+  !   REAL(dp), DIMENSION(:),           INTENT(IN)  :: x, y
+  !   LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
+  !   REAL(dp)                                      :: MAE_PROB_TWO_1d_dp
+
+  !   INTEGER(i4)                                   :: n
+  !   INTEGER(i4), DIMENSION(size(shape(x)) )       :: shapemask
+  !   LOGICAL,  DIMENSION(size(x))                  :: maske
+
+  !   if (present(mask)) then
+  !      shapemask = shape(mask)
+  !   else
+  !      shapemask = shape(x)
+  !   end if
+  !   !
+  !   if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
+  !        stop 'MAE_PROB_1d_dp: shapes of inputs(x,y) or mask are not matching'
+  !   !
+  !   if (present(mask)) then
+  !      maske = mask
+  !      n = count(maske)
+  !   else
+  !      maske = .true.
+  !      n = size(x)
+  !   endif
+  !   if (n .LE. 1_i4) stop 'MAE_PROB_1d_dp: number of arguments must be at least 2'
+  !   !
+  !   MAE_PROB_TWO_1d_dp = average(abs(EMPCDF(y, maske=maske, print_info=.False.) - EMPCDF(x, maske=maske, print_info=.False.)))
+
+  ! END FUNCTION MAE_PROB_TWO_1d_dp
 
   ! ------------------------------------------------------------------
 

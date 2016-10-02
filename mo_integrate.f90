@@ -120,10 +120,6 @@ CONTAINS
        ddx = 2.0_dp/45.0_dp
     endif
 
-    !print*, 'dat ',dat
-    !print*, 'ddx ',ddx
-    !pause
-
     n0 = 5
     n  = size(dat,1)
 

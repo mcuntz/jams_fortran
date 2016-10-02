@@ -2,19 +2,24 @@ PROGRAM main
 
   USE mo_kind,          ONLY: i4, dp, sp
   USE mo_utils,         ONLY: ne
-  USE mo_distributions, ONLY: ep, ep01, laplace, laplace01, normal, normal01, &
-       sep, sep01, sstudentt, sstudentt01, studentt, studentt01
+  USE mo_distributions, ONLY: laplace, laplace01, normal, normal01
+  USE mo_distributions, ONLY: ep, ep01, sep, sep01
+  USE mo_distributions, ONLY: st, st01, t, t01
 
   IMPLICIT NONE
 
   ! data
-  INTEGER(i4), PARAMETER  :: nn = 200
-  REAL(dp)                :: out0
-  REAL(dp), DIMENSION(nn) :: dat1, out1
-  REAL(dp)                :: mu, sig, skew, kurt, nu
-  REAL(sp)                :: sout0
-  REAL(sp), DIMENSION(nn) :: sat1, sout1
-  REAL(sp)                :: smu, ssig, sskew, skurt, snu
+  INTEGER(i4), PARAMETER  :: nn = 10000
+
+  REAL(dp)                :: out0, iloc, isig, ddat
+  REAL(dp), DIMENSION(nn) :: dat, out
+  REAL(dp)                :: loc, sca, sig, xi, beta, nu
+  REAL(dp)                :: dmean, dvar, dstd
+
+  REAL(sp)                :: isloc, issig, dsat
+  REAL(sp), DIMENSION(nn) :: sat, sout
+  REAL(sp)                :: sloc, ssca, ssig, sxi, sbeta, snu
+  REAL(dp)                :: smean, svar, sstd
 
   INTEGER(i4) :: i
   LOGICAL     :: isgood, allgood
@@ -25,48 +30,78 @@ PROGRAM main
   allgood = .true.
 
   ! DP
-  forall(i=1:nn) dat1(i) = real(i,dp)/real(nn,dp)*20.0_dp - 10.0_dp
-  mu   = 1.0_dp
-  sig  = 2.0_dp
-  skew = 2.0_dp
-  kurt = 0.5_dp
-  nu   = 10.0_dp
+  forall(i=1:nn) dat(i) = real(i,dp)/real(nn,dp)*300.0_dp - 150.0_dp
+  ddat = dat(2)-dat(1)
+  
+  loc  = 1.1_dp
+  sca  = 2.2_dp
+  sig  = 2.2_dp
+  xi   = 3.3_dp
+  beta = 0.5_dp
+  nu   = 4.4_dp
 
   ! integral
   do i=1, 12
      isgood = .true.
      select case(i)
      case(1) ! Exponential Power
-        out1 = ep(dat1, mu, sig, kurt)
+        iloc = loc
+        isig = sig
+        out = ep(dat, loc, beta=beta, sig=sig)
      case(2)
-        out1 = ep01(dat1, kurt)
+        iloc = 0.0_dp
+        isig = 1.0_dp
+        out = ep01(dat, beta)
      case(3)! Laplace
-        out1 = laplace(dat1, mu, sig)
+        iloc = loc
+        isig = sig
+        out = laplace(dat, loc, sig=sig)
      case(4)
-        out1 = laplace01(dat1)
+        iloc = 0.0_dp
+        isig = sqrt(2.0_dp)
+        out = laplace01(dat)
      case(5) ! Normal
-        out1 = normal(dat1, mu, sig)
+        iloc = loc
+        isig = sig
+        out = normal(dat, loc, sig=sig)
      case(6)
-        out1 = normal01(dat1)
+        iloc = 0.0_dp
+        isig = 1.0_dp
+        out = normal01(dat)
      case(7) ! Skew Exponential Power
-        out1 = sep(dat1, mu, sig, skew, kurt)
+        iloc = loc
+        isig = sig
+        out = sep(dat, loc, xi=xi, beta=beta, sig=sig)
      case(8)
-        out1 = sep01(dat1, skew, kurt)
+        iloc = 0.0_dp
+        isig = 1.0_dp
+        out = sep01(dat, xi, beta)
      case(9) ! Skewed Student t
-        out1 = sstudentt(dat1, nu, mu, sig, skew)
+        iloc = loc
+        isig = sig
+        out = st(dat, nu, loc, xi=xi, sig=sig)
      case(10)
-        out1 = sstudentt01(dat1, nu, skew)
+        iloc = 0.0_dp
+        isig = sqrt(nu/(nu-2.0_dp))
+        out = st01(dat, nu, xi)
      case(11) ! Student t
-        out1 = studentt(dat1, nu, mu, sig)
+        iloc = loc
+        isig = sig
+        out = t(dat, nu, loc, sig=sig)
      case(12)
-        out1 = studentt01(dat1, nu)
+        iloc = 0.0_dp
+        isig = sqrt(nu/(nu-2.0_dp))
+        out = t01(dat, nu)
      case default
         continue
      end select
-     out0 = sum((dat1(2:nn)-dat1(1:nn-1))*out1(1:nn-1))+(dat1(nn)-dat1(nn-1))*out1(nn)
-     if (abs(1.0_dp-out0) > 1.0e-2_dp) isgood = .false.
+     dmean = sum(dat * out * ddat)
+     dvar  = sum((dat-dmean)**2 * out * ddat)
+     dstd  = sqrt(dvar)
+     if (abs(dmean-iloc) > 1.0e-2_dp) isgood = .false.
+     if (abs(dstd-isig) > 1.0e-2_dp) isgood = .false.
      allgood = allgood .and. isgood
-     if (.not. isgood) write(*,*) 'mo_distributions integral failed: ', i, out0
+     if (.not. isgood) write(*,*) 'mo_distributions integral DP failed: ', i, iloc, dmean, isig, dstd
   enddo
 
   ! normal vs normal01
@@ -74,23 +109,23 @@ PROGRAM main
      isgood = .true.
      select case(i)
      case(1)
-        out1 = ep(dat1, kurt=kurt) - ep01(dat1, kurt)
+        out = ep(dat, beta=beta) - ep01(dat, beta)
      case(2)
-        out1 = laplace(dat1, 0.0_dp) - laplace01(dat1)
+        out = laplace(dat, 0.0_dp) - laplace01(dat)
      case(3)
-        out1 = normal(dat1, 0.0_dp) - normal01(dat1)
+        out = normal(dat, 0.0_dp, 1.0_dp) - normal01(dat)
      case(4)
-        out1 = sep(dat1, 0.0_dp, 1.0_dp, skew, kurt) - sep01(dat1, skew, kurt)
+        out = sep(dat, 0.0_dp, 1.0_dp, xi, beta) - sep01(dat, xi, beta)
      case(5)
-        out1 = sstudentt(dat1, nu, skew=skew) - sstudentt01(dat1, nu, skew)
+        out = st(dat, nu, xi=xi) - st01(dat, nu, xi)
      case(6)
-        out1 = studentt(dat1, nu, sig=1.0_dp) - studentt01(dat1, nu)
+        out = t(dat, nu, sca=1.0_dp) - t01(dat, nu)
      case default
         continue
      end select
-     if (any(ne(out1, 0.0_dp))) isgood = .false.
+     if (any(ne(out, 0.0_dp))) isgood = .false.
      allgood = allgood .and. isgood
-     if (.not. isgood) write(*,*) 'mo_distributions comparison to 01 versions failed: ', i, out1
+     if (.not. isgood) write(*,*) 'mo_distributions comparison 01 versions failed: ', i, out
   enddo
 
   ! transformation
@@ -98,23 +133,24 @@ PROGRAM main
      isgood = .true.
      select case(i)
      case(1)
-        out1 = ep(dat1, mu, sig, kurt=kurt) - ep((dat1-mu)/sig, kurt=kurt)/sig
+        out = ep(dat, loc, sca, beta) - ep((dat-loc)/sca, beta=beta)/sca
      case(2)
-        out1 = laplace(dat1, mu, sig) - laplace((dat1-mu)/sig)/sig
+        out = laplace(dat, loc, sca) - laplace((dat-loc)/sca)/sca
      case(3)
-        out1 = normal(dat1, mu, sig) - normal((dat1-mu)/sig)/sig
+        out = normal(dat, loc, sca) - normal((dat-loc)/sca)/sca
      case(4)
-        out1 = sep(dat1, mu, sig, skew=skew, kurt=kurt) - sep((dat1-mu)/sig, skew=skew, kurt=kurt)/sig
+        out = sep(dat, loc, sca, xi=xi, beta=beta) - sep((dat-loc)/sca, xi=xi, beta=beta)/sca
      case(5)
-        out1 = sstudentt(dat1, nu, mu, sig, skew=skew) - sstudentt((dat1-mu)/sig, nu, skew=skew)/sig
+        out = st(dat, nu, loc, sca, xi=xi) - st((dat-loc)/sca, nu, xi=xi)/sca
      case(6)
-        out1 = studentt(dat1, nu, mu, sig) - studentt((dat1-mu)/sig, nu)/sig
+        out = t(dat, nu, loc, sca) - t((dat-loc)/sca, nu)/sca
      case default
         continue
      end select
-     if (any(ne(out1, 0.0_dp))) isgood = .false.
+     ! if (any(ne(out, 0.0_dp))) isgood = .false.
+     if (any(abs(out) > 1.0e-15_dp)) isgood = .false.
      allgood = allgood .and. isgood
-     if (.not. isgood) write(*,*) 'mo_distributions transformation failed: ', i, out1
+     if (.not. isgood) write(*,*) 'mo_distributions transformation 1D failed: ', i, maxval(abs(out))
   enddo
 
   ! transformation 0D
@@ -122,23 +158,24 @@ PROGRAM main
      isgood = .true.
      select case(i)
      case(1)
-        out0 = ep(0.5_dp, mu, sig, kurt=kurt) - ep((0.5_dp-mu)/sig, kurt=kurt)/sig
+        out0 = ep(0.5_dp, loc, sca, beta=beta) - ep((0.5_dp-loc)/sca, beta=beta)/sca
      case(2)
-        out0 = laplace(0.5_dp, mu, sig) - laplace((0.5_dp-mu)/sig)/sig
+        out0 = laplace(0.5_dp, loc, sca) - laplace((0.5_dp-loc)/sca)/sca
      case(3)
-        out0 = normal(0.5_dp, mu, sig) - normal((0.5_dp-mu)/sig)/sig
+        out0 = normal(0.5_dp, loc, sca) - normal((0.5_dp-loc)/sca)/sca
      case(4)
-        out0 = sep(0.5_dp, mu, sig, skew=skew, kurt=kurt) - sep((0.5_dp-mu)/sig, skew=skew, kurt=kurt)/sig
+        out0 = sep(0.5_dp, loc, sca, xi=xi, beta=beta) - sep((0.5_dp-loc)/sca, xi=xi, beta=beta)/sca
      case(5)
-        out0 = sstudentt(0.5_dp, nu, mu, sig, skew=skew) - sstudentt((0.5_dp-mu)/sig, nu, skew=skew)/sig
+        out0 = st(0.5_dp, nu, loc, sca, xi=xi) - st((0.5_dp-loc)/sca, nu, xi=xi)/sca
      case(6)
-        out0 = studentt(0.5_dp, nu, mu, sig) - studentt((0.5_dp-mu)/sig, nu)/sig
+        out0 = t(0.5_dp, nu, loc, sca) - t((0.5_dp-loc)/sca, nu)/sca
      case default
         continue
      end select
-     if (ne(out0, 0.0_dp)) isgood = .false.
+     ! if (ne(out0, 0.0_dp)) isgood = .false.
+     if (abs(out0) > 1.0e-15_dp) isgood = .false.
      allgood = allgood .and. isgood
-     if (.not. isgood) write(*,*) 'mo_distributions transformation failed: ', i, out0
+     if (.not. isgood) write(*,*) 'mo_distributions transformation 0D failed: ', i, out0
   enddo
 
   ! ep/sep vs normal/laplace
@@ -146,29 +183,29 @@ PROGRAM main
      isgood = .true.
      select case(i)
      case(1)
-        out1 = ep(dat1, 0.0_dp, 1.0_dp, 0.0_dp) - normal(dat1, 0.0_dp, 1.0_dp)
+        out = ep(dat, 0.0_dp, 1.0_dp, 0.0_dp) - normal(dat, 0.0_dp, 1.0_dp)
      case(2)
-        out1 = ep01(dat1, kurt=0.0_dp) - normal01(dat1)
+        out = ep01(dat, beta=0.0_dp) - normal01(dat)
      case(3)
-        out1 = sep(dat1, 0.0_dp, 1.0_dp, 1.0_dp, 0.0_dp) - normal(dat1, 0.0_dp, 1.0_dp)
+        out = sep(dat, 0.0_dp, 1.0_dp, 1.0_dp, 0.0_dp) - normal(dat, 0.0_dp, 1.0_dp)
      case(4)
-        out1 = sep01(dat1) - normal01(dat1)
+        out = sep01(dat) - normal01(dat)
      case(5)
-        out1 = ep(dat1, 0.0_dp, 1.0_dp, 1.0_dp) - laplace(dat1, 0.0_dp, 1.0_dp/sqrt(2.0_dp))
+        out = ep(dat, 0.0_dp, 1.0_dp, 1.0_dp) - laplace(dat, 0.0_dp, sig=1.0_dp)
      case(6)
-        out1 = ep(dat1, 0.0_dp, sqrt(2.0_dp), 1.0_dp) - laplace(dat1, 0.0_dp, 1.0_dp)
+        out = ep(dat, 0.0_dp, 1.0_dp, 1.0_dp) - laplace(dat, 0.0_dp, 1.0_dp/sqrt(2.0_dp))
      case(7)
-        out1 = ep(dat1, 0.0_dp, sqrt(2.0_dp), 1.0_dp) - laplace01(dat1)
+        out = ep(dat, 0.0_dp, sqrt(2.0_dp), 1.0_dp) - laplace(dat, 0.0_dp, 1.0_dp)
      case(8)
-        out1 = sep(dat1, 0.0_dp, 1.0_dp, 1.0_dp, 1.0_dp) - laplace(dat1, 0.0_dp, 1.0_dp/sqrt(2.0_dp))
+        out = sep(dat, 0.0_dp, 1.0_dp, 1.0_dp, 1.0_dp) - laplace(dat, 0.0_dp, sig=1.0_dp)
      case(9)
-        out1 = sep(dat1, 0.0_dp, sqrt(2.0_dp), 1.0_dp, 1.0_dp) - laplace(dat1, 0.0_dp, 1.0_dp)
+        out = sep(dat, 0.0_dp, sqrt(2.0_dp), 1.0_dp, 1.0_dp) - laplace(dat, 0.0_dp, 1.0_dp)
      case default
         continue
      end select
-     if (any(abs(out1) > 1.0e-10)) isgood = .false.
+     if (any(abs(out) > 1.0e-10)) isgood = .false.
      allgood = allgood .and. isgood
-     if (.not. isgood) write(*,*) 'mo_distributions ep/sep comparison to normal/laplace failed: ', i, out1
+     if (.not. isgood) write(*,*) 'mo_distributions ep/sep comparison to normal/laplace failed: ', i, out
   enddo
 
   ! skewed vs unskewed
@@ -176,62 +213,91 @@ PROGRAM main
      isgood = .true.
      select case(i)
      case(1)
-        out1 = sep(dat1, mu, sig, 1.0_dp, kurt) - ep(dat1, mu, sig, kurt)
+        out = sep(dat, loc, sca, 1.0_dp, beta) - ep(dat, loc, sca, beta)
      case(2)
-        out1 = sstudentt(dat1, nu, mu, sig, 1.0_dp) - studentt(dat1, nu, mu, sig)
+        out = st(dat, nu, loc, sca, 1.0_dp) - t(dat, nu, loc, sca)
      case default
         continue
      end select
-     if (any(abs(out1) > 1.0e-10)) isgood = .false.
+     if (any(abs(out) > 1.0e-10)) isgood = .false.
      allgood = allgood .and. isgood
-     if (.not. isgood) write(*,*) 'mo_distributions skewed vs non-skewed failed: ', i, out1
+     if (.not. isgood) write(*,*) 'mo_distributions skewed vs non-skewed failed: ', i, out
   enddo
 
 
   ! SP
-  forall(i=1:nn) sat1(i) = real(i,sp)/real(nn,sp)*20.0_sp - 10.0_sp
-  smu   = 1.0_sp
-  ssig  = 2.0_sp
-  sskew = 2.0_sp
-  skurt = 0.5_sp
-  snu   = 10.0_sp
+  forall(i=1:nn) sat(i) = real(i,sp)/real(nn,sp)*300.0_sp - 150.0_sp
+  dsat = sat(2)-sat(1)
+  
+  sloc  = 1.1_sp
+  ssca  = 2.2_sp
+  ssig  = 2.2_sp
+  sxi   = 3.3_sp
+  sbeta = 0.5_sp
+  snu   = 4.4_sp
 
-  isgood = .true.
   ! integral
   do i=1, 12
      isgood = .true.
      select case(i)
-     case(1)
-        sout1 = ep(sat1, smu, ssig, skurt)
+     case(1) ! Exponential Power
+        isloc = sloc
+        issig = ssig
+        sout = ep(sat, sloc, beta=sbeta, sig=ssig)
      case(2)
-        sout1 = ep01(sat1, skurt)
-     case(3)
-        sout1 = laplace(sat1, smu, ssig)
+        isloc = 0.0_sp
+        issig = 1.0_sp
+        sout = ep01(sat, sbeta)
+     case(3)! Laplace
+        isloc = sloc
+        issig = ssig
+        sout = laplace(sat, sloc, sig=ssig)
      case(4)
-        sout1 = laplace01(sat1)
-     case(5)
-        sout1 = normal(sat1, smu, ssig)
+        isloc = 0.0_sp
+        issig = sqrt(2.0_sp)
+        sout = laplace01(sat)
+     case(5) ! Normal
+        isloc = sloc
+        issig = ssig
+        sout = normal(sat, sloc, ssca)
      case(6)
-        sout1 = normal01(sat1)
-     case(7)
-        sout1 = sep(sat1, smu, ssig, sskew, skurt)
+        isloc = 0.0_sp
+        issig = 1.0_sp
+        sout = normal01(sat)
+     case(7) ! Skew Exponential Power
+        isloc = sloc
+        issig = ssig
+        sout = sep(sat, sloc, xi=sxi, beta=sbeta, sig=ssig)
      case(8)
-        sout1 = sep01(sat1, sskew, skurt)
-     case(9)
-        sout1 = sstudentt(sat1, snu, smu, ssig, sskew)
+        isloc = 0.0_sp
+        issig = 1.0_sp
+        sout = sep01(sat, sxi, sbeta)
+     case(9) ! Skewed Student t
+        isloc = sloc
+        issig = ssig
+        sout = st(sat, snu, sloc, xi=sxi, sig=ssig)
      case(10)
-        sout1 = sstudentt01(sat1, snu, sskew)
-     case(11)
-        sout1 = studentt(sat1, snu, smu, ssig)
+        isloc = 0.0_sp
+        issig = sqrt(snu/(snu-2.0_sp))
+        sout = st01(sat, snu, sxi)
+     case(11) ! Student t
+        isloc = sloc
+        issig = ssig
+        sout = t(sat, snu, sloc, sig=ssig)
      case(12)
-        sout1 = studentt01(sat1, snu)
+        isloc = 0.0_sp
+        issig = sqrt(snu/(snu-2.0_sp))
+        sout = t01(sat, snu)
      case default
         continue
      end select
-     sout0 = sum((sat1(2:nn)-sat1(1:nn-1))*sout1(1:nn-1))+(sat1(nn)-sat1(nn-1))*sout1(nn)
-     if (abs(1.0_sp-sout0) > 1.0e-2_sp) isgood = .false.
+     smean = sum(sat * sout * dsat)
+     svar  = sum((sat-smean)**2 * sout * dsat)
+     sstd  = sqrt(svar)
+     if (abs(smean-isloc) > 1.0e-2_sp) isgood = .false.
+     if (abs(sstd-issig) > 1.0e-2_sp) isgood = .false.
      allgood = allgood .and. isgood
-     if (.not. isgood) write(*,*) 'mo_distributions integral-sp failed: ', i, sout0
+     if (.not. isgood) write(*,*) 'mo_distributions integral SP failed: ', i, isloc, dmean, issig, dstd
   enddo
 
 

@@ -1,7 +1,9 @@
 program test_utils
 
   use mo_kind,  only: sp, dp, i4
-  use mo_utils, only: eq, ge, le, ne, swap, locate, is_finite, is_nan, is_normal, special_value
+  use mo_utils, only: eq, ge, le, ne
+  use mo_utils, only: swap, locate, cumsum, arange, linspace
+  use mo_utils, only: is_finite, is_nan, is_normal, special_value
 
   implicit none
 
@@ -10,22 +12,23 @@ program test_utils
   real(sp) :: a_sp
   real(sp) :: b_sp
 
-  integer(i4), parameter     :: nn = 100
-  real(dp),    dimension(nn) :: dat1, dat2, dat3
-  real(sp),    dimension(nn) :: sat1, sat2, sat3
+  integer(i4), parameter :: nn = 100
+  real(dp), dimension(nn) :: dat1, dat2, dat3
+  real(sp), dimension(nn) :: sat1, sat2, sat3
   integer(i4), dimension(nn) :: iat1, iat2, iat3
-  logical,     dimension(nn) :: mask
+  complex(dp), dimension(nn) :: cat1, cat2
+  real(dp), dimension(:), allocatable :: adat1
 
-  real(dp)    :: d1
-  real(dp),    dimension(5) :: d5
-  real(sp)    :: s1
-  real(sp),    dimension(5) :: s5
+  real(dp) :: d1
+  real(dp), dimension(5) :: d5
+  real(sp) :: s1
+  real(sp), dimension(5) :: s5
   integer(i4) :: ii1
   integer(i4), dimension(5) :: ii5
 
   integer(i4) :: i
-  logical     :: isgood
-  logical     :: compare
+  logical  :: isgood
+  logical  :: compare
 
   isgood = .true.
 
@@ -221,8 +224,6 @@ program test_utils
   write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
   isgood = isgood .and. (.not. compare)
 
-  if (.not. isgood) write(*,*) 'mo_utils failed comparisons'
-
   ! -----------------------------------------------------
   ! Swap
 
@@ -231,58 +232,20 @@ program test_utils
   dat3 = dat1
   call swap(dat1, dat2)
   isgood = isgood .and. all(eq(dat2,dat3))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_dp'
-  dat3 = dat1
-  mask    = .true.
-  mask(1) = .false.
-  call swap(dat1, dat2, mask=mask)
-  isgood = isgood .and. all(eq(dat2(2:),dat3(2:)))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_dp 1'
-  isgood = isgood .and. eq(dat1(1),dat3(1))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_dp 2'
 
-  dat3 = dat2
   call swap(dat2, 1, nn)
   call swap(dat2, nn, 1)
   isgood = isgood .and. all(eq(dat2,dat3))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_dp'
-  call swap(dat2, 1, nn, mask=.true.)
-  call swap(dat2, nn, 1, mask=.true.)
-  isgood = isgood .and. all(eq(dat2,dat3))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_dp'
-  call swap(dat2, 1, nn, mask=.false.)
-  call swap(dat2, nn, 1, mask=.false.)
-  isgood = isgood .and. all(eq(dat2,dat3))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_dp'
 
   call random_number(sat1)
   call random_number(sat2)
   sat3 = sat1
   call swap(sat1, sat2)
   isgood = isgood .and. all(eq(sat2,sat3))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_sp'
-  sat3 = sat1
-  mask    = .true.
-  mask(1) = .false.
-  call swap(sat1, sat2, mask=mask)
-  isgood = isgood .and. all(eq(sat2(2:),sat3(2:)))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_sp 1'
-  isgood = isgood .and. eq(sat1(1),sat3(1))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_sp 2'
 
-  sat3 = sat2
   call swap(sat2, 1, nn)
   call swap(sat2, nn, 1)
   isgood = isgood .and. all(eq(sat2,sat3))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_dp'
-  call swap(sat2, 1, nn, mask=.true.)
-  call swap(sat2, nn, 1, mask=.true.)
-  isgood = isgood .and. all(eq(sat2,sat3))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_sp'
-  call swap(sat2, 1, nn, mask=.false.)
-  call swap(sat2, nn, 1, mask=.false.)
-  isgood = isgood .and. all(eq(sat2,sat3))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_sp'
 
   call random_number(dat1)
   call random_number(dat2)
@@ -291,29 +254,10 @@ program test_utils
   iat3 = iat1
   call swap(iat1, iat2)
   isgood = isgood .and. all(iat2 == iat3)
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_i4'
-  iat3 = iat1
-  mask    = .true.
-  mask(1) = .false.
-  call swap(iat1, iat2, mask=mask)
-  isgood = isgood .and. all(iat2(2:) == iat3(2:))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_i4 1'
-  isgood = isgood .and. (iat1(1) == iat3(1))
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_xy_mask_i4 2'
 
-  iat3 = iat2
   call swap(iat2, 1, nn)
   call swap(iat2, nn, 1)
   isgood = isgood .and. all(iat2 == iat3)
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_i4'
-  call swap(iat2, 1, nn, mask=.true.)
-  call swap(iat2, nn, 1, mask=.true.)
-  isgood = isgood .and. all(iat2 == iat3)
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_i4'
-  call swap(iat2, 1, nn, mask=.false.)
-  call swap(iat2, nn, 1, mask=.false.)
-  isgood = isgood .and. all(iat2 == iat3)
-  if (.not. isgood) write(*,*) 'mo_utils failed swap_vec_mask_i4'
 
   ! -----------------------------------------------------
   ! Locate
@@ -415,6 +359,65 @@ program test_utils
   isgood = isgood .and. eq(special_value(1.0_sp, 'IEEE_NEGATIVE_ZERO'), -special_value(1.0_sp, 'IEEE_POSITIVE_ZERO'))
   isgood = isgood .and. eq(abs(special_value(1.0_sp, 'IEEE_POSITIVE_ZERO')), 0.0_sp)
   isgood = isgood .and. eq(abs(special_value(1.0_sp, 'IEEE_NEGATIVE_ZERO')), 0.0_sp)
+
+  ! -----------------------------------------------------
+  ! Cumsum
+  ! double precision
+  dat1(:) = 1.0_dp
+  dat2    = cumsum(dat1)
+  isgood  = isgood .and. (eq(dat2(1),1.0_dp))
+  isgood  = isgood .and. (eq(dat2(nn),real(nn,dp)))
+  ! single precision
+  sat1(:) = 2.0_sp
+  sat2    = cumsum(sat1)
+  isgood  = isgood .and. (eq(sat2(1),2.0_sp))
+  isgood  = isgood .and. (eq(sat2(nn),real(2*nn,sp)))
+  ! integer
+  iat1(:) = 3
+  iat2    = cumsum(iat1)
+  isgood  = isgood .and. (iat2(1) == 3)
+  isgood  = isgood .and. (iat2(nn) == 3*nn)
+  ! complex
+  cat1(:) = (1.0_dp,1.0_dp)
+  cat2    = cumsum(cat1)
+  isgood  = isgood .and. (eq(real(cat2(1)),1.0_dp))
+  isgood  = isgood .and. (eq(aimag(cat2(nn)),real(nn,dp)))
+
+  ! -----------------------------------------------------
+  ! Range
+  ! double precision
+  dat1(:) = 1.0_dp
+  dat2    = cumsum(dat1)
+  dat1    = arange(real(nn,dp))
+  isgood  = isgood .and. all(eq(dat1,dat2))
+  ! single precision
+  sat1(:) = 2.0_dp
+  sat2    = cumsum(sat1)
+  sat1    = arange(real(nn,sp)) * 2.0_sp
+  isgood  = isgood .and. all(eq(sat1,sat2))
+  ! integer
+  iat1(:) = 1
+  iat2    = cumsum(iat1) - 2
+  iat1    = arange(-1,nn-2)
+  isgood  = isgood .and. all(iat1==iat2)
+  ! allocatable out
+  adat1 = arange(real(nn,dp))
+
+  ! -----------------------------------------------------
+  ! Linspace
+  ! double precision
+  dat1   = arange(real(nn,dp))
+  dat2   = linspace(1.0_dp,real(nn,dp),nn)
+  isgood = isgood .and. all(eq(dat1,dat2))
+  ! single precision
+  sat1   = arange(real(nn,sp))/real(nn,sp)
+  sat2   = linspace(0.01_sp,1.0_sp,nn)
+  isgood = isgood .and. all(eq(sat1,sat2))
+  ! integer
+  iat1(:) = 3
+  iat2    = cumsum(iat1)
+  iat1    = linspace(3,3*nn,nn)
+  isgood  = isgood .and. all(iat1==iat2)
 
 
   write(*,*) ''

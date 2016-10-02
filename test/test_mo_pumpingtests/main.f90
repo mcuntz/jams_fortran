@@ -15,8 +15,11 @@ REAL(sp)            :: Reftest, hreftest, Qwtest, Ktest, Ltest, Stest, TGtest, v
 REAL(dp)            :: Reftestd, hreftestd, Qwtestd, Ktestd, Ltestd, Stestd, TGtestd, vartestd, corrtestd, anisotestd!, proptestd
 LOGICAL             :: isgood
 
-real(dp), dimension(3,3)   :: fpoints_dp
-real(sp), dimension(3,3)   :: fpoints_sp
+real(dp), dimension(3,3)   :: fpoints_dp, fpoints2_dp, fpoints3_dp
+real(sp), dimension(3,3)   :: fpoints_sp, fpoints2_sp, fpoints3_sp
+
+real(dp), dimension(9,2)   :: grid_dp
+real(sp), dimension(9,2)   :: grid_sp
 
 integer(i4)         :: m,n
 
@@ -48,6 +51,20 @@ vartestd        = 1.0_dp
 corrtestd       = 10.0_dp
 anisotestd      = 1.0_dp
 
+grid_sp         =   reshape((/  1._sp,      2._sp,      3._sp,&
+                                1._sp,      2._sp,      3._sp,&
+                                1._sp,      2._sp,      3._sp,&
+                                50.0_sp,    50.0_sp,    50.0_sp,&
+                                100.0_sp,   100.0_sp,   100.0_sp,&
+                                1000.0_sp,  1000.0_sp,  1000.0_sp /), (/9,2/))
+
+grid_dp         =   reshape((/  1._dp,      2._dp,      3._dp,&
+                                1._dp,      2._dp,      3._dp,&
+                                1._dp,      2._dp,      3._dp,&
+                                50.0_dp,    50.0_dp,    50.0_dp,&
+                                100.0_dp,   100.0_dp,   100.0_dp,&
+                                1000.0_dp,  1000.0_dp,  1000.0_dp /), (/9,2/))
+
 isgood          = .TRUE.
 
 !---------------------------------------------------------------------------------------------------
@@ -66,16 +83,16 @@ write (*,*) '-------------------------------------------------------------------
 ! Thiemdp(0.2)         =  -2.5614999936338809     
 ! Thiemdp(0.3)         =  -1.9161822315668402     
   
-    isgood = isgood .and. (nint(thiem(0.2_sp, (/Ktest , Ltest /), (/Reftest , hreftest , Qwtest /))*1000)       .EQ. -2562)
-    isgood = isgood .and. (nint(thiem(0.3_sp, (/Ktest , Ltest /), (/Reftest , hreftest , Qwtest /))*1000)       .EQ. -1916)
-    isgood = isgood .and. (nint(thiem(0.2_dp, (/Ktestd, Ltestd/), (/Reftestd, hreftestd, Qwtestd/))*1000000)    .EQ. -2561500)
-    isgood = isgood .and. (nint(thiem(0.3_dp, (/Ktestd, Ltestd/), (/Reftestd, hreftestd, Qwtestd/))*1000000)    .EQ. -1916182)
+    isgood = isgood .and. (nint(thiem(0.2_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))*1000)       .EQ. -2562)
+    isgood = isgood .and. (nint(thiem(0.3_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))*1000)       .EQ. -1916)
+    isgood = isgood .and. (nint(thiem(0.2_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))*1000000)    .EQ. -2561500)
+    isgood = isgood .and. (nint(thiem(0.3_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))*1000000)    .EQ. -1916182)
 !sp
-    write (*,*) 'Thiemsp(0.2)           =', thiem(0.2_sp, (/Ktest , Ltest /), (/Reftest , hreftest , Qwtest /))
-    write (*,*) 'Thiemsp(0.3)           =', thiem(0.3_sp, (/Ktest , Ltest /), (/Reftest , hreftest , Qwtest /))
+    write (*,*) 'Thiemsp(0.2)           =', thiem(0.2_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))
+    write (*,*) 'Thiemsp(0.3)           =', thiem(0.3_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))
 !dp
-    write (*,*) 'Thiemdp(0.2)           =', thiem(0.2_dp, (/Ktestd, Ltestd/), (/Reftestd, hreftestd, Qwtestd/))
-    write (*,*) 'Thiemdp(0.3)           =', thiem(0.3_dp, (/Ktestd, Ltestd/), (/Reftestd, hreftestd, Qwtestd/))
+    write (*,*) 'Thiemdp(0.2)           =', thiem(0.2_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))
+    write (*,*) 'Thiemdp(0.3)           =', thiem(0.3_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))
 
     write (*,*) ' '
 
@@ -91,49 +108,49 @@ write (*,*) '-------------------------------------------------------------------
 ! ext_Thiem3d_dp(0.2)  =  -1.5541790860603071   optional  
 ! ext_Thiem3d_dp(0.3)  =  -1.1627453616249193   optional
 
-    isgood = isgood .and. (nint(ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest , Ltest /),&
-                                                    & (/Reftest , hreftest , Qwtest /))*1000)                   .EQ. -4195)
-    isgood = isgood .and. (nint(ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest , Ltest /),&
-                                                    & (/Reftest , hreftest , Qwtest /))*1000)                   .EQ. -3132)
-    isgood = isgood .and. (nint(ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest , Ltest /),&
-                                                            & (/Reftest , hreftest , Qwtest /),&
+    isgood = isgood .and. (nint(ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest/),&
+                                                    & (/Reftest , hreftest , Qwtest , Ltest  /))*1000)          .EQ. -4195)
+    isgood = isgood .and. (nint(ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest/),&
+                                                    & (/Reftest , hreftest , Qwtest , Ltest  /))*1000)          .EQ. -3132)
+    isgood = isgood .and. (nint(ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest/),&
+                                                            & (/Reftest , hreftest , Qwtest , Ltest  /),&
                                                             & .false., 1.0_sp)*1000)                            .EQ. -1554)
-    isgood = isgood .and. (nint(ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest , Ltest /),&
-                                                            & (/Reftest , hreftest , Qwtest /),&
+    isgood = isgood .and. (nint(ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest/),&
+                                                            & (/Reftest , hreftest , Qwtest , Ltest  /),&
                                                             & .false., 1.0_sp)*1000)                            .EQ. -1163)
-    isgood = isgood .and. (nint(ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd, Ltestd/),&
-                                                            & (/Reftestd, hreftestd, Qwtestd/))*1000000)        .EQ. -4194527)
-    isgood = isgood .and. (nint(ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd, Ltestd/),&
-                                                            & (/Reftestd, hreftestd, Qwtestd/))*1000000)        .EQ. -3132098)
-    isgood = isgood .and. (nint(ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd, Ltestd/),&
-                                                            & (/Reftestd, hreftestd, Qwtestd/),&
+    isgood = isgood .and. (nint(ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
+                                                            & (/Reftestd, hreftestd, Qwtestd, Ltestd/))*1000000).EQ. -4194527)
+    isgood = isgood .and. (nint(ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
+                                                            & (/Reftestd, hreftestd, Qwtestd, Ltestd/))*1000000).EQ. -3132098)
+    isgood = isgood .and. (nint(ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
+                                                            & (/Reftestd, hreftestd, Qwtestd, Ltestd/),&
                                                             & .false., 1.0_dp)*1000000)                         .EQ. -1554179)
-    isgood = isgood .and. (nint(ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd, Ltestd/),&
-                                                            & (/Reftestd, hreftestd, Qwtestd/),&
+    isgood = isgood .and. (nint(ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
+                                                            & (/Reftestd, hreftestd, Qwtestd, Ltestd/),&
                                                             & .false., 1.0_dp)*1000000)                         .EQ. -1162745)
 !sp
-    write (*,*) 'ext_Thiem3d_sp(0.2)_std=', ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest , Ltest /),&
-                                                            & (/Reftest , hreftest , Qwtest /))
-    write (*,*) 'ext_Thiem3d_sp(0.3)_std=', ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest , Ltest /),&
-                                                            & (/Reftest , hreftest , Qwtest /))
+    write (*,*) 'ext_Thiem3d_sp(0.2)_std=', ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest /),&
+                                                            & (/Reftest , hreftest , Qwtest , Ltest /))
+    write (*,*) 'ext_Thiem3d_sp(0.3)_std=', ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest /),&
+                                                            & (/Reftest , hreftest , Qwtest , Ltest /))
 !with optional inputs
-    write (*,*) 'ext_Thiem3d_sp(0.2)_opt=', ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest , Ltest /),&
-                                                            & (/Reftest , hreftest , Qwtest /),&
+    write (*,*) 'ext_Thiem3d_sp(0.2)_opt=', ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest /),&
+                                                            & (/Reftest , hreftest , Qwtest , Ltest /),&
                                                             & .false., 1.0_sp)
-    write (*,*) 'ext_Thiem3d_sp(0.3)_opt=', ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest , Ltest /),&
-                                                            & (/Reftest , hreftest , Qwtest /),&
+    write (*,*) 'ext_Thiem3d_sp(0.3)_opt=', ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest /),&
+                                                            & (/Reftest , hreftest , Qwtest , Ltest /),&
                                                             & .false., 1.0_sp)
 !dp
-    write (*,*) 'ext_Thiem3d_dp(0.2)_std=', ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd, Ltestd/),&
-                                                            & (/Reftestd, hreftestd, Qwtestd/))
-    write (*,*) 'ext_Thiem3d_dp(0.3)_std=', ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd, Ltestd/),&
-                                                            & (/Reftestd, hreftestd, Qwtestd/))
+    write (*,*) 'ext_Thiem3d_dp(0.2)_std=', ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
+                                                            & (/Reftestd, hreftestd, Qwtestd, Ltestd/))
+    write (*,*) 'ext_Thiem3d_dp(0.3)_std=', ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
+                                                            & (/Reftestd, hreftestd, Qwtestd, Ltestd/))
 !with optional inputs
-    write (*,*) 'ext_Thiem3d_dp(0.2)_opt=', ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd, Ltestd/),&
-                                                            & (/Reftestd, hreftestd, Qwtestd/),&
+    write (*,*) 'ext_Thiem3d_dp(0.2)_opt=', ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
+                                                            & (/Reftestd, hreftestd, Qwtestd, Ltestd/),&
                                                             & .false., 1.0_dp)
-    write (*,*) 'ext_Thiem3d_dp(0.3)_opt=', ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd, Ltestd/),&
-                                                            & (/Reftestd, hreftestd, Qwtestd/),&
+    write (*,*) 'ext_Thiem3d_dp(0.3)_opt=', ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
+                                                            & (/Reftestd, hreftestd, Qwtestd, Ltestd/),&
                                                             & .false., 1.0_dp)
 
     write (*,*) ' '
@@ -193,237 +210,144 @@ write (*,*) '-------------------------------------------------------------------
 ! Theisdp(r=.3,t=.2)   = -0.14212753460648780     
 ! Theisdp(r=.3,t=.3)   = -0.27083461355368116 
 
-    isgood = isgood .and. (nint(theis(0.2_sp, 0.0_sp, (/Stest , Ktest , Ltest /),   (/Qwtest /) )*1000)         .EQ. 0)
-    isgood = isgood .and. (nint(theis(0.2_sp, 0.1_sp, (/Stest , Ktest , Ltest /),   (/Qwtest /) )*1000)         .EQ. -175)
-    isgood = isgood .and. (nint(theis(0.3_sp, 0.2_sp, (/Stest , Ktest , Ltest /),   (/Qwtest /) )*1000)         .EQ. -142)
-    isgood = isgood .and. (nint(theis(0.3_sp, 0.3_sp, (/Stest , Ktest , Ltest /),   (/Qwtest /) )*1000)         .EQ. -271)
-    isgood = isgood .and. (nint(theis(0.2_dp, 0.0_dp, (/Stestd, Ktestd, Ltestd/),   (/Qwtestd/) )*1000000)      .EQ. 0)
-    isgood = isgood .and. (nint(theis(0.2_dp, 0.1_dp, (/Stestd, Ktestd, Ltestd/),   (/Qwtestd/) )*1000000)      .EQ. -174580)
-    isgood = isgood .and. (nint(theis(0.3_dp, 0.2_dp, (/Stestd, Ktestd, Ltestd/),   (/Qwtestd/) )*1000000)      .EQ. -142128)
-    isgood = isgood .and. (nint(theis(0.3_dp, 0.3_dp, (/Stestd, Ktestd, Ltestd/),   (/Qwtestd/) )*1000000)      .EQ. -270835)
+    isgood = isgood .and. (nint(theis(0.2_sp, 0.0_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )*1000)         .EQ. 0)
+    isgood = isgood .and. (nint(theis(0.2_sp, 0.1_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )*1000)         .EQ. -175)
+    isgood = isgood .and. (nint(theis(0.3_sp, 0.2_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )*1000)         .EQ. -142)
+    isgood = isgood .and. (nint(theis(0.3_sp, 0.3_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )*1000)         .EQ. -271)
+    isgood = isgood .and. (nint(theis(0.2_dp, 0.0_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )*1000000)      .EQ. 0)
+    isgood = isgood .and. (nint(theis(0.2_dp, 0.1_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )*1000000)      .EQ. -174580)
+    isgood = isgood .and. (nint(theis(0.3_dp, 0.2_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )*1000000)      .EQ. -142128)
+    isgood = isgood .and. (nint(theis(0.3_dp, 0.3_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )*1000000)      .EQ. -270835)
 !sp
-    write (*,*) 'Theissp(r=.2,t=.0)     =', theis(0.2_sp, 0.0_sp, (/Stest , Ktest , Ltest /),   (/Qwtest /) )
-    write (*,*) 'Theissp(r=.2,t=.1)     =', theis(0.2_sp, 0.1_sp, (/Stest , Ktest , Ltest /),   (/Qwtest /) )
-    write (*,*) 'Theissp(r=.3,t=.2)     =', theis(0.3_sp, 0.2_sp, (/Stest , Ktest , Ltest /),   (/Qwtest /) )
-    write (*,*) 'Theissp(r=.3,t=.3)     =', theis(0.3_sp, 0.3_sp, (/Stest , Ktest , Ltest /),   (/Qwtest /) )
+    write (*,*) 'Theissp(r=.2,t=.0)     =', theis(0.2_sp, 0.0_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )
+    write (*,*) 'Theissp(r=.2,t=.1)     =', theis(0.2_sp, 0.1_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )
+    write (*,*) 'Theissp(r=.3,t=.2)     =', theis(0.3_sp, 0.2_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )
+    write (*,*) 'Theissp(r=.3,t=.3)     =', theis(0.3_sp, 0.3_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )
 !dp
-    write (*,*) 'Theisdp(r=.2,t=.0)     =', theis(0.2_dp, 0.0_dp, (/Stestd, Ktestd, Ltestd/),   (/Qwtestd/) )
-    write (*,*) 'Theisdp(r=.2,t=.1)     =', theis(0.2_dp, 0.1_dp, (/Stestd, Ktestd, Ltestd/),   (/Qwtestd/) )
-    write (*,*) 'Theisdp(r=.3,t=.2)     =', theis(0.3_dp, 0.2_dp, (/Stestd, Ktestd, Ltestd/),   (/Qwtestd/) )
-    write (*,*) 'Theisdp(r=.3,t=.3)     =', theis(0.3_dp, 0.3_dp, (/Stestd, Ktestd, Ltestd/),   (/Qwtestd/) )
+    write (*,*) 'Theisdp(r=.2,t=.0)     =', theis(0.2_dp, 0.0_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )
+    write (*,*) 'Theisdp(r=.2,t=.1)     =', theis(0.2_dp, 0.1_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )
+    write (*,*) 'Theisdp(r=.3,t=.2)     =', theis(0.3_dp, 0.2_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )
+    write (*,*) 'Theisdp(r=.3,t=.3)     =', theis(0.3_dp, 0.3_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )
     
     write (*,*) ' '
 
 write (*,*) "EXTENDED THEIS' SOLUTION IN 2D"
 write (*,*) '-------------------------------------------------------------------------'
 
-! ext_theis2d_dp(r=1 ,t=  50 )  =   -2.6490725920191469     
-! ext_theis2d_dp(r=1 ,t= 100 )  =   -3.5064712797000333     
-! ext_theis2d_dp(r=1 ,t=1000 )  =   -6.4798765369790310     
-! ext_theis2d_dp(r=2 ,t=  50 )  =   -1.1832411219975087     
-! ext_theis2d_dp(r=2 ,t= 100 )  =   -1.9058011979543912     
-! ext_theis2d_dp(r=2 ,t=1000 )  =   -4.7465171853361445     
-! ext_theis2d_dp(r=3 ,t=  50 )  =  -0.60054292194236258     
-! ext_theis2d_dp(r=3 ,t= 100 )  =   -1.1578489936001926     
-! ext_theis2d_dp(r=3 ,t=1000 )  =   -3.8058729235417590     
+! ext_theis2d_dp_vec(r=           1 ,t=          50 )  =   -2.6724678924208556     
+! ext_theis2d_dp_vec(r=           1 ,t=         100 )  =   -3.4409275281733089     
+! ext_theis2d_dp_vec(r=           1 ,t=        1000 )  =   -5.7384083577267218     
+! ext_theis2d_dp_vec(r=           2 ,t=          50 )  =   -1.2250879935634749     
+! ext_theis2d_dp_vec(r=           2 ,t=         100 )  =   -1.8423690881291142     
+! ext_theis2d_dp_vec(r=           2 ,t=        1000 )  =   -4.0012094551152613     
+! ext_theis2d_dp_vec(r=           3 ,t=          50 )  =   -0.60506500331545221     
+! ext_theis2d_dp_vec(r=           3 ,t=         100 )  =   -1.0950539046041157     
+! ext_theis2d_dp_vec(r=           3 ,t=        1000 )  =   -3.0545777884298797     
 
-fpoints_dp    =   ext_theis2d(&
-                    rad     =   (/1._dp,2._dp,3._dp/),&
-                    time    =   (/50.0_dp,100.0_dp,1000.0_dp/),&
-                    params  =   (/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                    inits   =   (/0.01_dp,-0.001_dp/)&
-                    )
-
-do m=1_i4,3_i4
-    do n=1_i4,3_i4
-        isgood = isgood .and. &
-                    eq(ext_theis2d(&
-                        rad=real(m,dp),&
-                        time=real(425_i4*n**2_i4-1225_i4*n+850_i4,dp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/)),&
-                    fpoints_dp(m,n))
-    end do
-end do        
-
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=1.0_dp,&
-                        time=50.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -2649073)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=1.0_dp,&
-                        time=100.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -3506471)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=1.0_dp,&
-                        time=1000.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -6479877)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=2.0_dp,&
-                        time=50.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -1183241)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=2.0_dp,&
-                        time=100.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -1905801)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=2.0_dp,&
-                        time=1000.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -4746517)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=3.0_dp,&
-                        time=50.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -600543)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=3.0_dp,&
-                        time=100.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -1157849)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=3.0_dp,&
-                        time=1000.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -3805873)
-
-do m=1_i4,3_i4
-do n=1_i4,3_i4
-    write(*,*) "ext_theis2d_dp_vec(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints_dp(m,n)
-    write(*,*) "ext_theis2d_dp_sgl(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", ext_theis2d(&
-                        rad=real(m,dp),&
-                        time=real(425_i4*n**2_i4-1225_i4*n+850_i4,dp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))
-end do
-end do
-
-! ext_theis2d_sp(r=1 ,t=  50 )  =   -2.64904737    
-! ext_theis2d_sp(r=1 ,t= 100 )  =   -3.50652599    
-! ext_theis2d_sp(r=1 ,t=1000 )  =   -6.48010302    
-! ext_theis2d_sp(r=2 ,t=  50 )  =   -1.18317485    
-! ext_theis2d_sp(r=2 ,t= 100 )  =   -1.90604305    
-! ext_theis2d_sp(r=2 ,t=1000 )  =   -4.74695349    
-! ext_theis2d_sp(r=3 ,t=  50 )  =  -0.600474238    
-! ext_theis2d_sp(r=3 ,t= 100 )  =   -1.15807271    
-! ext_theis2d_sp(r=3 ,t=1000 )  =   -3.80635810    
-
-fpoints_sp    =   ext_theis2d(&
-                    rad     =   (/1._sp,2._sp,3._sp/),&
-                    time    =   (/50.0_sp,100.0_sp,1000.0_sp/),&
-                    params  =   (/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                    inits   =   (/0.01_sp,-0.001_sp/)&
-                    )
+fpoints_dp    =             ext_theis2d(&
+                                rad     =   (/1._dp,2._dp,3._dp/),&
+                                time    =   (/50.0_dp,100.0_dp,1000.0_dp/),&
+                                params  =   (/TGtestd, vartestd, corrtestd, Stestd/),&
+                                inits   =   (/Qwtestd/))
 
 do m=1_i4,3_i4
     do n=1_i4,3_i4
-        isgood = isgood .and. &
-                    eq(ext_theis2d(&
-                        rad=real(m,sp),&
-                        time=real(425_i4*n**2_i4-1225_i4*n+850_i4,sp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/)),&
-                    fpoints_sp(m,n))
+        fpoints2_dp(m,n) =  ext_theis2d(&
+                                rad     =   real(m,dp),&
+                                time    =   real(425_i4*n**2_i4-1225_i4*n+850_i4,dp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
+                                params  =   (/TGtestd, vartestd, corrtestd, Stestd/),&
+                                inits   =   (/Qwtestd/))
+    end do
+end do
+
+fpoints3_dp =               reshape(&
+                            ext_theis2d(&
+                                grid    =   grid_dp,&
+                                params  =   (/TGtestd, vartestd, corrtestd, Stestd/),&
+                                inits   =   (/Qwtestd/)),(/3,3/))
+
+
+do m=1_i4,3_i4
+    do n=1_i4,3_i4
+        isgood = isgood .and. eq(fpoints_dp(m,n),fpoints2_dp(m,n))
+        isgood = isgood .and. eq(fpoints_dp(m,n),fpoints3_dp(m,n))
     end do
 end do        
 
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=1.0_sp,&
-                        time=50.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -2649) !-2648
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=1.0_sp,&
-                        time=100.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -3507)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=1.0_sp,&
-                        time=1000.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -6480)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=2.0_sp,&
-                        time=50.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -1183)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=2.0_sp,&
-                        time=100.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -1906)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=2.0_sp,&
-                        time=1000.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -4747)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=3.0_sp,&
-                        time=50.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -600)
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=3.0_sp,&
-                        time=100.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -1158) !-1157
-    isgood = isgood .and. &
-                (nint(ext_theis2d(&
-                        rad=3.0_sp,&
-                        time=1000.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -3806)
+isgood = isgood .and. (nint(fpoints_dp(1,1)*1000000) .eq. -2672468)
+isgood = isgood .and. (nint(fpoints_dp(1,2)*1000000) .eq. -3440928)
+isgood = isgood .and. (nint(fpoints_dp(1,3)*1000000) .eq. -5738408)
+isgood = isgood .and. (nint(fpoints_dp(2,1)*1000000) .eq. -1225088)
+isgood = isgood .and. (nint(fpoints_dp(2,2)*1000000) .eq. -1842369)
+isgood = isgood .and. (nint(fpoints_dp(2,3)*1000000) .eq. -4001209)
+isgood = isgood .and. (nint(fpoints_dp(3,1)*1000000) .eq. -605065)
+isgood = isgood .and. (nint(fpoints_dp(3,2)*1000000) .eq. -1095054)
+isgood = isgood .and. (nint(fpoints_dp(3,3)*1000000) .eq. -3054578)
 
 do m=1_i4,3_i4
-do n=1_i4,3_i4
-    write(*,*) "ext_theis2d_sp_vec(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints_sp(m,n)
-    write(*,*) "ext_theis2d_sp_sgl(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", ext_theis2d(&
-                        rad=real(m,sp),&
-                        time=real(425_i4*n**2_i4-1225_i4*n+850_i4,sp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))
-
+    do n=1_i4,3_i4
+        write(*,*) "ext_theis2d_dp_vec(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints_dp(m,n)
+        write(*,*) "ext_theis2d_dp_sgl(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints2_dp(m,n)
+        write(*,*) "ext_theis2d_dp_gri(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints3_dp(m,n)
+    end do
 end do
+
+!### sp #########################################################################
+! ext_theis2d_sp_vec(r=           1 ,t=          50 )  =   -2.67246795    
+! ext_theis2d_sp_vec(r=           1 ,t=         100 )  =   -3.44092774    
+! ext_theis2d_sp_vec(r=           1 ,t=        1000 )  =   -5.73840857    
+! ext_theis2d_sp_vec(r=           2 ,t=          50 )  =   -1.22508800    
+! ext_theis2d_sp_vec(r=           2 ,t=         100 )  =   -1.84236920    
+! ext_theis2d_sp_vec(r=           2 ,t=        1000 )  =   -4.00120974    
+! ext_theis2d_sp_vec(r=           3 ,t=          50 )  =   -0.605064988    
+! ext_theis2d_sp_vec(r=           3 ,t=         100 )  =   -1.09505391    
+! ext_theis2d_sp_vec(r=           3 ,t=        1000 )  =   -3.05457783    
+
+fpoints_sp             =    ext_theis2d(&
+                                rad     =   (/1._sp,2._sp,3._sp/),&
+                                time    =   (/50.0_sp,100.0_sp,1000.0_sp/),&
+                                params  =   (/TGtest, vartest, corrtest, Stest/),&
+                                inits   =   (/Qwtest/))
+
+do m=1_i4,3_i4
+    do n=1_i4,3_i4
+        fpoints2_sp(m,n) =  ext_theis2d(&
+                                rad     =   real(m,sp),&
+                                time    =   real(425_i4*n**2_i4-1225_i4*n+850_i4,sp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
+                                params  =   (/TGtest, vartest, corrtest, Stest/),&
+                                inits   =   (/Qwtest/))
+    end do
+end do
+
+fpoints3_sp             =   reshape(&
+                            ext_theis2d(&
+                                grid    =   grid_sp,&
+                                params  =   (/TGtest, vartest, corrtest, Stest/),&
+                                inits   =   (/Qwtest/)),(/3,3/))
+
+do m=1_i4,3_i4
+    do n=1_i4,3_i4
+        isgood = isgood .and. eq(fpoints_sp(m,n),fpoints2_sp(m,n))
+        isgood = isgood .and. eq(fpoints_sp(m,n),fpoints3_sp(m,n))
+    end do
+end do        
+
+isgood = isgood .and. (nint(fpoints_sp(1,1)*1000) .eq. -2672)
+isgood = isgood .and. (nint(fpoints_sp(1,2)*1000) .eq. -3441)
+isgood = isgood .and. (nint(fpoints_sp(1,3)*1000) .eq. -5738)
+isgood = isgood .and. (nint(fpoints_sp(2,1)*1000) .eq. -1225)
+isgood = isgood .and. (nint(fpoints_sp(2,2)*1000) .eq. -1842)
+isgood = isgood .and. (nint(fpoints_sp(2,3)*1000) .eq. -4001)
+isgood = isgood .and. (nint(fpoints_sp(3,1)*1000) .eq. - 605)
+isgood = isgood .and. (nint(fpoints_sp(3,2)*1000) .eq. -1095)
+isgood = isgood .and. (nint(fpoints_sp(3,3)*1000) .eq. -3055)
+
+do m=1_i4,3_i4
+    do n=1_i4,3_i4
+        write(*,*) "ext_theis2d_sp_vec(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints_sp(m,n)
+        write(*,*) "ext_theis2d_sp_sgl(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints2_sp(m,n)
+        write(*,*) "ext_theis2d_sp_gri(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints3_sp(m,n)
+    end do
 end do
 
 
@@ -432,212 +356,118 @@ end do
 write (*,*) "EXTENDED THEIS' SOLUTION IN 3D"
 write (*,*) '-------------------------------------------------------------------------'
 
-! ext_theis3d_dp(r=1 ,t=  50 )  =   -2.6560270406458253     
-! ext_theis3d_dp(r=1 ,t= 100 )  =   -3.5135670372984724     
-! ext_theis3d_dp(r=1 ,t=1000 )  =   -6.4871018871446848     
-! ext_theis3d_dp(r=2 ,t=  50 )  =   -1.2070941817599892     
-! ext_theis3d_dp(r=2 ,t= 100 )  =   -1.9315210194279706     
-! ext_theis3d_dp(r=2 ,t=1000 )  =   -4.7741294815995907     
-! ext_theis3d_dp(r=3 ,t=  50 )  =  -0.64295549214806225     
-! ext_theis3d_dp(r=3 ,t= 100 )  =   -1.2072969523759849     
-! ext_theis3d_dp(r=3 ,t=1000 )  =   -3.8633829776289548     
+! ext_theis3d_dp_vec(r=           1 ,t=          50 )  =   -2.6719739969853862     
+! ext_theis3d_dp_vec(r=           1 ,t=         100 )  =   -3.4114799964304905     
+! ext_theis3d_dp_vec(r=           1 ,t=        1000 )  =   -5.4641666480313242     
+! ext_theis3d_dp_vec(r=           2 ,t=          50 )  =   -1.2452670522580507     
+! ext_theis3d_dp_vec(r=           2 ,t=         100 )  =   -1.8293707976344475     
+! ext_theis3d_dp_vec(r=           2 ,t=        1000 )  =   -3.7458081837503667     
+! ext_theis3d_dp_vec(r=           3 ,t=          50 )  =  -0.64353916624054508     
+! ext_theis3d_dp_vec(r=           3 ,t=         100 )  =   -1.1069066253083155     
+! ext_theis3d_dp_vec(r=           3 ,t=        1000 )  =   -2.8268598328483159     
 
-fpoints_dp    =   ext_theis3d(&
-                    rad     =   (/1._dp,2._dp,3._dp/),&
-                    time    =   (/50.0_dp,100.0_dp,1000.0_dp/),&
-                    params  =   (/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                    inits   =   (/0.01_dp,-0.001_dp/)&
-                    )
-
-do m=1_i4,3_i4
-    do n=1_i4,3_i4
-        isgood = isgood .and. &
-                    eq(ext_theis3d(&
-                        rad=real(m,dp),&
-                        time=real(425_i4*n**2_i4-1225_i4*n+850_i4,dp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/)),&
-                    fpoints_dp(m,n))
-    end do
-end do        
-
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=1.0_dp,&
-                        time=50.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -2656027)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=1.0_dp,&
-                        time=100.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -3513567)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=1.0_dp,&
-                        time=1000.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -6487102)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=2.0_dp,&
-                        time=50.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -1207094)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=2.0_dp,&
-                        time=100.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -1931521)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=2.0_dp,&
-                        time=1000.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -4774129)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=3.0_dp,&
-                        time=50.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -642955)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=3.0_dp,&
-                        time=100.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -1207297)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=3.0_dp,&
-                        time=1000.0_dp,&
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))*1000000)&
-                .eq. -3863383)
-
-do m=1_i4,3_i4
-do n=1_i4,3_i4
-    write(*,*) "ext_theis3d_dp_vec(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints_dp(m,n)
-    write(*,*) "ext_theis3d_dp_sgl(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", ext_theis3d(&
-                        rad=real(m,dp),&
-                        time=real(425_i4*n**2_i4-1225_i4*n+850_i4,dp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
-                        params=(/0.0001_dp, 1.0_dp, 10.0_dp, 1.0_dp, 1.0_dp, 0.001_dp/),&
-                        inits=(/0.01_dp,-0.001_dp/))
-end do
-end do
-
-! ext_theis3d_sp(r=1 ,t=  50 )  =   -2.65659475    
-! ext_theis3d_sp(r=1 ,t= 100 )  =   -3.51366711    
-! ext_theis3d_sp(r=1 ,t=1000 )  =   -6.48712111    
-! ext_theis3d_sp(r=2 ,t=  50 )  =   -1.20790708    
-! ext_theis3d_sp(r=2 ,t= 100 )  =   -1.93158758    
-! ext_theis3d_sp(r=2 ,t=1000 )  =   -4.77424622    
-! ext_theis3d_sp(r=3 ,t=  50 )  =  -0.644515157    
-! ext_theis3d_sp(r=3 ,t= 100 )  =   -1.20738590    
-! ext_theis3d_sp(r=3 ,t=1000 )  =   -3.86354828    
-
-fpoints_sp    =   ext_theis3d(&
-                    rad     =   (/1._sp,2._sp,3._sp/),&
-                    time    =   (/50.0_sp,100.0_sp,1000.0_sp/),&
-                    params  =   (/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                    inits   =   (/0.01_sp,-0.001_sp/)&
-                    )
+fpoints_dp    =             ext_theis3d(&
+                                rad     =   (/1._dp,2._dp,3._dp/),&
+                                time    =   (/50.0_dp,100.0_dp,1000.0_dp/),&
+                                params  =   (/Ktestd, vartestd, corrtestd, Stestd, anisotestd/),&
+                                inits   =   (/Qwtestd, Ltestd/))
 
 do m=1_i4,3_i4
     do n=1_i4,3_i4
-        isgood = isgood .and. &
-                    eq(ext_theis3d(&
-                        rad=real(m,sp),&
-                        time=real(425_i4*n**2_i4-1225_i4*n+850_i4,sp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/)),&
-                    fpoints_sp(m,n))
+        fpoints2_dp(m,n) =   ext_theis3d(&
+                                rad     =   real(m,dp),&
+                                time    =   real(425_i4*n**2_i4-1225_i4*n+850_i4,dp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
+                                params  =   (/Ktestd, vartestd, corrtestd, Stestd, anisotestd/),&
+                                inits   =   (/Qwtestd, Ltestd/))
+    end do
+end do
+
+fpoints3_dp             =   reshape(&
+                            ext_theis3d(&
+                                grid    =   grid_dp,&
+                                params  =   (/Ktestd, vartestd, corrtestd, Stestd, anisotestd/),&
+                                inits   =   (/Qwtestd, Ltestd/)),(/3,3/))
+
+do m=1_i4,3_i4
+    do n=1_i4,3_i4
+        isgood = isgood .and. eq(fpoints_dp(m,n), fpoints2_dp(m,n))
+        isgood = isgood .and. eq(fpoints_dp(m,n), fpoints3_dp(m,n))
     end do
 end do        
 
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=1.0_sp,&
-                        time=50.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -2657)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=1.0_sp,&
-                        time=100.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -3514)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=1.0_sp,&
-                        time=1000.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -6487)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=2.0_sp,&
-                        time=50.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -1208)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=2.0_sp,&
-                        time=100.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -1932)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=2.0_sp,&
-                        time=1000.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -4774)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=3.0_sp,&
-                        time=50.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*100)&
-                        .eq. -64)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=3.0_sp,&
-                        time=100.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -1207)
-    isgood = isgood .and. &
-                (nint(ext_theis3d(&
-                        rad=3.0_sp,&
-                        time=1000.0_sp,&
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))*1000)&
-                .eq. -3864)
+    isgood = isgood .and. (nint(fpoints_dp(1,1)*1000000) .eq. -2671974)
+    isgood = isgood .and. (nint(fpoints_dp(1,2)*1000000) .eq. -3411480)
+    isgood = isgood .and. (nint(fpoints_dp(1,3)*1000000) .eq. -5464167)
+    isgood = isgood .and. (nint(fpoints_dp(2,1)*1000000) .eq. -1245267)
+    isgood = isgood .and. (nint(fpoints_dp(2,2)*1000000) .eq. -1829371)
+    isgood = isgood .and. (nint(fpoints_dp(2,3)*1000000) .eq. -3745808)
+    isgood = isgood .and. (nint(fpoints_dp(3,1)*1000000) .eq. -643539)
+    isgood = isgood .and. (nint(fpoints_dp(3,2)*1000000) .eq. -1106907)
+    isgood = isgood .and. (nint(fpoints_dp(3,3)*1000000) .eq. -2826860)
 
 do m=1_i4,3_i4
-do n=1_i4,3_i4
-    write(*,*) "ext_theis3d_sp_vec(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints_sp(m,n)
-    write(*,*) "ext_theis3d_sp_sgl(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", ext_theis3d(&
-                        rad=real(m,sp),&
-                        time=real(425_i4*n**2_i4-1225_i4*n+850_i4,sp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
-                        params=(/0.0001_sp, 1.0_sp, 10.0_sp, 1.0_sp, 1.0_sp, 0.001_sp/),&
-                        inits=(/0.01_sp,-0.001_sp/))
+    do n=1_i4,3_i4
+        write(*,*) "ext_theis3d_dp_vec(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints_dp(m,n)
+        write(*,*) "ext_theis3d_dp_sgl(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints2_dp(m,n)
+        write(*,*) "ext_theis3d_dp_gri(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints3_dp(m,n)
+    end do
 end do
+
+! ext_theis3d_sp_vec(r=           1 ,t=          50 )  =   -2.67197418    
+! ext_theis3d_sp_vec(r=           1 ,t=         100 )  =   -3.41148019    
+! ext_theis3d_sp_vec(r=           1 ,t=        1000 )  =   -5.46416712    
+! ext_theis3d_sp_vec(r=           2 ,t=          50 )  =   -1.24526703    
+! ext_theis3d_sp_vec(r=           2 ,t=         100 )  =   -1.82937086    
+! ext_theis3d_sp_vec(r=           2 ,t=        1000 )  =   -3.74580836    
+! ext_theis3d_sp_vec(r=           3 ,t=          50 )  =  -0.643539190    
+! ext_theis3d_sp_vec(r=           3 ,t=         100 )  =   -1.10690665    
+! ext_theis3d_sp_vec(r=           3 ,t=        1000 )  =   -2.82685995    
+
+fpoints_sp              =   ext_theis3d(&
+                                rad     =   (/1._sp,2._sp,3._sp/),&
+                                time    =   (/50.0_sp,100.0_sp,1000.0_sp/),&
+                                params  =   (/Ktest, vartest, corrtest, Stest, anisotest/),&
+                                inits   =   (/Qwtest, Ltest/))
+
+do m=1_i4,3_i4
+    do n=1_i4,3_i4
+        fpoints2_sp(m,n) =   ext_theis3d(&
+                                rad     =   real(m,sp),&
+                                time    =   real(425_i4*n**2_i4-1225_i4*n+850_i4,sp),&  !polynomial with p(1)=50 p(2)=100 p(3)=1000
+                                params  =   (/Ktest, vartest, corrtest, Stest, anisotest/),&
+                                inits   =   (/Qwtest, Ltest/))
+    end do
+end do
+
+fpoints3_sp             =   reshape(&
+                            ext_theis3d(&
+                                grid    =   grid_sp,&
+                                params  =   (/Ktest, vartest, corrtest, Stest, anisotest/),&
+                                inits   =   (/Qwtest, Ltest/)),(/3,3/))
+
+do m=1_i4,3_i4
+    do n=1_i4,3_i4
+        isgood = isgood .and. eq(fpoints_sp(m,n), fpoints2_sp(m,n))
+        isgood = isgood .and. eq(fpoints_sp(m,n), fpoints3_sp(m,n))
+    end do
+end do        
+
+    isgood = isgood .and. (nint(fpoints_sp(1,1)*1000) .eq. -2672)
+    isgood = isgood .and. (nint(fpoints_sp(1,2)*1000) .eq. -3411)
+    isgood = isgood .and. (nint(fpoints_sp(1,3)*1000) .eq. -5464)
+    isgood = isgood .and. (nint(fpoints_sp(2,1)*1000) .eq. -1245)
+    isgood = isgood .and. (nint(fpoints_sp(2,2)*1000) .eq. -1829)
+    isgood = isgood .and. (nint(fpoints_sp(2,3)*1000) .eq. -3746)
+    isgood = isgood .and. (nint(fpoints_sp(3,1)*1000) .eq. -644)
+    isgood = isgood .and. (nint(fpoints_sp(3,2)*1000) .eq. -1107)
+    isgood = isgood .and. (nint(fpoints_sp(3,3)*1000) .eq. -2827)
+
+do m=1_i4,3_i4
+    do n=1_i4,3_i4
+        write(*,*) "ext_theis3d_sp_vec(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints_sp(m,n)
+        write(*,*) "ext_theis3d_sp_sgl(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints2_sp(m,n)
+        write(*,*) "ext_theis3d_sp_gri(r=",m,",t=",425_i4*n**2_i4-1225_i4*n+850_i4,")  = ", fpoints3_sp(m,n)
+    end do
 end do
 
 

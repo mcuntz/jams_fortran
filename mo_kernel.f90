@@ -27,6 +27,7 @@ MODULE mo_kernel
   !          Matthias Cuntz, May 2014 - sort -> qsort
   !          Matthias Cuntz, May 2014 - module procedure golden
   !          Stephan Thober, Jul 2015 - using sort_index in favor of qsort_index
+  !          Matthias Cuntz, Jun 2016 - Romberg integration in cumdensity
 
   ! License
   ! -------
@@ -38,13 +39,8 @@ MODULE mo_kernel
 
   ! Copyright 2013-2014 Juliane Mai, Stephan Thober, Matthias Cuntz
 
-  USE mo_constants, ONLY: twopi_sp, twopi_dp
-  USE mo_integrate, ONLY: int_regular
   USE mo_kind,      ONLY: i4, sp, dp
   USE mo_moment,    ONLY: stddev
-  USE mo_nelmin,    ONLY: nelminrange      ! ND optimization
-  !  USE mo_quicksort, ONLY: qsort_index !ST: may lead to Segmentation Fault for large arrays > 600 000 entries
-  use mo_sort,      only: sort_index
 
   IMPLICIT NONE
 
@@ -54,6 +50,7 @@ MODULE mo_kernel
   PUBLIC :: kernel_regression        ! Kernel regression                         (1D and ND)
   PUBLIC :: kernel_regression_h      ! Bandwith estimation for kernel regression (1D and ND)
 
+  
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -100,9 +97,13 @@ MODULE mo_kernel
   !>                                                     to estimate the bandwidth.
   !>       \param[in] "real(sp/dp), optional :: xout(:)" If present, the CDF will be approximated at this arguments,
   !>                                                     otherwise the CDF is approximated at x.
-  !>       \param[in] "integer(i4), optional :: nintegrate" If present, number of sampling points between for
-  !>                                                        integration between output points.
-  !>                                                        Should 1 plus a multiple of 4. Default: 101.
+  !>       \param[in] "logical, optional :: romberg"     If .true., use Romberg converging integration
+  !>                                                     If .true., use 5-point Newton-Cotes with fixed nintegrate points
+  !>       \param[in] "integer(i4), optional :: nintegrate" 2**nintegrate if Romberg or nintegrate number of sampling
+  !>                                                        points for integration between output points.
+  !>                                                        Default: 10 if Romberg, 101 otherwise.
+  !>       \param[in] "real(sp/dp), optional :: epsint"  maximum relative error for Romberg integration.
+  !>                                                     Default: 1e-6.
   !>       \param[in] "logical, optional :: mask(:)"     mask x values at calculation.\n
   !>                                                     if not xout given, then kernel estimates will have nodata value.
   !>       \param[in] "real(sp/dp), optional :: nodata"  if mask and not xout given, then masked data will
@@ -152,11 +153,13 @@ MODULE mo_kernel
   !>        \date Mar 2013
   !         Modified, Matthias Cuntz, Mar 2013
   !                   Matthias Cuntz, May 2014 - sort -> qsort
+  !                   Matthias Cuntz, Jun 2016 - Romberg integration
 
   INTERFACE kernel_cumdensity
      MODULE PROCEDURE kernel_cumdensity_1d_dp, kernel_cumdensity_1d_sp
   END INTERFACE kernel_cumdensity
 
+  
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -258,6 +261,7 @@ MODULE mo_kernel
      MODULE PROCEDURE kernel_density_1d_dp,  kernel_density_1d_sp
   END INTERFACE kernel_density
 
+  
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -340,6 +344,7 @@ MODULE mo_kernel
      MODULE PROCEDURE kernel_density_h_1d_dp, kernel_density_h_1d_sp
   END INTERFACE kernel_density_h
 
+  
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -445,6 +450,7 @@ MODULE mo_kernel
           kernel_regression_1d_dp, kernel_regression_1d_sp
   END INTERFACE kernel_regression
 
+  
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -533,6 +539,7 @@ MODULE mo_kernel
           kernel_regression_h_1d_dp, kernel_regression_h_1d_sp
   END INTERFACE kernel_regression_h
 
+  
   ! ------------------------------------------------------------------
 
   INTERFACE nadaraya_watson
@@ -561,6 +568,14 @@ MODULE mo_kernel
      MODULE PROCEDURE golden_dp, golden_sp
   END INTERFACE golden
 
+  INTERFACE trapzd
+     MODULE PROCEDURE trapzd_dp, trapzd_sp
+  END INTERFACE trapzd
+
+  INTERFACE polint
+     MODULE PROCEDURE polint_dp, polint_sp
+  END INTERFACE polint
+
   PRIVATE
 
   ! Module variables which need to be public for optimization of bandwith via cross-validation
@@ -572,11 +587,18 @@ MODULE mo_kernel
   real(dp), dimension(:,:), allocatable :: global_xout_dp
   real(dp), dimension(:),   allocatable :: global_y_dp
 
+  
   ! ------------------------------------------------------------------------------------------------
 
 CONTAINS
 
-  function kernel_cumdensity_1d_dp(ix, h, silverman, xout, nintegrate, mask, nodata)
+  function kernel_cumdensity_1d_dp(ix, h, silverman, xout, romberg, nintegrate, epsint, mask, nodata)
+
+    use mo_utils,     only: le, linspace
+    ! use mo_quicksort, only: qsort_index !ST: may lead to Segmentation Fault for large arrays > 600 000 entries
+    ! use mo_sort,      only: sort_index
+    use mo_orderpack, only: sort_index ! MC: use orderpack for no NR until somebody complains
+    use mo_integrate, only: int_regular
 
     implicit none
 
@@ -584,24 +606,33 @@ CONTAINS
     real(dp),                           optional, intent(in) :: h
     logical,                            optional, intent(in) :: silverman
     real(dp), dimension(:),             optional, intent(in) :: xout
+    logical,                            optional, intent(in) :: romberg
     integer(i4),                        optional, intent(in) :: nintegrate
+    real(dp),                           optional, intent(in) :: epsint
     logical,  dimension(:),             optional, intent(in) :: mask
     real(dp),                           optional, intent(in) :: nodata
     real(dp), dimension(:), allocatable                      :: kernel_cumdensity_1d_dp
 
     ! local variables
-    integer(i4)                            :: nin, nout, nmesh
-    integer(i4)                            :: ii
-    real(dp)                               :: hh
-    real(dp)                               :: lower_x
+    integer(i4)                            :: nin, nout
+    integer(i4)                            :: ii, jj
+    real(dp)                               :: hh      ! bandwidth
     real(dp),    dimension(:), allocatable :: xxout
     integer(i4), dimension(:), allocatable :: xindx
-    real(dp),    dimension(:), allocatable :: kernel_pdf
-    real(dp),    dimension(:), allocatable :: xmesh
-    real(dp)                               :: delta
     ! real(dp)                               :: tmp
-    real(dp),    dimension(:), allocatable :: z
     real(dp),    dimension(:), allocatable :: x
+    ! integration
+    logical                :: doromberg                ! Romberg of Newton-Coates
+    real(dp),  dimension(:), allocatable :: kernel_pdf ! kernel densities at xout
+    integer(i4)            :: trapzmax                 ! maximum 2**trapzmax points per integration between xouts
+    real(dp)               :: trapzreps                ! maximum relative integration error
+    integer(i4), parameter :: kromb = 5                ! Romberg's method of order 2kromb
+    real(dp)               :: a, b, k1, k2             ! integral limits and corresponding kernel densities
+    real(dp)               :: qromb, dqromb            ! interpolated result and changeof consecutive calls to trapzd 
+    real(dp), dimension(:), allocatable :: s, hs       ! results and stepsize of consecutive calls to trapzd
+    real(dp)               :: lower_x                  ! lowest support point at min(x) - 3 stddev(x)
+    real(dp), dimension(1) :: klower_x                 ! kernel density estimate at lower_x
+    real(dp)               :: delta                    ! stepsize for Newton-Coates
 
     ! consistency check - mask needs either nodata or xout
     if (present(mask) .and. (.not. present(xout)) .and. (.not. present(nodata)) ) then
@@ -618,7 +649,6 @@ CONTAINS
        allocate(x(nin))
        x = ix
     endif
-    allocate(z(nin))
 
     ! allocate
     if (present(xout)) then
@@ -636,11 +666,28 @@ CONTAINS
     xindx = sort_index(xxout)
     xxout = xxout(xindx)
 
-    ! should be (n*4 + 1) for int_regular
-    if (present(nintegrate)) then
-       nmesh = nintegrate
+    if (present(romberg)) then
+       doromberg = romberg
     else
-       nmesh = 101_i4
+       doromberg = .false.
+    end if
+
+    ! maximum 2**nintegrate points for Romberg integration; (4*n+1) points for 5-point Newton-Cotes
+    if (present(nintegrate)) then
+       trapzmax = nintegrate
+    else
+       if (doromberg) then
+          trapzmax = 10_i4
+       else
+          trapzmax = 101_i4
+       endif
+    endif
+
+    ! maximum relative error for integration
+    if (present(epsint)) then
+       trapzreps = epsint
+    else
+       trapzreps = 1.0e-6_dp
     endif
 
     ! determine h
@@ -654,30 +701,70 @@ CONTAINS
        end if
     end if
 
-    ! allocate PDF, mesh and CDF
-    allocate(kernel_pdf(nmesh))
-    allocate(xmesh(nmesh))
+    ! cumulative integration of pdf with Simpson's and trapezoidal rules as in Numerical recipes (qsimp)
+    ! We do the i=1 step of trapzd ourselves to save kernel evaluations
+    allocate(kernel_pdf(nout))
     allocate(kernel_cumdensity_1d_dp(nout))
 
-    ! calculate standard deviation of x to determine left side starting point for integration of PDF
-    lower_x = minval(x) - 3.0_dp * stddev(x, ddof=1_i4)
+    lower_x  = minval(x) - 3.0_dp * stddev(x)
 
-    ! loop through all regression points
-    do ii = 1, nout
-       ! generate nmesh points between last x and this x
-       ! integrate pdf and add to last point
-       if (ii .eq. 1_i4) then
-          xmesh                       = mesh(lower_x, xxout(1), nmesh, delta)
-          kernel_pdf(:)               = kernel_density(x, hh, xout=xmesh)
-          kernel_cumdensity_1d_dp(1)  = int_regular(kernel_pdf, delta)
-       else
-          xmesh                       = mesh(xxout(ii-1), xxout(ii), nmesh, delta)
-          kernel_pdf(:)               = kernel_density(x, hh, xout=xmesh)
-          kernel_cumdensity_1d_dp(ii) = kernel_cumdensity_1d_dp(ii-1) + int_regular(kernel_pdf, delta)
-       end if
-    end do
+    if (doromberg) then
+       allocate(s(trapzmax+1), hs(trapzmax+1))
 
-    ! ! scale to range [0,1]
+       kernel_pdf = kernel_density(x, hh, xout=xxout)
+       klower_x   = kernel_density(x, hh, xout=(/lower_x/))
+
+       ! loop through all regression points
+       do ii = 1, nout
+          if (ii==1) then
+             a  = lower_x
+             k1 = klower_x(1)
+          else
+             a  = xxout(ii-1)
+             k1 = kernel_pdf(ii-1)
+          endif
+          b  = xxout(ii)
+          k2 = kernel_pdf(ii)
+          ! Romberg integration
+          ! first trapzd manually using kernel_pdf above
+          jj       = 1
+          s(jj)    = 0.5_dp * (b-a) * (k1+k2)
+          hs(jj)   = 1.0_dp
+          s(jj+1)  = s(jj)
+          hs(jj+1) = 0.25_dp*hs(jj)
+          do jj=2, trapzmax
+             call trapzd(kernel_density_1d_dp, x, hh, a, b, s(jj), jj)
+             if (jj >= kromb) then
+                call polint(hs(jj-kromb+1:jj), s(jj-kromb+1:jj), 0.0_dp, qromb, dqromb)
+                if (le(abs(dqromb),trapzreps*abs(qromb))) exit
+             end if
+             s(jj+1)  = s(jj)
+             hs(jj+1) = 0.25_dp*hs(jj)
+          end do
+          if (ii==1) then
+             kernel_cumdensity_1d_dp(ii) = qromb
+          else
+             kernel_cumdensity_1d_dp(ii) = kernel_cumdensity_1d_dp(ii-1) + qromb
+          endif
+       end do
+       
+       deallocate(s, hs)
+    else
+       ! loop through all regression points
+       do ii = 1, nout
+          if (ii .eq. 1_i4) then
+             delta                       = (xxout(ii)-lower_x) / real(trapzmax-1,dp)
+             kernel_pdf                  = kernel_density(x, hh, xout=linspace(lower_x, xxout(ii), trapzmax))
+             kernel_cumdensity_1d_dp(1)  = int_regular(kernel_pdf, delta)
+          else
+             delta                       = (xxout(ii)-xxout(ii-1)) / real(trapzmax-1,dp)
+             kernel_pdf                  = kernel_density(x, hh, xout=linspace(xxout(ii-1), xxout(ii), trapzmax))
+             kernel_cumdensity_1d_dp(ii) = kernel_cumdensity_1d_dp(ii-1) + int_regular(kernel_pdf, delta)
+          end if
+       end do
+    endif
+
+    ! scale to range [0,1]
     ! tmp = 1.0_dp / (kernel_cumdensity_1d_dp(nout) - kernel_cumdensity_1d_dp(1))
     ! kernel_cumdensity_1d_dp(:) = ( kernel_cumdensity_1d_dp(:) - kernel_cumdensity_1d_dp(1) ) * tmp
     kernel_cumdensity_1d_dp = min(kernel_cumdensity_1d_dp, 1.0_dp)
@@ -700,13 +787,17 @@ CONTAINS
     deallocate(xxout)
     deallocate(xindx)
     deallocate(kernel_pdf)
-    deallocate(xmesh)
-    deallocate(z)
     deallocate(x)
 
   end function kernel_cumdensity_1d_dp
 
-  function kernel_cumdensity_1d_sp(ix, h, silverman, xout, nintegrate, mask, nodata)
+  function kernel_cumdensity_1d_sp(ix, h, silverman, xout, romberg, nintegrate, epsint, mask, nodata)
+
+    use mo_utils,     only: le, linspace
+    ! use mo_quicksort, only: qsort_index !ST: may lead to Segmentation Fault for large arrays > 600 000 entries
+    ! use mo_sort,      only: sort_index
+    use mo_orderpack, only: sort_index ! MC: use orderpack for no NR until somebody complains
+    use mo_integrate, only: int_regular
 
     implicit none
 
@@ -714,24 +805,33 @@ CONTAINS
     real(sp),                           optional, intent(in) :: h
     logical,                            optional, intent(in) :: silverman
     real(sp), dimension(:),             optional, intent(in) :: xout
+    logical,                            optional, intent(in) :: romberg
     integer(i4),                        optional, intent(in) :: nintegrate
+    real(sp),                           optional, intent(in) :: epsint
     logical,  dimension(:),             optional, intent(in) :: mask
     real(sp),                           optional, intent(in) :: nodata
     real(sp), dimension(:), allocatable                      :: kernel_cumdensity_1d_sp
 
     ! local variables
-    integer(i4)                            :: nin, nout, nmesh
-    integer(i4)                            :: ii
-    real(sp)                               :: hh
-    real(sp)                               :: lower_x
+    integer(i4)                            :: nin, nout
+    integer(i4)                            :: ii, jj
+    real(sp)                               :: hh      ! bandwidth
     real(sp),    dimension(:), allocatable :: xxout
     integer(i4), dimension(:), allocatable :: xindx
-    real(sp),    dimension(:), allocatable :: kernel_pdf
-    real(sp),    dimension(:), allocatable :: xmesh
-    real(sp)                               :: delta
     ! real(sp)                               :: tmp
-    real(sp),    dimension(:), allocatable :: z
     real(sp),    dimension(:), allocatable :: x
+    ! integration
+    logical                :: doromberg                ! Romberg of Newton-Coates
+    real(sp),  dimension(:), allocatable :: kernel_pdf ! kernel densities at xout
+    integer(i4)            :: trapzmax                 ! maximum 2**trapzmax points per integration between xouts
+    real(sp)               :: trapzreps                ! maximum relative integration error
+    integer(i4), parameter :: kromb = 5                ! Romberg's method of order 2kromb
+    real(sp)               :: a, b, k1, k2             ! integral limits and corresponding kernel densities
+    real(sp)               :: qromb, dqromb            ! interpolated result and changeof consecutive calls to trapzd 
+    real(sp), dimension(:), allocatable :: s, hs       ! results and stepsize of consecutive calls to trapzd
+    real(sp)               :: lower_x                  ! lowest support point at min(x) - 3 stddev(x)
+    real(sp), dimension(1) :: klower_x                 ! kernel density estimate at lower_x
+    real(sp)               :: delta                    ! stepsize for Newton-Coates
 
     ! consistency check - mask needs either nodata or xout
     if (present(mask) .and. (.not. present(xout)) .and. (.not. present(nodata)) ) then
@@ -748,7 +848,6 @@ CONTAINS
        allocate(x(nin))
        x = ix
     endif
-    allocate(z(nin))
 
     ! allocate
     if (present(xout)) then
@@ -765,12 +864,29 @@ CONTAINS
     ! sort the x
     xindx = sort_index(xxout)
     xxout = xxout(xindx)
-    
-    ! should be (n*4 + 1) for int_regular
-    if (present(nintegrate)) then
-       nmesh = nintegrate
+
+    if (present(romberg)) then
+       doromberg = romberg
     else
-       nmesh = 101_i4
+       doromberg = .false.
+    end if
+
+    ! maximum 2**nintegrate points for Romberg integration; (4*n+1) points for 5-point Newton-Cotes
+    if (present(nintegrate)) then
+       trapzmax = nintegrate
+    else
+       if (doromberg) then
+          trapzmax = 10_i4
+       else
+          trapzmax = 101_i4
+       endif
+    endif
+
+    ! maximum relative error for integration
+    if (present(epsint)) then
+       trapzreps = epsint
+    else
+       trapzreps = 1.0e-6_sp
     endif
 
     ! determine h
@@ -784,33 +900,70 @@ CONTAINS
        end if
     end if
 
-    ! allocate PDF, mesh and CDF
-    allocate(kernel_pdf(nmesh))
-    allocate(xmesh(nmesh))
+    ! cumulative integration of pdf with Simpson's and trapezoidal rules as in Numerical recipes (qsimp)
+    ! We do the i=1 step of trapzd ourselves to save kernel evaluations
+    allocate(kernel_pdf(nout))
     allocate(kernel_cumdensity_1d_sp(nout))
 
-    ! calculate standard deviation of x to determine left side starting point for integration of PDF
-    lower_x = minval(x) - 3.0_sp * stddev(x, ddof=1_i4)
+    if (doromberg) then
+       allocate(s(trapzmax+1), hs(trapzmax+1))
 
-    ! loop through all regression points
-    do ii = 1, nout
-       if ( mod( ii, 100 ) .eq. 0 ) Then
-          print *, real( ii, sp) / real( nout, sp ) * 100.
-       END if
-       ! generate nmesh points between last x and this x
-       ! integrate pdf and add to last point
-       if (ii .eq. 1_i4) then
-          xmesh                       = mesh(lower_x, xxout(1), nmesh, delta)
-          kernel_pdf(:)               = kernel_density(x, hh, xout=xmesh)
-          kernel_cumdensity_1d_sp(1)  = int_regular(kernel_pdf, delta)
-       else
-          xmesh                       = mesh(xxout(ii-1), xxout(ii), nmesh, delta)
-          kernel_pdf(:)               = kernel_density(x, hh, xout=xmesh)
-          kernel_cumdensity_1d_sp(ii) = kernel_cumdensity_1d_sp(ii-1) + int_regular(kernel_pdf, delta)
-       end if
-    end do
+       kernel_pdf = kernel_density(x, hh, xout=xxout)
 
-    ! ! scale to range [0,1]
+       lower_x  = minval(x) - 3.0_sp * stddev(x)
+       klower_x = kernel_density(x, hh, xout=(/lower_x/))
+
+       ! loop through all regression points
+       do ii = 1, nout
+          if (ii==1) then
+             a  = lower_x
+             k1 = klower_x(1)
+          else
+             a  = xxout(ii-1)
+             k1 = kernel_pdf(ii-1)
+          endif
+          b  = xxout(ii)
+          k2 = kernel_pdf(ii)
+          ! Romberg integration
+          ! first trapzd manually using kernel_pdf above
+          jj       = 1
+          s(jj)    = 0.5_sp * (b-a) * (k1+k2)
+          hs(jj)   = 1.0_sp
+          s(jj+1)  = s(jj)
+          hs(jj+1) = 0.25_sp*hs(jj)
+          do jj=2, trapzmax
+             call trapzd(kernel_density_1d_sp, x, hh, a, b, s(jj), jj)
+             if (jj >= kromb) then
+                call polint(hs(jj-kromb+1:jj), s(jj-kromb+1:jj), 0.0_sp, qromb, dqromb)
+                if (le(abs(dqromb),trapzreps*abs(qromb))) exit
+             end if
+             s(jj+1)  = s(jj)
+             hs(jj+1) = 0.25_sp*hs(jj)
+          end do
+          if (ii==1) then
+             kernel_cumdensity_1d_sp(ii) = qromb
+          else
+             kernel_cumdensity_1d_sp(ii) = kernel_cumdensity_1d_sp(ii-1) + qromb
+          endif
+       end do
+       
+       deallocate(s, hs)
+    else
+       ! loop through all regression points
+       do ii = 1, nout
+          if (ii .eq. 1_i4) then
+             delta                       = (xxout(ii)-lower_x) / real(trapzmax-1,sp)
+             kernel_pdf                  = kernel_density(x, hh, xout=linspace(lower_x, xxout(ii), trapzmax))
+             kernel_cumdensity_1d_sp(1)  = int_regular(kernel_pdf, delta)
+          else
+             delta                       = (xxout(ii)-xxout(ii-1)) / real(trapzmax-1,sp)
+             kernel_pdf                  = kernel_density(x, hh, xout=linspace(xxout(ii-1), xxout(ii), trapzmax))
+             kernel_cumdensity_1d_sp(ii) = kernel_cumdensity_1d_sp(ii-1) + int_regular(kernel_pdf, delta)
+          end if
+       end do
+    endif
+
+    ! scale to range [0,1]
     ! tmp = 1.0_sp / (kernel_cumdensity_1d_sp(nout) - kernel_cumdensity_1d_sp(1))
     ! kernel_cumdensity_1d_sp(:) = ( kernel_cumdensity_1d_sp(:) - kernel_cumdensity_1d_sp(1) ) * tmp
     kernel_cumdensity_1d_sp = min(kernel_cumdensity_1d_sp, 1.0_sp)
@@ -833,12 +986,11 @@ CONTAINS
     deallocate(xxout)
     deallocate(xindx)
     deallocate(kernel_pdf)
-    deallocate(xmesh)
-    deallocate(z)
     deallocate(x)
 
   end function kernel_cumdensity_1d_sp
 
+  
   ! ------------------------------------------------------------------------------------------------
 
   function kernel_density_1d_dp(ix, h, silverman, xout, mask, nodata)
@@ -1033,6 +1185,7 @@ CONTAINS
 
   end function kernel_density_1d_sp
 
+  
   ! ------------------------------------------------------------------------------------------------
 
   function kernel_density_h_1d_dp(ix, silverman, mask)
@@ -1137,6 +1290,7 @@ CONTAINS
 
   end function kernel_density_h_1d_sp
 
+  
   ! ------------------------------------------------------------------------------------------------
 
   function kernel_regression_1d_dp(ix, iy, h, silverman, xout, mask, nodata)
@@ -1545,9 +1699,12 @@ CONTAINS
 
   end function kernel_regression_2d_sp
 
+  
   ! ------------------------------------------------------------------------------------------------
 
   function kernel_regression_h_1d_dp(ix, iy, silverman, mask)
+
+    use mo_nelmin,    only: nelminrange      ! nd optimization
 
     implicit none
 
@@ -1604,6 +1761,8 @@ CONTAINS
 
   function kernel_regression_h_1d_sp(ix, iy, silverman, mask)
 
+    use mo_nelmin,    only: nelminrange      ! nd optimization
+
     implicit none
 
     real(sp), dimension(:),           intent(in) :: ix
@@ -1658,6 +1817,8 @@ CONTAINS
   end function kernel_regression_h_1d_sp
 
   function kernel_regression_h_2d_dp(ix, iy, silverman, mask)
+
+    use mo_nelmin,    only: nelminrange      ! nd optimization
 
     implicit none
 
@@ -1715,6 +1876,8 @@ CONTAINS
 
   function kernel_regression_h_2d_sp(ix, iy, silverman, mask)
 
+    use mo_nelmin,    only: nelminrange      ! nd optimization
+
     implicit none
 
     real(sp), dimension(:,:),                 intent(in) :: ix
@@ -1769,6 +1932,7 @@ CONTAINS
 
   end function kernel_regression_h_2d_sp
 
+  
   ! ------------------------------------------------------------------------------------------------
   !
   !                PRIVATE ROUTINES
@@ -1776,6 +1940,8 @@ CONTAINS
   ! ------------------------------------------------------------------------------------------------
 
   function nadaraya_watson_1d_dp(z, y, mask, valid)
+
+    use mo_constants, only: twopi_dp
 
     implicit none
 
@@ -1827,6 +1993,8 @@ CONTAINS
 
   function nadaraya_watson_1d_sp(z, y, mask, valid)
 
+    use mo_constants, only: twopi_sp
+
     implicit none
 
     real(sp), dimension(:),             intent(in)  :: z
@@ -1876,6 +2044,8 @@ CONTAINS
   end function nadaraya_watson_1d_sp
 
   function nadaraya_watson_2d_dp(z, y, mask, valid)
+
+    use mo_constants, only: twopi_dp
 
     implicit none
 
@@ -1932,6 +2102,8 @@ CONTAINS
 
   function nadaraya_watson_2d_sp(z, y, mask, valid)
 
+    use mo_constants, only: twopi_sp
+
     implicit none
 
     real(sp), dimension(:,:),           intent(in)  :: z
@@ -1985,6 +2157,7 @@ CONTAINS
 
   end function nadaraya_watson_2d_sp
 
+  
   ! ------------------------------------------------------------------------------------------------
 
   function cross_valid_regression_dp(h)
@@ -2028,7 +2201,7 @@ CONTAINS
        cross_valid_regression_dp = huge(1.0_dp)
     end if
 
-    print*, 'cross_valid_regression_dp = ', cross_valid_regression_dp, '  ( h = ', h, ' )'
+    write(*,*) 'cross_valid_regression_dp = ', cross_valid_regression_dp, '  ( h = ', h, ' )'
 
   end function cross_valid_regression_dp
 
@@ -2074,9 +2247,12 @@ CONTAINS
 
   end function cross_valid_regression_sp
 
+  
   ! ------------------------------------------------------------------------------------------------
 
   function cross_valid_density_1d_dp(h)
+
+    use mo_integrate, only: int_regular
 
     implicit none
 
@@ -2160,6 +2336,8 @@ CONTAINS
 
   function cross_valid_density_1d_sp(h)
 
+    use mo_integrate, only: int_regular
+
     implicit none
 
     ! Helper function that calculates cross-validation function for the
@@ -2239,6 +2417,7 @@ CONTAINS
 
   end function cross_valid_density_1d_sp
 
+  
   ! ------------------------------------------------------------------------------------------------
 
   subroutine allocate_globals_1d_dp(x,y,xout)
@@ -2333,6 +2512,7 @@ CONTAINS
 
   end subroutine allocate_globals_2d_sp
 
+  
   ! ------------------------------------------------------------------------------------------------
 
   subroutine deallocate_globals()
@@ -2348,6 +2528,7 @@ CONTAINS
 
   end subroutine deallocate_globals
 
+  
   ! ------------------------------------------------------------------------------------------------
 
   FUNCTION golden_sp(ax,bx,cx,func,tol,xmin)
@@ -2490,6 +2671,7 @@ CONTAINS
 
   END FUNCTION golden_dp
 
+  
   ! ------------------------------------------------------------------------------------------------
 
   function mesh_dp(start, end, n, delta)
@@ -2527,5 +2709,165 @@ CONTAINS
     forall(ii=1:n) mesh_sp(ii) = start + (ii-1) * delta
 
   end function mesh_sp
+
+  subroutine trapzd_dp(kernel,x,h,a,b,res,n)
+
+    use mo_utils, only: linspace
+
+    implicit none
+
+    ! kernel density function
+    interface
+       function kernel(ix, hh, silverman, xout, mask, nodata)
+         use mo_kind
+         implicit none
+         real(dp), dimension(:),                       intent(in) :: ix
+         real(dp),                           optional, intent(in) :: hh
+         logical,                            optional, intent(in) :: silverman
+         real(dp), dimension(:),             optional, intent(in) :: xout
+         logical,  dimension(:),             optional, intent(in) :: mask
+         real(dp),                           optional, intent(in) :: nodata
+         real(dp), dimension(:), allocatable                      :: kernel
+       end function kernel
+    end interface
+
+    real(dp), dimension(:), intent(in)    :: x    ! datapoints
+    real(dp),               intent(in)    :: h    ! bandwidth
+    real(dp),               intent(in)    :: a,b  ! integration bounds
+    real(dp),               intent(inout) :: res  ! integral
+    integer(i4),            intent(in)    :: n    ! 2^(n-2) extra points between a and b
+
+    real(dp)    :: del, fsum
+    integer(i4) :: it
+
+    if (n == 1) then
+       res = 0.5_dp * (b-a) * sum(kernel(x, h, xout=(/a,b/)))
+    else
+       it   = 2**(n-2)
+       del  = (b-a)/real(it,dp)
+       fsum = sum(kernel(x, h, xout=linspace(a+0.5_dp*del,b-0.5_dp*del,it)))
+       res  = 0.5_dp * (res + del*fsum)
+    end if
+
+  end subroutine trapzd_dp
+
+  subroutine trapzd_sp(kernel,x,h,a,b,res,n)
+
+    use mo_utils, only: linspace
+
+    implicit none
+
+    ! kernel density function
+    interface
+       function kernel(ix, hh, silverman, xout, mask, nodata)
+         use mo_kind
+         implicit none
+         real(sp), dimension(:),                       intent(in) :: ix
+         real(sp),                           optional, intent(in) :: hh
+         logical,                            optional, intent(in) :: silverman
+         real(sp), dimension(:),             optional, intent(in) :: xout
+         logical,  dimension(:),             optional, intent(in) :: mask
+         real(sp),                           optional, intent(in) :: nodata
+         real(sp), dimension(:), allocatable                      :: kernel
+       end function kernel
+    end interface
+
+    real(sp), dimension(:), intent(in)    :: x    ! datapoints
+    real(sp),               intent(in)    :: h    ! bandwidth
+    real(sp),               intent(in)    :: a,b  ! integration bounds
+    real(sp),               intent(inout) :: res  ! integral
+    integer(i4),            intent(in)    :: n    ! 2^(n-2) extra points between a and b
+
+    real(sp)    :: del, fsum
+    integer(i4) :: it
+
+    if (n == 1) then
+       res = 0.5_sp * (b-a) * sum(kernel(x, h, xout=(/a,b/)))
+    else
+       it   = 2**(n-2)
+       del  = (b-a)/real(it,sp)
+       fsum = sum(kernel(x, h, xout=linspace(a+0.5_sp*del,b-0.5_sp*del,it)))
+       res  = 0.5_sp * (res + del*fsum)
+    end if
+
+  end subroutine trapzd_sp
+
+  subroutine polint_dp(xa, ya, x, y, dy)
+
+    use mo_utils, only: eq, iminloc
+
+    implicit none
+
+    real(dp), dimension(:), intent(in)  :: xa, ya
+    real(dp),               intent(in)  :: x
+    real(dp),               intent(out) :: y, dy
+
+    integer(i4) :: m, n, ns
+    real(dp), dimension(size(xa)) :: c, d, den, ho
+
+    n  = size(xa)
+    c  = ya
+    d  = ya
+    ho = xa-x
+    ns = iminloc(abs(x-xa))
+    y  = ya(ns)
+    ns = ns-1
+    do m=1, n-1
+       den(1:n-m) = ho(1:n-m)-ho(1+m:n)
+       if (any(eq(den(1:n-m),0.0_dp))) then
+          stop 'polint: calculation failure'
+       endif
+       den(1:n-m) = (c(2:n-m+1)-d(1:n-m))/den(1:n-m)
+       d(1:n-m)   = ho(1+m:n)*den(1:n-m)
+       c(1:n-m)   = ho(1:n-m)*den(1:n-m)
+       if (2*ns < n-m) then
+          dy = c(ns+1)
+       else
+          dy = d(ns)
+          ns = ns-1
+       end if
+       y = y+dy
+    end do
+
+  end subroutine polint_dp
+
+  subroutine polint_sp(xa, ya, x, y, dy)
+
+    use mo_utils, only: eq, iminloc
+
+    implicit none
+
+    real(sp), dimension(:), intent(in)  :: xa, ya
+    real(sp),               intent(in)  :: x
+    real(sp),               intent(out) :: y, dy
+
+    integer(i4) :: m, n, ns
+    real(sp), dimension(size(xa)) :: c, d, den, ho
+
+    n  = size(xa)
+    c  = ya
+    d  = ya
+    ho = xa-x
+    ns = iminloc(abs(x-xa))
+    y  = ya(ns)
+    ns = ns-1
+    do m=1, n-1
+       den(1:n-m) = ho(1:n-m)-ho(1+m:n)
+       if (any(eq(den(1:n-m),0.0_sp))) then
+          stop 'polint: calculation failure'
+       endif
+       den(1:n-m) = (c(2:n-m+1)-d(1:n-m))/den(1:n-m)
+       d(1:n-m)   = ho(1+m:n)*den(1:n-m)
+       c(1:n-m)   = ho(1:n-m)*den(1:n-m)
+       if (2*ns < n-m) then
+          dy = c(ns+1)
+       else
+          dy = d(ns)
+          ns = ns-1
+       end if
+       y = y+dy
+    end do
+
+  end subroutine polint_sp
 
 END MODULE mo_kernel

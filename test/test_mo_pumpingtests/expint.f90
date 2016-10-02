@@ -1,1 +1,1 @@
-../../nr_chs/expint.f90
+../../nr_jams/expint.f90
