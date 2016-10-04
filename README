@@ -1,5 +1,5 @@
 
-This is the FORTRAN library of JAMS.
+This is the Fortran library of JAMS.
 
 One can produce a browseable html of the library in the directory html by calling: make SRCPATH=. html
 
@@ -64,7 +64,7 @@ There are 3 possibilities:
    along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
    If not, see <http://www.gnu.org/licenses/>.
 
-   Copyright 2011-2014 Matthias Cuntz
+   Copyright 2011-2016 Matthias Cuntz
 
 
 Note on Numerical Recipes License
