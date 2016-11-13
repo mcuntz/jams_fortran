@@ -1,3 +1,4 @@
+! ToDo: be able to switch of writing of restart files (e.g. restartfile1='')
 !> \file mo_sce.f90
 
 !> \brief Shuffled Complex Evolution optimization algorithm.
