@@ -19,7 +19,7 @@ module mo_netcdf
 
   ! Written   David Schaefer, Jun 2015
   ! Modified, Matthias Cuntz, Nov 2016 - NETCDF3
-  
+
   ! License
   ! -------
   ! This file is part of the JAMS Fortran library.
@@ -109,7 +109,7 @@ module mo_netcdf
      procedure, public  :: getNoVariables
      procedure, public  :: getVariableIds
      procedure, public  :: getVariables
-     
+
      procedure, private :: setGlobalAttributeChar
      procedure, private :: setGlobalAttributeI8
      procedure, private :: setGlobalAttributeI16
@@ -577,7 +577,7 @@ module mo_netcdf
    contains
 
      procedure, public :: initNcDimension
-     
+
      procedure, public :: getName => getDimensionName
      ! -----------------------------------------------------------------------------------
      !
@@ -696,7 +696,7 @@ module mo_netcdf
      procedure, public  :: initNcVariable
 
      procedure, public  :: getName => getVariableName
-     
+
      procedure, private :: setVariableAttributeChar
      procedure, private :: setVariableAttributeI8
      procedure, private :: setVariableAttributeI16
@@ -1364,7 +1364,7 @@ contains
     class(NcDataset), intent(in)           :: self
     integer(i4), dimension(:), allocatable :: getVariableIds
     integer(i4)                            :: tmp
-    
+
     allocate(getVariableIds(self%getNoVariables()))
     
 #ifndef NETCDF3
@@ -1373,7 +1373,7 @@ contains
     forall(tmp=1:self%getNoVariables()) getVariableIds(tmp) = tmp
 #endif
   end function getVariableIds
-  
+
   function getVariables(self)
     class(NcDataset), intent(in)                :: self
     type(NcVariable), dimension(:), allocatable :: getVariables
@@ -1387,9 +1387,9 @@ contains
     do i=1,size(varids)
        getVariables(i) = NcVariable(varids(i), self)
     end do
-    
+
   end function getVariables
-  
+
   function getDimensionName(self)
     class(NcDimension), intent(in) :: self
     character(len=256)             :: getDimensionName
@@ -1843,7 +1843,7 @@ contains
          "Failed to write attribute: " // name )
     call check(nf90_enddef(self%parent%id), "Failed closing definition section - 9.")
   end subroutine setVariableAttributeI8
-  
+
   subroutine setVariableAttributeI16(self, name, data)
     class(NcVariable), intent(in) :: self
     character(*)     , intent(in) :: name
@@ -1968,7 +1968,7 @@ contains
        call self%setAttribute("_FillValue",fvalue)
     end if
   end subroutine setVariableFillValueI8
-  
+
   subroutine setVariableFillValueI16(self, fvalue)
     class(NcVariable), intent(in)  :: self
     integer(i2)      , intent(in)  :: fvalue
@@ -2508,10 +2508,10 @@ contains
     integer(i4)      , intent(in) , optional    :: start(:), count(:), stride(:), map(:)
     integer(i4)      , intent(out), allocatable :: data(:)
     integer(i4)                   , allocatable :: datashape(:)
-    
+
     allocate(datashape(1))
     datashape = getReadDataShape(self, 1, start, count, stride)
-    
+
     allocate(data(datashape(1)))
     call check (nf90_get_var(self%parent%id, self%id, data, start, count, stride, map), &
          "Could not read data from variable: "//trim(self%getName()))
