@@ -17,7 +17,8 @@ module mo_netcdf
   ! This module provides a thin wrapper around the NetCDF Fortran 90 interface,
   ! following a somehow object-oriented approach.
 
-  ! Written  David Schaefer, Jun 2015
+  ! Written   David Schaefer, Jun 2015
+  ! Modified, Matthias Cuntz, Nov 2016 - NETCDF3
   
   ! License
   ! -------
@@ -44,12 +45,16 @@ module mo_netcdf
        nf90_open, nf90_close, nf90_strerror, nf90_def_dim, nf90_def_var,   &
        nf90_put_var, nf90_get_var, nf90_put_att, nf90_get_att,             &
        nf90_inquire, nf90_inq_dimid, nf90_inquire_dimension,               &
-       nf90_inq_varid, nf90_inq_varids, nf90_inquire_variable, nf90_inquire_attribute,      &
-       NF90_OPEN, NF90_NETCDF4, NF90_CREATE, NF90_WRITE, NF90_NOWRITE,     &
+       nf90_inq_varid, nf90_inquire_variable, nf90_inquire_attribute,      &
+       NF90_OPEN, NF90_CREATE, NF90_WRITE, NF90_NOWRITE,     &
        NF90_BYTE, NF90_SHORT, NF90_INT, NF90_FLOAT, NF90_DOUBLE,                      &
        NF90_FILL_BYTE, NF90_FILL_SHORT, NF90_FILL_INT, NF90_FILL_FLOAT , NF90_FILL_DOUBLE, &
-       NF90_NOERR, NF90_UNLIMITED, NF90_GLOBAL
-
+       NF90_NOERR, NF90_UNLIMITED, NF90_GLOBAL, nf90_redef, nf90_enddef
+#ifndef NETCDF3
+  use netcdf, only: NF90_NETCDF4, nf90_inq_varids
+#else
+  use netcdf, only: NF90_64BIT_OFFSET
+#endif
 
   implicit none
 
@@ -1301,7 +1306,12 @@ contains
 
     select case(mode)
     case("w")
+#ifndef NETCDF3
        status = nf90_create(trim(fname), NF90_NETCDF4, self%id)
+#else
+       status = nf90_create(trim(fname), NF90_64BIT_OFFSET, self%id)
+#endif
+       call check(nf90_enddef(self%id), "Failed closing definition section - 0.")
     case("r")
        status = nf90_open(trim(fname), NF90_NOWRITE, self%id)
     case("a")
@@ -1356,7 +1366,12 @@ contains
     integer(i4)                            :: tmp
     
     allocate(getVariableIds(self%getNoVariables()))
+    
+#ifndef NETCDF3
     call check(nf90_inq_varids(self%id, tmp, getVariableIds), "Failed to inquire variable ids")
+#else
+    forall(tmp=1:self%getNoVariables()) getVariableIds(tmp) = tmp
+#endif
   end function getVariableIds
   
   function getVariables(self)
@@ -1446,8 +1461,10 @@ contains
        dimlength = length
     end if
 
+    call check(nf90_redef(self%id), "Failed reopening definition section - 1.")
     call check(nf90_def_dim(self%id, name, dimlength, id), &
          "Failed to create dimension: " // name)
+    call check(nf90_enddef(self%id), "Failed closing definition section - 1.")
 
     setDimension = NcDimension(id,self)
   end function setDimension
@@ -1482,12 +1499,17 @@ contains
     integer(i4)     , intent(in), optional :: endianness,deflate_level,cache_size, &
          cache_nelems, cache_preemption, chunksizes(:)
     type(NcVariable)                       :: setVariableWithIds
-    integer(i4)                            :: varid, status
+    integer(i4)                            :: varid
 
-    status = nf90_def_var(self%id, name, getDtypeFromString(dtype), dimensions, varid, contiguous, &
+    call check(nf90_redef(self%id), "Failed reopening definition section - 14.")
+#ifndef NETCDF3
+    call check(nf90_def_var(self%id, name, getDtypeFromString(dtype), dimensions, varid, contiguous, &
          chunksizes, deflate_level, shuffle, fletcher32, endianness, &
-         cache_size, cache_nelems, cache_preemption)
-    call check(status, "Failed to create variable: " // name)
+         cache_size, cache_nelems, cache_preemption), "Failed to create variable: " // name)
+#else
+    call check(nf90_def_var(self%id, name, getDtypeFromString(dtype), dimensions, varid), "Failed to create variable: " // name)
+#endif
+    call check(nf90_enddef(self%id), "Failed closing definition section - 14.")
     setVariableWithIds = NcVariable(varid, self)
   end function setVariableWithIds
 
@@ -1667,8 +1689,10 @@ contains
     character(*)    , intent(in) :: name
     character(*)    , intent(in) :: data
 
+    call check(nf90_redef(self%id), "Failed reopening definition section - 2.")
     call check(nf90_put_att(self%id,NF90_GLOBAL,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%id), "Failed closing definition section - 2.")
   end subroutine setGlobalAttributeChar
 
   subroutine setGlobalAttributeI8(self, name, data)
@@ -1676,8 +1700,10 @@ contains
     character(*)    , intent(in) :: name
     integer(i1)     , intent(in) :: data
 
+    call check(nf90_redef(self%id), "Failed reopening definition section - 3.")
     call check(nf90_put_att(self%id,NF90_GLOBAL,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%id), "Failed closing definition section - 3.")
   end subroutine setGlobalAttributeI8
 
   subroutine setGlobalAttributeI16(self, name, data)
@@ -1685,8 +1711,10 @@ contains
     character(*)    , intent(in) :: name
     integer(i2)     , intent(in) :: data
 
+    call check(nf90_redef(self%id), "Failed reopening definition section - 4.")
     call check(nf90_put_att(self%id,NF90_GLOBAL,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%id), "Failed closing definition section - 4.")
   end subroutine setGlobalAttributeI16
 
   subroutine setGlobalAttributeI32(self, name, data)
@@ -1694,8 +1722,10 @@ contains
     character(*)    , intent(in) :: name
     integer(i4)     , intent(in) :: data
 
+    call check(nf90_redef(self%id), "Failed reopening definition section - 5.")
     call check(nf90_put_att(self%id,NF90_GLOBAL,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%id), "Failed closing definition section - 5.")
   end subroutine setGlobalAttributeI32
 
   subroutine setGlobalAttributeF32(self, name, data)
@@ -1703,8 +1733,10 @@ contains
     character(*)    , intent(in) :: name
     real(sp)        , intent(in) :: data
 
+    call check(nf90_redef(self%id), "Failed reopening definition section - 6.")
     call check(nf90_put_att(self%id,NF90_GLOBAL,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%id), "Failed closing definition section - 6.")
   end subroutine setGlobalAttributeF32
 
   subroutine setGlobalAttributeF64(self, name, data)
@@ -1712,8 +1744,10 @@ contains
     character(*)    , intent(in) :: name
     real(dp)        , intent(in) :: data
 
+    call check(nf90_redef(self%id), "Failed reopening definition section - 7.")
     call check(nf90_put_att(self%id,NF90_GLOBAL,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%id), "Failed closing definition section - 7.")
   end subroutine setGlobalAttributeF64
 
   subroutine getGlobalAttributeChar(self, name, avalue)
@@ -1793,8 +1827,10 @@ contains
     character(*)     , intent(in) :: name
     character(*)     , intent(in) :: data
 
+    call check(nf90_redef(self%parent%id), "Failed reopening definition section - 8.")
     call check(nf90_put_att(self%parent%id,self%id,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%parent%id), "Failed closing definition section - 8.")
   end subroutine setVariableAttributeChar
 
   subroutine setVariableAttributeI8(self, name, data)
@@ -1802,8 +1838,10 @@ contains
     character(*)     , intent(in) :: name
     integer(i1)      , intent(in) :: data
 
+    call check(nf90_redef(self%parent%id), "Failed reopening definition section - 9.")
     call check(nf90_put_att(self%parent%id,self%id,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%parent%id), "Failed closing definition section - 9.")
   end subroutine setVariableAttributeI8
   
   subroutine setVariableAttributeI16(self, name, data)
@@ -1811,8 +1849,10 @@ contains
     character(*)     , intent(in) :: name
     integer(i2)      , intent(in) :: data
 
+    call check(nf90_redef(self%parent%id), "Failed reopening definition section - 10.")
     call check(nf90_put_att(self%parent%id,self%id,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%parent%id), "Failed closing definition section - 10.")
   end subroutine setVariableAttributeI16
 
   subroutine setVariableAttributeI32(self, name, data)
@@ -1820,8 +1860,10 @@ contains
     character(*)     , intent(in) :: name
     integer(i4)      , intent(in) :: data
 
+    call check(nf90_redef(self%parent%id), "Failed reopening definition section - 11.")
     call check(nf90_put_att(self%parent%id,self%id,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%parent%id), "Failed closing definition section - 11.")
   end subroutine setVariableAttributeI32
 
   subroutine setVariableAttributeF32(self, name, data)
@@ -1829,8 +1871,10 @@ contains
     character(*)     , intent(in) :: name
     real(sp)         , intent(in) :: data
 
+    call check(nf90_redef(self%parent%id), "Failed reopening definition section - 12.")
     call check(nf90_put_att(self%parent%id,self%id,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%parent%id), "Failed closing definition section - 12.")
   end subroutine setVariableAttributeF32
 
   subroutine setVariableAttributeF64(self, name, data)
@@ -1838,8 +1882,10 @@ contains
     character(*)     , intent(in) :: name
     real(dp)         , intent(in) :: data
 
+    call check(nf90_redef(self%parent%id), "Failed reopening definition section - 13.")
     call check(nf90_put_att(self%parent%id,self%id,name,data), &
          "Failed to write attribute: " // name )
+    call check(nf90_enddef(self%parent%id), "Failed closing definition section - 13.")
   end subroutine setVariableAttributeF64
 
   subroutine getVariableAttributeChar(self, name, avalue)

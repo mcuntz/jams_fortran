@@ -24,7 +24,7 @@ MODULE mo_mcmc
   USE mo_append,  only: append
   USE mo_moment,  only: stddev
   !$ USE omp_lib,    only: OMP_GET_NUM_THREADS
-  use mo_ncwrite, only: dump_netcdf
+  use mo_ncdump,  only: dump_netcdf
 
   IMPLICIT NONE
 

@@ -106,7 +106,7 @@ program test_mo_netcdf
 
   ! open dataset
   nc = NcDataset(fname,"r")
-
+  
   ! acces the variable
   var_time = nc%getVariable(vname_time)
   var_lat  = nc%getVariable(vname_lat)
