@@ -1,11 +1,12 @@
 PROGRAM main
-  
+
   USE mo_kind,           ONLY: i4, i8, dp, sp
   USE mo_utils,          ONLY: ne
-  USE mo_linear_algebra, ONLY: diag, inverse, solve_linear_equations, solve_linear_equations_svd
-  
+  USE mo_linear_algebra, ONLY: diag, min_diag, banded, inverse, solve_linear_equations, solve_linear_equations_svd, &
+                               solve_linear_equations_band
+
   IMPLICIT NONE
-  
+
   ! data
   ! Borders so that single precision versions do not work anymore are
   !   70/80 for inverse
@@ -15,8 +16,13 @@ PROGRAM main
   ! This improves inverse and solve_linear_equations but not solve_linear_equations_svd.
   ! Now, solve_linear_equations (LU factorisation) seems more stable then SVD version.
   INTEGER(i4), PARAMETER :: nn = 100
+  INTEGER(i4), PARAMETER :: l  = 6
+  INTEGER(i4), PARAMETER :: u  = 4
+  INTEGER(i4), PARAMETER :: mm = l+u+1 ! for the banded-algorithms
   REAL(dp),    DIMENSION(nn,nn) :: dat
   REAL(sp),    DIMENSION(nn,nn) :: sat
+  REAL(dp),    DIMENSION(nn,nn) :: dat2
+  REAL(sp),    DIMENSION(nn,nn) :: sat2
   INTEGER(i4), DIMENSION(nn,nn) :: i4at
   INTEGER(i8), DIMENSION(nn,nn) :: i8at
   ! diag
@@ -24,19 +30,19 @@ PROGRAM main
   REAL(sp),    DIMENSION(:), allocatable :: dsat
   INTEGER(i4), DIMENSION(:), allocatable :: di4at
   INTEGER(i8), DIMENSION(:), allocatable :: di8at
-  ! inverse
-  REAL(dp),    DIMENSION(:,:), allocatable :: idat!, tdat ! test invers
-  REAL(sp),    DIMENSION(:,:), allocatable :: isat!, tsat
+  ! inverse/banded
+  REAL(dp),    DIMENSION(:,:), allocatable :: idat, b_dat!, tdat ! test invers
+  REAL(sp),    DIMENSION(:,:), allocatable :: isat, b_sat!, tsat
   ! lin eq
   REAL(dp),    DIMENSION(nn) :: bdat!, tbdat ! test linear system
   REAL(sp),    DIMENSION(nn) :: bsat!, tbsat
   REAL(dp),    DIMENSION(:), allocatable :: xdat
   REAL(sp),    DIMENSION(:), allocatable :: xsat
-  
-  INTEGER(i4) :: i, nseed
+
+  INTEGER(i4) :: i, ii, nseed
   INTEGER(i4), DIMENSION(:), allocatable :: iseed
   LOGICAL :: isgood, allgood
-  
+
   Write(*,*) ''
   Write(*,*) 'Test mo_linear_algebra.f90'
 
@@ -77,6 +83,57 @@ PROGRAM main
   allgood = allgood .and. isgood
   if (.not. isgood) write(*,*) 'mo_linear_algebra diag failed!'
 
+  !min_diag
+  isgood = .true.
+  do ii=-nn+1,nn-1
+    deallocate(ddat)
+    deallocate(dsat)
+    deallocate(di4at)
+    deallocate(di8at)
+    allocate(ddat(nn-abs(ii)))
+    allocate(dsat(nn-abs(ii)))
+    allocate(di4at(nn-abs(ii)))
+    allocate(di8at(nn-abs(ii)))
+    ddat  = min_diag(dat,ii)
+    dsat  = min_diag(sat,ii)
+    di4at = min_diag(i4at,ii)
+    di8at = min_diag(i8at,ii)
+    do i=1, nn-abs(ii)
+      if (ne(ddat(i),  dat(i-min(ii,0),i+max(ii,0)))) isgood = .false.
+      if (ne(dsat(i),  sat(i-min(ii,0),i+max(ii,0)))) isgood = .false.
+      if (di4at(i) /= i4at(i-min(ii,0),i+max(ii,0)))  isgood = .false.
+      if (di8at(i) /= i8at(i-min(ii,0),i+max(ii,0)))  isgood = .false.
+    end do
+  end do
+
+  deallocate(ddat)
+  deallocate(dsat)
+  allocate(ddat(nn)) ! use later
+  allocate(dsat(nn))
+  ddat = diag(dat)
+  dsat = diag(sat)
+
+  allgood = allgood .and. isgood
+  if (.not. isgood) write(*,*) 'mo_linear_algebra min_diag failed!'
+
+  !banded
+  isgood = .true.
+  allocate(b_dat(mm,nn))
+  allocate(b_sat(mm,nn))
+  b_dat = banded(dat,l,u)
+  b_sat = banded(sat,l,u)
+  do i=1,u+1
+    if (any(ne(b_dat(i,u+2-i:nn),  min_diag(dat,u+1-i)))) isgood = .false.
+    if (any(ne(b_sat(i,u+2-i:nn),  min_diag(sat,u+1-i)))) isgood = .false.
+  end do
+  do i=1,l
+    if (any(ne(b_dat(u+1+i,1:nn-i),  min_diag(dat,-i)))) isgood = .false.
+    if (any(ne(b_sat(u+1+i,1:nn-i),  min_diag(sat,-i)))) isgood = .false.
+ end do
+
+  allgood = allgood .and. isgood
+  if (.not. isgood) write(*,*) 'mo_linear_algebra banded failed!'
+
   ! inverse
   isgood = .true.
   allocate(idat(nn,nn))
@@ -97,7 +154,7 @@ PROGRAM main
   ! do i=2, nn-1
   !    print*, tsat(i-1,i), tsat(i,i), tsat(i+1,i)
   ! enddo
-  
+
   allgood = allgood .and. isgood
   if (.not. isgood) write(*,*) 'mo_linear_algebra inverse failed!'
 
@@ -141,8 +198,31 @@ PROGRAM main
   allgood = allgood .and. isgood
   if (.not. isgood) write(*,*) 'mo_linear_algebra solve_linear_equations_svd failed!'
 
+  ! linear eq with banded
+  isgood = .true.
+
+  dat2 = 0._dp
+  sat2 = 0._dp
+  do ii=-l,u
+    do i=1,nn-abs(ii)
+      dat2(i-min(ii,0),i+max(ii,0)) = dat(i-min(ii,0),i+max(ii,0))
+      sat2(i-min(ii,0),i+max(ii,0)) = sat(i-min(ii,0),i+max(ii,0))
+    end do
+  end do
+  bdat = matmul(dat2,ddat)
+  bsat = matmul(sat2,dsat)
+  xdat = solve_linear_equations_band(banded(dat2,l,u), bdat, l, u)!, condition=.false.)
+  xsat = solve_linear_equations_band(banded(sat2,l,u), bsat, l, u)!, condition=.false.)
+  ! allow eps in each element of matrix -> very close but can be slightly higher -> *100
+  if (sum(abs(xdat-ddat)) > (real(size(dat2,1),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
+  if (sum(abs(xsat-dsat)) > (real(size(sat2,1),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
+  if (sum(matmul(dat2,xdat)-bdat) > (real(size(dat2,1),dp)**2*epsilon(1.0_dp))*100._dp) isgood = .false.
+  if (sum(matmul(sat2,xsat)-bsat) > (real(size(sat2,1),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
 
   allgood = allgood .and. isgood
+  if (.not. isgood) write(*,*) 'mo_linear_algebra solve_linear_equations_band failed!'
+
+
   if (allgood) then
      write(*,*) 'mo_linear_algebra o.k.'
   else
