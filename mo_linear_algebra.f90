@@ -5,14 +5,15 @@
 !> \details This modules provides mostly wrappers for LAPACK's F77 linear algebra routines.
 !>          It adds a few convenience functions such as diag.
 
-!> \authors Matthias Cuntz
+!> \authors Matthias Cuntz, Sebastian Mueller
 !> \date May 2014
 MODULE mo_linear_algebra
 
   ! Wrapper for LAPACK's F77 linear algebra routines.
 
-  ! Written  Matthias Cuntz, May 2014
-  ! Modified Matthias Cuntz, May 2016 - calc single precision via double precision
+  ! Written  Matthias Cuntz,    May 2014
+  ! Modified Matthias Cuntz,    May 2016 - calc single precision via double precision
+  ! Modified Sebastian Mueller, Oct 2016 - solver for banded coefficent-matrices and some involved algorithms
 
   ! License
   ! -------
@@ -32,16 +33,73 @@ MODULE mo_linear_algebra
   ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2014 Matthias Cuntz
+  ! Copyright 2014-2016 Matthias Cuntz, Sebastian Mueller
 
   USE mo_kind, ONLY: i4, i8, sp, dp
 
   IMPLICIT NONE
 
-  PUBLIC :: diag                       ! diagonal of matrix
-  PUBLIC :: inverse                    ! inverse of matrix
-  PUBLIC :: solve_linear_equations     ! solve linear system of equations with LU decomposition
-  PUBLIC :: solve_linear_equations_svd ! solve linear system of equations with SVD
+  PUBLIC :: banded                      ! banded form of a given matrix
+  PUBLIC :: diag                        ! diagonal of matrix
+  PUBLIC :: inverse                     ! inverse of matrix
+  PUBLIC :: min_diag                    ! minor diagonal of matrix
+  PUBLIC :: solve_linear_equations      ! solve linear system of equations with LU decomposition
+  PUBLIC :: solve_linear_equations_svd  ! solve linear system of equations with SVD
+  PUBLIC :: solve_linear_equations_band ! solve linear system of equations for banded matrix
+
+
+  ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         banded
+  !
+  !     PURPOSE
+  !         Banded form of squared matrix for the banded linear equations solver
+  !
+  !>        \brief Banded form of squared matrix.
+  !
+  !>        \details Converts a given squared matrix into the banded form needed for the Lapack-solver for banded matrices.
+  !
+  !     INTENT(IN)
+  !>        \param[in] "real(sp/dp) :: matrix(:,:)"    Squared 2D-array
+  !>        \param[in] "integer(i4) :: l          "    number of lower minor-diagonals
+  !>        \param[in] "integer(i4) :: u          "    number of upper minor-diagonals
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURNS
+  !>       \return     real(sp/dp) :: banded(:) &mdash; Banded form of input matrix
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         band = banded(matrix,l,u)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Sebastian Mueller
+  !>        \date October 2016
+  INTERFACE banded
+     MODULE PROCEDURE banded_dp, banded_sp
+  END INTERFACE banded
+
 
   ! ------------------------------------------------------------------
   !
@@ -146,6 +204,59 @@ MODULE mo_linear_algebra
   INTERFACE inverse
      MODULE PROCEDURE inverse_dp, inverse_sp
   END INTERFACE inverse
+
+
+  ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         min_diag
+  !
+  !     PURPOSE
+  !         Returns the n-th minor-diagonal of a square 2D-array, where positive n indicate super-diagonals and negativ n indicate
+  !         sub-diagonals.
+  !
+  !>        \brief Minor-diagonal elements of a squared matrix.
+  !
+  !>        \details Returns the n-th minor-diagonal of a square 2D-array.
+  !
+  !     INTENT(IN)
+  !>        \param[in] "real(sp/dp)/integer(i4/i8)/logical :: matrix(:,:)"    Squared 2D-array
+  !>        \param[in] "integer(i4)                        :: n          "    number of minor-diagonal
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURNS
+  !>       \return     real(sp/dp)/integer(i4/i8)/logical :: min_diag(:) &mdash; n-th minor-diagonal elements of matrix
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         m = min_diag(matrix,n)
+  !         -> see also example in test directory
+  !
+  !     LITERATURE
+  !         None
+  !
+  !     HISTORY
+  !>        \author Sebastian Mueller
+  !>        \date October 2016
+  INTERFACE min_diag
+     MODULE PROCEDURE min_diag_sp, min_diag_dp, min_diag_i4, min_diag_i8, min_diag_lgt
+  END INTERFACE min_diag
 
 
   ! ------------------------------------------------------------------
@@ -264,6 +375,77 @@ MODULE mo_linear_algebra
      MODULE PROCEDURE solve_linear_equations_svd_1_dp, solve_linear_equations_svd_1_sp
   END INTERFACE solve_linear_equations_svd
 
+
+  ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         solve_linear_equations_band
+  !
+  !     PURPOSE
+  !         Solve linear system of equations for a banded matrix A=(aij).
+  !         The band storage scheme is illustrated by the following example, when
+  !         N = 6, l = 2, u = 1:
+  !
+  !             *   a12  a23  a34  a45  a56
+  !            a11  a22  a33  a44  a55  a66
+  !            a21  a32  a43  a54  a65   *
+  !            a31  a42  a53  a64   *    *
+  !
+  !         Array elements marked * are not used by the routine. You can set them zero.
+  !
+  !>        \brief Solve linear system of equations.
+  !
+  !>        \details Solve linear system of equations for banded coefficent-matrix
+  !>                 \f[ A x = b \f]
+  !>                 Returns \f$ x \f$.
+  !>
+  !>                 Uses standard Lapack routine for banded matrix: dgbsv.
+  !>                 Conditions columns before decomposition.
+  !
+  !     INTENT(IN)
+  !>        \param[in] "real(sp/dp) :: lhsb(:,:)"    Coefficients of left hand side in banded form of \f$ A \f$
+  !>        \param[in] "real(sp/dp) :: rhs(:)   "    Right hand side \f$ b \f$
+  !>        \param[in] "integer(i4) :: l        "    number of lower minor-diagonals
+  !>        \param[in] "integer(i4) :: u        "    number of upper minor-diagonals
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !>       \param[in] "logical, optional :: condition" If true, condition lhsb before decomposition (default: true)
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURNS
+  !>       \return     real(sp/dp) :: x(:) &mdash; Solution x to \f$ A x = b \f$
+  !
+  !     RESTRICTIONS
+  !         Only one right-hand side.
+  !         Left-hand side needs to be in banded form. You can use the banded-function to convert a given squared matrix.
+  !
+  !     EXAMPLE
+  !         sol = solve_linear_equations_band(lhsb, rhs, l, u)
+  !         sol = solve_linear_equations_band(banded(lhs), rhs, l, u)
+  !         -> see also example in test directory
+
+  !     LITERATURE
+  !         None
+
+  !     HISTORY
+  !>        \author Sebastian Mueller
+  !>        \date October 2016
+  INTERFACE solve_linear_equations_band
+     MODULE PROCEDURE solve_linear_equations_band_1_dp, solve_linear_equations_band_1_sp
+  END INTERFACE solve_linear_equations_band
+
+
   PRIVATE
 
   INTERFACE svdksb
@@ -273,6 +455,66 @@ MODULE mo_linear_algebra
   ! ------------------------------------------------------------------
 
 CONTAINS
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION banded_dp(matrix, l, u)
+
+    IMPLICIT NONE
+
+    REAL(dp), DIMENSION(:,:), INTENT(IN)   :: matrix
+    INTEGER(i4),              INTENT(IN)   :: l, u
+    REAL(dp), DIMENSION(:,:), allocatable  :: banded_dp
+
+    INTEGER(i4) :: i
+
+    if (size(matrix,1) /= size(matrix,2)) stop 'banded_dp: array must be squared matrix.'
+    if (l              >= size(matrix,1)) stop 'banded_dp: l is to big. You need to choose minor diagonals within the matrix.'
+    if (u              >= size(matrix,1)) stop 'banded_dp: u is to big. You need to choose minor diagonals within the matrix.'
+    if (l              <  0_i4          ) stop 'banded_dp: l needs to be non-negativ.'
+    if (u              <  0_i4          ) stop 'banded_dp: u needs to be non-negativ.'
+    if (.not. allocated(banded_dp)) allocate(banded_dp(l+u+1,size(matrix,1)))
+
+    banded_dp = 0.0_dp
+
+    do i=0_i4,u
+        banded_dp(u+1-i,i+1:size(matrix,1)) = min_diag_dp(matrix, i)
+    end do
+
+    do i=1_i4,l
+        banded_dp(u+1+i,1:size(matrix,1)-i) = min_diag_dp(matrix,-i)
+    end do
+
+  END FUNCTION banded_dp
+
+  FUNCTION banded_sp(matrix, l, u)
+
+    IMPLICIT NONE
+
+    REAL(sp), DIMENSION(:,:), INTENT(IN)   :: matrix
+    INTEGER(i4),              INTENT(IN)   :: l, u
+    REAL(sp), DIMENSION(:,:), allocatable  :: banded_sp
+
+    INTEGER(i4) :: i
+
+    if (size(matrix,1) /= size(matrix,2)) stop 'banded_sp: array must be squared matrix.'
+    if (l              >= size(matrix,1)) stop 'banded_sp: l is to big. You need to choose minor diagonals within the matrix.'
+    if (u              >= size(matrix,1)) stop 'banded_sp: u is to big. You need to choose minor diagonals within the matrix.'
+    if (l              <  0_i4          ) stop 'banded_sp: l needs to be non-negativ.'
+    if (u              <  0_i4          ) stop 'banded_sp: u needs to be non-negativ.'
+    if (.not. allocated(banded_sp)) allocate(banded_sp(l+u+1,size(matrix,1)))
+
+    banded_sp = 0.0_sp
+
+    do i=0_i4,u
+        banded_sp(u+1-i,i+1:size(matrix,1)) = min_diag_sp(matrix, i)
+    end do
+
+    do i=1_i4,l
+        banded_sp(u+1+i,1:size(matrix,1)-i) = min_diag_sp(matrix,-i)
+    end do
+
+  END FUNCTION banded_sp
 
   ! ------------------------------------------------------------------
 
@@ -421,7 +663,7 @@ CONTAINS
 
   END FUNCTION inverse_dp
 
-  
+
   FUNCTION inverse_sp(matrix, condition)
 
     IMPLICIT NONE
@@ -432,8 +674,110 @@ CONTAINS
 
     allocate(inverse_sp(size(matrix,2),size(matrix,1)))
     inverse_sp = real(inverse_dp(real(matrix,dp), condition), sp)
-    
+
   END FUNCTION inverse_sp
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION min_diag_dp(matrix, n)
+
+    IMPLICIT NONE
+
+    REAL(dp), DIMENSION(:,:), INTENT(IN) :: matrix
+    INTEGER(i4),              INTENT(IN) :: n
+    REAL(dp), DIMENSION(:), allocatable  :: min_diag_dp
+
+    if (size(matrix,1) /= size(matrix,2)) stop 'min_diag_dp: array must be squared matrix.'
+    if (abs(n)         >= size(matrix,1)) stop 'min_diag_dp: n is to big. You need to choose a minor diagonal within the matrix.'
+    if (.not. allocated(min_diag_dp)) allocate(min_diag_dp(size(matrix,1) - abs(n)))
+
+    if (n >= 0_i4) then
+        min_diag_dp = diag_dp(matrix(1_i4:size(matrix,1)-n,1_i4+n:size(matrix,1)))
+    else
+        min_diag_dp = diag_dp(matrix(1_i4-n:size(matrix,1),1_i4:size(matrix,1)+n))
+    end if
+
+  END FUNCTION min_diag_dp
+
+  FUNCTION min_diag_sp(matrix, n)
+
+    IMPLICIT NONE
+
+    REAL(sp), DIMENSION(:,:), INTENT(IN) :: matrix
+    INTEGER(i4),              INTENT(IN) :: n
+    REAL(sp), DIMENSION(:), allocatable  :: min_diag_sp
+
+    if (size(matrix,1) /= size(matrix,2)) stop 'min_diag_sp: array must be squared matrix.'
+    if (abs(n)         >= size(matrix,1)) stop 'min_diag_sp: n is to big. You need to choose a minor diagonal within the matrix.'
+    if (.not. allocated(min_diag_sp)) allocate(min_diag_sp(size(matrix,1) - abs(n)))
+
+    if (n >= 0_i4) then
+        min_diag_sp = diag_sp(matrix(1_i4:size(matrix,1)-n,1_i4+n:size(matrix,1)))
+    else
+        min_diag_sp = diag_sp(matrix(1_i4-n:size(matrix,1),1_i4:size(matrix,1)+n))
+    end if
+
+  END FUNCTION min_diag_sp
+
+  FUNCTION min_diag_i4(matrix, n)
+
+    IMPLICIT NONE
+
+    INTEGER(i4), DIMENSION(:,:), INTENT(IN) :: matrix
+    INTEGER(i4),                 INTENT(IN) :: n
+    INTEGER(i4), DIMENSION(:), allocatable  :: min_diag_i4
+
+    if (size(matrix,1) /= size(matrix,2)) stop 'min_diag_i4: array must be squared matrix.'
+    if (abs(n)         >= size(matrix,1)) stop 'min_diag_i4: n is to big. You need to choose a minor diagonal within the matrix.'
+    if (.not. allocated(min_diag_i4)) allocate(min_diag_i4(size(matrix,1) - abs(n)))
+
+    if (n >= 0_i4) then
+        min_diag_i4 = diag_i4(matrix(1_i4:size(matrix,1)-n,1_i4+n:size(matrix,1)))
+    else
+        min_diag_i4 = diag_i4(matrix(1_i4-n:size(matrix,1),1_i4:size(matrix,1)+n))
+    end if
+
+  END FUNCTION min_diag_i4
+
+  FUNCTION min_diag_i8(matrix, n)
+
+    IMPLICIT NONE
+
+    INTEGER(i8), DIMENSION(:,:), INTENT(IN) :: matrix
+    INTEGER(i4),                 INTENT(IN) :: n
+    INTEGER(i8), DIMENSION(:), allocatable  :: min_diag_i8
+
+    if (size(matrix,1) /= size(matrix,2)) stop 'min_diag_i8: array must be squared matrix.'
+    if (abs(n)         >= size(matrix,1)) stop 'min_diag_i8: n is to big. You need to choose a minor diagonal within the matrix.'
+    if (.not. allocated(min_diag_i8)) allocate(min_diag_i8(size(matrix,1) - abs(n)))
+
+    if (n >= 0_i4) then
+        min_diag_i8 = diag_i8(matrix(1_i4:size(matrix,1)-n,1_i4+n:size(matrix,1)))
+    else
+        min_diag_i8 = diag_i8(matrix(1_i4-n:size(matrix,1),1_i4:size(matrix,1)+n))
+    end if
+
+  END FUNCTION min_diag_i8
+
+  FUNCTION min_diag_lgt(matrix, n)
+
+    IMPLICIT NONE
+
+    LOGICAL, DIMENSION(:,:), INTENT(IN) :: matrix
+    INTEGER(i4),             INTENT(IN) :: n
+    LOGICAL, DIMENSION(:), allocatable  :: min_diag_lgt
+
+    if (size(matrix,1) /= size(matrix,2)) stop 'min_diag_lgt: array must be squared matrix.'
+    if (abs(n)         >= size(matrix,1)) stop 'min_diag_lgt: n is to big. You need to choose a minor diagonal within the matrix.'
+    if (.not. allocated(min_diag_lgt)) allocate(min_diag_lgt(size(matrix,1) - abs(n)))
+
+    if (n >= 0_i4) then
+        min_diag_lgt = diag_lgt(matrix(1_i4:size(matrix,1)-n,1_i4+n:size(matrix,1)))
+    else
+        min_diag_lgt = diag_lgt(matrix(1_i4-n:size(matrix,1),1_i4:size(matrix,1)+n))
+    end if
+
+  END FUNCTION min_diag_lgt
 
   ! ------------------------------------------------------------------
 
@@ -622,6 +966,90 @@ CONTAINS
     solve_linear_equations_svd_1_sp = real(solve_linear_equations_svd_1_dp(real(lhs,dp), real(rhs,dp), condition), sp)
 
   END FUNCTION solve_linear_equations_svd_1_sp
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION solve_linear_equations_band_1_dp(lhsb, rhs, l, u, condition)
+
+    IMPLICIT NONE
+
+    REAL(dp), DIMENSION(:,:), INTENT(IN) :: lhsb !banded form of the lhs
+    REAL(dp), DIMENSION(:),   INTENT(IN) :: rhs
+    INTEGER(i4),              INTENT(IN) :: l, u
+    LOGICAL,  OPTIONAL,       INTENT(IN) :: condition
+    REAL(dp), DIMENSION(:), allocatable  :: solve_linear_equations_band_1_dp
+
+    INTEGER(i4) :: ii, nSpalten, nZeilen
+    real(dp),    dimension(:,:), allocatable :: ilhsb         ! internal lhsb
+    real(dp),    dimension(:),   allocatable :: irhs          ! internal rhs
+    real(dp),    dimension(:),   allocatable :: scale_cols    ! scale matrix for better conditioning
+!    real(dp),    dimension(:),   allocatable :: scale_rows    !              "
+    integer(i4), dimension(:),   allocatable :: ipiv          ! needed for dgesv lapack routine
+    integer(i4)                              :: info          !              "
+    logical :: icondition
+
+    external :: dgbsv  ! Lapack routine to compute solution of real system of linear equations with banded matrix
+
+    nZeilen  = size(lhsb,1)
+    nSpalten = size(lhsb,2)
+    if (l+u+1_i4    /= nZeilen ) stop 'solve_linear_equations_1_dp: Given banded matrix must have l+u+1 rows.'
+    if (size(rhs,1) /= nSpalten) stop 'solve_linear_equations_1_dp: right hand side must have same size as left hand side.'
+    ! internal arrays
+    allocate(ilhsb(nZeilen + l,nSpalten), irhs(nSpalten))
+    ilhsb = 0.0_dp
+
+    ilhsb(1+l:nZeilen + l,:) = lhsb
+    irhs                     = rhs
+
+    if (present(condition)) then
+       icondition = condition
+    else
+       icondition = .true.
+    endif
+
+    if (icondition) then
+       ! Condition of matrix
+       allocate(scale_cols(nSpalten))
+       ! Condition columns
+       scale_cols(:) = maxval(abs(ilhsb(:,:)),1)
+       where (scale_cols(:) < tiny(1.0_dp)) scale_cols(:) = 1.0_dp
+       scale_cols(:) = 1.0_dp / scale_cols(:)
+       forall(ii=1:nSpalten) ilhsb(:,ii) = ilhsb(:,ii) * scale_cols(ii)
+    endif
+
+    ! solve linear system of equations
+    allocate(ipiv(nSpalten))
+    call dgbsv(nSpalten, l, u, 1, ilhsb, nZeilen+l, ipiv, irhs, nSpalten, info)
+    if (info /= 0) stop 'solve_linear_equations_band_1_dp: Solving of linear system did not work.'
+
+    if (.not. allocated(solve_linear_equations_band_1_dp)) allocate(solve_linear_equations_band_1_dp(nSpalten))
+    solve_linear_equations_band_1_dp = irhs
+
+    if (icondition) then
+       ! rescale result
+       solve_linear_equations_band_1_dp(:) = solve_linear_equations_band_1_dp(:) * scale_cols(:)
+
+       deallocate(scale_cols)
+    endif
+
+    deallocate(ilhsb, irhs)
+    deallocate(ipiv)
+
+  END FUNCTION solve_linear_equations_band_1_dp
+
+  FUNCTION solve_linear_equations_band_1_sp(lhsb, rhs, l, u, condition)
+
+    IMPLICIT NONE
+
+    REAL(sp), DIMENSION(:,:), INTENT(IN) :: lhsb !banded form of the lhs
+    REAL(sp), DIMENSION(:),   INTENT(IN) :: rhs
+    INTEGER(i4),              INTENT(IN) :: l, u
+    LOGICAL,  OPTIONAL,       INTENT(IN) :: condition
+    REAL(sp), DIMENSION(:), allocatable  :: solve_linear_equations_band_1_sp
+
+    solve_linear_equations_band_1_sp = real(solve_linear_equations_band_1_dp(real(lhsb,dp), real(rhs,dp), l, u, condition), sp)
+
+  END FUNCTION solve_linear_equations_band_1_sp
 
   ! ------------------------------------------------------------------
 
