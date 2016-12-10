@@ -22,16 +22,15 @@ module mo_var2nc
 
   ! Copyright 2014-2016 Stephan Thober, Matthias Cuntz
 
-  use mo_kind,         only: i4, sp, dp
-  use mo_utils,        only: ne
+  use mo_kind,  only: i4, sp, dp
+  use mo_utils, only: ne
 
   ! functions and constants of netcdf4 library
-  use netcdf,  only: nf90_create, nf90_def_dim, NF90_UNLIMITED, nf90_def_var, &
-       nf90_put_att, NF90_INT, NF90_INT, &
-       nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, &
-       NF90_close, nf90_noerr, nf90_strerror, &
-       NF90_WRITE, nf90_inq_varid, nf90_inquire_variable, &
-       nf90_inquire_dimension, nf90_open, &
+  use netcdf, only: &
+       NF90_INT, NF90_FLOAT, NF90_DOUBLE, NF90_UNLIMITED, NF90_WRITE, NF90_NOERR, &
+       nf90_create, nf90_def_dim, nf90_def_var, nf90_put_att, &
+       nf90_enddef, nf90_put_var, nf90_close, nf90_strerror, &
+       nf90_inq_varid, nf90_inquire_variable, nf90_inquire_dimension, nf90_open, &
        nf90_inq_varid, nf90_inq_dimid, nf90_inquire, nf90_get_var, nf90_fill_float, &
        nf90_fill_double, nf90_fill_int, nf90_redef
 #ifndef NETCDF3
@@ -96,9 +95,9 @@ module mo_var2nc
   !>                -2.1474836E+09 | integer(i4)\n
   !>                 9.9692100E+36 | real(sp)\n
   !>        9.9692099683868690E+36 | real(dp)\n
-  !>        These numbers are netcdf fortran 90 constants! They are used to determine the 
+  !>        These numbers are netcdf fortran 90 constants! They are used to determine the
   !>        chunksize of the already written variable. Hence, this routine cannot append
-  !>        correctly to variables when these numbers are used. Only five dimensional 
+  !>        correctly to variables when these numbers are used. Only five dimensional
   !>        variables can be written, only one unlimited dimension can be defined.
   !>
   !>        The unlimited dimension can be any dimension in netcdf4 files but must be the
@@ -295,7 +294,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        if (idim .ne. ndim) stop "var2nc_1d_i4: number of variable dimensions /= number of file variable dimensions."
@@ -323,7 +322,7 @@ contains
        ! define dimension
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -474,7 +473,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        if (idim .ne. ndim) stop "var2nc_1d_sp: number of variable dimensions /= number of file variable dimensions."
@@ -502,7 +501,7 @@ contains
        ! define dimension
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -652,7 +651,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        if (idim .ne. ndim) stop "var2nc_1d_dp: number of variable dimensions /= number of file variable dimensions."
@@ -680,7 +679,7 @@ contains
        ! define dimension
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -812,7 +811,7 @@ contains
        dims(ndim)     = 1
     else
        chunksizes   = (/ size( arr, 1), size( arr, 2) /)
-       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
        dims(1:ndim_const) = shape( arr )
     end if
     start(:)     = 1_i4
@@ -838,7 +837,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -867,7 +866,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -1000,7 +999,7 @@ contains
        dims(ndim)     = 1
     else
        chunksizes   = (/ size( arr, 1), size( arr, 2) /)
-       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
        dims(1:ndim_const) = shape( arr )
     end if
     start(:)     = 1_i4
@@ -1026,7 +1025,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -1055,7 +1054,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -1188,7 +1187,7 @@ contains
        dims(ndim)     = 1
     else
        chunksizes   = (/ size( arr, 1), size( arr, 2) /)
-       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
        dims(1:ndim_const) = shape( arr )
     end if
     start(:)     = 1_i4
@@ -1214,7 +1213,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -1243,7 +1242,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -1376,7 +1375,7 @@ contains
        dims(ndim)     = 1
     else
        chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3) /)
-       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
        dims(1:ndim_const) = shape( arr )
     end if
     start(:)     = 1_i4
@@ -1402,7 +1401,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -1431,7 +1430,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -1565,7 +1564,7 @@ contains
        dims(ndim)     = 1
     else
        chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3) /)
-       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
        dims(1:ndim_const) = shape( arr )
     end if
     start(:)     = 1_i4
@@ -1591,7 +1590,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -1620,7 +1619,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -1753,7 +1752,7 @@ contains
        dims(ndim)     = 1
     else
        chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3) /)
-       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
        dims(1:ndim_const) = shape( arr )
     end if
     start(:)     = 1_i4
@@ -1779,7 +1778,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -1808,7 +1807,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -1943,7 +1942,7 @@ contains
     else
        chunksizes   = (/ size( arr, 1), size( arr, 2), &
             size( arr, 3), size( arr, 4) /)
-       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
        dims(1:ndim_const) = shape( arr )
     end if
     start(:)     = 1_i4
@@ -1969,7 +1968,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -1998,7 +1997,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -2133,7 +2132,7 @@ contains
     else
        chunksizes   = (/ size( arr, 1), size( arr, 2), &
             size( arr, 3), size( arr, 4) /)
-       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
        dims(1:ndim_const) = shape( arr )
     end if
     start(:)     = 1_i4
@@ -2159,7 +2158,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -2188,7 +2187,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -2323,7 +2322,7 @@ contains
     else
        chunksizes   = (/ size( arr, 1), size( arr, 2), &
             size( arr, 3), size( arr, 4) /)
-       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+       if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
        dims(1:ndim_const) = shape( arr )
     end if
     start(:)     = 1_i4
@@ -2349,7 +2348,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -2378,7 +2377,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -2502,7 +2501,7 @@ contains
     ! initialize
     deflate      = 1
     chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3), size( arr, 4), size( arr, 5) /)
-    if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+    if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -2529,7 +2528,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -2558,7 +2557,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -2682,7 +2681,7 @@ contains
     ! initialize
     deflate      = 1
     chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3), size( arr, 4), size( arr, 5) /)
-    if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+    if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -2709,7 +2708,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -2738,7 +2737,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -2862,7 +2861,7 @@ contains
     ! initialize
     deflate      = 1
     chunksizes   = (/ size( arr, 1), size( arr, 2), size( arr, 3), size( arr, 4), size( arr, 5) /)
-    if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1 
+    if ( d_unlimit .gt. 0 ) chunksizes( d_unlimit ) = 1
     dims(1:ndim) = shape( arr )
     start(:)     = 1_i4
     counter(:)   = dims
@@ -2889,7 +2888,7 @@ contains
        create_loc = .false.
     endif
     ! check whether variable exists
-    if ( nf90_noerr .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
+    if ( NF90_NOERR .eq. nf90_inq_varid( f_handle, v_name, varid(ndim+1)) ) then
        ! append
        call check(nf90_inquire_variable(f_handle, varid(ndim+1), ndims=idim, dimids=dimid))
        ! consistency checks
@@ -2918,7 +2917,7 @@ contains
        ! define dimensions
        do i = 1, ndim
           ! check whether dimension exists
-          if ( nf90_noerr .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
+          if ( NF90_NOERR .ne. nf90_inq_dimid( f_handle, dnames(i), dimid(i)) ) then
              ! create dimension
              if ( i .eq. d_unlimit ) then
                 ! define unlimited dimension
@@ -2981,7 +2980,7 @@ contains
   ! PRIVATE PART
   !
 
-  
+
   ! ----------------------------------------------------------------------------
 
   ! NAME
@@ -3056,7 +3055,7 @@ contains
 
     integer(i4), intent(in) :: status
 
-    if (status /= nf90_noerr) then
+    if (status /= NF90_NOERR) then
        write(*,*) 'mo_var2nc.check error: ', trim(nf90_strerror(status))
        stop
     end if
