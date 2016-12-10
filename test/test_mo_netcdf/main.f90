@@ -68,8 +68,8 @@ program test_mo_netcdf
   dim_time = nc%setDimension("time", -1)
 
   ! create variables
-  var_time = nc%setVariable(vname_time, "i32", (/dim_time/))
-  var_lat  = nc%setVariable(vname_lat,  "f32", (/dim_x, dim_y/))
+  var_time = nc%setVariable(vname_time, "i4", (/dim_time/))      ! jams kind
+  var_lat  = nc%setVariable(vname_lat,  "f32", (/dim_x, dim_y/)) ! mo_netcdf notation
   var_lon  = nc%setVariable(vname_lon , "f32", (/dim_x, dim_y/))
   var_data = nc%setVariable(vname_data, "f64", (/dim_x, dim_y, dim_time/))
 
@@ -171,8 +171,8 @@ program test_mo_netcdf
   var_data = nc%getVariable(vname_data)
 
   ! read the appended chunk of data
-  call var_time%getData(rtime, start=(/ntime+1/), count=(/nadd/))
-  call var_data%getData(rdata, start=(/1,1,ntime+1/), count=(/nx,ny,nadd/))
+  call var_time%getData(rtime, start=(/ntime+1/), cnt=(/nadd/))
+  call var_data%getData(rdata, start=(/1,1,ntime+1/), cnt=(/nx,ny,nadd/))
 
   ! close dataset
   call nc%close()
