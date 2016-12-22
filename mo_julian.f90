@@ -29,6 +29,8 @@ MODULE mo_julian
   ! Modified David Schaefer, Oct 2015 - addded 360 day calendar procedures
   ! Modified David Schaefer, Jan 2016 - addded 365 day calendar procedures
   ! Modified David Schaefer, Feb 2016 - implemented wrapper function and the module calendar state
+  ! Modified Matthias Cuntz, Dec 2016 - remove save variable calendar and associated routines setCalendar
+  !                                     pass calendar to conversion routines
 
   ! License
   ! -------
@@ -62,157 +64,8 @@ MODULE mo_julian
   PUBLIC :: julday       ! Julian day from day, month and year
   PUBLIC :: ndays        ! IMSL Julian day from day, month and year
   PUBLIC :: ndyin        ! Day, month and year from IMSL Julian day
-  public :: setCalendar
-  public :: caldatJulian
-  
-  integer(i4), save, private :: calendar = 1
-
-  interface setCalendar
-     module procedure setCalendarInteger, setCalendarString
-  end interface setCalendar
   
 CONTAINS
-
-
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         setCalendarString
-
-  !     PURPOSE
-  !>        \brief Set module private variable calendar
-
-  !     CALLING SEQUENCE
-  !         call caldat(selector)
-
-  !     INTENT(IN)
-  !>        \param[in] "character(len=*) :: selector"     {"julian"|"365day"|"360day"}
-
-  !     INTENT(INOUT)
-  !         None
-
-  !     INTENT(OUT)
-  !         None
-
-  !     INTENT(IN), OPTIONAL
-  !         None
-
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-
-  !     INTENT(OUT), OPTIONAL
-  !         None
-
-  !     HISTORY
-  !>        \author Written, David Schäfer
-  !>        \date Jan 2015
-   subroutine setCalendarString(selector)
-    character(*), intent(in) :: selector
-    
-    select case(selector)
-    case("julian")
-       call setCalendarInteger(1)  
-    case("365day")
-       call setCalendarInteger(2)  
-    case("360day")
-       call setCalendarInteger(3)  
-    case default
-       print*, "Unknown selector! Select on of 'julian', '365day', '360day'."
-       stop 1
-    end select
-  end subroutine setCalendarString
-
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         setCalendarString
-
-  !     PURPOSE
-  !>        \brief Set module private variable calendar
-
-  !     CALLING SEQUENCE
-  !         call caldat(selector)
-
-  !     INTENT(IN)
-  !>        \param[in] "integer(i4) :: selector"     {1|2|3}
-
-  !     INTENT(INOUT)
-  !         None
-
-  !     INTENT(OUT)
-  !         None
-
-  !     INTENT(IN), OPTIONAL
-  !         None
-
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-
-  !     INTENT(OUT), OPTIONAL
-  !         None
-
-  !     HISTORY
-  !>        \author Written, David Schäfer
-  !>        \date Jan 2015
-   subroutine setCalendarInteger(selector)
-    integer(i4), intent(in) :: selector
-
-    if ((selector .lt. 1) .or. (selector .gt. 3)) then
-       print*, "Unknown selector! Select on of 1, 2, 3."
-       stop 1
-    end if
-    calendar = selector
-
-  end subroutine setCalendarInteger
-
-  ! ------------------------------------------------------------------
-
-  !     NAME
-  !         selectCalendar
-
-  !     PURPOSE
-  !>        \brief Select a calendar
-
-  !>        \details Returns a valid calendar index, based on the given optional argument
-  !>        and/or the module global private variable calendar. If an invalid selector is passed,
-  !>        its value is ignored and the global calendar value retuned instead.
-
-  !     CALLING SEQUENCE
-  !         idx = selectCalendar(3)
-
-  !     INTENT(IN)
-  !         None
-
-  !     INTENT(INOUT)
-  !         None
-
-  !     INTENT(OUT)
-  !         None
-
-  !     INTENT(IN), OPTIONAL
-  !>        \param[in] "integer(i4), optional :: selector"     Calendar selector {1|2|3}
-
-  !     INTENT(INOUT), OPTIONAL
-  !         None
-
-  !     INTENT(OUT), OPTIONAL
-  !         None
-
-  !     HISTORY
-  !>        \author Written, David Schäfer
-  !>        \date Jan 2015
-  pure function selectCalendar(selector)
-    integer(i4), intent(in), optional :: selector
-    integer(i4)                       :: selectCalendar
-
-    selectCalendar = calendar
-    if (present(selector)) then
-       if ((selector .gt. 0) .and. (selector .lt. 4)) then
-          selectCalendar = selector
-       end if
-    end if
-   
-  end function selectCalendar
 
   ! ------------------------------------------------------------------
 
@@ -230,7 +83,7 @@ CONTAINS
   !>        The zeroth Julian Day depends on the called procedure. See their documentation for details.
 
   !     CALLING SEQUENCE
-  !         call caldat(julday, dd, mm, yy)
+  !         call caldat(julday, dd, mm, yy, calendar)
 
   !     INTENT(IN)
   !>        \param[in] "integer(i4) :: julday"     Julian day
@@ -244,7 +97,7 @@ CONTAINS
   !>        \param[out] "integer(i4) :: yy"         Year of Julian day
 
   !     INTENT(IN), OPTIONAL
-  !>        \param[in] "integer(i4) :: calendar"   The calendar to use, the global calendar
+  !>        \param[in] "integer(i4) :: calendar"    The calendar to use, the global calendar
   !>                                                will be used by default
 
   !     INTENT(INOUT), OPTIONAL
@@ -263,18 +116,22 @@ CONTAINS
 
     implicit none
 
-    integer(i4), intent(in)           :: julian
-    integer(i4), intent(out)          :: dd, mm, yy
-    integer(i4), intent(in), optional :: calendar
+    integer(i4),  intent(in)           :: julian
+    integer(i4),  intent(out)          :: dd, mm, yy
+    character(*), intent(in), optional :: calendar
     
-    select case(selectCalendar(calendar))
-    case(1)
+    if (present(calendar)) then
+       select case(calendar)
+       case("365day")
+          call caldat365(julian,dd,mm,yy)
+       case("360day")
+          call caldat360(julian,dd,mm,yy)
+       case default
+          call caldatJulian(julian,dd,mm,yy)
+       end select
+    else
        call caldatJulian(julian,dd,mm,yy)
-    case(2)
-       call caldat365(julian,dd,mm,yy)
-    case(3)
-       call caldat360(julian,dd,mm,yy)
-    end select
+    endif
 
   end subroutine caldat
 
@@ -294,7 +151,7 @@ CONTAINS
   !>        The zeroth Julian Day depends on the called procedure. See their documentation for details.
 
   !     CALLING SEQUENCE
-  !         call dec2date(fJulian, dd, mm, yy, hh, nn, ss)
+  !         call dec2date(fJulian, dd, mm, yy, hh, nn, ss, calendar)
 
   !     INTENT(IN)
   !>        \param[in] "real(dp) :: fJulian"     fractional Julian day
@@ -332,16 +189,20 @@ CONTAINS
 
     real(dp),    intent(in)            :: julian
     integer(i4), intent(out), optional :: dd, mm, yy, hh, nn, ss
-    integer(i4), intent(in), optional  :: calendar
+    character(*), intent(in), optional :: calendar
     
-    select case(selectCalendar(calendar))
-    case(1)
+    if (present(calendar)) then
+       select case(calendar)
+       case("365day")
+          call dec2date365(julian, dd, mm, yy, hh, nn, ss)
+       case("360day")
+          call dec2date360(julian, dd, mm, yy, hh, nn, ss)
+       case default
+          call dec2dateJulian(julian, dd, mm, yy, hh, nn, ss)
+       end select
+    else
        call dec2dateJulian(julian, dd, mm, yy, hh, nn, ss)
-    case(2)
-       call dec2date365(julian, dd, mm, yy, hh, nn, ss)
-    case(3)
-       call dec2date360(julian, dd, mm, yy, hh, nn, ss)
-    end select
+    endif
     
   end subroutine dec2date
 
@@ -360,7 +221,7 @@ CONTAINS
   !>        The zeroth Julian Day depends on the called procedure. See their documentation for details.
 
   !     CALLING SEQUENCE
-  !         date2dec = date2dec(dd, mm, yy, hh, nn, ss)
+  !         date2dec = date2dec(dd, mm, yy, hh, nn, ss, calendar)
 
   !     INTENT(IN)
   !         None
@@ -400,19 +261,23 @@ CONTAINS
 
     implicit none
 
-    integer(i4), intent(in), optional :: dd, mm, yy
-    integer(i4), intent(in), optional :: hh, nn, ss
-    integer(i4), intent(in), optional :: calendar
-    real(dp)                          :: date2dec
-
-    select case(selectCalendar(calendar))
-    case(1)
+    integer(i4),  intent(in), optional :: dd, mm, yy
+    integer(i4),  intent(in), optional :: hh, nn, ss
+    character(*), intent(in), optional :: calendar
+    real(dp)                           :: date2dec
+    
+    if (present(calendar)) then
+       select case(calendar)
+       case("365day")
+          date2dec = date2dec365(dd, mm, yy, hh, nn, ss)
+       case("360day")
+          date2dec = date2dec360(dd, mm, yy, hh, nn, ss)
+       case default
+          date2dec = date2decJulian(dd, mm, yy, hh, nn, ss)
+       end select
+    else
        date2dec = date2decJulian(dd, mm, yy, hh, nn, ss)
-    case(2)
-       date2dec = date2dec365(dd, mm, yy, hh, nn, ss)
-    case(3)
-       date2dec = date2dec360(dd, mm, yy, hh, nn, ss)
-    end select
+    endif
 
   end function date2dec
 
@@ -431,7 +296,7 @@ CONTAINS
   !>        The zeroth Julian Day depends on the called procedure. See their documentation for details.
 
   !     CALLING SEQUENCE
-  !         julian = julday(dd, mm, yy)
+  !         julian = julday(dd, mm, yy, calendar)
 
   !     INTENT(IN)
   !>        \param[in] "integer(i4) :: dd"         Day in month of Julian day
@@ -467,19 +332,23 @@ CONTAINS
 
     implicit none
 
-    integer(i4), intent(in)           :: dd, mm, yy
-    integer(i4), intent(in), optional :: calendar
-    integer(i4)                       :: julday
+    integer(i4),  intent(in)           :: dd, mm, yy
+    character(*), intent(in), optional :: calendar
+    integer(i4)                        :: julday
     
-    select case(selectCalendar(calendar))
-    case(1)
+    if (present(calendar)) then
+       select case(calendar)
+       case("365day")
+          julday = julday365(dd, mm, yy)
+       case("360day")
+          julday = julday360(dd, mm, yy)
+       case default
+          julday = juldayJulian(dd, mm, yy)
+       end select
+    else
        julday = juldayJulian(dd, mm, yy)
-    case(2)
-       julday = julday365(dd, mm, yy)
-    case(3)
-       julday = julday360(dd, mm, yy)
-    end select
-
+    endif
+    
   end function julday
 
   ! ------------------------------------------------------------------
@@ -551,7 +420,7 @@ CONTAINS
   !>        \date Dec 2011
   !>        Modified Matthias Cuntz, May 2014 - changed to new algorithm with astronomical units
   !>                                            removed numerical recipes
-  !>                 David Schaefer, Jan 2016 - renamed procodure
+  !>                 David Schaefer, Jan 2016 - renamed procedure
   ELEMENTAL SUBROUTINE caldatJulian(julian,dd,mm,yy)
 
     IMPLICIT NONE
@@ -669,7 +538,7 @@ CONTAINS
   !>        \date Jan 2013
   !>        Modified Matthias Cuntz, May 2014 - changed to new algorithm with astronomical units
   !>                                            removed numerical recipes
-  !>                 David Schaefer, Jan 2016 - renamed procodure
+  !>                 David Schaefer, Jan 2016 - renamed procedure
   ELEMENTAL FUNCTION date2decJulian(dd,mm,yy,hh,nn,ss)
 
     IMPLICIT NONE
@@ -807,7 +676,7 @@ CONTAINS
   !>        \date Jan 2013
   !>        Modified Matthias Cuntz, May 2014 - changed to new algorithm with astronomical units
   !>                                            removed numerical recipes
-  !>                 David Schaefer, Jan 2016 - renamed procodure
+  !>                 David Schaefer, Jan 2016 - renamed procedure
   ELEMENTAL SUBROUTINE dec2dateJulian(julian,dd,mm,yy,hh,nn,ss)
 
     IMPLICIT NONE
@@ -962,7 +831,7 @@ CONTAINS
   !>        \date Dec 2011
   !>        Modified Matthias Cuntz, May 2014 - changed to new algorithm with astronomical units
   !>                                            removed numerical recipes
-  !>                 David Schaefer, Jan 2016 - renamed procodure
+  !>                 David Schaefer, Jan 2016 - renamed procedure
   ELEMENTAL FUNCTION juldayJulian(dd,mm,yy)
 
     IMPLICIT NONE
