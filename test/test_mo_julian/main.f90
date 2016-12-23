@@ -3,6 +3,7 @@ PROGRAM main
   USE mo_kind,   ONLY: i4, dp
   USE mo_julian, ONLY: ndays, ndyin
   USE mo_julian, ONLY: caldat, julday, date2dec, dec2date
+  USE mo_utils,  ONLY: ne
 
   IMPLICIT NONE
 
@@ -14,7 +15,7 @@ PROGRAM main
   INTEGER(i4), DIMENSION(3) :: dd1, mm1, yy1, hh1, nn1, ss1
   INTEGER(i4), DIMENSION(3) :: dd12, mm12, yy12, hh12, nn12, ss12
   REAL(dp),    DIMENSION(3) :: dec1
-  REAL(dp),    DIMENSION(3) :: rr1, ff1, gg1
+  REAL(dp),    DIMENSION(3) :: rr1, ff1, gg1, fd1, fd2
   INTEGER(i4) :: jj
 
   LOGICAL :: isgood
@@ -54,6 +55,7 @@ PROGRAM main
   ! date2dec
   if (abs(date2dec(01,01,1900,12,0)-2415021.0_dp) > epsilon(1.0_dp)*2415021._dp*10.0_dp) isgood = .false.
   if (abs(date2dec(01,01,1900)-2415020.5_dp) > epsilon(1.0_dp)*2415020._dp*10.0_dp) isgood = .false.
+  if (abs(date2dec(01,01,1900,fracday=0.5_dp)-2415021.0_dp) > epsilon(1.0_dp)*2415021._dp*10.0_dp) isgood = .false.
 
   ! date2dec, dec2date - scalar
   do jj=1, 2524594 ! 01.01.2200
@@ -123,6 +125,16 @@ PROGRAM main
      if (jj /= ss) isgood = .false.
   end do
 
+  ! fracday
+  do jj=1, 2524594 ! 01.01.2200
+     call random_number(ff1)
+     rr1 = real(jj) + ff1
+     call dec2date(rr1,dd1,mm1,yy1,fracday=fd1)
+     gg1 = date2dec(dd1(1),mm1(1),yy1(1),fracday=fd1)
+     call dec2date(gg1,dd12,mm12,yy12,fracday=fd2)
+     if (any(dd1(1) /= dd12) .or. any(mm1(1) /= mm12) .or. any(yy1(1) /= yy12) .or. any(ne(fd1,fd2))) isgood = .false.
+  end do
+
   
   ! ----------------------
   ! 360day calendar tests
@@ -140,6 +152,8 @@ PROGRAM main
   ! date2dec360
   if (abs(date2dec(01,01,1900,12,0, calendar='360day')-684000.0_dp) > epsilon(1.0_dp)*684000.0_dp*10.0_dp) isgood = .false.
   if (abs(date2dec(01,01,1900, calendar='360day')-683999.5_dp) > epsilon(1.0_dp)*683999._dp*10.0_dp) isgood = .false.
+  if (abs(date2dec(01,01,1900,fracday=0.5_dp, calendar='360day')-684000.0_dp) > epsilon(1.0_dp)*2415021._dp*10.0_dp) &
+       isgood = .false.
 
   ! date2dec360, dec2date360 - scalar
   do jj=1, 109573 ! 01.01.2200
@@ -210,7 +224,17 @@ PROGRAM main
      if (jj /= ss) isgood = .false.
   end do
 
+  ! fracday
+  do jj=1, 2524594 ! 01.01.2200
+     call random_number(ff1)
+     rr1 = real(jj) + ff1
+     call dec2date(rr1,dd1,mm1,yy1,fracday=fd1, calendar='360day')
+     gg1 = date2dec(dd1(1),mm1(1),yy1(1),fracday=fd1, calendar='360day')
+     call dec2date(gg1,dd12,mm12,yy12,fracday=fd2, calendar='360day')
+     if (any(dd1(1) /= dd12) .or. any(mm1(1) /= mm12) .or. any(yy1(1) /= yy12) .or. any(ne(fd1,fd2))) isgood = .false.
+  end do
 
+  
   ! ---------------------
   ! 365day calendar tests
 
@@ -228,6 +252,8 @@ PROGRAM main
   ! date2dec365
   if (abs(date2dec(01,01,1900,12,0, calendar='365day')-693500.0_dp) > epsilon(1.0_dp)*693500.0_dp*10.0_dp) isgood = .false.
   if (abs(date2dec(01,01,1900, calendar='365day')-693499.5_dp) > epsilon(1.0_dp)*693499._dp*10.0_dp) isgood = .false.
+  if (abs(date2dec(01,01,1900,fracday=0.5_dp, calendar='365day')-693500.0_dp) > epsilon(1.0_dp)*2415021._dp*10.0_dp) &
+       isgood = .false.
 
   ! date2dec365, dec2date365 - scalar
   do jj=1, 803000 ! 01.01.2200
@@ -300,6 +326,106 @@ PROGRAM main
      if (jj /= ss) isgood = .false.
   end do
 
+
+  ! ---------------------
+  ! lilian calendar tests
+
+  ! julday365, caldat365
+  do jj=0, 803000 ! 01.01.2200
+     call caldat(jj,dd,mm,yy, calendar='lilian')
+     ss = julday(dd,mm,yy, calendar='lilian')
+     if (jj /= ss) isgood = .false.
+  end do
+  if (julday(01,01,1900, calendar='lilian') /= 115861) isgood = .false.
+  call caldat(115861, dd, mm, yy, calendar='lilian')
+  if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 1900)) isgood = .false.
+
+  ! date2dec365
+  if (abs(date2dec(01,01,1900,12,0, calendar='lilian')-115861.5_dp) > epsilon(1.0_dp)*2415021._dp*10.0_dp) isgood = .false.
+  if (abs(date2dec(01,01,1900, calendar='lilian')-115861.0_dp) > epsilon(1.0_dp)*2415021._dp*10.0_dp) isgood = .false.
+
+  ! date2dec365, dec2date365 - scalar
+  do jj=1, 803000 ! 01.01.2200
+     call random_number(ff)
+     rr = real(jj) + ff
+     call dec2date(rr,dd,mm,yy,hh,nn,ss, calendar='lilian')
+     gg = date2dec(dd,mm,yy,hh,nn,ss, calendar='lilian')
+     call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2, calendar='lilian')
+     if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) isgood = .false.
+  end do
+
+  call dec2date(date2dec(01,01,1900,12,01,02, calendar='lilian'), dd, mm, yy, hh, nn, ss, calendar='lilian')
+  if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 1900) .or. (hh /= 12) .or. (nn /= 01) .or. (ss /= 02)) isgood = .false.
+  call dec2date(date2dec(01,01,1900, calendar='lilian'), dd, mm, yy, hh, nn, ss, calendar='lilian')
+  if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 1900) .or. (hh /= 00) .or. (nn /= 00) .or. (ss /= 00)) isgood = .false.
+  call dec2date(date2dec(01,01,1900,23,59,59, calendar='lilian'), dd, mm, yy, hh, nn, ss, calendar='lilian')
+  if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 1900) .or. (hh /= 23) .or. (nn /= 59) .or. (ss /= 59)) isgood = .false.
+  call dec2date(date2dec(01,01,01,12,12,12, calendar='lilian'), dd, mm, yy, hh, nn, ss, calendar='lilian')
+  if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 01) .or. (hh /= 12) .or. (nn /= 12) .or. (ss /= 12)) isgood = .false.
+  call dec2date(date2dec(01,02,-100,11,11,11, calendar='lilian'), dd, mm, yy, hh, nn, ss, calendar='lilian')
+  if ((dd /= 1) .or. (mm /= 2) .or. (yy /= -100) .or. (hh /= 11) .or. (nn /= 11) .or. (ss /= 11)) isgood = .false.
+  
+  ! date2dec365, dec2date365 - vector
+  do jj=1, 803000 ! 01.01.2200
+     call random_number(ff1)
+     rr1 = real(jj) + ff1
+     call dec2date(rr1, dd1, mm1, yy1, hh1, nn1, ss1, calendar='lilian')
+     gg1 = date2dec(dd1, mm1, yy1, hh1, nn1, ss1, calendar='lilian')
+     call dec2date(gg1, dd12, mm12, yy12, hh12, nn12, ss12, calendar='lilian')
+     if (any(dd1 /= dd12) .or. any(mm1 /= mm12) .or. any(yy1 /= yy12) .or. &
+          any(hh1 /= hh12) .or. any(nn1 /= nn12) .or. any(ss1 /= ss12)) isgood = .false.
+  end do
+
+  call dec2date(date2dec((/01,10,27/),(/02,12,03/),(/-100,1,2000/),(/11,23,00/),(/11,57,47/),(/11,12,59/), calendar='lilian'), &
+       dd1, mm1, yy1, hh1, nn1, ss1, calendar='lilian')
+  if ((dd1(1) /= 1) .or. (mm1(1) /= 2) .or. (yy1(1) /= -100) .or. &
+       (hh1(1) /= 11) .or. (nn1(1) /= 11) .or. (ss1(1) /= 11)) isgood = .false.
+  if ((dd1(2) /= 10) .or. (mm1(2) /= 12) .or. (yy1(2) /= 1) .or. &
+       (hh1(2) /= 23) .or. (nn1(2) /= 57) .or. (ss1(2) /= 12)) isgood = .false.
+  if ((dd1(3) /= 27) .or. (mm1(3) /= 3) .or. (yy1(3) /= 2000) .or. &
+       (hh1(3) /= 0) .or. (nn1(3) /= 47) .or. (ss1(3) /= 59)) isgood = .false.
+
+
+  ! date2dec365, dec2date365 - scalar/vector mix
+  ! This does not work with NAG compiler, have to have temporary array
+  ! call dec2date365(date2dec365(01,12,2000,(/11,12,13/),11,59), &
+  !      dd1, mm1, yy1, hh1, nn1, ss1)
+  do jj=1, 803000 ! 01.01.2200
+     call random_number(ff1)
+     rr1 = real(jj) + ff1
+     call dec2date(rr1, dd1, mm1, yy1, hh1, nn1, ss1, calendar='lilian')
+     gg1 = date2dec(dd1(1), mm1(1), yy1(1), hh1, nn1, ss1, calendar='lilian')
+     call dec2date(gg1, dd12, mm12, yy12, hh12, nn12, ss12, calendar='lilian')
+     if (any(dd1(1) /= dd12) .or. any(mm1(1) /= mm12) .or. any(yy1(1) /= yy12) .or. &
+          any(hh1 /= hh12) .or. any(nn1 /= nn12) .or. any(ss1 /= ss12)) isgood = .false.
+  end do
+  dec1 = date2dec(01, 12, 2000, (/11,12,13/), 11, 59, calendar='lilian')
+  call dec2date(dec1, dd1, mm1, yy1, hh1, nn1, ss1, calendar='lilian')
+  if ((dd1(1) /= 1) .or. (mm1(1) /= 12) .or. (yy1(1) /= 2000) .or. &
+       (hh1(1) /= 11) .or. (nn1(1) /= 11) .or. (ss1(1) /= 59)) isgood = .false.
+  if ((dd1(2) /= 1) .or. (mm1(2) /= 12) .or. (yy1(2) /= 2000) .or. &
+       (hh1(2) /= 12) .or. (nn1(2) /= 11) .or. (ss1(2) /= 59)) isgood = .false.
+  if ((dd1(3) /= 1) .or. (mm1(3) /= 12) .or. (yy1(3) /= 2000) .or. &
+       (hh1(3) /= 13) .or. (nn1(3) /= 11) .or. (ss1(3) /= 59)) isgood = .false.
+
+  ! Mix
+  do jj=1, 803000 ! 01.01.2200
+     call caldat(jj, dd, mm, yy, calendar='lilian')
+     ss = int(date2dec(dd, mm, yy, 12, 0, 0, calendar='lilian'), i4)
+     if (jj /= ss) isgood = .false.
+  end do
+
+  ! fracday
+  do jj=1, 2524594 ! 01.01.2200
+     call random_number(ff1)
+     rr1 = real(jj) + ff1
+     call dec2date(rr1,dd1,mm1,yy1,fracday=fd1, calendar='365day')
+     gg1 = date2dec(dd1(1),mm1(1),yy1(1),fracday=fd1, calendar='365day')
+     call dec2date(gg1,dd12,mm12,yy12,fracday=fd2, calendar='365day')
+     if (any(dd1(1) /= dd12) .or. any(mm1(1) /= mm12) .or. any(yy1(1) /= yy12) .or. any(ne(fd1,fd2))) isgood = .false.
+  end do
+
+  
   if (isgood) then
      write(*,*) 'mo_julian o.k.'
   else
