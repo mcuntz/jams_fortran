@@ -415,7 +415,7 @@ module mo_netcdf
      !     PURPOSE
      !>        \brief Retrieve NcDimension
      !>        \details Retrieve the NcDimension derived type for the dimension specified by
-     !>                 its name or id. The program will teminate abruptly if no such
+     !>                 its name or id. The program will terminate abruptly if no such
      !>                 dimension exists.
      !
      !     INTENT(IN)
@@ -1597,44 +1597,56 @@ contains
   end function setDimension
 
 
-  function setVariableWithIds(self, name, dtype, dimensions, contiguous, &
+  function setVariableWithIds(self, name, dtype, dimensions &
+#ifndef NETCDF3
+       , contiguous, &
        chunksizes, deflate_level, shuffle, fletcher32, endianness, &
-       cache_size, cache_nelems, cache_preemption)
+       cache_size, cache_nelems, cache_preemption &
+#endif
+    )
     class(NcDataset), intent(in)           :: self
     character(*)    , intent(in)           :: name
     character(*)    , intent(in)           :: dtype
     integer(i4)     , intent(in)           :: dimensions(:)
+#ifndef NETCDF3
     logical         , intent(in), optional :: contiguous,shuffle, fletcher32
     integer(i4)     , intent(in), optional :: endianness,deflate_level,cache_size, &
          cache_nelems, cache_preemption, chunksizes(:)
+#endif
     type(NcVariable)                       :: setVariableWithIds
     integer(i4)                            :: varid
 
     call check(nf90_redef(self%id), "Failed reopening definition section - 14.")
+    call check(nf90_def_var(self%id, name, getDtypeFromString(dtype), dimensions, varid &
 #ifndef NETCDF3
-    call check(nf90_def_var(self%id, name, getDtypeFromString(dtype), dimensions, varid, contiguous, &
+         , contiguous, &
          chunksizes, deflate_level, shuffle, fletcher32, endianness, &
-         cache_size, cache_nelems, cache_preemption), "Failed to create variable: " // name)
-#else
-    call check(nf90_def_var(self%id, name, getDtypeFromString(dtype), dimensions, varid), "Failed to create variable: " // name)
+         cache_size, cache_nelems, cache_preemption &
 #endif
+    ), "Failed to create variable: " // name)
     call check(nf90_enddef(self%id), "Failed closing definition section - 14.")
     setVariableWithIds = NcVariable(varid, self)
 
   end function setVariableWithIds
+  
 
-
-  function setVariableWithNames(self, name, dtype, dimensions, contiguous, &
+  function setVariableWithNames(self, name, dtype, dimensions &
+#ifndef NETCDF3
+       , contiguous, &
        chunksizes, deflate_level, shuffle, fletcher32, endianness, &
-       cache_size, cache_nelems, cache_preemption)
+       cache_size, cache_nelems, cache_preemption &
+#endif
+       )
 
     class(NcDataset), intent(in)              :: self
     character(*)    , intent(in)              :: name
     character(*)    , intent(in)              :: dtype
     character(*)    , intent(in)              :: dimensions(:)
+#ifndef NETCDF3
     logical         , intent(in), optional    :: contiguous,shuffle, fletcher32
     integer(i4)     , intent(in), optional    :: endianness,deflate_level,cache_size, &
          cache_nelems, cache_preemption, chunksizes(:)
+#endif
     type(NcVariable)                          :: setVariableWithNames
     type(NcDimension)                         :: dim
     integer(i4)                               :: i, dimids(size(dimensions))
@@ -1644,23 +1656,33 @@ contains
        dimids(i) = dim%id
     end do
 
-    setVariableWithNames = setVariableWithIds(self, name, dtype, dimids, contiguous, &
+    setVariableWithNames = setVariableWithIds(self, name, dtype, dimids &
+#ifndef NETCDF3
+         , contiguous, &
          chunksizes, deflate_level, shuffle, fletcher32, endianness, &
-         cache_size, cache_nelems, cache_preemption)
+         cache_size, cache_nelems, cache_preemption &
+#endif
+         )
 
   end function setVariableWithNames
 
 
-  function setVariableWithTypes(self, name, dtype, dimensions, contiguous, &
+  function setVariableWithTypes(self, name, dtype, dimensions &
+#ifndef NETCDF3
+       , contiguous, &
        chunksizes, deflate_level, shuffle, fletcher32, endianness, &
-       cache_size, cache_nelems, cache_preemption)
+       cache_size, cache_nelems, cache_preemption &
+#endif
+       )
     class(NcDataset) , intent(in)              :: self
     character(*)     , intent(in)              :: name
     character(*)     , intent(in)              :: dtype
     type(NcDimension), intent(in)              :: dimensions(:)
+#ifndef NETCDF3
     logical          , intent(in), optional    :: contiguous,shuffle, fletcher32
     integer(i4)      , intent(in), optional    :: endianness,deflate_level,cache_size, &
          cache_nelems, cache_preemption, chunksizes(:)
+#endif
     type(NcVariable)                           :: setVariableWithTypes
     type(NcDimension)                          :: dim
     integer(i4)                                :: i, dimids(size(dimensions))
@@ -1670,9 +1692,13 @@ contains
        dimids(i) = dim%id
     end do
 
-    setVariableWithTypes = setVariableWithIds(self, name, dtype, dimids, contiguous, &
+    setVariableWithTypes = setVariableWithIds(self, name, dtype, dimids &
+#ifndef NETCDF3
+         , contiguous, &
          chunksizes, deflate_level, shuffle, fletcher32, endianness, &
-         cache_size, cache_nelems, cache_preemption)
+         cache_size, cache_nelems, cache_preemption &
+#endif
+         )
 
   end function setVariableWithTypes
 
