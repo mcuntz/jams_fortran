@@ -36,7 +36,7 @@ MODULE mo_utils
 
   ! Copyright 2014 Matthias Cuntz, Juliane Mai
 
-  USE mo_kind,         only: sp, dp, i4, i8, spc, dpc
+  USE mo_kind, only: sp, dp, i4, i8, spc, dpc
 
   IMPLICIT NONE
 
@@ -48,6 +48,7 @@ MODULE mo_utils
   PUBLIC :: greaterequal  ! a >= b, a .ge. b
   PUBLIC :: imaxloc       ! maxloc(arr)(1)
   PUBLIC :: iminloc       ! maxloc(arr)(1)
+  PUBLIC :: isin          ! .true. if scalar present in array
   PUBLIC :: is_finite     ! .true. if not IEEE Inf and not IEEE NaN
   PUBLIC :: is_nan        ! .true. if IEEE NaN
   PUBLIC :: is_normal     ! .true. if not IEEE Inf and not IEEE NaN
@@ -62,10 +63,10 @@ MODULE mo_utils
 
   
   ! ------------------------------------------------------------------
-
+  !
   !     NAME
   !         cumsum
-
+  !
   !     PURPOSE
   !         Calculate the cumulative sum
   !
@@ -79,7 +80,7 @@ MODULE mo_utils
   !
   !     INTENT(INOUT)
   !         None
-
+  !
   !     INTENT(OUT)
   !         None
   !
@@ -102,10 +103,10 @@ MODULE mo_utils
   !         vec = (/ 1., 2., 3., 4., 5., 6. /)
   !         cum = cumsum(vec)
   !         -> see also example in test directory
-
+  !
   !     LITERATURE
   !         None
-
+  !
   !     HISTORY
   !>        \authors Matthias Cuntz
   !>        \date Jun 2016
@@ -115,10 +116,10 @@ MODULE mo_utils
 
   
   ! ------------------------------------------------------------------
-
+  !
   !     NAME
   !         equal / notequal / greaterequal / lesserequal
-
+  !
   !     PURPOSE
   !         Elemental function returning .true. or .false. depending if the reals are equal or not.
   !
@@ -133,7 +134,7 @@ MODULE mo_utils
   !
   !     INTENT(INOUT)
   !         None
-
+  !
   !     INTENT(OUT)
   !         None
   !
@@ -157,10 +158,10 @@ MODULE mo_utils
   !         vec2 = (/ 1., 1., 3., -999., 10., 6. /)
   !         isequal = equal(vec1, vec2)
   !         -> see also example in test directory
-
+  !
   !     LITERATURE
   !         None
-
+  !
   !     HISTORY
   !>        \authors Matthias Cuntz, Juliane Mai
   !>        \date Feb 2014
@@ -199,10 +200,10 @@ MODULE mo_utils
 
 
   ! ------------------------------------------------------------------
-
+  !
   !     NAME
   !         imaxloc / iminloc
-
+  !
   !     PURPOSE
   !         First location in array of element with the maximum/minimum value.
   !
@@ -217,7 +218,7 @@ MODULE mo_utils
   !
   !     INTENT(INOUT)
   !         None
-
+  !
   !     INTENT(OUT)
   !         None
   !
@@ -241,10 +242,10 @@ MODULE mo_utils
   !         integer(i4) :: imin
   !         imin = iminloc(vec, mask=mask)
   !         -> see also example in test directory
-
+  !
   !     LITERATURE
   !         None
-
+  !
   !     HISTORY
   !>        \authors Matthias Cuntz, Juliane Mai
   !>        \date Feb 2014
@@ -259,10 +260,71 @@ MODULE mo_utils
 
 
   ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         isin
+  !
+  !     PURPOSE
+  !         Return true if one element of an array corresponds to a scalar,
+  !         false otherwise.
+  !
+  !>        \brief True if scalar is present in array.
+  !
+  !>        \details Ask 'Is this scalar present in the array?'
+  !>                 Returns .true. if one element of the array corresponds
+  !>                 to the scalar value.\n
+  !>                 This is basically any(array == scalar) but works also with
+  !>                 floating point variables and character strings.\n
+  !>                 Leading and trailing blank characters are removed from strings.
+  !
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4/i8)/real(sp/dp)/character(len=*) :: scalar" Single scalar value
+  !>        \param[in] "integer(i4/i8)/real(sp/dp)/character(len=*) :: array(:)" Input vector
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !>        \param[in] "logical :: mask(:)"   If present, only those locations in array corresponding to
+  !>                                          the true values in mask are searched for the scalar value.
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !>       \return     logical :: in &mdash; .true. if scalar present in array, .false. otherwise
+  !
+  !     RESTRICTIONS
+  !         Only 1D-arrays.
+  !
+  !     EXAMPLE
+  !         sca = 1.1
+  !         vec = (/ 0.0, 1.1, 2.2, 3.3 /)
+  !         if (isin(sca, vec)) print*, 'It is in.'
+  !         -> see also example in test directory
+  !
+  !     LITERATURE
+  !         None
+  !
+  !     HISTORY
+  !>        \authors Matthias Cuntz
+  !>        \date Jan 2016
+  INTERFACE isin
+     MODULE PROCEDURE isin_i4, isin_i8, isin_sp, isin_dp, isin_char
+  END INTERFACE isin
 
+
+  ! ------------------------------------------------------------------
+  !
   !     NAME
   !         is_finite / is_nan / is_normal
-
+  !
   !     PURPOSE
   !         Elemental inquiry functions returning .true. if the argument has a value
   !         implied by the name of the function.
@@ -278,7 +340,7 @@ MODULE mo_utils
   !
   !     INTENT(INOUT)
   !         None
-
+  !
   !     INTENT(OUT)
   !         None
   !
@@ -304,10 +366,10 @@ MODULE mo_utils
   !         is_nan    = equal(vec1)
   !         is_normal = equal(vec1)
   !         -> see also example in test directory
-
+  !
   !     LITERATURE
   !         None
-
+  !
   !     HISTORY
   !>        \authors Matthias Cuntz
   !>        \date Mar 2015
@@ -325,10 +387,10 @@ MODULE mo_utils
 
 
   ! ------------------------------------------------------------------
-
+  !
   !     NAME
   !         linspace
-
+  !
   !     PURPOSE
   !         Return evenly spaced numbers over a specified interval.
   !
@@ -346,7 +408,7 @@ MODULE mo_utils
   !
   !     INTENT(INOUT)
   !         None
-
+  !
   !     INTENT(OUT)
   !         None
   !
@@ -368,10 +430,10 @@ MODULE mo_utils
   !     EXAMPLE
   !         rr = linspace(1.0_dp,11._dp,101)
   !         -> see also example in test directory
-
+  !
   !     LITERATURE
   !         None
-
+  !
   !     HISTORY
   !>        \authors Matthias Cuntz
   !>        \date Jun 2016
@@ -381,10 +443,10 @@ MODULE mo_utils
 
 
   ! ------------------------------------------------------------------
-
+  !
   !     NAME
   !         locate
-
+  !
   !     PURPOSE
   !         Find closest values in a monotonic series
   !
@@ -431,10 +493,10 @@ MODULE mo_utils
   !         ii = locate(x, y)
   !         -> ii == 1
   !         -> see also example in test directory
-
+  !
   !     LITERATURE
   !         None
-
+  !
   !     HISTORY
   !>        \author Matthias Cuntz
   !>        \date May 2014
@@ -444,10 +506,10 @@ MODULE mo_utils
 
 
   ! ------------------------------------------------------------------
-
+  !
   !     NAME
   !         arange
-
+  !
   !     PURPOSE
   !         Gives natural numbers within a given interval.
   !
@@ -469,7 +531,7 @@ MODULE mo_utils
   !
   !     INTENT(INOUT)
   !         None
-
+  !
   !     INTENT(OUT)
   !         None
   !
@@ -491,10 +553,10 @@ MODULE mo_utils
   !     EXAMPLE
   !         rr = arange(100._dp)
   !         -> see also example in test directory
-
+  !
   !     LITERATURE
   !         None
-
+  !
   !     HISTORY
   !>        \authors Matthias Cuntz
   !>        \date Jun 2016
@@ -504,10 +566,10 @@ MODULE mo_utils
 
   
   ! ------------------------------------------------------------------
-
+  !
   !     NAME
   !         swap
-
+  !
   !     PURPOSE
   !         Swap two values/arrays or two elements in 1D-array.
   !
@@ -557,10 +619,10 @@ MODULE mo_utils
   !         call swap(vec1, vec2, mask=(vec==-999.))
   !         call swap(vec1, 1, 3)
   !         -> see also example in test directory
-
+  !
   !     LITERATURE
   !         None
-
+  !
   !     HISTORY
   !>        \author Matthias Cuntz
   !>        \date May 2014
@@ -574,10 +636,10 @@ MODULE mo_utils
 
   
   ! ------------------------------------------------------------------
-
+  !
   !     NAME
   !         special_value
-
+  !
   !     PURPOSE
   !         Mimics the function ieee_value of the intrinsic module ieee_arithmetic.
   !
@@ -607,7 +669,7 @@ MODULE mo_utils
   !
   !     INTENT(INOUT)
   !         None
-
+  !
   !     INTENT(OUT)
   !
   !     INTENT(IN), OPTIONAL
@@ -631,7 +693,6 @@ MODULE mo_utils
   !>                 IEEE_POSITIVE_NORMAL (==1.0 for gfortran)\n
   !>                 IEEE_NEGATIVE_ZERO\n
   !>                 IEEE_POSITIVE_ZERO\n
-
   !
   !     RESTRICTIONS
   !         None
@@ -640,10 +701,10 @@ MODULE mo_utils
   !         NaN = special_value(1.0, 'IEEE_QUIET_NAN')
   !         nan = special_value(1.0_dp, 'ieee_quiet_nan')
   !         -> see also example in test directory
-
+  !
   !     LITERATURE
   !         None
-
+  !
   !     HISTORY
   !>        \authors Matthias Cuntz
   !>        \date Mar 2015
@@ -1151,7 +1212,103 @@ CONTAINS
 
   end function iminloc_sp
 
-  
+
+  ! ------------------------------------------------------------------
+
+  function isin_i4(sca, arr, mask)
+
+    implicit none
+
+    integer(i4),               intent(in)           :: sca
+    integer(i4), dimension(:), intent(in)           :: arr
+    logical,     dimension(:), intent(in), optional :: mask
+    logical                                         :: isin_i4
+    
+    if (present(mask)) then
+       isin_i4 = any((arr==sca) .and. mask)
+    else
+       isin_i4 = any(arr==sca)
+    endif
+
+  end function isin_i4
+
+  function isin_i8(sca, arr, mask)
+
+    implicit none
+
+    integer(i8),               intent(in)           :: sca
+    integer(i8), dimension(:), intent(in)           :: arr
+    logical,     dimension(:), intent(in), optional :: mask
+    logical                                         :: isin_i8
+    
+    if (present(mask)) then
+       isin_i8 = any((arr==sca) .and. mask)
+    else
+       isin_i8 = any(arr==sca)
+    endif
+
+  end function isin_i8
+
+  function isin_dp(sca, arr, mask)
+
+    implicit none
+
+    real(dp),               intent(in)           :: sca
+    real(dp), dimension(:), intent(in)           :: arr
+    logical,  dimension(:), intent(in), optional :: mask
+    logical                                      :: isin_dp
+    
+    if (present(mask)) then
+       isin_dp = any(eq(arr,sca) .and. mask)
+    else
+       isin_dp = any(eq(arr,sca))
+    endif
+
+  end function isin_dp
+
+  function isin_sp(sca, arr, mask)
+
+    implicit none
+
+    real(sp),               intent(in)           :: sca
+    real(sp), dimension(:), intent(in)           :: arr
+    logical,  dimension(:), intent(in), optional :: mask
+    logical                                      :: isin_sp
+    
+    if (present(mask)) then
+       isin_sp = any(eq(arr,sca) .and. mask)
+    else
+       isin_sp = any(eq(arr,sca))
+    endif
+
+  end function isin_sp
+
+  function isin_char(sca, arr, mask)
+
+    implicit none
+
+    character(len=*),               intent(in)           :: sca
+    character(len=*), dimension(:), intent(in)           :: arr
+    logical,          dimension(:), intent(in), optional :: mask
+    logical                                              :: isin_char
+
+    integer :: i, n
+
+    isin_char = .false.
+    n = size(arr)
+    if (present(mask)) then
+       do i=1, n
+          if ((trim(adjustl(sca)) == trim(adjustl(arr(i)))) .and. mask(i)) isin_char = .true.
+       enddo
+    else
+       do i=1, n
+          if (trim(adjustl(sca)) == trim(adjustl(arr(i)))) isin_char = .true.
+       enddo
+    endif
+
+  end function isin_char
+
+
   ! ------------------------------------------------------------------
 
   ELEMENTAL PURE FUNCTION is_finite_dp(a)
@@ -1949,51 +2106,51 @@ CONTAINS
   ! -----------------------------------------------------------
 
   ! ------------------------------------------------------------------
-
+  !
   !     NAME
   !         itoupper
-
+  !
   !     PURPOSE
   !         \brief Convert to upper case
-
+  !
   !         \details Convert all lower case letters in string to upper case letters.
-
+  !
   !         Copy of toupper of mo_string_utils, making mo_utils only dependent on mo_kind.
-
+  !
   !     CALLING SEQUENCE
   !         up = itoupper(lower)
-
+  !
   !     INTENT(IN)
   !         \param[in] "character(len=*) :: lower"    String
-
+  !
   !     INTENT(INOUT)
   !         None
-
+  !
   !     INTENT(OUT)
   !         None
-
+  !
   !     INTENT(IN), OPTIONAL
   !         None
-
+  !
   !     INTENT(INOUT), OPTIONAL
   !         None
-
+  !
   !     INTENT(OUT), OPTIONAL
   !         None
-
+  !
   !     RETURN
   !         \return character(len=len_trim(lower)) :: up  &mdash;  String where all lowercase in input is converted to uppercase
-
+  !
   !     RESTRICTIONS
   !         None
-
+  !
   !     EXAMPLE
   !         ! Returns 'HALLO'
   !         up = itoupper('Hallo')
-
+  !
   !     LITERATURE
   !         None
-
+  !
   !     HISTORY
   !         \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
   !         \date Dec 2011

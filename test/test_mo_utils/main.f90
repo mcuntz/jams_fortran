@@ -4,6 +4,7 @@ program test_utils
   use mo_utils, only: eq, ge, le, ne
   use mo_utils, only: swap, locate, cumsum, arange, linspace
   use mo_utils, only: is_finite, is_nan, is_normal, special_value
+  use mo_utils, only: isin
 
   implicit none
 
@@ -18,7 +19,8 @@ program test_utils
   integer(i4), dimension(nn) :: iat1, iat2, iat3
   complex(dp), dimension(nn) :: cat1, cat2
   real(dp), dimension(:), allocatable :: adat1
-
+  character(len=10), dimension(nn) :: chat1
+  
   real(dp) :: d1
   real(dp), dimension(5) :: d5
   real(sp) :: s1
@@ -422,7 +424,26 @@ program test_utils
   iat1    = linspace(3,3*nn,nn)
   isgood  = isgood .and. all(iat1==iat2)
 
-
+  ! -----------------------------------------------------
+  ! isin
+  ! double precision
+  dat1   = arange(real(nn,dp))
+  isgood = isgood .and. isin(1.0_dp, dat1)
+  isgood = isgood .and. isin(10.0_dp, dat1)
+  isgood = isgood .and. isin(1.0_dp+0.1*epsilon(1.0_dp), dat1)
+  sat1   = arange(real(nn,sp))/real(nn,sp)
+  isgood = isgood .and. isin(0.1_sp, sat1)
+  isgood = isgood .and. isin(1.0_sp, sat1)
+  iat1   = arange(nn)
+  isgood = isgood .and. isin(1, iat1)
+  isgood = isgood .and. isin(2_i4, iat1)
+  chat1(:)  = 'dummy'
+  chat1(1)  = 'one'
+  chat1(2)  = 'two'
+  chat1(nn) = 'nn'
+  isgood = isgood .and. isin('one', chat1)
+  isgood = isgood .and. isin(' two ', chat1)
+  
   write(*,*) ''
   if (isgood) then
      write(*,*) 'mo_utils o.k.'
