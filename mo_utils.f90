@@ -15,7 +15,7 @@ MODULE mo_utils
   !          Matthias Cuntz,              Jun 2016 - special_value as elemental function
   !          Matthias Cuntz,              Jun 2016 - cumsum, arange, linspace, imaxloc/iminloc
   !          Matthias Cuntz,              Jun 2016 - copy toupper of mo_string_utils into module
-  !          Matthias Cuntz,              Jan 2017 - isin
+  !          Matthias Cuntz,              Jan 2017 - isin, isinloc
 
   ! License
   ! -------
@@ -50,6 +50,7 @@ MODULE mo_utils
   PUBLIC :: imaxloc       ! maxloc(arr)(1)
   PUBLIC :: iminloc       ! maxloc(arr)(1)
   PUBLIC :: isin          ! .true. if scalar present in array
+  PUBLIC :: isinloc       ! first index of scalar in an array
   PUBLIC :: is_finite     ! .true. if not IEEE Inf and not IEEE NaN
   PUBLIC :: is_nan        ! .true. if IEEE NaN
   PUBLIC :: is_normal     ! .true. if not IEEE Inf and not IEEE NaN
@@ -206,12 +207,12 @@ MODULE mo_utils
   !         imaxloc / iminloc
   !
   !     PURPOSE
-  !         First location in array of element with the maximum/minimum value.
+  !         First index location in array of element with the maximum/minimum value.
   !
-  !>        \brief First location in array of element with the maximum/minimum value.
+  !>        \brief First index location in an array of the element with the maximum/minimum value.
   !
-  !>        \details Fortran intrinsics maxloc and minloc return arrays with all subsripts
-  !>                 corresponding to the maximum/minimum value in the array.\n
+  !>        \details Fortran intrinsics maxloc and minloc return arrays with all indexes
+  !>                 corresponding to the maximum/minimum value in an array.\n
   !>                 This routine returns only the first entry as scalar integer.
   !
   !     INTENT(IN)
@@ -234,7 +235,7 @@ MODULE mo_utils
   !         None
   !
   !     RETURN
-  !>       \return     integer(i4) :: imaxloc/iminloc &mdash; First location of maximum/minimum
+  !>       \return     integer(i4) :: imaxloc/iminloc &mdash; First index location of maximum/minimum
   !
   !     RESTRICTIONS
   !         None
@@ -299,7 +300,7 @@ MODULE mo_utils
   !         None
   !
   !     RETURN
-  !>       \return     logical :: in &mdash; .true. if scalar present in array, .false. otherwise
+  !>       \return     logical :: isin &mdash; .true. if scalar present in array, .false. otherwise
   !
   !     RESTRICTIONS
   !         Only 1D-arrays.
@@ -319,6 +320,65 @@ MODULE mo_utils
   INTERFACE isin
      MODULE PROCEDURE isin_i4, isin_i8, isin_sp, isin_dp, isin_char
   END INTERFACE isin
+
+
+  ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         isinloc
+  !
+  !     PURPOSE
+  !         Returns the first index location of the element of an array that corresponds
+  !         to a given scalar, 0 otherwise.
+  !
+  !>        \brief First index location of scalar in array.
+  !
+  !>        \details Returns the first index location in an array where an array element
+  !>                 matches a given scalar. Returns 0 if the element is not present in
+  !>                 the array.\n
+  !>                 Leading and trailing blank characters are removed from strings.
+  !
+  !     INTENT(IN)
+  !>        \param[in] "integer(i4/i8)/real(sp/dp)/character(len=*) :: scalar" Single scalar value
+  !>        \param[in] "integer(i4/i8)/real(sp/dp)/character(len=*) :: array(:)" Input vector
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !>        \param[in] "logical :: mask(:)"   If present, only those locations in array corresponding to
+  !>                                          the true values in mask are searched for the scalar value.
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURN
+  !>       \return     integer(i4) :: isinloc &mdash; First index location of scalar in array, 0 otherwise
+  !
+  !     RESTRICTIONS
+  !         Only 1D-arrays.
+  !
+  !     EXAMPLE
+  !         sca = 1.1
+  !         vec = (/ 0.0, 1.1, 2.2, 3.3 /)
+  !         ii = isinloc(sca, vec)
+  !         -> see also example in test directory
+  !
+  !     LITERATURE
+  !         None
+  !
+  !     HISTORY
+  !>        \authors Matthias Cuntz
+  !>        \date Jan 2017
+  INTERFACE isinloc
+     MODULE PROCEDURE isinloc_i4, isinloc_i8, isinloc_sp, isinloc_dp, isinloc_char
+  END INTERFACE isinloc
 
 
   ! ------------------------------------------------------------------
@@ -1293,21 +1353,185 @@ CONTAINS
     logical,          dimension(:), intent(in), optional :: mask
     logical                                              :: isin_char
 
-    integer :: i, n
+    integer(i4) :: i, n
 
     isin_char = .false.
     n = size(arr)
     if (present(mask)) then
        do i=1, n
-          if ((trim(adjustl(sca)) == trim(adjustl(arr(i)))) .and. mask(i)) isin_char = .true.
+          if ((trim(adjustl(sca)) == trim(adjustl(arr(i)))) .and. mask(i)) then
+             isin_char = .true.
+             return
+          endif
        enddo
     else
        do i=1, n
-          if (trim(adjustl(sca)) == trim(adjustl(arr(i)))) isin_char = .true.
+          if (trim(adjustl(sca)) == trim(adjustl(arr(i)))) then
+             isin_char = .true.
+             return
+          endif
        enddo
     endif
 
   end function isin_char
+
+
+  ! ------------------------------------------------------------------
+
+  function isinloc_i4(sca, arr, mask)
+
+    implicit none
+
+    integer(i4),               intent(in)           :: sca
+    integer(i4), dimension(:), intent(in)           :: arr
+    logical,     dimension(:), intent(in), optional :: mask
+    integer(i4)                                     :: isinloc_i4
+
+    integer(i4) :: i, n
+    
+    isinloc_i4 = 0
+    n = size(arr)
+    if (present(mask)) then
+       do i=1, n
+          if ((sca == arr(i)) .and. mask(i)) then
+             isinloc_i4 = i
+             return
+          endif
+       enddo
+    else
+       do i=1, n
+          if (sca == arr(i)) then
+             isinloc_i4 = i
+             return
+          endif
+       enddo
+    endif
+
+  end function isinloc_i4
+
+  function isinloc_i8(sca, arr, mask)
+
+    implicit none
+
+    integer(i8),               intent(in)           :: sca
+    integer(i8), dimension(:), intent(in)           :: arr
+    logical,     dimension(:), intent(in), optional :: mask
+    integer(i8)                                     :: isinloc_i8
+
+    integer(i8) :: i, n
+    
+    isinloc_i8 = 0
+    n = size(arr)
+    if (present(mask)) then
+       do i=1, n
+          if ((sca == arr(i)) .and. mask(i)) then
+             isinloc_i8 = i
+             return
+          endif
+       enddo
+    else
+       do i=1, n
+          if (sca == arr(i)) then
+             isinloc_i8 = i
+             return
+          endif
+       enddo
+    endif
+
+  end function isinloc_i8
+
+  function isinloc_dp(sca, arr, mask)
+
+    implicit none
+
+    real(dp),               intent(in)           :: sca
+    real(dp), dimension(:), intent(in)           :: arr
+    logical,  dimension(:), intent(in), optional :: mask
+    integer(i4)                                  :: isinloc_dp
+
+    integer(i4) :: i, n
+    
+    isinloc_dp = 0
+    n = size(arr)
+    if (present(mask)) then
+       do i=1, n
+          if (eq(sca,arr(i)) .and. mask(i)) then
+             isinloc_dp = i
+             return
+          endif
+       enddo
+    else
+       do i=1, n
+          if (eq(sca,arr(i))) then
+             isinloc_dp = i
+             return
+          endif
+       enddo
+    endif
+
+  end function isinloc_dp
+
+  function isinloc_sp(sca, arr, mask)
+
+    implicit none
+
+    real(sp),               intent(in)           :: sca
+    real(sp), dimension(:), intent(in)           :: arr
+    logical,  dimension(:), intent(in), optional :: mask
+    integer(i4)                                  :: isinloc_sp
+
+    integer(i4) :: i, n
+    
+    isinloc_sp = 0
+    n = size(arr)
+    if (present(mask)) then
+       do i=1, n
+          if (eq(sca,arr(i)) .and. mask(i)) then
+             isinloc_sp = i
+             return
+          endif
+       enddo
+    else
+       do i=1, n
+          if (eq(sca,arr(i))) then
+             isinloc_sp = i
+             return
+          endif
+       enddo
+    endif
+
+  end function isinloc_sp
+
+  function isinloc_char(sca, arr, mask)
+
+    implicit none
+
+    character(len=*),               intent(in)           :: sca
+    character(len=*), dimension(:), intent(in)           :: arr
+    logical,          dimension(:), intent(in), optional :: mask
+    integer(i4)                                          :: isinloc_char
+
+    integer(i4) :: i, n
+
+    isinloc_char = 0
+    n = size(arr)
+    if (present(mask)) then
+       do i=1, n
+          if ((trim(adjustl(sca)) == trim(adjustl(arr(i)))) .and. mask(i)) then
+             isinloc_char = i
+             return
+          endif
+       enddo
+    else
+       do i=1, n
+          if (trim(adjustl(sca)) == trim(adjustl(arr(i)))) then
+             isinloc_char = i
+             return
+          endif
+       enddo
+    endif
+
+  end function isinloc_char
 
 
   ! ------------------------------------------------------------------

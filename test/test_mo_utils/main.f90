@@ -4,7 +4,7 @@ program test_utils
   use mo_utils, only: eq, ge, le, ne
   use mo_utils, only: swap, locate, cumsum, arange, linspace
   use mo_utils, only: is_finite, is_nan, is_normal, special_value
-  use mo_utils, only: isin
+  use mo_utils, only: isin, isinloc
 
   implicit none
 
@@ -426,7 +426,6 @@ program test_utils
 
   ! -----------------------------------------------------
   ! isin
-  ! double precision
   dat1   = arange(real(nn,dp))
   isgood = isgood .and. isin(1.0_dp, dat1)
   isgood = isgood .and. isin(10.0_dp, dat1)
@@ -445,6 +444,27 @@ program test_utils
   isgood = isgood .and. isin('one', chat1)
   isgood = isgood .and. isin(' two ', chat1)
   isgood = isgood .and. .not. isin('100', chat1)
+
+  ! -----------------------------------------------------
+  ! isinloc
+  dat1   = arange(real(nn,dp))
+  isgood = isgood .and. (isinloc(1.0_dp, dat1) == 1)
+  isgood = isgood .and. (isinloc(10.0_dp, dat1) == 10)
+  isgood = isgood .and. (isinloc(1.0_dp+0.1*epsilon(1.0_dp), dat1) == 1)
+  isgood = isgood .and. (isinloc(1.1_dp, dat1) == 0)
+  sat1   = arange(real(nn,sp))/real(nn,sp)
+  isgood = isgood .and. (isinloc(0.1_sp, sat1) == 10)
+  isgood = isgood .and. (isinloc(1.0_sp, sat1) == nn)
+  iat1   = arange(nn)
+  isgood = isgood .and. (isinloc(1, iat1) == 1_i4)
+  isgood = isgood .and. (isinloc(2_i4, iat1) == 2)
+  chat1(:)  = 'dummy'
+  chat1(1)  = 'one'
+  chat1(2)  = 'two'
+  chat1(nn) = 'nn'
+  isgood = isgood .and. (isinloc('one', chat1) == 1)
+  isgood = isgood .and. (isinloc(' two ', chat1) == 2)
+  isgood = isgood .and. (isinloc('100', chat1) == 0)
   
   write(*,*) ''
   if (isgood) then
