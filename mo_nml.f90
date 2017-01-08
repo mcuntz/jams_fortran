@@ -20,6 +20,7 @@ MODULE mo_nml
   !                                     quiet
   !          Jan 2013, Matthias Cuntz - close_nml with unit, open_nml quiet=.true. default
   !                                     position_nml swap first and status
+  !          Dec 2016, Matthias Cuntz - rm dependency to mo_message and mo_finish
 
   ! License
   ! -------
@@ -39,12 +40,10 @@ MODULE mo_nml
   ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2001-2011 Luis Kornblueh, Matthias Cuntz
+  ! Copyright 2001-2016 Luis Kornblueh, Matthias Cuntz
 
   USE mo_kind,         ONLY: i4
   USE mo_string_utils, ONLY: tolower
-  USE mo_message,      ONLY: message, message_text
-  USE mo_finish,       ONLY: finish
 
   IMPLICIT NONE
 
@@ -135,12 +134,12 @@ CONTAINS
     if (present(quiet)) iquiet=quiet
 
     nunitnml = unit
-    if (.not. iquiet) CALL message('    This is namelist ', trim(file))
+    if (.not. iquiet) write(*,*) '    This is namelist ', trim(file)
     OPEN (nunitnml, file=file, iostat=istat, status='old', action='read', delim='apostrophe')
 
     IF (istat .ne. 0) THEN
-       write(message_text,'(A,A)') 'Could not open namelist file ', trim(file)
-      CALL finish('OPEN_NML',trim(message_text))
+       write(*,'(A,A)') 'OPEN_NML: Could not open namelist file ', trim(file)
+       stop
     END IF
 
   END SUBROUTINE open_nml
@@ -203,11 +202,11 @@ CONTAINS
     nnml = nunitnml
     if (present(unit)) nnml = unit
     
-    IF (nnml .lt. 0) CALL finish('CLOSE_NML','No namelist file opened.')
+    IF (nnml .lt. 0) stop 'CLOSE_NML: No namelist file opened.'
 
     CLOSE(nnml, IOSTAT=istat)
 
-    IF (istat .ne. 0) CALL finish('CLOSE_NML','Could not close namelist file.')
+    IF (istat .ne. 0) stop 'CLOSE_NML: Could not close namelist file.'
 
     if (.not. present(unit)) nunitnml = -1
 
@@ -359,9 +358,8 @@ CONTAINS
     END SELECT
 
     ! Error if it reaches here
-    !message_text = 'namelist /'//TRIM(name)//'/ '//code
-    write(message_text,'(A,A,A,A)') 'namelist /', trim(name), '/ ', trim(code)
-    CALL finish('POSITION_NML',message_text)
+    write(*,'(A,A,A,A)') 'POSITION_NML: namelist /', trim(name), '/ ', trim(code)
+    stop 
 
   END SUBROUTINE position_nml
 
