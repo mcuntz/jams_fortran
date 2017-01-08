@@ -15,6 +15,7 @@ MODULE mo_utils
   !          Matthias Cuntz,              Jun 2016 - special_value as elemental function
   !          Matthias Cuntz,              Jun 2016 - cumsum, arange, linspace, imaxloc/iminloc
   !          Matthias Cuntz,              Jun 2016 - copy toupper of mo_string_utils into module
+  !          Matthias Cuntz,              Jan 2017 - isin
 
   ! License
   ! -------
@@ -314,7 +315,7 @@ MODULE mo_utils
   !
   !     HISTORY
   !>        \authors Matthias Cuntz
-  !>        \date Jan 2016
+  !>        \date Jan 2017
   INTERFACE isin
      MODULE PROCEDURE isin_i4, isin_i8, isin_sp, isin_dp, isin_char
   END INTERFACE isin

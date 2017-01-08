@@ -431,6 +431,7 @@ program test_utils
   isgood = isgood .and. isin(1.0_dp, dat1)
   isgood = isgood .and. isin(10.0_dp, dat1)
   isgood = isgood .and. isin(1.0_dp+0.1*epsilon(1.0_dp), dat1)
+  isgood = isgood .and. .not. isin(1.1_dp, dat1)
   sat1   = arange(real(nn,sp))/real(nn,sp)
   isgood = isgood .and. isin(0.1_sp, sat1)
   isgood = isgood .and. isin(1.0_sp, sat1)
@@ -443,6 +444,7 @@ program test_utils
   chat1(nn) = 'nn'
   isgood = isgood .and. isin('one', chat1)
   isgood = isgood .and. isin(' two ', chat1)
+  isgood = isgood .and. .not. isin('100', chat1)
   
   write(*,*) ''
   if (isgood) then
