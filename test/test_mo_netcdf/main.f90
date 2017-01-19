@@ -27,7 +27,7 @@ program test_mo_netcdf
   type(NcDimension)        :: dim_x, dim_y, dim_time
   type(NcVariable)         :: var_lon, var_lat, var_time, var_data
 
-  integer(i4)              :: wtime(ntime+nadd),  i
+  integer(i4)              :: wtime(ntime+nadd), i, ndim
   integer(i4), allocatable :: rtime(:)
   real(sp)                 :: wlat(nx,ny), wlon(nx,ny)
   real(sp),    allocatable :: rlat(:,:),rlon(:,:)
@@ -106,6 +106,9 @@ program test_mo_netcdf
 
   ! open dataset
   nc = NcDataset(fname,"r")
+
+  ! check dimensions
+  ndim = nc%getNoDimensions()
   
   ! acces the variable
   var_time = nc%getVariable(vname_time)
@@ -130,6 +133,7 @@ program test_mo_netcdf
 
   ! 1.3 Check
   ! ---------
+  if (.not. (ndim .eq. 3))                         correct = .false.
   if (.not. all(rtime .eq. wtime(1:ntime)))        correct = .false.
   if (.not. all(equal(rlat, wlat)))                correct = .false.
   if (.not. all(equal(rlon, wlon)))                correct = .false.

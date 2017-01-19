@@ -19,8 +19,11 @@ module mo_netcdf
 
   ! Written  David Schaefer, Jun 2015
   ! Modified Matthias Cuntz, Jan 2016 - no automatic allocation of left-hand-side (e.g. PGI Fortran rev 15.9)
-  ! Modified Matthias Cuntz, Nov 2016 - NETCDF3
-
+  !          Stephan Thober, Oct 2016 - count->cnt
+  !          Matthias Cuntz, Nov 2016 - NETCDF3
+  !          Matthias Cuntz, Jan 2017 - getNoDimensions on NcDataset,
+  !                                     i.e. getNoDimension->getNoDimension_variable, and new getNoDimension_dataset
+  
   ! License
   ! -------
   ! This file is part of the JAMS Fortran library.
@@ -125,6 +128,36 @@ module mo_netcdf
      procedure, private :: getGlobalAttributeF32
      procedure, private :: getGlobalAttributeF64
 
+     ! -----------------------------------------------------------------------------------
+     !
+     !     NAME
+     !         getNoDimensions
+     !
+     !     PURPOSE
+     !>        \brief Retrieve the number of dimensions
+     !>        \details Return the number of dimensions associated with netcdf file
+     !
+     !     INTENT(IN)
+     !         None
+     !
+     !     INTENT(INOUT)
+     !         None
+     !
+     !     INTENT(OUT)
+     !         None
+     !
+     !     RETURN
+     !         \return "integer(i4)"
+     !
+     !     EXAMPLE
+     !         See test file
+     !
+     !     HISTORY
+     !         \author Matthias Cuntz
+     !         \date Jan 2017
+     !
+     ! -----------------------------------------------------------------------------------
+     procedure, public  :: getNoDimensions => getNoDimensions_dataset
      procedure, private :: getDimensionByName
      procedure, private :: getDimensionById
 
@@ -815,7 +848,7 @@ module mo_netcdf
      !         \date June 2015
      !
      ! -----------------------------------------------------------------------------------
-     procedure, public  :: getNoDimensions
+     procedure, public  :: getNoDimensions => getNoDimensions_variable
 
      ! -----------------------------------------------------------------------------------
      !
@@ -1439,6 +1472,13 @@ contains
 
   end function hasVariable
 
+  function getNoDimensions_dataset(self)
+    class(NcDataset), intent(in) :: self
+    integer(i4)                  :: getNoDimensions_dataset
+
+    call check(nf90_inquire(self%id, ndimensions=getNoDimensions_dataset), "Failed inquire number of dimensions.")
+
+  end function getNoDimensions_dataset
 
   function hasDimension(self, name)
     class(NcDataset), intent(in) :: self
@@ -1761,14 +1801,14 @@ contains
   end function getVariableName
 
 
-  function getNoDimensions(self)
+  function getNoDimensions_variable(self)
     class(NcVariable), intent(in) :: self
-    integer(i4)                   :: getNoDimensions
+    integer(i4)                   :: getNoDimensions_variable
 
-    call check(nf90_inquire_variable(self%parent%id,self%id,ndims=getNoDimensions), &
+    call check(nf90_inquire_variable(self%parent%id,self%id,ndims=getNoDimensions_variable), &
          "Could not inquire variable: " // self%getName())
 
-  end function getNoDimensions
+  end function getNoDimensions_variable
 
 
   function getVariableDimensions(self)
