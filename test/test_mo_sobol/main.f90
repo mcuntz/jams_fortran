@@ -93,5 +93,31 @@ program test
   else
      write(*,*) 'mo_sobol failed'
   endif
+  
   !
+  ! Note: routine exists also in Python
+  !
+  !      dims_i4    = 40_i4
+  !      nPoints_i4 = 20_i4
+  !      skip_i4    = 30000_i4
+  !      allocate(sobol_database_dp(nPoints_i4, dims_i4))
+  !      call sobol_array( dims_i4, nPoints_i4, skip_i4, sobol_database_dp )
+  !      open(unit=9876, file='sobol_fortran_sets.out')
+  !      do ii=1,nPoints_i4
+  !         write(9876,*) sobol_database_dp(ii,:)
+  !      end do
+  !      close(9876)
+  !
+  ! is producing the same as
+  !
+  !      import sobol
+  !      dims_i4    = 40_i4
+  !      nPoints_i4 = 20_i4
+  !      skip_i4    = 30000_i4
+  !      sobol_database_dp = sobol.i4_sobol_generate(40,nPoints_i4,skip_i4+1) 
+  !      np.savetxt('sobol_python_sets.out', sobol_database_dp)
+  !
+  ! Note: - changed order of dims and nPoints
+  !       - skip_python = skip_fortran + 1
+  
 end program test
