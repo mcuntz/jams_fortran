@@ -1,6 +1,6 @@
 !> \file mo_utils.f90
 
-!> \brief General utilities for the CHS library
+!> \brief General utilities for the JAMS library
 
 !> \details This module provides general utilities such as comparisons of two reals.
 

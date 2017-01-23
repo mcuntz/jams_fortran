@@ -64,15 +64,18 @@ PROGRAM main
   isgood = isgood .and. (strArr(6) .eq. 'routine!')
   if (.not. isgood) write(*,*) 'mo_string_utils splitstring 1'
   if (allocated(strArr)) deallocate(strArr)
-  allocate(strArr(countsubstring('I,want,to,test,this,routine!', ',')))
-  strArr = splitString('I,want,to,test,this,routine!', ',')
+  allocate(strArr(countsubstring('I,want,to,test,this,routine! ', ',')))
+  strArr = splitString('I,want,to,test,this,routine! ', ',')
   isgood = isgood .and. (strArr(1) .EQ. 'I')
   isgood = isgood .and. (strArr(2) .EQ. 'want')
   isgood = isgood .and. (strArr(3) .EQ. 'to')
   isgood = isgood .and. (strArr(4) .EQ. 'test')
   isgood = isgood .and. (strArr(5) .EQ. 'this')
-  isgood = isgood .and. (strArr(6) .EQ. 'routine!')
+  isgood = isgood .and. (strArr(6) .EQ. 'routine! ')
   if (.not. isgood) write(*,*) 'mo_string_utils splitstring 2'
+  strArr = splitString('I,want,to,test,this,routine! ', ',')
+  isgood = isgood .and. (strArr(6) .EQ. 'routine!')
+  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 2.1'
   if (allocated(strArr)) deallocate(strArr)
   allocate(strArr(countsubstring('w!hat_s-a+bout=-sp.eci,al-chara<cte>rs?', '-')))
   strArr = splitString('w!hat_s-a+bout=-sp.eci,al-chara<cte>rs?', '-')
