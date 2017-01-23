@@ -597,7 +597,7 @@ CONTAINS
   !         \details Split string at delimiter an return an array of strings
 
   !     CALLING SEQUENCE
-  !         string_parts = splitString(string,delim)
+  !         string_parts = splitString(string, delim, strip)
 
   !     INTENT(IN)
   !         \param[in] "character(len=*) :: string"    String
@@ -610,7 +610,7 @@ CONTAINS
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !         None
+  !         \param[in] "logical :: strip"    Strip leading and trailing blanks
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -619,7 +619,7 @@ CONTAINS
   !         None
 
   !     RETURN
-  !         \return character(len=245) :: out(:)
+  !         \return character(len=8192) :: out(:)
 
   !     RESTRICTIONS
   !         None
@@ -635,17 +635,20 @@ CONTAINS
   !         \date Mar 2015
   !         Modified Matthias Cuntz, May 2016 - rm append
   !                  Matthias Cuntz, May 2016 - allocate str2num output
+  !                  Matthias Cuntz, Jan 2017 - strip
 
-  function splitString(string,delim) result(out)
+  function splitString(string, delim, strip) result(out)
     
     implicit none
     
-    character(len=*),   intent(in)        :: string
-    character(len=*),   intent(in)        :: delim
-    character(len=256), allocatable       :: out(:)
-    character(len=256), allocatable       :: tmpout(:)
-    integer(i4),        allocatable       :: string_array(:), delim_array(:)
-    integer(i4)                           :: i, start, zaehl
+    character(len=*),    intent(in)           :: string
+    character(len=*),    intent(in)           :: delim
+    logical,             intent(in), optional :: strip
+    character(len=len(string)), allocatable   :: out(:)
+    
+    character(len=len(string)), allocatable :: tmpout(:)
+    integer(i4),                allocatable :: string_array(:), delim_array(:)
+    integer(i4)                             :: i, start, zaehl
 
     if (allocated(out)) deallocate(out)
     allocate(string_array(len(string//delim)))
@@ -663,12 +666,22 @@ CONTAINS
           zaehl = zaehl + 1
        end if
     end do
+
     ! out array
     zaehl = zaehl - 1
     allocate(out(zaehl))
     out(1:zaehl) = tmpout(1:zaehl)
+    ! strip leading and trailing blanks
+    if (present(strip)) then
+       if (strip) then
+          do i=1, zaehl
+             out(i) = trim(adjustl(tmpout(i)))
+          end do
+       endif
+    end if
+    
     deallocate(tmpout)
-    !
+
   end function splitString
 
   ! ------------------------------------------------------------------
