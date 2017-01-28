@@ -10,8 +10,6 @@
 !
 !> \authors David Schaefer
 !> \date Jun 2015
-
-
 module mo_netcdf
 
   ! This module provides a thin wrapper around the NetCDF Fortran 90 interface,

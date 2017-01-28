@@ -40,8 +40,18 @@ module mo_file_utils
 
   private
 
-  public :: find_next_unit    ! find file handle that is not used yet
-  public :: lines_in_file     ! count number of lines in file
+  public :: find_next_unit ! find file handle that is not used yet
+  public :: lif            ! alias for lines_in_file
+  public :: lines_in_file  ! count number of lines in file
+  public :: next_unit      ! alias for find_next_unit
+
+  interface lif
+     module procedure lines_in_file
+  end interface lif
+
+  interface next_unit
+     module procedure find_next_unit
+  end interface next_unit
 
   ! ------------------------------------------------------------------
 
