@@ -80,13 +80,13 @@ program test_mo_netcdf
   call var_data%setFillValue(wfvalue)
   
   ! write data of static variables
-  call var_lat%setData(wlat)
-  call var_lon%setData(wlon)
+  call var_lat%putData(wlat)
+  call var_lon%putData(wlon)
     
   ! append data within a loop
   do i=1, ntime
-     call var_time%setData(wtime(i),     start=(/i/))
-     call var_data%setData(wdata(:,:,i), start=(/1,1,i/))
+     call var_time%putData(wtime(i),     start=(/i/))
+     call var_data%putData(wdata(:,:,i), start=(/1,1,i/))
   end do
 
   ! add some more variable attributes
@@ -157,8 +157,8 @@ program test_mo_netcdf
 
   ! append data within a loop
   do i=ntime+1, ntime+nadd
-     call var_time%setData(wtime(i),     start=(/i/))
-     call var_data%setData(wdata(:,:,i), start=(/1,1,i/))
+     call var_time%putData(wtime(i),     start=(/i/))
+     call var_data%putData(wdata(:,:,i), start=(/1,1,i/))
   end do
 
   ! close dataset
@@ -205,7 +205,7 @@ program test_mo_netcdf
        )
   
   ! write data
-  call var_data%setData(wdata)
+  call var_data%putData(wdata)
 
   ! close the file
   call nc%close()
@@ -225,8 +225,8 @@ program test_mo_netcdf
        )
   
   ! write data
-  call var_time%setData(wtime)
-  call var_data%setData(wdata)
+  call var_time%putData(wtime)
+  call var_data%putData(wdata)
 
   ! close the file
   call nc%close()
