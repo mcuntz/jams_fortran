@@ -112,20 +112,13 @@ MODULE mo_append
   !        Modified Matthias Zink,  Feb 2015 - added optional 'fill_value' for logical append
   !        Modified Stephan Thober, Jan 2017 - added 3d version for append
 
-  
   INTERFACE append
-     MODULE PROCEDURE append_i4_v_s, append_i4_v_v, append_i4_m_m, &
-          append_i8_v_s, append_i8_v_v, append_i8_m_m, &
-          append_i8_3d, &
-          append_sp_v_s, append_sp_v_v, append_sp_m_m, &
-          append_sp_3d, &
-          append_dp_v_s, append_dp_v_v, append_dp_m_m, &
-          append_dp_3d, &
-          append_char_v_s, append_char_v_v, append_char_m_m, &
-          append_char_3d, &
-          append_lgt_v_s, append_lgt_v_v, append_lgt_m_m, &
-          append_lgt_3d
-
+     MODULE PROCEDURE append_i4_v_s, append_i4_v_v, append_i4_m_m, append_i4_3d_3d, &
+          append_i8_v_s, append_i8_v_v, append_i8_m_m, append_i8_3d_3d, &
+          append_sp_v_s, append_sp_v_v, append_sp_m_m, append_sp_3d_3d, &
+          append_dp_v_s, append_dp_v_v, append_dp_m_m, append_dp_3d_3d, &
+          append_char_v_s, append_char_v_v, append_char_m_m, append_char_3d_3d, &
+          append_lgt_v_s, append_lgt_v_v, append_lgt_m_m, append_lgt_3d_3d
   END INTERFACE append
 
   ! ------------------------------------------------------------------
@@ -334,7 +327,7 @@ CONTAINS
 
   END SUBROUTINE append_i4_m_m
 
-  SUBROUTINE append_i4_3d(mat1, mat2, fill_value)
+  SUBROUTINE append_i4_3d_3d(mat1, mat2, fill_value)
 
     implicit none
 
@@ -348,7 +341,7 @@ CONTAINS
     integer(i4)                                :: j1, j2    ! dim3 of matrixes: something else
     integer(i4), dimension(:,:,:), allocatable :: tmp
 
-    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_i4_3d'
+    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_i4_3d_3d'
     
     m2 = size(mat2,1)    ! rows
     n2 = size(mat2,2)    ! columns
@@ -381,7 +374,7 @@ CONTAINS
        
     end if
 
-  END SUBROUTINE append_i4_3d
+  END SUBROUTINE append_i4_3d_3d
 
   SUBROUTINE append_i8_v_s(vec1, sca2)
 
@@ -506,7 +499,7 @@ CONTAINS
 
   END SUBROUTINE append_i8_m_m
 
-  SUBROUTINE append_i8_3d(mat1, mat2, fill_value)
+  SUBROUTINE append_i8_3d_3d(mat1, mat2, fill_value)
 
     implicit none
 
@@ -520,7 +513,7 @@ CONTAINS
     integer(i4)                                :: j1, j2    ! dim3 of matrixes: something else
     integer(i8), dimension(:,:,:), allocatable :: tmp
 
-    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_i8_3d'
+    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_i8_3d_3d'
     
     m2 = size(mat2,1)    ! rows
     n2 = size(mat2,2)    ! columns
@@ -553,7 +546,7 @@ CONTAINS
        
     end if
 
-  END SUBROUTINE append_i8_3d
+  END SUBROUTINE append_i8_3d_3d
 
   SUBROUTINE append_sp_v_s(vec1, sca2)
 
@@ -678,7 +671,7 @@ CONTAINS
 
   END SUBROUTINE append_sp_m_m
 
-  SUBROUTINE append_sp_3d(mat1, mat2, fill_value)
+  SUBROUTINE append_sp_3d_3d(mat1, mat2, fill_value)
 
     implicit none
 
@@ -692,7 +685,7 @@ CONTAINS
     integer(i4)                               :: j1, j2    ! dim3 of matrixes: something else
     real(sp), dimension(:,:,:), allocatable   :: tmp
 
-    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_sp_3d'
+    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_sp_3d_3d'
     
     m2 = size(mat2,1)    ! rows
     n2 = size(mat2,2)    ! columns
@@ -725,7 +718,7 @@ CONTAINS
        
     end if
 
-  END SUBROUTINE append_sp_3d
+  END SUBROUTINE append_sp_3d_3d
 
   SUBROUTINE append_dp_v_s(vec1, sca2)
 
@@ -850,7 +843,7 @@ CONTAINS
 
   END SUBROUTINE append_dp_m_m
 
-  SUBROUTINE append_dp_3d(mat1, mat2, fill_value)
+  SUBROUTINE append_dp_3d_3d(mat1, mat2, fill_value)
 
     implicit none
 
@@ -864,7 +857,7 @@ CONTAINS
     integer(i4)                               :: j1, j2    ! dim3 of matrixes: something else
     real(dp), dimension(:,:,:), allocatable   :: tmp
 
-    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_dp_3d'
+    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_dp_3d_3d'
     
     m2 = size(mat2,1)    ! rows
     n2 = size(mat2,2)    ! columns
@@ -897,7 +890,7 @@ CONTAINS
        
     end if
 
-  END SUBROUTINE append_dp_3d
+  END SUBROUTINE append_dp_3d_3d
 
   SUBROUTINE append_char_v_s(vec1, sca2)
 
@@ -1020,7 +1013,7 @@ CONTAINS
 
   END SUBROUTINE append_char_m_m
 
-  SUBROUTINE append_char_3d(mat1, mat2, fill_value)
+  SUBROUTINE append_char_3d_3d(mat1, mat2, fill_value)
 
     implicit none
 
@@ -1034,7 +1027,7 @@ CONTAINS
     integer(i4)                                :: j1, j2    ! dim3 of matrixes: something else
     character(len(mat1)), dimension(:,:,:), allocatable :: tmp
 
-    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_i8_3d'
+    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_i8_3d_3d'
     
     m2 = size(mat2,1)    ! rows
     n2 = size(mat2,2)    ! columns
@@ -1067,7 +1060,7 @@ CONTAINS
        
     end if
 
-  END SUBROUTINE append_char_3d
+  END SUBROUTINE append_char_3d_3d
 
   SUBROUTINE append_lgt_v_s(vec1, sca2)
 
@@ -1192,7 +1185,7 @@ CONTAINS
 
   END SUBROUTINE append_lgt_m_m
 
-  SUBROUTINE append_lgt_3d(mat1, mat2, fill_value)
+  SUBROUTINE append_lgt_3d_3d(mat1, mat2, fill_value)
 
     implicit none
 
@@ -1206,7 +1199,7 @@ CONTAINS
     integer(i4)                                :: j1, j2    ! dim3 of matrixes: something else
     logical, dimension(:,:,:), allocatable :: tmp
 
-    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_i8_3d'
+    if (present(fill_value)) print*, '***warning: fill_value is ignored in append_i8_3d_3d'
     
     m2 = size(mat2,1)    ! rows
     n2 = size(mat2,2)    ! columns
@@ -1239,7 +1232,7 @@ CONTAINS
        
     end if
 
-  END SUBROUTINE append_lgt_3d
+  END SUBROUTINE append_lgt_3d_3d
 
   ! ------------------------------------------------------------------
 
