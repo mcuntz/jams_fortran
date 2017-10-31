@@ -23,7 +23,8 @@ module mo_netcdf
   !          Matthias Cuntz, Nov 2016 - NETCDF3
   !          Matthias Cuntz, Jan 2017 - getNoDimensions on NcDataset,
   !                                     i.e. getNoDimension->getNoDimension_variable, and new getNoDimension_dataset
-  
+  !          Matthias Cuntz, Oct 2017 - NetCDF creation mode flag in initNcDataset
+
   ! License
   ! -------
   ! This file is part of the JAMS Fortran library.
@@ -72,8 +73,8 @@ module mo_netcdf
   !>        \details Bound to this derived type is the basic file level create/retrieve
   !>                 functionality, i.e. functions/subroutines to create/retrieve
   !>                 dimensions, variables and global attributes.
-  !>                 All files created by this derived type and its procedures are
-  !>                 are NF90_NETCDF4 only.
+  !>                 Files created by this derived type and its procedures are NF90_NETCDF4 by default
+  !>                 but this can be set with cmode keyword.
   !>                 The supported modes are:
   !>                     r: read
   !>                     w: write/create
@@ -82,6 +83,12 @@ module mo_netcdf
   !     INTENT(IN)
   !>        \param[in] "character(*) :: fname"
   !>        \param[in] "character(1) :: mode"
+  !
+  !     INTENT(IN), OPTIONAL
+  !>       \param[in] "integer(i4) :: cmode - The creation mode flag for mode 'r'.
+  !>                                          The following flags should be used:
+  !>                                          NF90_NETCDF4, NF90_64BIT_OFFSET, NF90_CLASSIC_MODEL,
+  !>                                          or any combinatin with NF90_CLOBBER, etc."
   !
   !     INTENT(INOUT)
   !         None
@@ -1345,19 +1352,25 @@ contains
   end subroutine initNcDimension
 
 
-  subroutine initNcDataset(self, fname, mode)
-    class(NcDataset), intent(inout) :: self
-    character(*)    , intent(in)    :: fname
-    character(1)    , intent(in)    :: mode
-    integer(i4)                     :: status
+  subroutine initNcDataset(self, fname, mode, cmode)
+    class(NcDataset),      intent(inout) :: self
+    character(*),          intent(in)    :: fname
+    character(1),          intent(in)    :: mode
+    integer(i4), optional, intent(in)    :: cmode
+
+    integer(i4) :: status
 
     select case(mode)
     case("w")
+       if (present(cmode)) then
+          status = nf90_create(trim(fname), cmode, self%id)
+       else
 #ifndef NETCDF3
-       status = nf90_create(trim(fname), NF90_NETCDF4, self%id)
+          status = nf90_create(trim(fname), NF90_NETCDF4, self%id)
 #else
-       status = nf90_create(trim(fname), NF90_64BIT_OFFSET, self%id)
+          status = nf90_create(trim(fname), NF90_64BIT_OFFSET, self%id)
 #endif
+       endif
        call check(nf90_enddef(self%id), "Failed closing definition section - 0.")
     case("r")
        status = nf90_open(trim(fname), NF90_NOWRITE, self%id)
@@ -1397,11 +1410,12 @@ contains
   end function newNcDimension
 
 
-  type(NcDataset) function newNcDataset(fname, mode)
-    character(*), intent(in) :: fname
-    character(1), intent(in) :: mode
+  type(NcDataset) function newNcDataset(fname, mode, cmode)
+    character(*),          intent(in) :: fname
+    character(1),          intent(in) :: mode
+    integer(i4), optional, intent(in) :: cmode
 
-    call newNcDataset%initNcDataset(fname,mode)
+    call newNcDataset%initNcDataset(fname, mode, cmode)
 
   end function newNcDataset
 
@@ -1686,7 +1700,7 @@ contains
     setVariableWithIds = NcVariable(varid, self)
 
   end function setVariableWithIds
-  
+
 
   function setVariableWithNames(self, name, dtype, dimensions &
 #ifndef NETCDF3
