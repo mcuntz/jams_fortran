@@ -4755,7 +4755,7 @@ CONTAINS
     !
     !  Reference:
     !    Deb, K., Thiele, L., Laumanns, M., & Zitzler, E. (2002).
-    !        Scalable multi-objective optimization test problems (pp. 825–830).
+    !        Scalable multi-objective optimization test problems (pp. 825-830).
     !        Presented at the Congress on Evolutionary Computation (CEC 2002).
     !        --> Eq. 9
     !
@@ -4841,7 +4841,7 @@ CONTAINS
     !
     !  Reference:
     !    Deb, K., Thiele, L., Laumanns, M., & Zitzler, E. (2002).
-    !        Scalable multi-objective optimization test problems (pp. 825–830).
+    !        Scalable multi-objective optimization test problems (pp. 825-830).
     !        Presented at the Congress on Evolutionary Computation (CEC 2002).
     !        --> Eq. 9
     !
@@ -4926,7 +4926,7 @@ CONTAINS
     !
     !  Reference:
     !    Deb, K., Thiele, L., Laumanns, M., & Zitzler, E. (2002).
-    !        Scalable multi-objective optimization test problems (pp. 825–830).
+    !        Scalable multi-objective optimization test problems (pp. 825-830).
     !        Presented at the Congress on Evolutionary Computation (CEC 2002).
     !        --> Eq. 9
     !
@@ -5007,10 +5007,10 @@ CONTAINS
     !    C. M. Fonseca and P. J. Fleming (1993)
     !        Genetic algorithms for multiobjective optimization: Formulation, discussion and generalization
     !        In Proceedings of the Fifth International Conference on Genetic Algorithms
-    !        S. Forrest, Ed. San Mateo, CA: Morgan Kauffman, pp. 416–423.
+    !        S. Forrest, Ed. San Mateo, CA: Morgan Kauffman, pp. 416-423.
     !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
     !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
-    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182-197.
     !
     !  Parameters:
     !    real(dp), intent(in)  :: X(:)     -  the argument of the objective function.
@@ -5026,7 +5026,7 @@ CONTAINS
     real(dp)    :: gg
 
     npara = size(paraset)
-    if (npara .ne. 3) stop('mo_objective: fon_2d: This function requires 3-dimensional parameter sets')
+    if (npara .ne. 3) stop 'mo_objective: fon_2d: This function requires 3-dimensional parameter sets'
     
     nobj  = 2
     allocate(obj(nobj))
@@ -5081,13 +5081,13 @@ CONTAINS
     !        A variant of evolution strategies for vector optimization
     !        In Parallel Problem Solving from Nature
     !        H.-P. Schwefel and R. Maenner, Eds.
-    !        Berlin, Germany: Springer-Verlag, pp. 193–197.
+    !        Berlin, Germany: Springer-Verlag, pp. 193-197.
     !    Deb, K. (2001)
     !        Multiobjective Optimization Using Evolutionary Algorithms.
     !        Chichester, U.K.: Wiley.
     !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
     !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
-    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182-197.
     !
     !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/kur/
@@ -5153,13 +5153,13 @@ CONTAINS
     !        Hybrid GA for multiobjective aerodynamic shape optimization
     !        In Genetic Algorithms in Engineering and Computer Science
     !        G. Winter, J. Periaux, M. Galan, and P. Cuesta, Eds.
-    !        New York: Wiley, pp. 397–414.
+    !        New York: Wiley, pp. 397-414.
     !    Deb, K. (2001)
     !        Multiobjective Optimization Using Evolutionary Algorithms.
     !        Chichester, U.K.: Wiley
     !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
     !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
-    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182-197.
     !
     !  Parameters:
     !    real(dp), intent(in)  :: X(:)     -  the argument of the objective function.
@@ -5175,7 +5175,7 @@ CONTAINS
     real(dp)    :: a1, a2, b1, b2
 
     npara = size(paraset)
-    if (npara .ne. 2) stop('mo_objective: pol_2d: This function requires 2-dimensional parameter sets')
+    if (npara .ne. 2) stop 'mo_objective: pol_2d: This function requires 2-dimensional parameter sets'
     
     nobj  = 2
     allocate(obj(nobj))
@@ -5219,10 +5219,10 @@ CONTAINS
     !    Schaffer J.D. (1987)
     !        Multiple objective optimization with vector evaluated genetic algorithms
     !        In Proceedings of the First International Conference on Genetic Algorithms,
-    !        J. J. Grefensttete, Ed. Hillsdale, NJ: Lawrence Erlbaum, pp. 93–100.
+    !        J. J. Grefensttete, Ed. Hillsdale, NJ: Lawrence Erlbaum, pp. 93-100.
     !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
     !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
-    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182-197.
     !
     !  Parameters:
     !    real(dp), intent(in)  :: X(:)     -  the argument of the objective function.
@@ -5237,7 +5237,7 @@ CONTAINS
     integer(i4) :: npara, nobj
 
     npara = size(paraset)
-    if (npara .ne. 1) stop('mo_objective: sch_2d: This function requires 1-dimensional parameter sets')
+    if (npara .ne. 1) stop 'mo_objective: sch_2d: This function requires 1-dimensional parameter sets'
     
     nobj  = 2
     allocate(obj(nobj))
@@ -5301,10 +5301,10 @@ CONTAINS
     !  Reference:
     !    Zitzler, E., Thiele, L., & Deb, K. (2000).
     !        Comparison of Multiobjective Evolutionary Algorithms: Empirical Results.
-    !        Evolutionary Computation, 8(2), 173–195.
+    !        Evolutionary Computation, 8(2), 173-195.
     !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
     !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
-    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182-197.
     !
     !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt1/
@@ -5371,10 +5371,10 @@ CONTAINS
     !  Reference:
     !    Zitzler, E., Thiele, L., & Deb, K. (2000).
     !        Comparison of Multiobjective Evolutionary Algorithms: Empirical Results.
-    !        Evolutionary Computation, 8(2), 173–195.
+    !        Evolutionary Computation, 8(2), 173-195.
     !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
     !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
-    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182-197.
     !
     !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt2/
@@ -5441,10 +5441,10 @@ CONTAINS
     !  Reference:
     !    Zitzler, E., Thiele, L., & Deb, K. (2000).
     !        Comparison of Multiobjective Evolutionary Algorithms: Empirical Results.
-    !        Evolutionary Computation, 8(2), 173–195.
+    !        Evolutionary Computation, 8(2), 173-195.
     !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
     !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
-    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182-197.
     !
     !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt3/
@@ -5509,10 +5509,10 @@ CONTAINS
     !  Reference:
     !    Zitzler, E., Thiele, L., & Deb, K. (2000).
     !        Comparison of Multiobjective Evolutionary Algorithms: Empirical Results.
-    !        Evolutionary Computation, 8(2), 173–195.
+    !        Evolutionary Computation, 8(2), 173-195.
     !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
     !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
-    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182-197.
     !
     !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt4/
@@ -5580,10 +5580,10 @@ CONTAINS
     !  Reference:
     !    Zitzler, E., Thiele, L., & Deb, K. (2000).
     !        Comparison of Multiobjective Evolutionary Algorithms: Empirical Results.
-    !        Evolutionary Computation, 8(2), 173–195.
+    !        Evolutionary Computation, 8(2), 173-195.
     !    Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002).
     !        A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
-    !        IEEE Transactions on Evolutionary Computation, 6(2), 182–197.
+    !        IEEE Transactions on Evolutionary Computation, 6(2), 182-197.
     !
     !    http://www.mathworks.com/matlabcentral/fileexchange/31166-ngpm-a-nsga-ii-program-in-matlab-v1-4/content/TP_NSGA2/
     !    http://www.tik.ee.ethz.ch/sop/download/supplementary/testproblems/zdt6/

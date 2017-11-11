@@ -690,7 +690,7 @@ CONTAINS
     end if
 
     if (present(wmean_frac) .and. .not. present(wmean)) then
-       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
+       stop 'mo_sobol_index: wmean_frac is only callable when wmean is present'
     end if
 
     nsets = size(yc,1)
@@ -1113,7 +1113,7 @@ CONTAINS
     end if
 
     if (present(wmean_frac) .and. .not. present(wmean)) then
-       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
+       stop 'mo_sobol_index: wmean_frac is only callable when wmean is present'
     end if
 
     nsets = size(yc,1)
@@ -1552,7 +1552,7 @@ CONTAINS
     end if
 
     if (present(wmean_frac) .and. .not. present(wmean)) then
-       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
+       stop 'mo_sobol_index: wmean_frac is only callable when wmean is present'
     end if
 
     nsets = size(yc,1)
@@ -2019,7 +2019,7 @@ CONTAINS
     end if
 
     if (present(wmean_frac) .and. .not. present(wmean)) then
-       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
+       stop 'mo_sobol_index: wmean_frac is only callable when wmean is present'
     end if
 
     nsets = size(yc,1)
@@ -2498,7 +2498,7 @@ CONTAINS
     end if
 
     if (present(wmean_frac) .and. .not. present(wmean)) then
-       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
+       stop 'mo_sobol_index: wmean_frac is only callable when wmean is present'
     end if
 
     nsets = size(yc,1)
@@ -2994,7 +2994,7 @@ CONTAINS
     end if
 
     if (present(wmean_frac) .and. .not. present(wmean)) then
-       stop('mo_sobol_index: wmean_frac is only callable when wmean is present')
+       stop 'mo_sobol_index: wmean_frac is only callable when wmean is present'
     end if
 
     nsets = size(yc,1)
