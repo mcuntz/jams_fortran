@@ -1549,6 +1549,7 @@ contains
     integer(i4)                            :: naxis
     integer(i4)                            :: getReadDataShape(datarank)
 
+    allocate(readshape(var%getNoDimensions()))
     readshape = var%getShape()
 
     if (present(incnt)) then
