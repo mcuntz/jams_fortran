@@ -1,1 +1,0 @@
-../../qhull/poly.h
