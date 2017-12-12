@@ -1,7 +1,7 @@
 program main
 
   use mo_kind,      only: i4, i8, sp, dp
-  use mo_functions, only: factorial, factln, gamma, gammln
+  use mo_functions, only: factorial, factln, gamm, gammln
 
   implicit none
 
@@ -19,9 +19,9 @@ program main
   if ( nint(exp(factln(5_i4)),i4) .ne. 120_i4 ) isgood = .false.
   if ( nint(exp(factln(5_i8)),i8) .ne. 120_i8 ) isgood = .false.
 
-  ! gamma
-  if ( nint(gamma(6._sp),i4) .ne. 120_i4 ) isgood = .false.
-  if ( nint(gamma(6._dp),i8) .ne. 120_i8 ) isgood = .false.
+  ! gamm
+  if ( nint(gamm(6._sp),i4) .ne. 120_i4 ) isgood = .false.
+  if ( nint(gamm(6._dp),i8) .ne. 120_i8 ) isgood = .false.
 
   ! gammln
   if ( nint(exp(gammln(6._sp)),i4) .ne. 120_i4 ) isgood = .false.

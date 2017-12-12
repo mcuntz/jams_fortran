@@ -11,6 +11,7 @@ MODULE mo_functions
   ! Provide special functions.
 
   ! Written  Matthias Cuntz, May 2014
+  ! Modified Matthias Cuntz, Dec 2017 - Morris
 
   ! License
   ! -------
@@ -30,16 +31,16 @@ MODULE mo_functions
   ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2014 Matthias Cuntz, Juliane Mai
+  ! Copyright 2014-2017 Matthias Cuntz
 
   USE mo_kind, ONLY: i4, i8, sp, dp
 
   IMPLICIT NONE
 
-  PUBLIC :: factln    ! Ln(n!)
+  PUBLIC :: factln    ! ln(n!)
   PUBLIC :: factorial ! n!
-  PUBLIC :: gammln    ! Ln(gamma)
-  PUBLIC :: gamma     ! gamma
+  PUBLIC :: gammln    ! ln(gamma)
+  PUBLIC :: gamm      ! gamm
 
   ! ------------------------------------------------------------------
   !
@@ -56,7 +57,7 @@ MODULE mo_functions
   !>        with
   !>        \f[ n! = 1 \dot 2 \dot ... \dot n \f]
   !>
-  !>         Uses n! = \f$ \gamma(n+1) \f$.
+  !>         Uses n! = \f$ \Gamma(n+1) \f$.
   !
   !     INTENT(IN)
   !>        \param[in] "integer(i4/i8) :: n"        input
@@ -107,7 +108,7 @@ MODULE mo_functions
   !>        \details Elemental function of the factorial:
   !>        \f[ n! = 1 \dot 2 \dot ... \dot n \f]
   !>
-  !>         Uses n! = \f$ \gamma(n+1) \f$.
+  !>         Uses n! = \f$ \Gamma(n+1) \f$.
   !
   !     INTENT(IN)
   !>        \param[in] "integer(i4/i8) :: n"        input
@@ -139,7 +140,7 @@ MODULE mo_functions
   !         -> see also example in test directory
   !
   !     HISTORY
-  !>        \author Matthias Cuntz, Juliane May
+  !>        \author Matthias Cuntz
   !>        \date Feb 2013
   ! ------------------------------------------------------------------  
   INTERFACE factorial
@@ -149,15 +150,15 @@ MODULE mo_functions
   ! ------------------------------------------------------------------
   !
   !     NAME
-  !         gamma
+  !         gamm
   !
   !     PURPOSE
   !         The gamma function.
   !
-  !>        \brief \f$ \gamma(z) \f$.
+  !>        \brief \f$ \Gamma(z) \f$.
   !
   !>        \details Elemental function of the gamma function:
-  !>        \f[ \gamma = \Int_0^\Inf t^{z-1} e^{-t} dt \f]
+  !>        \f[ \Gamma = \Int_0^\Inf t^{z-1} e^{-t} dt \f]
   !>
   !>         Uses Lanczos-type approximation to ln(gamma) for z > 0.
   !>         The function calculates gamma from abs(z).
@@ -183,14 +184,14 @@ MODULE mo_functions
   !         None
   !
   !     RETURNS
-  !>       \return     real(sp/dp) :: gamma &mdash; \f$ \gamma(z) \f$
+  !>       \return     real(sp/dp) :: gamm &mdash; \f$ \Gamma(z) \f$
   !
   !     RESTRICTIONS
-  !>       \note z must be >0. gammaln is calculated from abs(z).
+  !>       \note z must be >0. gammln is calculated from abs(z).
   !
   !     EXAMPLE
   !         vec = (/ 1., 2, 3., -9., 5., 6. /)
-  !         gl  = gamma(vec)
+  !         gl  = gamm(vec)
   !         -> see also example in test directory
   !
   !     LITERATURE
@@ -200,9 +201,9 @@ MODULE mo_functions
   !>        \author Alan Miller, 1 Creswick Street, Brighton, Vic. 3187, Australia, e-mail: amiller @ bigpond.net.au
   !>        \date Oct 1996
   !         Modified, Matthias Cuntz, May 2014
-  INTERFACE gamma
-     MODULE PROCEDURE gamma_sp, gamma_dp
-  END INTERFACE gamma
+  INTERFACE gamm
+     MODULE PROCEDURE gamm_sp, gamm_dp
+  END INTERFACE gamm
 
   ! ------------------------------------------------------------------
   !
@@ -212,10 +213,10 @@ MODULE mo_functions
   !     PURPOSE
   !         Logarithm of the gamma function.
   !
-  !>        \brief \f$ \ln(\gamma(z)) \f$.
+  !>        \brief \f$ \ln(\Gamma(z)) \f$.
   !
   !>        \details Elemental function of the logarithm of the gamma function:
-  !>        \f[ \gamma = \Int_0^\Inf t^{z-1} e^{-t} dt \f]
+  !>        \f[ \Gamma = \Int_0^\Inf t^{z-1} e^{-t} dt \f]
   !>
   !>         Uses Lanczos-type approximation to ln(gamma) for z > 0.
   !>         The function calculates ln(gamma) from abs(z).
@@ -241,10 +242,10 @@ MODULE mo_functions
   !         None
   !
   !     RETURNS
-  !>       \return     real(sp/dp) :: gammln &mdash; \f$ \ln\gamma(z) \f$
+  !>       \return     real(sp/dp) :: gammln &mdash; \f$ \ln\Gamma(z) \f$
   !
   !     RESTRICTIONS
-  !>       \note z must be >0. gammaln is calculated from abs(z).
+  !>       \note z must be >0. gammln is calculated from abs(z).
   !
   !     EXAMPLE
   !         vec = (/ 1., 2, 3., -9., 5., 6. /)
@@ -320,27 +321,27 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  elemental pure function gamma_dp(z)
+  elemental pure function gamm_dp(z)
 
     IMPLICIT NONE
 
     REAL(dp), INTENT(IN) :: z
-    REAL(dp)             :: gamma_dp
+    REAL(dp)             :: gamm_dp
 
-    gamma_dp = exp(gammln(z))
+    gamm_dp = exp(gammln(z))
     
-  end function gamma_dp
+  end function gamm_dp
 
-  elemental pure function gamma_sp(z)
+  elemental pure function gamm_sp(z)
 
     IMPLICIT NONE
 
     REAL(sp), INTENT(IN) :: z
-    REAL(sp)             :: gamma_sp
+    REAL(sp)             :: gamm_sp
 
-    gamma_sp = exp(gammln(z))
+    gamm_sp = exp(gammln(z))
     
-  end function gamma_sp
+  end function gamm_sp
 
   ! ------------------------------------------------------------------
 

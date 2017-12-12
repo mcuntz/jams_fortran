@@ -1516,7 +1516,7 @@ CONTAINS
 
     use mo_kind,      only: dp
     use mo_utils,     only: ne
-    use mo_functions, only: gamma
+    use mo_functions, only: gamm
 
     real(dp),           intent(in) :: x
     real(dp), optional, intent(in) :: beta
@@ -1535,8 +1535,8 @@ CONTAINS
     if (ne(ibeta, -1.0_dp)) then
        b1 = 0.5_dp*(1.0_dp + ibeta)
        b3 = 1.5_dp*(1.0_dp + ibeta)
-       g1 = gamma(b1)
-       g3 = gamma(b3)
+       g1 = gamm(b1)
+       g3 = gamm(b3)
        ! -> 0
        c_beta = (g3/g1)**(1.0_dp/(1.0_dp+ibeta))
        ! -> sqrt(1/12)
@@ -1565,7 +1565,7 @@ CONTAINS
 
     use mo_kind,      only: sp
     use mo_utils,     only: ne
-    use mo_functions, only: gamma
+    use mo_functions, only: gamm
 
     real(sp),           intent(in) :: x
     real(sp), optional, intent(in) :: beta
@@ -1584,8 +1584,8 @@ CONTAINS
     if (ne(ibeta, -1.0_sp)) then
        b1 = 0.5_sp*(1.0_sp + ibeta)
        b3 = 1.5_sp*(1.0_sp + ibeta)
-       g1 = gamma(b1)
-       g3 = gamma(b3)
+       g1 = gamm(b1)
+       g3 = gamm(b3)
        ! -> 0
        c_beta = (g3/g1)**(1.0_sp/(1.0_sp+ibeta))
        ! -> sqrt(1/12)
@@ -2014,7 +2014,7 @@ CONTAINS
 
     use mo_kind,      only: dp
     use mo_utils,     only: ne
-    use mo_functions, only: gamma
+    use mo_functions, only: gamm
 
     real(dp), optional, intent(in) :: xi
     real(dp), optional, intent(in) :: beta
@@ -2035,9 +2035,9 @@ CONTAINS
        b1 = 0.5_dp*(1.0_dp + ibeta)
        b2 =         1.0_dp + ibeta
        b3 = 1.5_dp*(1.0_dp + ibeta)
-       g1 = gamma(b1)
-       g2 = gamma(b2)
-       g3 = gamma(b3)
+       g1 = gamm(b1)
+       g2 = gamm(b2)
+       g3 = gamm(b3)
        ! -> sqrt(3/4)
        M1 = g2 / sqrt(g3*g1)
     else
@@ -2056,7 +2056,7 @@ CONTAINS
 
     use mo_kind,      only: sp
     use mo_utils,     only: ne
-    use mo_functions, only: gamma
+    use mo_functions, only: gamm
 
     real(sp), optional, intent(in) :: xi
     real(sp), optional, intent(in) :: beta
@@ -2077,9 +2077,9 @@ CONTAINS
        b1 = 0.5_sp*(1.0_sp + ibeta)
        b2 =         1.0_sp + ibeta
        b3 = 1.5_sp*(1.0_sp + ibeta)
-       g1 = gamma(b1)
-       g2 = gamma(b2)
-       g3 = gamma(b3)
+       g1 = gamm(b1)
+       g2 = gamm(b2)
+       g3 = gamm(b3)
        ! -> sqrt(3/4)
        M1 = g2 / sqrt(g3*g1)
     else
@@ -2460,7 +2460,7 @@ CONTAINS
 
     use mo_kind,      only: dp
     use mo_constants, only: pi_dp
-    use mo_functions, only: gamma
+    use mo_functions, only: gamm
     use mo_utils,     only: special_value
     use mo_utils,     only: le
 
@@ -2476,7 +2476,7 @@ CONTAINS
     if (le(nu,1.0_dp)) then
        st01_fs_mean_dp = special_value(1.0_dp, 'ieee_positive_inf')
     else
-       st01_fs_mean_dp = 2.0_dp * (ixi-1./ixi) * gamma(0.5_dp*(nu+1.0_dp)) / gamma(0.5_dp*nu)
+       st01_fs_mean_dp = 2.0_dp * (ixi-1./ixi) * gamm(0.5_dp*(nu+1.0_dp)) / gamm(0.5_dp*nu)
        st01_fs_mean_dp = st01_fs_mean_dp * (nu-2.0_dp)/(nu-1.0_dp) * nu/(nu-2.0_dp) / sqrt(pi_dp*nu)
     endif
 
@@ -2486,7 +2486,7 @@ CONTAINS
 
     use mo_kind,      only: sp
     use mo_constants, only: pi_sp
-    use mo_functions, only: gamma
+    use mo_functions, only: gamm
     use mo_utils,     only: special_value
     use mo_utils,     only: le
 
@@ -2502,7 +2502,7 @@ CONTAINS
     if (le(nu,1.0_sp)) then
        st01_fs_mean_sp = special_value(1.0_sp, 'ieee_positive_inf')
     else
-       st01_fs_mean_sp = 2.0_sp * (ixi-1./ixi) * gamma(0.5_sp*(nu+1.0_sp)) / gamma(0.5_sp*nu)
+       st01_fs_mean_sp = 2.0_sp * (ixi-1./ixi) * gamm(0.5_sp*(nu+1.0_sp)) / gamm(0.5_sp*nu)
        st01_fs_mean_sp = st01_fs_mean_sp * (nu-2.0_sp)/(nu-1.0_sp) * nu/(nu-2.0_sp) / sqrt(pi_sp*nu)
     endif
 
@@ -2680,7 +2680,7 @@ CONTAINS
 
     use mo_kind,      only: dp
     use mo_constants, only: pi_dp
-    use mo_functions, only: gamma
+    use mo_functions, only: gamm
 
     real(dp), intent(in) :: x
     real(dp), intent(in) :: nu
@@ -2688,7 +2688,7 @@ CONTAINS
 
     real(dp) :: c
 
-    c = gamma(0.5_dp*(nu+1.0_dp)) / (gamma(0.5_dp*nu) * sqrt(pi_dp*nu))
+    c = gamm(0.5_dp*(nu+1.0_dp)) / (gamm(0.5_dp*nu) * sqrt(pi_dp*nu))
     t01_dp = c * (1.0_dp + x*x/nu)**(-0.5_dp*(nu+1.0_dp))
 
   end function t01_dp
@@ -2697,7 +2697,7 @@ CONTAINS
 
     use mo_kind,      only: sp
     use mo_constants, only: pi_sp
-    use mo_functions, only: gamma
+    use mo_functions, only: gamm
 
     real(sp), intent(in) :: x
     real(sp), intent(in) :: nu
@@ -2705,7 +2705,7 @@ CONTAINS
 
     real(sp) :: c
 
-    c = gamma(0.5_sp*(nu+1.0_sp)) / (gamma(0.5_sp*nu) * sqrt(pi_sp*nu))
+    c = gamm(0.5_sp*(nu+1.0_sp)) / (gamm(0.5_sp*nu) * sqrt(pi_sp*nu))
     t01_sp = c * (1.0_sp + x*x/nu)**(-0.5_sp*(nu+1.0_sp))
 
   end function t01_sp

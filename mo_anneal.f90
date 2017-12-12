@@ -493,7 +493,7 @@ CONTAINS
        real(DP)                                 :: best        ! best value found
        real(DP)                                 :: dMult       ! sensitivity multiplier for parameter search
     end type paramLim
-    type (paramLim), dimension (size(para,1)), target :: gamma ! Parameter
+    type (paramLim), dimension (size(para,1)), target :: gamm  ! Parameter
 
     ! for random numbers
     real(DP)                                :: RN1, RN2, RN3     ! Random numbers
@@ -740,24 +740,24 @@ CONTAINS
     seeds_in = 0_i8
 
     ! Start Simulated Annealing routine
-    gamma(:)%dmult = 1.0_dp
-    gamma(:)%new = para(:)
-    gamma(:)%old = para(:)
-    gamma(:)%best = para(:)
+    gamm(:)%dmult = 1.0_dp
+    gamm(:)%new = para(:)
+    gamm(:)%old = para(:)
+    gamm(:)%best = para(:)
     NormPhi = -9999.9_dp
     T0=      T_in
     DT0=     DT_IN
 
     ! Generate and evaluate the initial solution state
-    fo = cost(gamma(:)%old) * maxit_in
+    fo = cost(gamm(:)%old) * maxit_in
     if ( abs(fo) .lt. tiny(0.0_dp) ) fo = 0.0000001_dp * maxit_in
 
     file_write: if (present(tmp_file)) then
        open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append', recl=(n+2)*30)
        if (.not. ldummy) then
-          write(999,*) '0', fo, gamma(:)%old
+          write(999,*) '0', fo, gamm(:)%old
        else
-          write(999,*) '0', -fo, gamma(:)%old
+          write(999,*) '0', -fo, gamm(:)%old
        end if
        close(999)
     end if file_write
@@ -831,41 +831,41 @@ CONTAINS
                 iPar = iPar + 1_i4
              end do
              if (present(prange_func)) then
-                call prange_func(gamma(:)%old, iPar, iParRange)
+                call prange_func(gamm(:)%old, iPar, iParRange)
              else
                 iParRange(1) = prange(iPar,1)
                 iParRange(2) = prange(iPar,2)
              endif
-             gamma(iPar)%min = iParRange(1)
-             gamma(iPar)%max = iParRange(2)
+             gamm(iPar)%min = iParRange(1)
+             gamm(iPar)%max = iParRange(2)
              if (reflectionFlag_inin) then
                 call xor4096g(seeds_in(3),RN3, save_state=save_state_3)
-                gamma(iPar)%new = parGen_dds_dp( gamma(iPar)%old, pertubationR, &
-                     gamma(iPar)%min, gamma(iPar)%max,RN3)
+                gamm(iPar)%new = parGen_dds_dp( gamm(iPar)%old, pertubationR, &
+                     gamm(iPar)%min, gamm(iPar)%max,RN3)
              else
                 call xor4096(seeds_in(2),RN2, save_state=save_state_2)
-                gamma(iPar)%new = parGen_anneal_dp( gamma(iPar)%old, dR, &
-                     gamma(iPar)%min, gamma(iPar)%max,RN2)
+                gamm(iPar)%new = parGen_anneal_dp( gamm(iPar)%old, dR, &
+                     gamm(iPar)%min, gamm(iPar)%max,RN2)
              end if
           case(2_i4)  ! all parameter are changed
              do par=1, size(truepara)
                 iPar = truepara(par)
                 if (present(prange_func)) then
-                   call prange_func(gamma(:)%old, iPar, iParRange)
+                   call prange_func(gamm(:)%old, iPar, iParRange)
                 else
                    iParRange(1) = prange(iPar,1)
                    iParRange(2) = prange(iPar,2)
                 endif
-                gamma(iPar)%min = iParRange(1)
-                gamma(iPar)%max = iParRange(2)
+                gamm(iPar)%min = iParRange(1)
+                gamm(iPar)%max = iParRange(2)
                 if (reflectionFlag_inin) then
                    call xor4096g(seeds_in(3),RN3, save_state=save_state_3)
-                   gamma(iPar)%new = parGen_dds_dp( gamma(iPar)%old, pertubationR, &
-                        gamma(iPar)%min, gamma(iPar)%max,RN3)
+                   gamm(iPar)%new = parGen_dds_dp( gamm(iPar)%old, pertubationR, &
+                        gamm(iPar)%min, gamm(iPar)%max,RN3)
                 else
                    call xor4096(seeds_in(2),RN2, save_state=save_state_2)
-                   gamma(iPar)%new = parGen_anneal_dp( gamma(iPar)%old, dR, &
-                        gamma(iPar)%min, gamma(iPar)%max,RN2)
+                   gamm(iPar)%new = parGen_anneal_dp( gamm(iPar)%old, dR, &
+                        gamm(iPar)%min, gamm(iPar)%max,RN2)
                 end if
              end do
           case(3_i4)  ! parameter in neighborhood are changed
@@ -878,31 +878,31 @@ CONTAINS
                 if (neighborhood(iPar)) then
                    ! find range of parameter
                    if (present(prange_func)) then
-                      call prange_func(gamma(:)%old, iPar, iParRange)
+                      call prange_func(gamm(:)%old, iPar, iParRange)
                    else
                       iParRange(1) = prange(iPar,1)
                       iParRange(2) = prange(iPar,2)
                    endif
-                   gamma(iPar)%min = iParRange(1)
-                   gamma(iPar)%max = iParRange(2)
+                   gamm(iPar)%min = iParRange(1)
+                   gamm(iPar)%max = iParRange(2)
                    !
                    if (reflectionFlag_inin) then
                       ! generate gaussian distributed new parameter value which is reflected if out of bound
                       call xor4096g(seeds_in(3),RN3, save_state=save_state_3)
-                      gamma(iPar)%new = parGen_dds_dp( gamma(iPar)%old, pertubationR, &
-                           gamma(iPar)%min, gamma(iPar)%max,RN3)
+                      gamm(iPar)%new = parGen_dds_dp( gamm(iPar)%old, pertubationR, &
+                           gamm(iPar)%min, gamm(iPar)%max,RN3)
                    else
                       ! generate new parameter value uniform distributed in range (no reflection)
                       call xor4096(seeds_in(2),RN2, save_state=save_state_2)
-                      gamma(iPar)%new = parGen_anneal_dp( gamma(iPar)%old, dR, &
-                           gamma(iPar)%min, gamma(iPar)%max,RN2)
+                      gamm(iPar)%new = parGen_anneal_dp( gamm(iPar)%old, dR, &
+                           gamm(iPar)%min, gamm(iPar)%max,RN2)
                    end if
                 end if
              end do
           end select
 
           ! (2) Calculate new objective function value
-          fn = cost(gamma(:)%new) * maxit_in
+          fn = cost(gamm(:)%new) * maxit_in
           coststatus = .true.
           if (present(undef_funcval)) then
              if ( abs(fn*maxit_in-undef_funcval) .lt. tiny(1.0_dp) ) then
@@ -922,12 +922,12 @@ CONTAINS
                 ! accept the new state
                 Ipos=Ipos+1_i4
                 fo = fn
-                gamma(:)%old   = gamma(:)%new
+                gamm(:)%old   = gamm(:)%new
 
                 ! keep best solution
                 if (fo < fBest) then
                    fBest =  fo
-                   gamma(:)%best   = gamma(:)%new
+                   gamm(:)%best   = gamm(:)%new
                 endif
              else
                 if ( df >  eps_in ) then
@@ -945,7 +945,7 @@ CONTAINS
                       Ineg=Ineg+1_i4
                       fo = fn
                       ! save old state
-                      gamma(:)%old   = gamma(:)%new
+                      gamm(:)%old   = gamm(:)%new
                    end if
                 end if
              end if
@@ -972,7 +972,7 @@ CONTAINS
 
        file_write2: if (present(tmp_file)) then
           open(unit=999,file=trim(adjustl(tmp_file)), action='write', position='append',recl=(n+2)*30)
-          write(999,*) iTotalCounter, maxit_in * fBest*normPhi, gamma(:)%best
+          write(999,*) iTotalCounter, maxit_in * fBest*normPhi, gamm(:)%best
           close(999)
        end if file_write2
 
@@ -1003,7 +1003,7 @@ CONTAINS
           iter           = 0_i4       ! for LEN
           iTotalCounterR = 0_i4       ! for dR
           ! start from current best
-          gamma(:)%old   = gamma(:)%best
+          gamm(:)%old   = gamm(:)%best
        else
           ! Update Temperature (geometrical decrement)
           if (ac_ratio < 0.4_dp)  then
@@ -1057,7 +1057,7 @@ CONTAINS
     end do loopTest
 
     ! calculate cost function again (only for check and return values)
-    parabest = gamma(:)%best
+    parabest = gamm(:)%best
     costbest = cost(parabest) * maxit_in
     if (present (funcbest)) then
        funcbest = costbest * maxit_in
@@ -1069,7 +1069,7 @@ CONTAINS
        print '(A15,E15.7)',                   ' end cost    = ', maxit_in * fBest*normPhi
        print *,           'end parameter: '
        do kk = 1,N
-          print '(A10,I3,A3, E15.7)' ,    '    para #',kk,' = ', gamma(kk)%best
+          print '(A10,I3,A3, E15.7)' ,    '    para #',kk,' = ', gamm(kk)%best
        end do
 
        print *, 'Final check:    ', (fo - fBest)
@@ -1181,7 +1181,7 @@ CONTAINS
        real(DP)                                 :: dMult               ! sensitivity multiplier
        !                                                               ! for parameter search
     end type paramLim
-    type (paramLim), dimension (size(paraset,1)), target   :: gamma    ! Parameter
+    type (paramLim), dimension (size(paraset,1)), target   :: gamm    ! Parameter
 
     ! for random numbers
     INTEGER(I8)                             :: seeds_in(2)
@@ -1286,10 +1286,10 @@ CONTAINS
     seeds_in = 0_i8
     ! (3) Now ready for calling
 
-    gamma(:)%dmult = 1.0_dp
-    gamma(:)%new   = paraset(:)
-    gamma(:)%old   = paraset(:)
-    gamma(:)%best  = paraset(:)
+    gamm(:)%dmult = 1.0_dp
+    gamm(:)%new   = paraset(:)
+    gamm(:)%old   = paraset(:)
+    gamm(:)%best  = paraset(:)
     NormPhi        = -9999.9_dp
 
     fo =  cost(paraset) * maxit_in
@@ -1312,19 +1312,19 @@ CONTAINS
 
        ! (1b) Generate new value of selected parameter
        if ( present(prange_func) ) then
-          call prange_func(gamma(:)%old, iPar, iParRange )
+          call prange_func(gamm(:)%old, iPar, iParRange )
        else
           iParRange(1) = prange(iPar,1)
           iParRange(2) = prange(iPar,2)
        end if
-       gamma(iPar)%min = iParRange(1)
-       gamma(iPar)%max = iParRange(2)
+       gamm(iPar)%min = iParRange(1)
+       gamm(iPar)%max = iParRange(2)
        call xor4096(seeds_in(2),RN2, save_state=save_state_2)
-       gamma(iPar)%new = parGen_anneal_dp( gamma(iPar)%old, gamma(iPar)%dMult*dR, &
-            gamma(iPar)%min, gamma(iPar)%max, RN2)
+       gamm(iPar)%new = parGen_anneal_dp( gamm(iPar)%old, gamm(iPar)%dMult*dR, &
+            gamm(iPar)%min, gamm(iPar)%max, RN2)
        !
        ! (2)  Calculate new objective function value and normalize it
-       fn = cost(gamma(:)%new) * maxit_in
+       fn = cost(gamm(:)%new) * maxit_in
        coststatus = .true.
        if (present(undef_funcval)) then
           if ( abs(fn*maxit_in-undef_funcval) .lt. tiny(1.0_dp) ) then
