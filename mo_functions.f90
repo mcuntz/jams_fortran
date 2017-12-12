@@ -11,7 +11,7 @@ MODULE mo_functions
   ! Provide special functions.
 
   ! Written  Matthias Cuntz, May 2014
-  ! Modified Matthias Cuntz, Dec 2017 - Morris
+  ! Modified Matthias Cuntz, Dec 2017 - morris
 
   ! License
   ! -------
@@ -41,6 +41,7 @@ MODULE mo_functions
   PUBLIC :: factorial ! n!
   PUBLIC :: gammln    ! ln(gamma)
   PUBLIC :: gamm      ! gamm
+  PUBLIC :: morris    ! elementary effects test function after Morris (1991)
 
   ! ------------------------------------------------------------------
   !
@@ -264,6 +265,59 @@ MODULE mo_functions
   END INTERFACE gammln
 
   ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         morris
+  !
+  !     PURPOSE
+  !>        \details 20-dimension test function for elementary effects after Morris (1991).
+  !
+  !     INTENT(IN)
+  !>        \param[in] "real(sp/dp), dimension(20[,npoints]) :: x"        number of points
+  !>        \param[in] "real(sp/dp)                          :: beta0"    parameters
+  !>        \param[in] "real(sp/dp), dimension(20)           :: beta1"    parameters
+  !>        \param[in] "real(sp/dp), dimension(20,20)        :: beta2"    parameters
+  !>        \param[in] "real(sp/dp), dimension(20,20,20)     :: beta3"    parameters
+  !>        \param[in] "real(sp/dp), dimension(20,20,20,20)  :: beta4"    parameters
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURNS
+  !>       \return     real(sp/dp)[, dimension(npoints)] :: morris &mdash; result of Morris function
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         -> see example in test directory
+  !
+  !     LITERATURE
+  !         Morris (1991), Factorial sampling plans for preliminary computational experiments,
+  !         Technometrics 33, 161-174.
+  !
+  !     HISTORY
+  !>        \author Matthias Cuntz, Juliane Mai, Mar 2015 in Python
+  !>        \date Mar 2015
+  !         Modified, Matthias Cuntz, Dec 2017 - ported to Fortran
+  INTERFACE morris
+     MODULE PROCEDURE morris_0d_dp, morris_1d_dp, &
+          morris_0d_sp, morris_1d_sp
+  END INTERFACE morris
+
+  ! ------------------------------------------------------------------
 
   PRIVATE
 
@@ -432,6 +486,173 @@ CONTAINS
     gammln_sp = LOG(gammln_sp) + lnsqrt2pi - (abs(z) + sixpt5) + (abs(z) - half)*LOG(abs(z) + sixpt5)
 
   END FUNCTION gammln_sp
+
+  ! ------------------------------------------------------------------
+
+  FUNCTION morris_0d_dp(x, beta0, beta1, beta2, beta3, beta4)
+
+    use mo_kind, only: dp, i4
+    
+    implicit none
+
+    real(dp), dimension(20),          intent(in) :: x
+    real(dp),                         intent(in) :: beta0
+    real(dp), dimension(20),          intent(in) :: beta1
+    real(dp), dimension(20,20),       intent(in) :: beta2
+    real(dp), dimension(20,20,20),    intent(in) :: beta3
+    real(dp), dimension(20,20,20,20), intent(in) :: beta4
+    real(dp)                                     :: morris_0d_dp
+
+    ! local
+    real(dp),    dimension(20) :: om
+    integer(i4), dimension(3) :: ii
+    integer(i4) :: i, j, l, s, nn
+
+    om = 2._dp*(x - 0.5_dp)
+    ii = (/2, 4, 6/) + 1 ! +1 Python -> Fortran
+    om(ii) = 2._dp*(1.1_dp*x(ii)/(x(ii)+0.1_dp) - 0.5_dp)
+
+    nn = size(x)
+
+    morris_0d_dp = beta0
+    do i=1, nn
+       morris_0d_dp = morris_0d_dp + beta1(i)*om(i)
+       do j=i+1, nn
+          morris_0d_dp = morris_0d_dp + beta2(i,j)*om(i)*om(j)
+          do l=j+1, nn
+             morris_0d_dp = morris_0d_dp + beta3(i,j,l)*om(i)*om(j)*om(l)
+             do s=l+1, nn
+                morris_0d_dp = morris_0d_dp + beta4(i,j,l,s)*om(i)*om(j)*om(l)*om(s)
+             end do
+          end do
+       end do
+    end do
+
+  END FUNCTION morris_0d_dp
+
+  FUNCTION morris_1d_dp(x, beta0, beta1, beta2, beta3, beta4)
+
+    use mo_kind, only: dp, i4
+    
+    implicit none
+
+    real(dp), dimension(:,:),         intent(in) :: x
+    real(dp),                         intent(in) :: beta0
+    real(dp), dimension(20),          intent(in) :: beta1
+    real(dp), dimension(20,20),       intent(in) :: beta2
+    real(dp), dimension(20,20,20),    intent(in) :: beta3
+    real(dp), dimension(20,20,20,20), intent(in) :: beta4
+    real(dp), dimension(size(x,2))               :: morris_1d_dp
+
+    ! local
+    real(dp),    dimension(20,size(x,2)) :: om
+    integer(i4), dimension(3)            :: ii
+    integer(i4) :: i, j, l, s, nn
+
+    om = 2._dp*(x - 0.5_dp)
+    ii = (/2, 4, 6/)
+    om(ii,:) = 2._dp*(1.1_dp*x(ii,:)/(x(ii,:)+0.1_dp) - 0.5_dp)
+
+    nn = size(x)
+
+    morris_1d_dp(:) = beta0
+    do i=1, nn
+       morris_1d_dp(:) = morris_1d_dp(:) + beta1(i)*om(i,:)
+       do j=i+1, nn
+          morris_1d_dp(:) = morris_1d_dp(:) + beta2(i,j)*om(i,:)*om(j,:)
+          do l=j+1, nn
+             morris_1d_dp(:) = morris_1d_dp(:) + beta3(i,j,l)*om(i,:)*om(j,:)*om(l,:)
+             do s=l+1, nn
+                morris_1d_dp(:) = morris_1d_dp(:) + beta4(i,j,l,s)*om(i,:)*om(j,:)*om(l,:)*om(s,:)
+             end do
+          end do
+       end do
+    end do
+
+  END FUNCTION morris_1d_dp
+
+  
+  FUNCTION morris_0d_sp(x, beta0, beta1, beta2, beta3, beta4)
+
+    use mo_kind, only: sp, i4
+    
+    implicit none
+
+    real(sp), dimension(20),          intent(in) :: x
+    real(sp),                         intent(in) :: beta0
+    real(sp), dimension(20),          intent(in) :: beta1
+    real(sp), dimension(20,20),       intent(in) :: beta2
+    real(sp), dimension(20,20,20),    intent(in) :: beta3
+    real(sp), dimension(20,20,20,20), intent(in) :: beta4
+    real(sp)                                     :: morris_0d_sp
+
+    ! local
+    real(sp),    dimension(20) :: om
+    integer(i4), dimension(3) :: ii
+    integer(i4) :: i, j, l, s, nn
+
+    om = 2._sp*(x - 0.5_sp)
+    ii = (/2, 4, 6/)
+    om(ii) = 2._sp*(1.1_sp*x(ii)/(x(ii)+0.1_sp) - 0.5_sp)
+
+    nn = size(x)
+
+    morris_0d_sp = beta0
+    do i=1, nn
+       morris_0d_sp = morris_0d_sp + beta1(i)*om(i)
+       do j=i+1, nn
+          morris_0d_sp = morris_0d_sp + beta2(i,j)*om(i)*om(j)
+          do l=j+1, nn
+             morris_0d_sp = morris_0d_sp + beta3(i,j,l)*om(i)*om(j)*om(l)
+             do s=l+1, nn
+                morris_0d_sp = morris_0d_sp + beta4(i,j,l,s)*om(i)*om(j)*om(l)*om(s)
+             end do
+          end do
+       end do
+    end do
+
+  END FUNCTION morris_0d_sp
+
+  FUNCTION morris_1d_sp(x, beta0, beta1, beta2, beta3, beta4)
+
+    use mo_kind, only: sp, i4
+    
+    implicit none
+
+    real(sp), dimension(:,:),         intent(in) :: x
+    real(sp),                         intent(in) :: beta0
+    real(sp), dimension(20),          intent(in) :: beta1
+    real(sp), dimension(20,20),       intent(in) :: beta2
+    real(sp), dimension(20,20,20),    intent(in) :: beta3
+    real(sp), dimension(20,20,20,20), intent(in) :: beta4
+    real(sp), dimension(size(x,2))               :: morris_1d_sp
+
+    ! local
+    real(sp),    dimension(20,size(x,2)) :: om
+    integer(i4), dimension(3)            :: ii
+    integer(i4) :: i, j, l, s, nn
+
+    om = 2._sp*(x - 0.5_sp)
+    ii = (/2, 4, 6/)
+    om(ii,:) = 2._sp*(1.1_sp*x(ii,:)/(x(ii,:)+0.1_sp) - 0.5_sp)
+
+    nn = size(x)
+
+    morris_1d_sp(:) = beta0
+    do i=1, nn
+       morris_1d_sp(:) = morris_1d_sp(:) + beta1(i)*om(i,:)
+       do j=i+1, nn
+          morris_1d_sp(:) = morris_1d_sp(:) + beta2(i,j)*om(i,:)*om(j,:)
+          do l=j+1, nn
+             morris_1d_sp(:) = morris_1d_sp(:) + beta3(i,j,l)*om(i,:)*om(j,:)*om(l,:)
+             do s=l+1, nn
+                morris_1d_sp(:) = morris_1d_sp(:) + beta4(i,j,l,s)*om(i,:)*om(j,:)*om(l,:)*om(s,:)
+             end do
+          end do
+       end do
+    end do
+
+  END FUNCTION morris_1d_sp
 
   ! ------------------------------------------------------------------
 
