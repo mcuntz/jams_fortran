@@ -143,7 +143,7 @@ MODULE mo_functions
   !     HISTORY
   !>        \author Matthias Cuntz
   !>        \date Feb 2013
-  ! ------------------------------------------------------------------  
+  ! ------------------------------------------------------------------
   INTERFACE factorial
      MODULE PROCEDURE factorial_i4, factorial_i8
   END INTERFACE factorial
@@ -383,7 +383,7 @@ CONTAINS
     REAL(dp)             :: gamm_dp
 
     gamm_dp = exp(gammln(z))
-    
+
   end function gamm_dp
 
   elemental pure function gamm_sp(z)
@@ -394,7 +394,7 @@ CONTAINS
     REAL(sp)             :: gamm_sp
 
     gamm_sp = exp(gammln(z))
-    
+
   end function gamm_sp
 
   ! ------------------------------------------------------------------
@@ -492,7 +492,7 @@ CONTAINS
   FUNCTION morris_0d_dp(x, beta0, beta1, beta2, beta3, beta4)
 
     use mo_kind, only: dp, i4
-    
+
     implicit none
 
     real(dp), dimension(20),          intent(in) :: x
@@ -533,7 +533,7 @@ CONTAINS
   FUNCTION morris_1d_dp(x, beta0, beta1, beta2, beta3, beta4)
 
     use mo_kind, only: dp, i4
-    
+
     implicit none
 
     real(dp), dimension(:,:),         intent(in) :: x
@@ -571,11 +571,11 @@ CONTAINS
 
   END FUNCTION morris_1d_dp
 
-  
+
   FUNCTION morris_0d_sp(x, beta0, beta1, beta2, beta3, beta4)
 
     use mo_kind, only: sp, i4
-    
+
     implicit none
 
     real(sp), dimension(20),          intent(in) :: x
@@ -616,7 +616,7 @@ CONTAINS
   FUNCTION morris_1d_sp(x, beta0, beta1, beta2, beta3, beta4)
 
     use mo_kind, only: sp, i4
-    
+
     implicit none
 
     real(sp), dimension(:,:),         intent(in) :: x
