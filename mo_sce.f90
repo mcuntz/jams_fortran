@@ -202,6 +202,7 @@ MODULE mo_sce
   !                  Matthias Cuntz, Juliane Mai  Feb 2015 - restart
   !                  Matthias Cuntz               Mar 2015 - use is_finite and special_value from mo_utils
   !                  Juliane Mai                  Apr 2015 - handling of array-like variables in restart-namelists
+  !                  Matthias Cuntz               Feb 2018 - made counter local in contained subroutines/functions
 
   ! ------------------------------------------------------------------
 
@@ -1362,6 +1363,8 @@ CONTAINS
 
       logical, intent(in) :: to_file
 
+      integer(i4) :: jj
+
       if (to_file) then
          open(999,file=trim(adjustl(istmp_file)), action='write', position='append',recl=(nn+6)*30)
          if (.not. maxit) then
@@ -1392,6 +1395,8 @@ CONTAINS
 
       implicit none
 
+      integer(i4) :: jj
+
       write(format_str1,'(A13,I3,A8)') '( A10, ',nn,'(6X,A4))'
       write(format_str2,'(A14,I3,A8)') '(E22.14, ',nn,'(G10.3))'
 
@@ -1407,6 +1412,8 @@ CONTAINS
     subroutine write_population(to_file)
 
       logical, intent(in) :: to_file
+
+      integer(i4) :: ii, jj
 
       if (to_file) then
          write(format_str2,'(A13,I3,A9)') '(I4, E22.14, ',nn,'(E22.14))'
