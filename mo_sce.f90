@@ -203,6 +203,7 @@ MODULE mo_sce
   !                  Matthias Cuntz               Mar 2015 - use is_finite and special_value from mo_utils
   !                  Juliane Mai                  Apr 2015 - handling of array-like variables in restart-namelists
   !                  Matthias Cuntz               Feb 2018 - made counter local in contained subroutines/functions
+  !                  Matthias Cuntz               Mar 2018 - mask parameters with degenerated ranges, e.g. upper<lower
 
   ! ------------------------------------------------------------------
 
@@ -492,8 +493,9 @@ CONTAINS
        bu(:)   = prange(:,2)
        do ii=1, nn
           if( ((bu(ii)-bl(ii)) .lt. tiny(1.0_dp) ) .and. maskpara(ii) ) then
+             maskpara(ii) = .false.
              write(error_unit,*) 'para #',ii,'  :: range = ( ',bl(ii),' , ',bu(ii),' )'
-             stop 'mo_sce: inconsistent or too small parameter range'
+             ! stop 'mo_sce: inconsistent or too small parameter range'
           end if
        end do
 
