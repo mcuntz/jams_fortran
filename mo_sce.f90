@@ -204,6 +204,7 @@ MODULE mo_sce
   !                  Juliane Mai                  Apr 2015 - handling of array-like variables in restart-namelists
   !                  Matthias Cuntz               Feb 2018 - made counter local in contained subroutines/functions
   !                  Matthias Cuntz               Mar 2018 - mask parameters with degenerated ranges, e.g. upper<lower
+  !                  Matthias Cuntz               Mar 2018 - use only masked in normalized geometric range of parameters
 
   ! ------------------------------------------------------------------
 
@@ -1556,7 +1557,8 @@ CONTAINS
           gsum = gsum + log( delta + (xmax(kk)-xmin(kk))/bound(kk) )
        end if
     end do
-    gnrng = exp(gsum/real(nn,dp))
+    ! gnrng = exp(gsum/real(nn,dp))
+    gnrng = exp(gsum/real(count(mask),dp))
     !
     !  check if normalized standard deviation of parameter is <= eps
     ipcnvg = 0_i4
