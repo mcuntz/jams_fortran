@@ -5,6 +5,7 @@
 !> \details Julian date to and from day, month, year, and also from day, month, year, hour, minute, and second.\n
 !> Different calendars provided: julian, lilian, 360day, 365day.\n
 !> Convenience routines for Julian dates of IMSL are provided (start at 01.01.1990).
+!> Also relative dates can be given in dec2date with a unit indicating the reference date.
 
 !> \note Julian day definition starts at noon of the 1st January 4713 BC.\n
 !> Here, the astronomical definition is used,
@@ -17,6 +18,9 @@
 !> and use julday with caldat together for integer Julian days.
 
 !> \note Lilian date start at midnight of 15.10.1582, when Pope Gregory XIII introduced the Gregorian calendar.
+
+!> \note Units in dec2date can only be "days/minutes/hours/seconds since YYYY-MM-DD hh:mm:ss".
+!> Any precision after reference time giving the time zone (Z, +hh:mm) will be ignored.
 
 !> \author Matthias Cuntz
 !> \date Dec 2011
@@ -35,6 +39,7 @@ MODULE mo_julian
   ! Modified Matthias Cuntz, Dec 2016 - remove save variable calendar and associated routines setCalendar
   !                                     pass calendar to conversion routines
   ! Modified Matthias Cuntz, Dec 2016 - Lilian date, fracday
+  ! Modified Matthias Cuntz, Mar 2018 - units in dec2date
 
   ! License
   ! -------
@@ -173,10 +178,14 @@ CONTAINS
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !>        \param[in] "integer(i4), optional :: calendar"    The calendar to use.
-  !>                                                          Available calendars
-  !>                                                          'julian', '360day', '365day', 'lilian'
-  !>                                                          All other strings are taken as 'julian'.
+  !>        \param[in] "character(len=*), optional :: calendar"    The calendar to use. Available calendars:\n
+  !>                                                               'julian', '360day', '365day', 'lilian'
+  !>                                                               All other strings are taken as 'julian'.
+  !>        \param[in] "character(len=*), optional :: units"       Units of decimal date.\n
+  !>                   Can only be "days/minutes/hours/seconds since YYYY-MM-DD hh:mm:ss".\n
+  !>                   Any precision after reference time giving the time zone
+  !>                   (http://www.cl.cam.ac.uk/%7Emgk25/iso-time.html : Z, +hh:mm) will be ignored, e.g.
+  !>                   YYYY-MM-DD hh:mm:ssZ for UTC ot YYYY-MM-DD hh:mm:ss+hh:mm for a specific time zone.
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -196,29 +205,96 @@ CONTAINS
   !     HISTORY
   !>        \author Written, David Schaefer
   !>        \date Jan 2015
-  elemental subroutine dec2date(julian, dd, mm, yy, hh, nn, ss, fracday, calendar)
+  !>        Modified Matthias Cuntz, Mar 2018 - units
+  elemental subroutine dec2date(julian, dd, mm, yy, hh, nn, ss, fracday, calendar, units)
 
     implicit none
 
-    real(dp),     intent(in)            :: julian
-    integer(i4),  intent(out), optional :: dd, mm, yy, hh, nn, ss
-    real(dp),     intent(out), optional :: fracday
-    character(*), intent(in),  optional :: calendar
+    real(dp),         intent(in)            :: julian
+    integer(i4),      intent(out), optional :: dd, mm, yy, hh, nn, ss
+    real(dp),         intent(out), optional :: fracday
+    character(len=*), intent(in),  optional :: calendar
+    character(len=*), intent(in),  optional :: units
 
-    if (present(calendar)) then
-       select case(calendar)
-       case("365day")
-          call dec2date365(julian, dd, mm, yy, hh, nn, ss, fracday)
-       case("360day")
-          call dec2date360(julian, dd, mm, yy, hh, nn, ss, fracday)
-       case("lilian")
-          call dec2dateLilian(julian, dd, mm, yy, hh, nn, ss, fracday)
-       case default
-          call dec2dateJulian(julian, dd, mm, yy, hh, nn, ss, fracday)
+    character(64) :: icalendar, iunit, idate0
+    integer(i4)   :: year0, month0, day0, hour0, minute0, second0
+    real(dp)      :: jdate0, jdate, eps
+
+    icalendar = 'julian'
+    if (present(calendar)) icalendar = calendar
+
+    jdate = julian
+    ! No write in pure routines so no error handling (commented)
+    if (present(units)) then
+       ! get reference date
+       ! if (index(trim(units),'since') == 0) then
+       !    write(*,*) 'Error dec2date: No "since" in units.'
+       !    write(*,*) '    Units must be "days/minutes/hours/seconds since YYYY-MM-DD hh:mm:ss".'
+       !    write(*,*) '    hh:mm:ss can be omitted. Units given: ', trim(units)
+       !    stop
+       ! endif
+       iunit  = units(1:index(trim(units),'since')-1)
+       idate0 = units(index(trim(units),'since')+6:)
+       ! if (len_trim(idate0) < 10) then
+       !    write(*,*) 'Error dec2date: Reference date must be given.'
+       !    write(*,*) '    Units must be "days/minutes/hours/seconds since YYYY-MM-DD hh:mm:ss".'
+       !    write(*,*) '    hh:mm:ss can be omitted. Units given: ', trim(units)
+       !    stop
+       ! endif
+       read(idate0(1:4),*) year0
+       read(idate0(6:7),*) month0
+       read(idate0(9:10),*) day0
+       hour0   = 0
+       minute0 = 0
+       second0 = 0
+       if (len_trim(idate0) >= 13) read(idate0(12:13),*) hour0
+       if (len_trim(idate0) >= 16) read(idate0(15:16),*) minute0
+       if (len_trim(idate0) >= 19) read(idate0(18:19),*) second0
+       jdate0 = date2dec(day0, month0, year0, hour0, minute0, second0, calendar=icalendar)
+       ! Julian date should have a small offset proportional to julian date for correct re-conversion.
+       ! Add it to final Julian date so substract it from jdate0
+       eps = epsilon(1.0_dp)
+       if (eps * abs(jdate0) > eps) then
+          if (jdate0 > 0._dp) then
+             jdate0 = jdate0 / (1._dp+eps)
+          else
+             jdate0 = jdate0 / (1._dp-eps)
+          endif
+       else
+          jdate0 = jdate0 - eps
+       endif
+       ! Add time to reference date
+       select case(trim(iunit))
+       case("days")
+          jdate = jdate0 + julian
+       case("hours")
+          jdate = jdate0 + julian/24._dp
+       case("minutes")
+          jdate = jdate0 + julian/1440._dp
+       case("seconds")
+          jdate = jdate0 + julian/86400._dp
+       ! case default
+       !    write(*,*) 'Error dec2date: time unit not days, hours, minutes, or seconds.'
+       !    write(*,*) '    Units must be "days/minutes/hours/seconds since YYYY-MM-DD hh:mm:ss".'
+       !    write(*,*) '    hh:mm:ss can be omitted. Units given: ', trim(units)
+       !    stop
        end select
-    else
-       call dec2dateJulian(julian, dd, mm, yy, hh, nn, ss, fracday)
+       ! Now add the offset for the numerics
+       eps = max(eps * abs(jdate), eps)
+       jdate = jdate + eps
     endif
+
+    ! dec2date
+    select case(icalendar)
+    case("365day")
+       call dec2date365(jdate, dd, mm, yy, hh, nn, ss, fracday)
+    case("360day")
+       call dec2date360(jdate, dd, mm, yy, hh, nn, ss, fracday)
+    case("lilian")
+       call dec2dateLilian(jdate, dd, mm, yy, hh, nn, ss, fracday)
+    case default
+       call dec2dateJulian(jdate, dd, mm, yy, hh, nn, ss, fracday)
+    end select
 
   end subroutine dec2date
 
@@ -1521,7 +1597,6 @@ CONTAINS
     minute   = min(max(floor(fraction*1440.0_dp), 0), 59)
     second   = max(nint((fraction - real(minute,dp)/1440.0_dp)*86400.0_dp), 0)
 
-    ! If seconds==60
     if (second==60) then
        second = 0
        minute = minute + 1

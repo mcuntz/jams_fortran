@@ -1,33 +1,35 @@
-PROGRAM main
+program main
 
-  USE mo_kind,   ONLY: i4, dp
-  USE mo_julian, ONLY: ndays, ndyin
-  USE mo_julian, ONLY: caldat, julday, date2dec, dec2date
-  USE mo_utils,  ONLY: ne
+  use mo_kind,   only: i4, dp
+  use mo_julian, only: ndays, ndyin
+  use mo_julian, only: caldat, julday, date2dec, dec2date
+  use mo_utils,  only: ne
 
-  IMPLICIT NONE
+  implicit none
 
-  INTEGER(i4) :: dd, mm, yy
-  INTEGER(i4) :: hh, nn, ss
-  INTEGER(i4) :: dd2, mm2, yy2
-  INTEGER(i4) :: hh2, nn2, ss2
-  REAL(dp)    :: ff, rr, gg
-  INTEGER(i4), DIMENSION(3) :: dd1, mm1, yy1, hh1, nn1, ss1
-  INTEGER(i4), DIMENSION(3) :: dd12, mm12, yy12, hh12, nn12, ss12
-  REAL(dp),    DIMENSION(3) :: dec1
-  REAL(dp),    DIMENSION(3) :: rr1, ff1, gg1, fd1, fd2
-  INTEGER(i4) :: jj
+  integer(i4) :: dd, mm, yy
+  integer(i4) :: hh, nn, ss
+  integer(i4) :: dd2, mm2, yy2
+  integer(i4) :: hh2, nn2, ss2
+  real(dp)    :: ff, rr, gg, d0
+  integer(i4), dimension(3) :: dd1, mm1, yy1, hh1, nn1, ss1
+  integer(i4), dimension(3) :: dd12, mm12, yy12, hh12, nn12, ss12
+  real(dp),    dimension(3) :: dec1
+  real(dp),    dimension(3) :: rr1, ff1, gg1, fd1, fd2
+  integer(i4) :: jj
 
-  LOGICAL :: isgood
+  logical :: isgood, allgood
 
-  Write(*,*) ''
-  Write(*,*) 'Test mo_julian.f90'
+  write(*,*) ''
+  write(*,*) 'Test mo_julian.f90'
 
-  isgood = .true.
-
+  
+  allgood = .true.
   
   ! -----------------------
   ! standard calendar tests
+
+  isgood = .true.
   
   ! julday, caldat
   do jj=1, 2524594 ! 01.01.2200
@@ -60,7 +62,7 @@ PROGRAM main
   ! date2dec, dec2date - scalar
   do jj=1, 2524594 ! 01.01.2200
      call random_number(ff)
-     rr = real(jj) + ff
+     rr = real(jj,dp) + ff
      call dec2date(rr,dd,mm,yy,hh,nn,ss)
      gg = date2dec(dd,mm,yy,hh,nn,ss)
      call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2)
@@ -80,7 +82,7 @@ PROGRAM main
   ! date2dec, dec2date - vector
   do jj=1, 2524594 ! 01.01.2200
      call random_number(ff1)
-     rr1 = real(jj) + ff1
+     rr1 = real(jj,dp) + ff1
      call dec2date(rr1,dd1,mm1,yy1,hh1,nn1,ss1)
      gg1 = date2dec(dd1,mm1,yy1,hh1,nn1,ss1)
      call dec2date(gg1,dd12,mm12,yy12,hh12,nn12,ss12)
@@ -102,7 +104,7 @@ PROGRAM main
   !      dd1, mm1, yy1, hh1, nn1, ss1)
   do jj=1, 2524594 ! 01.01.2200
      call random_number(ff1)
-     rr1 = real(jj) + ff1
+     rr1 = real(jj,dp) + ff1
      call dec2date(rr1,dd1,mm1,yy1,hh1,nn1,ss1)
      gg1 = date2dec(dd1(1),mm1(1),yy1(1),hh1,nn1,ss1)
      call dec2date(gg1,dd12,mm12,yy12,hh12,nn12,ss12)
@@ -128,16 +130,47 @@ PROGRAM main
   ! fracday
   do jj=1, 2524594 ! 01.01.2200
      call random_number(ff1)
-     rr1 = real(jj) + ff1
+     rr1 = real(jj,dp) + ff1
      call dec2date(rr1,dd1,mm1,yy1,fracday=fd1)
      gg1 = date2dec(dd1(1),mm1(1),yy1(1),fracday=fd1)
      call dec2date(gg1,dd12,mm12,yy12,fracday=fd2)
      if (any(dd1(1) /= dd12) .or. any(mm1(1) /= mm12) .or. any(yy1(1) /= yy12) .or. any(ne(fd1,fd2))) isgood = .false.
   end do
 
+  ! units
+  d0 = date2dec(1,1,1900)
+  do jj=2415021, 2524594 ! 01.01.2200
+     call random_number(ff)
+     rr = real(jj,dp) + ff
+     call dec2date(rr,dd,mm,yy,hh,nn,ss)
+     rr = date2dec(dd,mm,yy,hh,nn,ss) ! include eps
+     gg = rr - d0     ! days since 01.01.1900 00:00:00
+     call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='days since 1900-01-01 00:00:00')
+     if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) isgood = .false.
+     gg = gg * 24._dp ! hours since 01.01.1900 00:00:00
+     call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='hours since 1900-01-01 00:00:00')
+     if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) isgood = .false.
+     gg = gg * 60._dp ! minutes since 01.01.1900 00:00:00
+     call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='minutes since 1900-01-01 00:00:00')
+     if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) isgood = .false.
+     gg = gg * 60._dp ! seconds since 01.01.1900 00:00:00
+     call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='seconds since 1900-01-01 00:00:00')
+     if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) isgood = .false.
+  end do
+
+  allgood = allgood .and. isgood
+  
+  if (isgood) then
+     write(*,*) 'mo_julian lilian o.k.'
+  else
+     write(*,*) 'mo_julian lilian failed!'
+  endif
+
   
   ! ----------------------
   ! 360day calendar tests
+
+  isgood = .true.
 
   ! julday360, caldat360
   do jj=0, 792000 ! 01.01.2200
@@ -158,7 +191,7 @@ PROGRAM main
   ! date2dec360, dec2date360 - scalar
   do jj=1, 109573 ! 01.01.2200
      call random_number(ff)
-     rr = real(jj) + ff
+     rr = real(jj,dp) + ff
      call dec2date(rr,dd,mm,yy,hh,nn,ss, calendar='360day')
      gg = date2dec(dd,mm,yy,hh,nn,ss, calendar='360day')
      call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2, calendar='360day')
@@ -179,10 +212,10 @@ PROGRAM main
   ! date2dec360, dec2date360 - vector
   do jj=1, 2524594 ! 01.01.2200
      call random_number(ff1)
-     rr1 = real(jj) + ff1
-     call dec2date(rr1,dd1,mm1,yy1,hh1,nn1,ss1, calendar='360day')
-     gg1 = date2dec(dd1,mm1,yy1,hh1,nn1,ss1, calendar='360day')
-     call dec2date(gg1,dd12,mm12,yy12,hh12,nn12,ss12, calendar='360day')
+     rr1 = real(jj,dp) + ff1
+     call dec2date(rr1,dd1,mm1,yy1,hh1,nn1,ss1,calendar='360day')
+     gg1 = date2dec(dd1,mm1,yy1,hh1,nn1,ss1,calendar='360day')
+     call dec2date(gg1,dd12,mm12,yy12,hh12,nn12,ss12,calendar='360day')
      if (any(dd1 /= dd12) .or. any(mm1 /= mm12) .or. any(yy1 /= yy12) .or. &
           any(hh1 /= hh12) .or. any(nn1 /= nn12) .or. any(ss1 /= ss12)) isgood = .false.
   end do
@@ -201,7 +234,7 @@ PROGRAM main
   !      dd1, mm1, yy1, hh1, nn1, ss1)
   do jj=1, 2524594 ! 01.01.2200
      call random_number(ff1)
-     rr1 = real(jj) + ff1
+     rr1 = real(jj,dp) + ff1
      call dec2date(rr1,dd1,mm1,yy1,hh1,nn1,ss1, calendar='360day')
      gg1 = date2dec(dd1(1),mm1(1),yy1(1),hh1,nn1,ss1, calendar='360day')
      call dec2date(gg1,dd12,mm12,yy12,hh12,nn12,ss12, calendar='360day')
@@ -227,16 +260,49 @@ PROGRAM main
   ! fracday
   do jj=1, 2524594 ! 01.01.2200
      call random_number(ff1)
-     rr1 = real(jj) + ff1
+     rr1 = real(jj,dp) + ff1
      call dec2date(rr1,dd1,mm1,yy1,fracday=fd1, calendar='360day')
      gg1 = date2dec(dd1(1),mm1(1),yy1(1),fracday=fd1, calendar='360day')
      call dec2date(gg1,dd12,mm12,yy12,fracday=fd2, calendar='360day')
      if (any(dd1(1) /= dd12) .or. any(mm1(1) /= mm12) .or. any(yy1(1) /= yy12) .or. any(ne(fd1,fd2))) isgood = .false.
   end do
 
+  ! units
+  d0 = date2dec(1,1,1900,calendar='360day')
+  do jj=683999, 2524594 ! 01.01.2200
+     call random_number(ff)
+     rr = real(jj,dp) + ff
+     call dec2date(rr,dd,mm,yy,hh,nn,ss,calendar='360day')
+     rr = date2dec(dd,mm,yy,hh,nn,ss,calendar='360day') ! include eps
+     gg = rr - d0 ! days since 01.01.1900 00:00:00
+     call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='days since 1900-01-01 00:00:00',calendar='360day')
+     if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) isgood = .false.
+     gg = gg * 24._dp ! hours since 01.01.1900 00:00:00
+     call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='hours since 1900-01-01 00:00:00',calendar='360day')
+     if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) isgood = .false.
+  end do
+  call dec2date(0.5_dp, dd, mm, yy, hh, nn, ss, units='days since 1900-01-01')
+  if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 1900) .or. (hh /= 12) .or. (nn /= 0) .or. (ss /= 0)) isgood = .false.
+  call dec2date(12.0_dp, dd, mm, yy, hh, nn, ss, units='hours since 1900-01-01 12:00')
+  if ((dd /= 2) .or. (mm /= 1) .or. (yy /= 1900) .or. (hh /= 0) .or. (nn /= 0) .or. (ss /= 0)) isgood = .false.
+  call dec2date(60.0_dp, dd, mm, yy, hh, nn, ss, units='minutes since 1900-01-01 12:00')
+  if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 1900) .or. (hh /= 13) .or. (nn /= 0) .or. (ss /= 0)) isgood = .false.
+  call dec2date(59.0_dp, dd, mm, yy, hh, nn, ss, units='seconds since 1900-01-01 12:00', calendar='365day')
+  if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 1900) .or. (hh /= 12) .or. (nn /= 0) .or. (ss /= 59)) isgood = .false.
+
+  allgood = allgood .and. isgood
+  
+  if (isgood) then
+     write(*,*) 'mo_julian lilian o.k.'
+  else
+     write(*,*) 'mo_julian lilian failed!'
+  endif
+
   
   ! ---------------------
   ! 365day calendar tests
+
+  isgood = .true.
 
   ! julday365, caldat365
   do jj=0, 803000 ! 01.01.2200
@@ -258,7 +324,7 @@ PROGRAM main
   ! date2dec365, dec2date365 - scalar
   do jj=1, 803000 ! 01.01.2200
      call random_number(ff)
-     rr = real(jj) + ff
+     rr = real(jj,dp) + ff
      call dec2date(rr,dd,mm,yy,hh,nn,ss, calendar='365day')
      gg = date2dec(dd,mm,yy,hh,nn,ss, calendar='365day')
      call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2, calendar='365day')
@@ -279,7 +345,7 @@ PROGRAM main
   ! date2dec365, dec2date365 - vector
   do jj=1, 803000 ! 01.01.2200
      call random_number(ff1)
-     rr1 = real(jj) + ff1
+     rr1 = real(jj,dp) + ff1
      call dec2date(rr1, dd1, mm1, yy1, hh1, nn1, ss1, calendar='365day')
      gg1 = date2dec(dd1, mm1, yy1, hh1, nn1, ss1, calendar='365day')
      call dec2date(gg1, dd12, mm12, yy12, hh12, nn12, ss12, calendar='365day')
@@ -303,7 +369,7 @@ PROGRAM main
   !      dd1, mm1, yy1, hh1, nn1, ss1)
   do jj=1, 803000 ! 01.01.2200
      call random_number(ff1)
-     rr1 = real(jj) + ff1
+     rr1 = real(jj,dp) + ff1
      call dec2date(rr1, dd1, mm1, yy1, hh1, nn1, ss1, calendar='365day')
      gg1 = date2dec(dd1(1), mm1(1), yy1(1), hh1, nn1, ss1, calendar='365day')
      call dec2date(gg1, dd12, mm12, yy12, hh12, nn12, ss12, calendar='365day')
@@ -326,9 +392,34 @@ PROGRAM main
      if (jj /= ss) isgood = .false.
   end do
 
+  ! units
+  d0 = date2dec(1,1,1900,calendar='365day')
+  do jj=693499, 2524594 ! 01.01.2200
+     call random_number(ff)
+     rr = real(jj,dp) + ff
+     call dec2date(rr,dd,mm,yy,hh,nn,ss,calendar='365day')
+     rr = date2dec(dd,mm,yy,hh,nn,ss,calendar='365day') ! include eps
+     gg = rr - d0 ! days since 01.01.1900 00:00:00
+     call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='days since 1900-01-01 00:00:00',calendar='365day')
+     if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) isgood = .false.
+     gg = gg * 24._dp * 60._dp ! minutes since 01.01.1900 00:00:00
+     call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='minutes since 1900-01-01 00:00:00',calendar='365day')
+     if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) isgood = .false.
+  end do
+
+  allgood = allgood .and. isgood
+  
+  if (isgood) then
+     write(*,*) 'mo_julian lilian o.k.'
+  else
+     write(*,*) 'mo_julian lilian failed!'
+  endif
+
 
   ! ---------------------
   ! lilian calendar tests
+
+  isgood = .true.
 
   ! julday365, caldat365
   do jj=0, 803000 ! 01.01.2200
@@ -347,7 +438,7 @@ PROGRAM main
   ! date2dec365, dec2date365 - scalar
   do jj=1, 803000 ! 01.01.2200
      call random_number(ff)
-     rr = real(jj) + ff
+     rr = real(jj,dp) + ff
      call dec2date(rr,dd,mm,yy,hh,nn,ss, calendar='lilian')
      gg = date2dec(dd,mm,yy,hh,nn,ss, calendar='lilian')
      call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2, calendar='lilian')
@@ -368,7 +459,7 @@ PROGRAM main
   ! date2dec365, dec2date365 - vector
   do jj=1, 803000 ! 01.01.2200
      call random_number(ff1)
-     rr1 = real(jj) + ff1
+     rr1 = real(jj,dp) + ff1
      call dec2date(rr1, dd1, mm1, yy1, hh1, nn1, ss1, calendar='lilian')
      gg1 = date2dec(dd1, mm1, yy1, hh1, nn1, ss1, calendar='lilian')
      call dec2date(gg1, dd12, mm12, yy12, hh12, nn12, ss12, calendar='lilian')
@@ -392,7 +483,7 @@ PROGRAM main
   !      dd1, mm1, yy1, hh1, nn1, ss1)
   do jj=1, 803000 ! 01.01.2200
      call random_number(ff1)
-     rr1 = real(jj) + ff1
+     rr1 = real(jj,dp) + ff1
      call dec2date(rr1, dd1, mm1, yy1, hh1, nn1, ss1, calendar='lilian')
      gg1 = date2dec(dd1(1), mm1(1), yy1(1), hh1, nn1, ss1, calendar='lilian')
      call dec2date(gg1, dd12, mm12, yy12, hh12, nn12, ss12, calendar='lilian')
@@ -418,15 +509,38 @@ PROGRAM main
   ! fracday
   do jj=1, 2524594 ! 01.01.2200
      call random_number(ff1)
-     rr1 = real(jj) + ff1
+     rr1 = real(jj,dp) + ff1
      call dec2date(rr1,dd1,mm1,yy1,fracday=fd1, calendar='365day')
      gg1 = date2dec(dd1(1),mm1(1),yy1(1),fracday=fd1, calendar='365day')
      call dec2date(gg1,dd12,mm12,yy12,fracday=fd2, calendar='365day')
      if (any(dd1(1) /= dd12) .or. any(mm1(1) /= mm12) .or. any(yy1(1) /= yy12) .or. any(ne(fd1,fd2))) isgood = .false.
   end do
 
+  ! units
+  d0 = date2dec(1,1,1900,calendar='lilian')
+  do jj=115861, 2524594 ! 01.01.2200
+     call random_number(ff)
+     rr = real(jj,dp) + ff
+     call dec2date(rr,dd,mm,yy,hh,nn,ss,calendar='lilian')
+     rr = date2dec(dd,mm,yy,hh,nn,ss,calendar='lilian') ! include eps
+     gg = rr - d0 ! days since 01.01.1900 00:00:00
+     call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='days since 1900-01-01 00:00:00',calendar='lilian')
+     if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) isgood = .false.
+     gg = gg * 24._dp * 60._dp * 60._dp ! seconds since 01.01.1900 00:00:00
+     call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='seconds since 1900-01-01 00:00:00',calendar='lilian')
+     if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) isgood = .false.
+  end do
+
+  allgood = allgood .and. isgood
   
   if (isgood) then
+     write(*,*) 'mo_julian lilian o.k.'
+  else
+     write(*,*) 'mo_julian lilian failed!'
+  endif
+
+  
+  if (allgood) then
      write(*,*) 'mo_julian o.k.'
   else
      write(*,*) 'mo_julian failed!'
