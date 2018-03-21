@@ -181,7 +181,7 @@ CONTAINS
   !>        \param[in] "character(len=*), optional :: calendar"    The calendar to use. Available calendars:\n
   !>                                                               'julian', '360day', '365day', 'lilian'
   !>                                                               All other strings are taken as 'julian'.
-  !>        \param[in] "character(len=*), optional :: units"       Units of decimal date.\n
+  !>        \param[in] "character(len=*), optional :: units"       Units of decimal date in ISO 8601 format.\n
   !>                   Can only be "days/minutes/hours/seconds since YYYY-MM-DD hh:mm:ss".\n
   !>                   Any precision after reference time giving the time zone
   !>                   (http://www.cl.cam.ac.uk/%7Emgk25/iso-time.html : Z, +hh:mm) will be ignored, e.g.

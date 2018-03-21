@@ -29,22 +29,24 @@ MODULE mo_string_utils
   ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011-2016 Matthias Cuntz
+  ! Copyright 2011-2018 Matthias Cuntz
 
   USE mo_kind, ONLY: i4, i8, sp, dp
 
   IMPLICIT NONE
 
   PUBLIC :: compress       ! Conversion   : 'A b C x Y z' -> 'AbCxYz'
+  PUBLIC :: count_split    ! count the numbers of fragments if string is split at delimiter
   PUBLIC :: countsubstring ! Count number of occurences of substring
 #ifndef ABSOFT
-  PUBLIC :: divide_string  ! subroutine split string at delimiter
+  PUBLIC :: divide_string  ! subroutine to split string at delimiter
 #endif
   PUBLIC :: equalStrings   ! compares two strings
   PUBLIC :: nonull         ! Check if string is still NULL
   PUBLIC :: num2str        ! Convert a number to a string
   PUBLIC :: separator      ! Format string: '-----...-----'
-  PUBLIC :: splitString    ! function split string at delimiter
+  PUBLIC :: split          ! function to split string at delimiter
+  PUBLIC :: splitString    ! function to split string at delimiter
   PUBLIC :: startsWith     ! checks if string starts with a certain string
   PUBLIC :: str2num        ! Converts string into an array of its numerical representation
   PUBLIC :: tolower        ! Conversion   : 'ABCXYZ' -> 'abcxyz'
@@ -278,6 +280,60 @@ CONTAINS
 
     end function compress
 
+    ! ------------------------------------------------------------------
+
+  !     NAME
+  !         count_split
+
+  !     PURPOSE
+  !>        \brief Count the numbers of fragments if string is split at delimiter
+
+  !>        \details ount the numbers of fragments if string is split at delimiter.
+  !>        To be used with function split if left hand side has to be allocated first (pre-Fortran 2003).
+
+  !     CALLING SEQUENCE
+  !         nsplit = count_split(string, delim)
+
+  !     INTENT(IN)
+  !>        \param[in] "character(len=*) :: string"    String
+  !>        \param[in] "character(len=*) :: delim"     String
+
+  !     RETURN
+  !         \return integer(i4) :: nsplit
+
+  !     EXAMPLE
+  !         nvar = count_split('var1,var2,var3, var4', ',')
+
+  !     HISTORY
+  !         \author Matthias Cuntz
+  !         \date Mar 2018
+
+  function count_split(string, delim)
+    
+    implicit none
+    
+    character(len=*), intent(in) :: string
+    character(len=*), intent(in) :: delim
+    integer(i4)                  :: count_split
+    
+    character(len=len(string)) :: istring
+    integer(i4)                :: ndel, zaehl, i
+    
+    ndel = len(delim)
+
+    istring = string
+    zaehl = 1
+    i = index(trim(istring), delim)
+    do while (i/=0)
+       zaehl = zaehl + 1
+       istring = istring(i+ndel:)
+       i = index(trim(istring), delim)
+    end do
+
+    count_split = zaehl
+
+  end function count_split
+
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -436,7 +492,7 @@ CONTAINS
     end do
     ! hand over results to strArr
     if (nosubstr .EQ. 0_i4) then
-       print*, '***WARNING: string does not contain delimiter. There are no substrings. (subroutine DIVIDE_STRING)'
+       write(*,*) '***WARNING: string does not contain delimiter. There are no substrings. (subroutine DIVIDE_STRING)'
        return
     else
        allocate(strArr(nosubstr))
@@ -585,6 +641,80 @@ CONTAINS
     endif
 
   END FUNCTION nonull
+
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         split
+
+  !     PURPOSE
+  !>        \brief Split string at delimiter.
+
+  !>        \details Split string at delimiter returning an array of strings.\n
+  !>        Fragments can be stripped by whitespace.\n
+  !>        One can use function count_split to allocate left hand side if needed (pre-Fortran 2003).
+  
+  !     CALLING SEQUENCE
+  !         string_parts = split(string, delim, strip)
+
+  !     INTENT(IN)
+  !>        \param[in] "character(len=*) :: string"    String
+  !>        \param[in] "character(len=*) :: delim"     String
+
+  !     INTENT(IN), OPTIONAL
+  !>        \param[in] "logical, optional :: strip"    Strip leading and trailing blanks
+
+  !     RETURN
+  !>        \return character(len=8192) :: out(:)
+
+  !     EXAMPLE
+  !         sarr = split('var1,var2,var3, var4', ',', strip=.true.)
+
+  !     HISTORY
+  !         \author Matthias Cuntz
+  !         \date Mar 2018
+
+  function split(string, delim, strip)
+    
+    implicit none
+    
+    character(len=*),    intent(in)           :: string
+    character(len=*),    intent(in)           :: delim
+    logical,             intent(in), optional :: strip
+    character(len=len(string)), dimension(:), allocatable :: split
+    
+    character(len=len(string)), allocatable :: tmpsplit(:)
+    character(len=len(string)) :: istring
+    integer(i4)                :: ndel, zaehl, i, j
+
+    ndel = len(delim)
+    zaehl = count_split(string, delim)
+
+    allocate(tmpsplit(zaehl))
+    istring = string
+    do j=1, zaehl-1
+       i = index(istring, delim)
+       tmpsplit(j) = istring(1:i-1)
+       istring = istring(i+ndel:)
+    end do
+    tmpsplit(zaehl) = istring
+
+    ! out array
+    if (allocated(split)) deallocate(split)
+    allocate(split(zaehl))
+    split(1:zaehl) = tmpsplit(1:zaehl)
+    ! strip leading and trailing blanks
+    if (present(strip)) then
+       if (strip) then
+          do i=1, zaehl
+             split(i) = trim(adjustl(tmpsplit(i)))
+          end do
+       endif
+    end if
+    
+    deallocate(tmpsplit)
+
+  end function split
 
   ! ------------------------------------------------------------------
 
