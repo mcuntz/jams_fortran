@@ -63,7 +63,7 @@ MODULE mo_utils
   PUBLIC :: special_value ! Special IEEE values
   PUBLIC :: swap          ! Swaps arrays or elements of an array
 
-  
+
   ! ------------------------------------------------------------------
   !
   !     NAME
@@ -116,7 +116,7 @@ MODULE mo_utils
      MODULE PROCEDURE cumsum_i4, cumsum_i8, cumsum_dp, cumsum_sp, cumsum_dpc, cumsum_spc
   END INTERFACE cumsum
 
-  
+
   ! ------------------------------------------------------------------
   !
   !     NAME
@@ -290,8 +290,10 @@ MODULE mo_utils
   !         None
   !
   !     INTENT(IN), OPTIONAL
-  !>        \param[in] "logical :: mask(:)"   If present, only those locations in array corresponding to
-  !>                                          the true values in mask are searched for the scalar value.
+  !>        \param[in] "logical :: mask(:)"       If present, only those locations in array corresponding to
+  !>                                              the true values in mask are searched for the scalar value.
+  !>        \param[in] "logical :: ignore_case"   If .true., ignore case in comparison of strings;
+  !>                                              if .false., comparison case sensitive (default: .true.)
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -317,6 +319,7 @@ MODULE mo_utils
   !     HISTORY
   !>        \authors Matthias Cuntz
   !>        \date Jan 2017
+  !>        Modified Matthias Cuntz, Mar 2018 - ignore_case for isin_char
   INTERFACE isin
      MODULE PROCEDURE isin_i4, isin_i8, isin_sp, isin_dp, isin_char
   END INTERFACE isin
@@ -349,8 +352,10 @@ MODULE mo_utils
   !         None
   !
   !     INTENT(IN), OPTIONAL
-  !>        \param[in] "logical :: mask(:)"   If present, only those locations in array corresponding to
-  !>                                          the true values in mask are searched for the scalar value.
+  !>        \param[in] "logical :: mask(:)"       If present, only those locations in array corresponding to
+  !>                                              the true values in mask are searched for the scalar value.
+  !>        \param[in] "logical :: ignore_case"   If .true., ignore case in comparison of strings;
+  !>                                              if .false., comparison case sensitive (default: .true.)
   !
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -436,15 +441,15 @@ MODULE mo_utils
   !>        \date Mar 2015
   INTERFACE is_finite
      MODULE PROCEDURE is_finite_sp, is_finite_dp
-  END INTERFACE is_finite  
+  END INTERFACE is_finite
 
   INTERFACE is_nan
      MODULE PROCEDURE is_nan_sp, is_nan_dp
   END INTERFACE is_nan
-  
+
   INTERFACE is_normal
      MODULE PROCEDURE is_normal_sp, is_normal_dp
-  END INTERFACE is_normal  
+  END INTERFACE is_normal
 
 
   ! ------------------------------------------------------------------
@@ -625,7 +630,7 @@ MODULE mo_utils
      MODULE PROCEDURE arange_i4, arange_i8, arange_dp, arange_sp
   END INTERFACE arange
 
-  
+
   ! ------------------------------------------------------------------
   !
   !     NAME
@@ -695,7 +700,7 @@ MODULE mo_utils
           swap_vec_mask_dp, swap_vec_mask_sp, swap_vec_mask_i4, swap_vec_mask_dpc, swap_vec_mask_spc
   END INTERFACE swap
 
-  
+
   ! ------------------------------------------------------------------
   !
   !     NAME
@@ -791,7 +796,7 @@ CONTAINS
     integer(i4), intent(in)                :: lower
     integer(i4), intent(in), optional      :: upper
     integer(i4), dimension(:), allocatable :: arange_i4
-    
+
     integer(i4) :: istart, istop
     integer(i4) :: i
 
@@ -816,7 +821,7 @@ CONTAINS
     integer(i8), intent(in)                :: lower
     integer(i8), intent(in), optional      :: upper
     integer(i8), dimension(:), allocatable :: arange_i8
-    
+
     integer(i8) :: istart, istop
     integer(i8) :: i
 
@@ -841,7 +846,7 @@ CONTAINS
     real(dp), intent(in)                :: lower
     real(dp), intent(in), optional      :: upper
     real(dp), dimension(:), allocatable :: arange_dp
-    
+
     integer(i8) :: istart, istop
     integer(i8) :: i
 
@@ -866,7 +871,7 @@ CONTAINS
     real(sp), intent(in)                :: lower
     real(sp), intent(in), optional      :: upper
     real(sp), dimension(:), allocatable :: arange_sp
-    
+
     integer(i8) :: istart, istop
     integer(i8) :: i
 
@@ -893,7 +898,7 @@ CONTAINS
 
     integer(i4), dimension(:), intent(in) :: arr
     integer(i4), dimension(size(arr,1))   :: cumsum_i4
-    
+
     integer(i4) :: i
 
     cumsum_i4(1) = arr(1)
@@ -909,7 +914,7 @@ CONTAINS
 
     integer(i8), dimension(:), intent(in) :: arr
     integer(i8), dimension(size(arr,1))   :: cumsum_i8
-    
+
     integer(i4) :: i
 
     cumsum_i8(1) = arr(1)
@@ -925,7 +930,7 @@ CONTAINS
 
     real(dp), dimension(:), intent(in) :: arr
     real(dp), dimension(size(arr,1))   :: cumsum_dp
-    
+
     integer(i4) :: i
 
     cumsum_dp(1) = arr(1)
@@ -941,7 +946,7 @@ CONTAINS
 
     complex(dpc), dimension(:), intent(in) :: arr
     complex(dpc), dimension(size(arr,1))   :: cumsum_dpc
-    
+
     integer(i4) :: i
 
     cumsum_dpc(1) = arr(1)
@@ -957,7 +962,7 @@ CONTAINS
 
     real(sp), dimension(:), intent(in) :: arr
     real(sp), dimension(size(arr,1))   :: cumsum_sp
-    
+
     integer(i4) :: i
 
     cumsum_sp(1) = arr(1)
@@ -973,7 +978,7 @@ CONTAINS
 
     complex(spc), dimension(:), intent(in) :: arr
     complex(spc), dimension(size(arr,1))   :: cumsum_spc
-    
+
     integer(i4) :: i
 
     cumsum_spc(1) = arr(1)
@@ -1125,7 +1130,7 @@ CONTAINS
     integer(i4), dimension(:), intent(in)           :: arr
     logical,     dimension(:), intent(in), optional :: mask
     integer(i4)                                     :: imaxloc_i4
-    
+
     integer(i4), dimension(1) :: imax
 
     if (present(mask)) then
@@ -1144,7 +1149,7 @@ CONTAINS
     integer(i8), dimension(:), intent(in)           :: arr
     logical,     dimension(:), intent(in), optional :: mask
     integer(i4)                                     :: imaxloc_i8
-    
+
     integer(i4), dimension(1) :: imax
 
     if (present(mask)) then
@@ -1163,7 +1168,7 @@ CONTAINS
     real(dp),   dimension(:), intent(in)           :: arr
     logical,    dimension(:), intent(in), optional :: mask
     integer(i4)                                    :: imaxloc_dp
-    
+
     integer(i4), dimension(1) :: imax
 
     if (present(mask)) then
@@ -1182,7 +1187,7 @@ CONTAINS
     real(sp),   dimension(:), intent(in)           :: arr
     logical,    dimension(:), intent(in), optional :: mask
     integer(i4)                                    :: imaxloc_sp
-    
+
     integer(i4), dimension(1) :: imax
 
     if (present(mask)) then
@@ -1204,7 +1209,7 @@ CONTAINS
     integer(i4), dimension(:), intent(in)           :: arr
     logical,     dimension(:), intent(in), optional :: mask
     integer(i4)                                     :: iminloc_i4
-    
+
     integer(i4), dimension(1) :: imin
 
     if (present(mask)) then
@@ -1223,7 +1228,7 @@ CONTAINS
     integer(i8), dimension(:), intent(in)           :: arr
     logical,     dimension(:), intent(in), optional :: mask
     integer(i4)                                     :: iminloc_i8
-    
+
     integer(i4), dimension(1) :: imin
 
     if (present(mask)) then
@@ -1242,7 +1247,7 @@ CONTAINS
     real(dp),   dimension(:), intent(in)           :: arr
     logical,    dimension(:), intent(in), optional :: mask
     integer(i4)                                    :: iminloc_dp
-    
+
     integer(i4), dimension(1) :: imin
 
     if (present(mask)) then
@@ -1261,7 +1266,7 @@ CONTAINS
     real(sp),   dimension(:), intent(in)           :: arr
     logical,    dimension(:), intent(in), optional :: mask
     integer(i4)                                    :: iminloc_sp
-    
+
     integer(i4), dimension(1) :: imin
 
     if (present(mask)) then
@@ -1284,7 +1289,7 @@ CONTAINS
     integer(i4), dimension(:), intent(in)           :: arr
     logical,     dimension(:), intent(in), optional :: mask
     logical                                         :: isin_i4
-    
+
     if (present(mask)) then
        isin_i4 = any((arr==sca) .and. mask)
     else
@@ -1301,7 +1306,7 @@ CONTAINS
     integer(i8), dimension(:), intent(in)           :: arr
     logical,     dimension(:), intent(in), optional :: mask
     logical                                         :: isin_i8
-    
+
     if (present(mask)) then
        isin_i8 = any((arr==sca) .and. mask)
     else
@@ -1318,7 +1323,7 @@ CONTAINS
     real(dp), dimension(:), intent(in)           :: arr
     logical,  dimension(:), intent(in), optional :: mask
     logical                                      :: isin_dp
-    
+
     if (present(mask)) then
        isin_dp = any(eq(arr,sca) .and. mask)
     else
@@ -1335,7 +1340,7 @@ CONTAINS
     real(sp), dimension(:), intent(in)           :: arr
     logical,  dimension(:), intent(in), optional :: mask
     logical                                      :: isin_sp
-    
+
     if (present(mask)) then
        isin_sp = any(eq(arr,sca) .and. mask)
     else
@@ -1344,34 +1349,39 @@ CONTAINS
 
   end function isin_sp
 
-  function isin_char(sca, arr, mask)
+  function isin_char(sca, arr, mask, ignore_case)
 
     implicit none
 
     character(len=*),               intent(in)           :: sca
     character(len=*), dimension(:), intent(in)           :: arr
     logical,          dimension(:), intent(in), optional :: mask
+    logical,                        intent(in), optional :: ignore_case
     logical                                              :: isin_char
 
     integer(i4) :: i, n
+    logical     :: icase, isame
+    logical, dimension(size(arr)) :: imask
+
+    ! optionals
+    imask = .true.
+    if (present(mask)) imask = mask
+    icase = .true.
+    if (present(ignore_case)) icase = ignore_case
 
     isin_char = .false.
     n = size(arr)
-    if (present(mask)) then
-       do i=1, n
-          if ((trim(adjustl(sca)) == trim(adjustl(arr(i)))) .and. mask(i)) then
-             isin_char = .true.
-             return
-          endif
-       enddo
-    else
-       do i=1, n
-          if (trim(adjustl(sca)) == trim(adjustl(arr(i)))) then
-             isin_char = .true.
-             return
-          endif
-       enddo
-    endif
+    do i=1, n
+       if (icase) then
+          isame = trim(adjustl(itoupper(sca))) == trim(adjustl(itoupper(arr(i))))
+       else
+          isame = trim(adjustl(sca)) == trim(adjustl(arr(i)))
+       endif
+       if (isame .and. imask(i)) then
+          isin_char = .true.
+          return
+       endif
+    enddo
 
   end function isin_char
 
@@ -1388,7 +1398,7 @@ CONTAINS
     integer(i4)                                     :: isinloc_i4
 
     integer(i4) :: i, n
-    
+
     isinloc_i4 = 0
     n = size(arr)
     if (present(mask)) then
@@ -1419,7 +1429,7 @@ CONTAINS
     integer(i8)                                     :: isinloc_i8
 
     integer(i8) :: i, n
-    
+
     isinloc_i8 = 0
     n = size(arr)
     if (present(mask)) then
@@ -1450,7 +1460,7 @@ CONTAINS
     integer(i4)                                  :: isinloc_dp
 
     integer(i4) :: i, n
-    
+
     isinloc_dp = 0
     n = size(arr)
     if (present(mask)) then
@@ -1481,7 +1491,7 @@ CONTAINS
     integer(i4)                                  :: isinloc_sp
 
     integer(i4) :: i, n
-    
+
     isinloc_sp = 0
     n = size(arr)
     if (present(mask)) then
@@ -1502,34 +1512,39 @@ CONTAINS
 
   end function isinloc_sp
 
-  function isinloc_char(sca, arr, mask)
+  function isinloc_char(sca, arr, mask, ignore_case)
 
     implicit none
 
     character(len=*),               intent(in)           :: sca
     character(len=*), dimension(:), intent(in)           :: arr
     logical,          dimension(:), intent(in), optional :: mask
+    logical,                        intent(in), optional :: ignore_case
     integer(i4)                                          :: isinloc_char
 
     integer(i4) :: i, n
+    logical     :: icase, isame
+    logical, dimension(size(arr)) :: imask
+
+    ! optionals
+    imask = .true.
+    if (present(mask)) imask = mask
+    icase = .true.
+    if (present(ignore_case)) icase = ignore_case
 
     isinloc_char = 0
     n = size(arr)
-    if (present(mask)) then
-       do i=1, n
-          if ((trim(adjustl(sca)) == trim(adjustl(arr(i)))) .and. mask(i)) then
-             isinloc_char = i
-             return
-          endif
-       enddo
-    else
-       do i=1, n
-          if (trim(adjustl(sca)) == trim(adjustl(arr(i)))) then
-             isinloc_char = i
-             return
-          endif
-       enddo
-    endif
+    do i=1, n
+       if (icase) then
+          isame = trim(adjustl(itoupper(sca))) == trim(adjustl(itoupper(arr(i))))
+       else
+          isame = trim(adjustl(sca)) == trim(adjustl(arr(i)))
+       endif
+       if (isame .and. imask(i)) then
+          isinloc_char = i
+          return
+       endif
+    enddo
 
   end function isinloc_char
 
@@ -1665,7 +1680,7 @@ CONTAINS
     integer(i4), intent(in)       :: upper
     integer(i4), intent(in)       :: nstep
     integer(i4), dimension(nstep) :: linspace_i4
-        
+
     linspace_i4 = lower + nint(arange(0.0_dp,real(nstep-1_i4,dp))/real(nstep-1_i4,dp) * real(upper-lower,dp), i4)
 
   end function linspace_i4
@@ -1678,7 +1693,7 @@ CONTAINS
     integer(i8), intent(in)       :: upper
     integer(i4), intent(in)       :: nstep
     integer(i8), dimension(nstep) :: linspace_i8
-        
+
     linspace_i8 = lower + nint(arange(0.0_dp,real(nstep-1_i4,dp))/real(nstep-1_i4,dp) * real(upper-lower,dp), i8)
 
   end function linspace_i8
@@ -1691,7 +1706,7 @@ CONTAINS
     real(dp),    intent(in)       :: upper
     integer(i4), intent(in)       :: nstep
     real(dp),    dimension(nstep) :: linspace_dp
-        
+
     linspace_dp = lower + arange(0.0_dp,real(nstep-1_i4,dp))/real(nstep-1_i4,dp) * (upper-lower)
 
   end function linspace_dp
@@ -1704,12 +1719,12 @@ CONTAINS
     real(sp),    intent(in)       :: upper
     integer(i4), intent(in)       :: nstep
     real(sp),    dimension(nstep) :: linspace_sp
-        
+
     linspace_sp = lower + arange(0.0_sp,real(nstep-1_i4,sp))/real(nstep-1_i4,sp) * (upper-lower)
 
   end function linspace_sp
 
-  
+
   ! ------------------------------------------------------------------
 
   ! Given an array x(1:N), and given a value y, returns a value j such that y is between
@@ -1806,7 +1821,7 @@ CONTAINS
 
   END FUNCTION locate_1d_sp
 
-  
+
   ! ------------------------------------------------------------------
 
   elemental pure subroutine swap_xy_dp(x,y)
@@ -2169,7 +2184,7 @@ CONTAINS
 #endif
 
     implicit none
-    
+
     real(dp),         intent(in) :: x
     character(len=*), intent(in) :: ieee
     real(dp)                     :: special_value_dp
@@ -2256,7 +2271,7 @@ CONTAINS
 #endif
 
     implicit none
-    
+
     real(sp),         intent(in) :: x
     character(len=*), intent(in) :: ieee
     real(sp)                     :: special_value_sp
