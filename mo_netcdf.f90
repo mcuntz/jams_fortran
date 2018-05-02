@@ -47,13 +47,13 @@ module mo_netcdf
 
   use mo_kind, only: i1, i2, i4, sp, dp
   use netcdf,  only: &
-       nf90_open, nf90_close, nf90_strerror, nf90_def_dim, nf90_def_var,   &
-       nf90_put_var, nf90_get_var, nf90_put_att, nf90_get_att,             &
-       nf90_inquire, nf90_inq_dimid, nf90_inquire_dimension,               &
-       nf90_inq_varid, nf90_inquire_variable, nf90_inquire_attribute,      &
-       NF90_OPEN, NF90_CREATE, NF90_WRITE, NF90_NOWRITE,     &
-       NF90_BYTE, NF90_SHORT, NF90_INT, NF90_FLOAT, NF90_DOUBLE,                      &
-       NF90_FILL_BYTE, NF90_FILL_SHORT, NF90_FILL_INT, NF90_FILL_FLOAT , NF90_FILL_DOUBLE, &
+       nf90_open, nf90_close, nf90_strerror, nf90_def_dim, nf90_def_var, nf90_def_var_fill, &
+       nf90_put_var, nf90_get_var, nf90_put_att, nf90_get_att,        &
+       nf90_inquire, nf90_inq_dimid, nf90_inquire_dimension,          &
+       nf90_inq_varid, nf90_inquire_variable, nf90_inquire_attribute, &
+       NF90_OPEN, NF90_CREATE, NF90_WRITE, NF90_NOWRITE,              &
+       NF90_BYTE, NF90_SHORT, NF90_INT, NF90_FLOAT, NF90_DOUBLE,      &
+       NF90_FILL_BYTE, NF90_FILL_SHORT, NF90_FILL_INT, NF90_FILL_FLOAT , NF90_FILL_DOUBLE,  &
        NF90_NOERR, NF90_UNLIMITED, NF90_GLOBAL, nf90_redef, nf90_enddef
 #ifndef NETCDF3
   use netcdf, only: NF90_NETCDF4, nf90_inq_varids
@@ -169,9 +169,9 @@ module mo_netcdf
      procedure, private :: getDimensionById
 
      procedure, private :: setVariableScalar
-     procedure, private :: setVariableWithTypes
-     procedure, private :: setVariableWithNames
-     procedure, private :: setVariableWithIds
+     procedure, private :: setVariableWithDimTypes
+     procedure, private :: setVariableWithDimNames
+     procedure, private :: setVariableWithDimIds
 
      procedure, private :: getVariableByName
 
@@ -536,9 +536,9 @@ module mo_netcdf
      ! -----------------------------------------------------------------------------------
      generic,   public  :: setVariable => &
           setVariableScalar, &
-          setVariableWithNames, &
-          setVariableWithTypes, &
-          setVariableWithIds
+          setVariableWithDimNames, &
+          setVariableWithDimTypes, &
+          setVariableWithDimIds
 
      ! -----------------------------------------------------------------------------------
      !
@@ -1670,7 +1670,7 @@ contains
   end function setVariableScalar
 
 
-  function setVariableWithIds(self, name, dtype, dimensions &
+  function setVariableWithDimIds(self, name, dtype, dimensions &
 #ifndef NETCDF3
        , contiguous, &
        chunksizes, deflate_level, shuffle, fletcher32, endianness, &
@@ -1686,7 +1686,7 @@ contains
     integer(i4)     , intent(in), optional :: endianness,deflate_level,cache_size, &
          cache_nelems, cache_preemption, chunksizes(:)
 #endif
-    type(NcVariable)                       :: setVariableWithIds
+    type(NcVariable)                       :: setVariableWithDimIds
     integer(i4)                            :: varid
 
     call check(nf90_redef(self%id), "Failed reopening definition section - 14.")
@@ -1698,12 +1698,12 @@ contains
 #endif
     ), "Failed to create variable: " // name)
     call check(nf90_enddef(self%id), "Failed closing definition section - 14.")
-    setVariableWithIds = NcVariable(varid, self)
+    setVariableWithDimIds = NcVariable(varid, self)
 
-  end function setVariableWithIds
+  end function setVariableWithDimIds
 
 
-  function setVariableWithNames(self, name, dtype, dimensions &
+  function setVariableWithDimNames(self, name, dtype, dimensions &
 #ifndef NETCDF3
        , contiguous, &
        chunksizes, deflate_level, shuffle, fletcher32, endianness, &
@@ -1720,7 +1720,7 @@ contains
     integer(i4)     , intent(in), optional    :: endianness,deflate_level,cache_size, &
          cache_nelems, cache_preemption, chunksizes(:)
 #endif
-    type(NcVariable)                          :: setVariableWithNames
+    type(NcVariable)                          :: setVariableWithDimNames
     type(NcDimension)                         :: dim
     integer(i4)                               :: i, dimids(size(dimensions))
 
@@ -1729,7 +1729,7 @@ contains
        dimids(i) = dim%id
     end do
 
-    setVariableWithNames = setVariableWithIds(self, name, dtype, dimids &
+    setVariableWithDimNames = setVariableWithDimIds(self, name, dtype, dimids &
 #ifndef NETCDF3
          , contiguous, &
          chunksizes, deflate_level, shuffle, fletcher32, endianness, &
@@ -1737,10 +1737,10 @@ contains
 #endif
          )
 
-  end function setVariableWithNames
+  end function setVariableWithDimNames
 
 
-  function setVariableWithTypes(self, name, dtype, dimensions &
+  function setVariableWithDimTypes(self, name, dtype, dimensions &
 #ifndef NETCDF3
        , contiguous, &
        chunksizes, deflate_level, shuffle, fletcher32, endianness, &
@@ -1756,7 +1756,7 @@ contains
     integer(i4)      , intent(in), optional    :: endianness,deflate_level,cache_size, &
          cache_nelems, cache_preemption, chunksizes(:)
 #endif
-    type(NcVariable)                           :: setVariableWithTypes
+    type(NcVariable)                           :: setVariableWithDimTypes
     type(NcDimension)                          :: dim
     integer(i4)                                :: i, dimids(size(dimensions))
 
@@ -1765,7 +1765,7 @@ contains
        dimids(i) = dim%id
     end do
 
-    setVariableWithTypes = setVariableWithIds(self, name, dtype, dimids &
+    setVariableWithDimTypes = setVariableWithDimIds(self, name, dtype, dimids &
 #ifndef NETCDF3
          , contiguous, &
          chunksizes, deflate_level, shuffle, fletcher32, endianness, &
@@ -1773,7 +1773,7 @@ contains
 #endif
          )
 
-  end function setVariableWithTypes
+  end function setVariableWithDimTypes
 
 
   !
@@ -2275,7 +2275,9 @@ contains
     integer(i1)      , intent(in)  :: fvalue
 
     if (.not. self%hasAttribute("_FillValue")) then
-       call self%setAttribute("_FillValue",fvalue)
+       ! call self%setAttribute("_FillValue",fvalue)
+       call check(nf90_def_var_fill(self%parent%id, self%id, 0, fvalue), &
+            "Failed to set _FillValue on variable: " // trim(self%getName()))
     end if
 
   end subroutine setVariableFillValueI8
@@ -2286,7 +2288,9 @@ contains
     integer(i2)      , intent(in)  :: fvalue
 
     if (.not. self%hasAttribute("_FillValue")) then
-       call self%setAttribute("_FillValue",fvalue)
+       ! call self%setAttribute("_FillValue",fvalue)
+       call check(nf90_def_var_fill(self%parent%id, self%id, 0, fvalue), &
+            "Failed to set _FillValue on variable: " // trim(self%getName()))
     end if
 
   end subroutine setVariableFillValueI16
@@ -2297,7 +2301,9 @@ contains
     integer(i4)      , intent(in)  :: fvalue
 
     if (.not. self%hasAttribute("_FillValue")) then
-       call self%setAttribute("_FillValue",fvalue)
+       ! call self%setAttribute("_FillValue",fvalue)
+       call check(nf90_def_var_fill(self%parent%id, self%id, 0, fvalue), &
+            "Failed to set _FillValue on variable: " // trim(self%getName()))
     end if
 
   end subroutine setVariableFillValueI32
@@ -2308,7 +2314,9 @@ contains
     real(sp)         , intent(in)  :: fvalue
 
     if (.not. self%hasAttribute("_FillValue")) then
-       call self%setAttribute("_FillValue",fvalue)
+       ! call self%setAttribute("_FillValue",fvalue)
+       call check(nf90_def_var_fill(self%parent%id, self%id, 0, fvalue), &
+            "Failed to set _FillValue on variable: " // trim(self%getName()))
     end if
 
   end subroutine setVariableFillValueF32
@@ -2319,7 +2327,9 @@ contains
     real(dp)         , intent(in)  :: fvalue
 
     if (.not. self%hasAttribute("_FillValue")) then
-       call self%setAttribute("_FillValue",fvalue)
+       ! call self%setAttribute("_FillValue",fvalue)
+       call check(nf90_def_var_fill(self%parent%id, self%id, 0, fvalue), &
+            "Failed to set _FillValue on variable: " // trim(self%getName()))
     end if
 
   end subroutine setVariableFillValueF64
