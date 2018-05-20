@@ -20,7 +20,7 @@ program main
 
   logical, dimension(:), allocatable :: tests
   logical :: test_failed
-  integer :: n, norder, ntests
+  integer :: n, ntests
   integer, parameter :: stdout = 6
 
   real(kind=real32),dimension(1000) :: x
@@ -75,35 +75,35 @@ program main
        'arange, real128')
   n = n + 1
 
-  tests(n) = assert(all(arange(cmplx(1._real32,0._real32),&
-       cmplx(3._real32,0._real32),&
-       cmplx(1._real32,0._real32))&
-       == [cmplx(1._real32,0._real32),&
-       cmplx(2._real32,0._real32),&
-       cmplx(3._real32,0._real32)]),&
+  tests(n) = assert(all(arange(cmplx(1._real32,0._real32, kind=real32),&
+       cmplx(3._real32,0._real32, kind=real32),&
+       cmplx(1._real32,0._real32, kind=real32))&
+       == [cmplx(1._real32,0._real32, kind=real32),&
+       cmplx(2._real32,0._real32, kind=real32),&
+       cmplx(3._real32,0._real32, kind=real32)]),&
        'arange, complex real32')
   n = n + 1
 
-  tests(n) = assert(all(arange(cmplx(1._real64,0._real64),&
-       cmplx(3._real64,0._real64),&
-       cmplx(1._real64,0._real64))&
-       == [cmplx(1._real64,0._real64),&
-       cmplx(2._real64,0._real64),&
-       cmplx(3._real64,0._real64)]),&
+  tests(n) = assert(all(arange(cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(3._real64,0._real64, kind=real64),&
+       cmplx(1._real64,0._real64, kind=real64))&
+       == [cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(2._real64,0._real64, kind=real64),&
+       cmplx(3._real64,0._real64, kind=real64)]),&
        'arange, complex real64')
   n = n + 1
 
-  tests(n) = assert(all(arange(cmplx(1._real128,0._real128),&
-       cmplx(3._real128,0._real128),&
-       cmplx(1._real128,0._real128))&
-       == [cmplx(1._real128,0._real128),&
-       cmplx(2._real128,0._real128),&
-       cmplx(3._real128,0._real128)]),&
+  tests(n) = assert(all(arange(cmplx(1._real128,0._real128, kind=real128),&
+       cmplx(3._real128,0._real128, kind=real128),&
+       cmplx(1._real128,0._real128, kind=real128))&
+       == [cmplx(1._real128,0._real128, kind=real128),&
+       cmplx(2._real128,0._real128, kind=real128),&
+       cmplx(3._real128,0._real128, kind=real128)]),&
        'arange, complex real128')
   n = n + 1
 
-  tests(n) = assert(all(arange(cmplx(1,1),cmplx(3,5),cmplx(1,2))&
-       == [cmplx(1,1),cmplx(2,3),cmplx(3,5)]),&
+  tests(n) = assert(all(arange(cmplx(1,1, kind=real32),cmplx(3,5, kind=real32),cmplx(1,2, kind=real32))&
+       == [cmplx(1,1, kind=real32),cmplx(2,3, kind=real32),cmplx(3,5, kind=real32)]),&
        'arange, incrementing both parts of complex numbers')
   n = n + 1
 
@@ -139,7 +139,6 @@ program main
   call report_tests(tests,test_failed)
   isgood = isgood .and. (.not. test_failed)
 
-
   n = 1
   ntests = 11
   call initialize_tests(tests,ntests)
@@ -172,22 +171,22 @@ program main
        'complement, real128')
   n = n + 1
 
-  tests(n) = assert(all(complement([cmplx(1._real32,0._real32),&
-       cmplx(2._real32,0._real32)],&
-       [cmplx(2._real32,0._real32)])&
-       == [cmplx(1._real32,0._real32)]),'complement, complex real32')
+  tests(n) = assert(all(complement([cmplx(1._real32,0._real32, kind=real32),&
+       cmplx(2._real32,0._real32, kind=real32)],&
+       [cmplx(2._real32,0._real32, kind=real32)])&
+       == [cmplx(1._real32,0._real32, kind=real32)]),'complement, complex real32')
   n = n + 1
 
-  tests(n) = assert(all(complement([cmplx(1._real64,0._real64),&
-       cmplx(2._real64,0._real64)],&
-       [cmplx(2._real64,0._real64)])&
-       == [cmplx(1._real64,0._real64)]),'complement, complex real64')
+  tests(n) = assert(all(complement([cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(2._real64,0._real64, kind=real64)],&
+       [cmplx(2._real64,0._real64, kind=real64)])&
+       == [cmplx(1._real64,0._real64, kind=real64)]),'complement, complex real64')
   n = n + 1
 
-  tests(n) = assert(all(complement([cmplx(1._real64,0._real64),&
-       cmplx(2._real64,0._real64)],&
-       [cmplx(2._real64,0._real64)])&
-       == [cmplx(1._real64,0._real64)]),'complement, complex real64')
+  tests(n) = assert(all(complement([cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(2._real64,0._real64, kind=real64)],&
+       [cmplx(2._real64,0._real64, kind=real64)])&
+       == [cmplx(1._real64,0._real64, kind=real64)]),'complement, complex real64')
   n = n + 1
 
   tests(n) = assert(all(complement([1,2],[2]) == ([1,2].complement.[2])),&
@@ -232,25 +231,25 @@ program main
   n = n + 1
 
   tests(n) = assert(all(filter(gt3lt5_c4,&
-       [cmplx(3.,0.),cmplx(4.,0.),cmplx(5.,0.)]) == [cmplx(4.,0.)]),&
+       [cmplx(3.,0., kind=real32),cmplx(4.,0., kind=real32),cmplx(5.,0., kind=real32)]) == [cmplx(4.,0., kind=real32)]),&
        'filter, complex real32')
   n = n + 1
 
   ! Need to assign to a variable first because cmplx() by default
   ! returns single-precision complex number which breaks the generic
   ! interface
-  c8 = [cmplx(3._real64,0._real64),&
-       cmplx(4._real64,0._real64),&
-       cmplx(5._real64,0._real64)]
-  c16 = [cmplx(3._real128,0._real128),&
-       cmplx(4._real128,0._real128),&
-       cmplx(5._real128,0._real128)]
+  c8 = [cmplx(3._real64,0._real64, kind=real64),&
+       cmplx(4._real64,0._real64, kind=real64),&
+       cmplx(5._real64,0._real64, kind=real64)]
+  c16 = [cmplx(3._real128,0._real128, kind=real128),&
+       cmplx(4._real128,0._real128, kind=real128),&
+       cmplx(5._real128,0._real128, kind=real128)]
 
-  tests(n) = assert(all(filter(gt3lt5_c8,c8) == [cmplx(4.,0.)]),&
+  tests(n) = assert(all(filter(gt3lt5_c8,c8) == [cmplx(4.,0., kind=real64)]),&
        'filter, complex real64')
   n = n + 1
 
-  tests(n) = assert(all(filter(gt3lt5_c16,c16) == [cmplx(4.,0.)]),&
+  tests(n) = assert(all(filter(gt3lt5_c16,c16) == [cmplx(4.,0., kind=real128)]),&
        'filter, complex real128')
   n = n + 1
 
@@ -295,22 +294,22 @@ program main
        'foldl, real128')
   n = n + 1
 
-  c4 = arange(cmplx(1,0),cmplx(5,0))
+  c4 = arange(cmplx(1,0, kind=real32),cmplx(5,0, kind=real32))
   c8 = c4
   c16 = c4
 
   c8_start = cmplx(0,0)
   c16_start = c8_start
 
-  tests(n) = assert(foldl(sum_c4,cmplx(0.,0.),c4) == cmplx(15,0),&
+  tests(n) = assert(foldl(sum_c4,cmplx(0.,0., kind=real32),c4) == cmplx(15,0, kind=real32),&
        'foldl, complex real32')
   n = n + 1
 
-  tests(n) = assert(foldl(sum_c8,c8_start,c8) == cmplx(15._real64,0._real64),&
+  tests(n) = assert(foldl(sum_c8,c8_start,c8) == cmplx(15._real64,0._real64, kind=real64),&
        'foldl, complex real64')
   n = n + 1
 
-  tests(n) = assert(foldl(sum_c16,c16_start,c16) == cmplx(15._real128,0._real128),&
+  tests(n) = assert(foldl(sum_c16,c16_start,c16) == cmplx(15._real128,0._real128, kind=real128),&
        'foldl, complex real128')
   n = n + 1
 
@@ -351,22 +350,22 @@ program main
        'foldr, real128')
   n = n + 1
 
-  c4 = arange(cmplx(1,0),cmplx(5,0))
+  c4 = arange(cmplx(1,0, kind=real32),cmplx(5,0, kind=real32))
   c8 = c4
   c16 = c4
 
-  c8_start = cmplx(0,0)
+  c8_start = cmplx(0,0, kind=real32)
   c16_start = c8_start
 
-  tests(n) = assert(foldr(sum_c4,cmplx(0.,0.),c4) == cmplx(15,0),&
+  tests(n) = assert(foldr(sum_c4,cmplx(0.,0., kind=real32),c4) == cmplx(15,0, kind=real32),&
        'foldr, complex real32')
   n = n + 1
 
-  tests(n) = assert(foldr(sum_c8,c8_start,c8) == cmplx(15._real64,0._real64),&
+  tests(n) = assert(foldr(sum_c8,c8_start,c8) == cmplx(15._real64,0._real64, kind=real64),&
        'foldr, complex real64')
   n = n + 1
 
-  tests(n) = assert(foldr(sum_c16,c16_start,c16) == cmplx(15._real128,0._real128),&
+  tests(n) = assert(foldr(sum_c16,c16_start,c16) == cmplx(15._real128,0._real128, kind=real128),&
        'foldr, complex real128')
   n = n + 1
 
@@ -407,22 +406,22 @@ program main
        'foldt, real128')
   n = n + 1
 
-  c4 = arange(cmplx(1,0),cmplx(5,0))
+  c4 = arange(cmplx(1,0, kind=real32),cmplx(5,0, kind=real32))
   c8 = c4
   c16 = c4
 
-  c8_start = cmplx(0,0)
+  c8_start = cmplx(0,0, kind=real32)
   c16_start = c8_start
 
-  tests(n) = assert(foldt(sum_c4,cmplx(0.,0.),c4) == cmplx(15,0),&
+  tests(n) = assert(foldt(sum_c4,cmplx(0.,0., kind=real32),c4) == cmplx(15,0, kind=real32),&
        'foldt, complex real32')
   n = n + 1
 
-  tests(n) = assert(foldt(sum_c8,c8_start,c8) == cmplx(15._real64,0._real64),&
+  tests(n) = assert(foldt(sum_c8,c8_start,c8) == cmplx(15._real64,0._real64, kind=real64),&
        'foldt, complex real64')
   n = n + 1
 
-  tests(n) = assert(foldt(sum_c16,c16_start,c16) == cmplx(15._real128,0._real128),&
+  tests(n) = assert(foldt(sum_c16,c16_start,c16) == cmplx(15._real128,0._real128, kind=real128),&
        'foldt, complex real128')
   n = n + 1
 
@@ -470,7 +469,11 @@ program main
   tests(n) = assert(head(c_r16) == c_r16(1),'head, complex real128')
   n = n + 1
 
+#ifdef pgiFortran
+  tests(n) = assert(.true.,'skip head operator, .head.x')
+#else
   tests(n) = assert(head([1,2]) == .head.[1,2],'head operator, .head.x')
+#endif
   n = n + 1
 
   test_failed = .false.
@@ -522,7 +525,11 @@ program main
   tests(n) = assert(size(init(init([1]))) == 0,'size(init(init([1]))) == 0')
   n = n + 1
 
+#ifdef pgiFortran
+  tests(n) = assert(.true.,'skip init operator, .init.x')
+#else
   tests(n) = assert(all(init([1,2]) == .init.[1,2]),'init operator, .init.x')
+#endif
   n = n + 1
 
   test_failed = .false.
@@ -562,21 +569,21 @@ program main
        'insert, real128')
   n = n + 1
 
-  tests(n) = assert(all(insert(cmplx(2._real32,0._real32),2,&
-       [cmplx(1._real32,0._real32),cmplx(3._real32,0._real32)])&
-       == arange(cmplx(1._real32,0._real32),cmplx(3._real32,0._real32))),&
+  tests(n) = assert(all(insert(cmplx(2._real32,0._real32, kind=real32),2,&
+       [cmplx(1._real32,0._real32, kind=real32),cmplx(3._real32,0._real32, kind=real32)])&
+       == arange(cmplx(1._real32,0._real32, kind=real32),cmplx(3._real32,0._real32, kind=real32))),&
        'insert, real32')
   n = n + 1
 
-  tests(n) = assert(all(insert(cmplx(2._real64,0._real64),2,&
-       [cmplx(1._real64,0._real64),cmplx(3._real64,0._real64)])&
-       == arange(cmplx(1._real64,0._real64),cmplx(3._real64,0._real64))),&
+  tests(n) = assert(all(insert(cmplx(2._real64,0._real64, kind=real64),2,&
+       [cmplx(1._real64,0._real64, kind=real64),cmplx(3._real64,0._real64, kind=real64)])&
+       == arange(cmplx(1._real64,0._real64, kind=real64),cmplx(3._real64,0._real64, kind=real64))),&
        'insert, real64')
   n = n + 1
 
-  tests(n) = assert(all(insert(cmplx(2._real128,0._real128),2,&
-       [cmplx(1._real128,0._real128),cmplx(3._real128,0._real128)])&
-       == arange(cmplx(1._real128,0._real128),cmplx(3._real128,0._real128))),&
+  tests(n) = assert(all(insert(cmplx(2._real128,0._real128, kind=real128),2,&
+       [cmplx(1._real128,0._real128, kind=real128),cmplx(3._real128,0._real128, kind=real128)])&
+       == arange(cmplx(1._real128,0._real128, kind=real128),cmplx(3._real128,0._real128, kind=real128))),&
        'insert, real128')
   n = n + 1
 
@@ -625,21 +632,21 @@ program main
        'intersection, real128')
   n = n + 1
 
-  tests(n) = assert(all(intersection([cmplx(1._real32,0._real32),cmplx(2._real32,0._real32)],&
-       [cmplx(2._real32,0._real32),cmplx(3._real32,0._real32)])&
-       == [cmplx(2._real32,0._real32)]),&
+  tests(n) = assert(all(intersection([cmplx(1._real32,0._real32, kind=real32),cmplx(2._real32,0._real32, kind=real32)],&
+       [cmplx(2._real32,0._real32, kind=real32),cmplx(3._real32,0._real32, kind=real32)])&
+       == [cmplx(2._real32,0._real32, kind=real32)]),&
        'intersection, complex real32')
   n = n + 1
 
-  tests(n) = assert(all(intersection([cmplx(1._real64,0._real64),cmplx(2._real64,0._real64)],&
-       [cmplx(2._real64,0._real64),cmplx(3._real64,0._real64)])&
-       == [cmplx(2._real64,0._real64)]),&
+  tests(n) = assert(all(intersection([cmplx(1._real64,0._real64, kind=real64),cmplx(2._real64,0._real64, kind=real64)],&
+       [cmplx(2._real64,0._real64, kind=real64),cmplx(3._real64,0._real64, kind=real64)])&
+       == [cmplx(2._real64,0._real64, kind=real64)]),&
        'intersection, complex real64')
   n = n + 1
 
-  tests(n) = assert(all(intersection([cmplx(1._real128,0._real128),cmplx(2._real128,0._real128)],&
-       [cmplx(2._real128,0._real128),cmplx(3._real128,0._real128)])&
-       == [cmplx(2._real128,0._real128)]),&
+  tests(n) = assert(all(intersection([cmplx(1._real128,0._real128, kind=real128),cmplx(2._real128,0._real128, kind=real128)],&
+       [cmplx(2._real128,0._real128, kind=real128),cmplx(3._real128,0._real128, kind=real128)])&
+       == [cmplx(2._real128,0._real128, kind=real128)]),&
        'intersection, complex real128')
   n = n + 1
 
@@ -684,22 +691,22 @@ program main
        'iterfold, real128')
   n = n + 1
 
-  c4 = arange(cmplx(1,0),cmplx(5,0))
+  c4 = arange(cmplx(1,0, kind=real32),cmplx(5,0, kind=real32))
   c8 = c4
   c16 = c4
 
-  c8_start = cmplx(0,0)
+  c8_start = cmplx(0,0, kind=real32)
   c16_start = c8_start
 
-  tests(n) = assert(iterfold(isum_c4,cmplx(0.,0.),c4) == cmplx(15,0),&
+  tests(n) = assert(iterfold(isum_c4,cmplx(0.,0., kind=real32),c4) == cmplx(15,0, kind=real32),&
        'iterfold, complex real32')
   n = n + 1
 
-  tests(n) = assert(iterfold(isum_c8,c8_start,c8) == cmplx(15._real64,0._real64),&
+  tests(n) = assert(iterfold(isum_c8,c8_start,c8) == cmplx(15._real64,0._real64, kind=real64),&
        'iterfold, complex real64')
   n = n + 1
 
-  tests(n) = assert(iterfold(isum_c16,c16_start,c16) == cmplx(15._real128,0._real128),&
+  tests(n) = assert(iterfold(isum_c16,c16_start,c16) == cmplx(15._real128,0._real128, kind=real128),&
        'iterfold, complex real128')
   n = n + 1
 
@@ -746,7 +753,11 @@ program main
   tests(n) = assert(last(c_r16) == c_r16(2),'last, complex real128')
   n = n + 1
 
+#ifdef pgiFortran
+  tests(n) = assert(.true.,'skip last operator, .last.x')
+#else
   tests(n) = assert(last([1,2]) == .last.[1,2],'last operator, .last.x')
+#endif
   n = n + 1
 
   test_failed = .false.
@@ -786,17 +797,17 @@ program main
        'limit, real128')
   n = n + 1
 
-  tests(n) = assert(limit(cmplx(-0.5,1.5),cmplx(0,0),cmplx(1,1)) == cmplx(0,1),&
+  tests(n) = assert(limit(cmplx(-0.5,1.5, kind=real32),cmplx(0,0, kind=real32),cmplx(1,1, kind=real32)) == cmplx(0,1, kind=real32),&
        'limit, complex real32')
   n = n + 1
 
-  tests(n) = assert(limit(cmplx(-0.5_real64,1.5_real64),cmplx(0._real64,0._real64),&
-       cmplx(1._real64,1._real64)) == cmplx(0._real64,1._real64),&
+  tests(n) = assert(limit(cmplx(-0.5_real64,1.5_real64, kind=real64),cmplx(0._real64,0._real64, kind=real64),&
+       cmplx(1._real64,1._real64, kind=real64)) == cmplx(0._real64,1._real64, kind=real64),&
        'limit, complex real64')
   n = n + 1
 
-  tests(n) = assert(limit(cmplx(-0.5_real128,1.5_real128),cmplx(0._real128,0._real128),&
-       cmplx(1._real128,1._real128)) == cmplx(0._real128,1._real128),&
+  tests(n) = assert(limit(cmplx(-0.5_real128,1.5_real128, kind=real128),cmplx(0._real128,0._real128, kind=real128),&
+       cmplx(1._real128,1._real128, kind=real128)) == cmplx(0._real128,1._real128, kind=real128),&
        'limit, complex real128')
   n = n + 1
 
@@ -841,13 +852,13 @@ program main
        == [1._real128,4._real128,27._real128]),'map, real128')
   n = n + 1
 
-  c4 = [cmplx(1.,0.),cmplx(2.,0.),cmplx(3.,0.)]
-  c8 = [cmplx(1._real64,0._real64),&
-       cmplx(2._real64,0._real64),&
-       cmplx(3._real64,0._real64)]
-  c16 = [cmplx(1._real128,0._real128),&
-       cmplx(2._real128,0._real128),&
-       cmplx(3._real128,0._real128)]
+  c4 = [cmplx(1.,0., kind=real32),cmplx(2.,0., kind=real32),cmplx(3.,0., kind=real32)]
+  c8 = [cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(2._real64,0._real64, kind=real64),&
+       cmplx(3._real64,0._real64, kind=real64)]
+  c16 = [cmplx(1._real128,0._real128, kind=real128),&
+       cmplx(2._real128,0._real128, kind=real128),&
+       cmplx(3._real128,0._real128, kind=real128)]
 
   tests(n) = assert(all(map(xpowx_c4,c4) == c4**c4),'map, complex real32')
   n = n + 1
@@ -895,32 +906,36 @@ program main
        'reverse, real128')
   n = n + 1
 
-  tests(n) = assert(all(reverse(arange(cmplx(1._real32,0._real32),&
-       cmplx(3._real32,0._real32)))&
-       == arange(cmplx(3._real32,0._real32),&
-       cmplx(1._real32,0._real32),&
-       cmplx(-1._real32,0._real32))),&
+  tests(n) = assert(all(reverse(arange(cmplx(1._real32,0._real32, kind=real32),&
+       cmplx(3._real32,0._real32, kind=real32)))&
+       == arange(cmplx(3._real32,0._real32, kind=real32),&
+       cmplx(1._real32,0._real32, kind=real32),&
+       cmplx(-1._real32,0._real32, kind=real32))),&
        'reverse, complex real32')
   n = n + 1
 
-  tests(n) = assert(all(reverse(arange(cmplx(1._real64,0._real64),&
-       cmplx(3._real64,0._real64)))&
-       == arange(cmplx(3._real64,0._real64),&
-       cmplx(1._real64,0._real64),&
-       cmplx(-1._real64,0._real64))),&
+  tests(n) = assert(all(reverse(arange(cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(3._real64,0._real64, kind=real64)))&
+       == arange(cmplx(3._real64,0._real64, kind=real64),&
+       cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(-1._real64,0._real64, kind=real64))),&
        'reverse, complex real64')
   n = n + 1
 
-  tests(n) = assert(all(reverse(arange(cmplx(1._real128,0._real128),&
-       cmplx(3._real128,0._real128)))&
-       == arange(cmplx(3._real128,0._real128),&
-       cmplx(1._real128,0._real128),&
-       cmplx(-1._real128,0._real128))),&
+  tests(n) = assert(all(reverse(arange(cmplx(1._real128,0._real128, kind=real64),&
+       cmplx(3._real128,0._real128, kind=real64)))&
+       == arange(cmplx(3._real128,0._real128, kind=real64),&
+       cmplx(1._real128,0._real128, kind=real64),&
+       cmplx(-1._real128,0._real128, kind=real64))),&
        'reverse, complex real128')
   n = n + 1
 
+#ifdef pgiFortran
+  tests(n) = assert(.true.,'skip reverse operator, .reverse.x')
+#else
   tests(n) = assert(all(reverse([1,2,3]) == .reverse.[1,2,3]),&
        'reverse operator, .reverse.x')
+#endif
   n = n + 1
 
   test_failed = .false.
@@ -960,8 +975,8 @@ program main
        'set, real128')
   n = n + 1
 
-  c4 = [cmplx(1,0),cmplx(2,0),cmplx(2,0),cmplx(3,0)]
-  c4_res = [cmplx(1,0),cmplx(2,0),cmplx(3,0)]
+  c4 = [cmplx(1,0, kind=real32),cmplx(2,0, kind=real32),cmplx(2,0, kind=real32),cmplx(3,0, kind=real32)]
+  c4_res = [cmplx(1,0, kind=real32),cmplx(2,0, kind=real32),cmplx(3,0, kind=real32)]
   tests(n) = assert(all(set(c4) == c4_res),'set, complex real32')
   n = n + 1
 
@@ -979,8 +994,12 @@ program main
        'set of empty array is an empty array')
   n = n + 1
 
+#ifdef pgiFortran
+  tests(n) = assert(.true.,'skip set operator, .set.x')
+#else
   tests(n) = assert(all(set([1,2,2,3]) == .set.[1,2,2,3]),&
        'set operator, .set.x')
+#endif
   n = n + 1
 
   test_failed = .false.
@@ -1020,27 +1039,27 @@ program main
        'sort, real128')
   n = n + 1
 
-  tests(n) = assert(all(sort(arange(cmplx(3._real32,0._real32),&
-       cmplx(1._real32,0._real32),&
-       cmplx(-1._real32,0._real32)))&
-       == arange(cmplx(1._real32,0._real32),&
-       cmplx(3._real32,0._real32))),&
+  tests(n) = assert(all(sort(arange(cmplx(3._real32,0._real32, kind=real32),&
+       cmplx(1._real32,0._real32, kind=real32),&
+       cmplx(-1._real32,0._real32, kind=real32)))&
+       == arange(cmplx(1._real32,0._real32, kind=real32),&
+       cmplx(3._real32,0._real32, kind=real32))),&
        'sort, complex real32')
   n = n + 1
 
-  tests(n) = assert(all(sort(arange(cmplx(3._real64,0._real64),&
-       cmplx(1._real64,0._real64),&
-       cmplx(-1._real64,0._real64)))&
-       == arange(cmplx(1._real64,0._real64),&
-       cmplx(3._real64,0._real64))),&
+  tests(n) = assert(all(sort(arange(cmplx(3._real64,0._real64, kind=real64),&
+       cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(-1._real64,0._real64, kind=real64)))&
+       == arange(cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(3._real64,0._real64, kind=real64))),&
        'sort, complex real64')
   n = n + 1
 
-  tests(n) = assert(all(sort(arange(cmplx(3._real128,0._real128),&
-       cmplx(1._real128,0._real128),&
-       cmplx(-1._real128,0._real128)))&
-       == arange(cmplx(1._real128,0._real128),&
-       cmplx(3._real128,0._real128))),&
+  tests(n) = assert(all(sort(arange(cmplx(3._real128,0._real128, kind=real128),&
+       cmplx(1._real128,0._real128, kind=real128),&
+       cmplx(-1._real128,0._real128, kind=real128)))&
+       == arange(cmplx(1._real128,0._real128, kind=real128),&
+       cmplx(3._real128,0._real128, kind=real128))),&
        'sort, complex real128')
   n = n + 1
 
@@ -1049,8 +1068,12 @@ program main
        'all(tail(sort(x)) >= init(sort(x))')
   n = n + 1
 
+#ifdef pgiFortran
+  tests(n) = assert(.true.,'skip sort operator, .sort.x')
+#else
   tests(n) = assert(all(sort(x) == .sort.x),&
        'sort operator, .sort.x')
+#endif
   n = n + 1
 
   test_failed = .false.
@@ -1165,21 +1188,21 @@ program main
        'subscript out of bounds returns empty array')
   n = n + 1
 
-  tests(n) = assert(all(subscript(arange(cmplx(1._real32,0._real32),&
-       cmplx(3._real32,0._real32)),[2])&
-       == [cmplx(2._real32,0._real32)]),&
+  tests(n) = assert(all(subscript(arange(cmplx(1._real32,0._real32, kind=real32),&
+       cmplx(3._real32,0._real32, kind=real32)),[2])&
+       == [cmplx(2._real32,0._real32, kind=real32)]),&
        'subscript, complex real32')
   n = n + 1
 
-  tests(n) = assert(all(subscript(arange(cmplx(1._real64,0._real64),&
-       cmplx(3._real64,0._real64)),[2])&
-       == [cmplx(2._real64,0._real64)]),&
+  tests(n) = assert(all(subscript(arange(cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(3._real64,0._real64, kind=real64)),[2])&
+       == [cmplx(2._real64,0._real64, kind=real64)]),&
        'subscript, complex real64')
   n = n + 1
 
-  tests(n) = assert(all(subscript(arange(cmplx(1._real128,0._real128),&
-       cmplx(3._real128,0._real128)),[2])&
-       == [cmplx(2._real128,0._real128)]),&
+  tests(n) = assert(all(subscript(arange(cmplx(1._real128,0._real128, kind=real128),&
+       cmplx(3._real128,0._real128, kind=real128)),[2])&
+       == [cmplx(2._real128,0._real128, kind=real128)]),&
        'subscript, complex real128')
   n = n + 1
 
@@ -1232,7 +1255,11 @@ program main
   tests(n) = assert(size(tail(tail([1._real32]))) == 0,'size(tail(tail([1]))) == 0')
   n = n + 1
 
+#ifdef pgiFortran
+  tests(n) = assert(.true.,'skip tail operator, .tail.x')
+#else
   tests(n) = assert(all(tail([1,2]) == .tail.[1,2]),'tail operator, .tail.x')
+#endif
   n = n + 1
 
   test_failed = .false.
@@ -1272,23 +1299,23 @@ program main
        'unfold, real128')
   n = n + 1
 
-  tests(n) = assert(all(unfold(addone_c4,[cmplx(1._real32,0._real32)],3)&
-       == arange(cmplx(1._real32,0._real32),&
-       cmplx(3._real32,0._real32))),&
+  tests(n) = assert(all(unfold(addone_c4,[cmplx(1._real32,0._real32, kind=real32)],3)&
+       == arange(cmplx(1._real32,0._real32, kind=real32),&
+       cmplx(3._real32,0._real32, kind=real32))),&
        'unfold, complex real32')
   n = n + 1
 
-  c8 = [cmplx(1._real64,0._real64)]
+  c8 = [cmplx(1._real64,0._real64, kind=real64)]
   tests(n) = assert(all(unfold(addone_c8,c8,3)&
-       == arange(cmplx(1._real64,0._real64),&
-       cmplx(3._real64,0._real64))),&
+       == arange(cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(3._real64,0._real64, kind=real64))),&
        'unfold, complex real64')
   n = n + 1
 
-  c16 = [cmplx(1._real128,0._real128)]
+  c16 = [cmplx(1._real128,0._real128, kind=real128)]
   tests(n) = assert(all(unfold(addone_c16,c16,3)&
-       == arange(cmplx(1._real128,0._real128),&
-       cmplx(3._real128,0._real128))),&
+       == arange(cmplx(1._real128,0._real128, kind=real128),&
+       cmplx(3._real128,0._real128, kind=real128))),&
        'unfold, complex real128')
   n = n + 1
 
@@ -1329,27 +1356,27 @@ program main
        'union, real128')
   n = n + 1
 
-  tests(n) = assert(all(union([cmplx(1._real32,0._real32),cmplx(2._real32,0._real32)],&
-       [cmplx(2._real32,0._real32),cmplx(3._real32,0._real32)])&
-       == [cmplx(1._real32,0._real32),&
-       cmplx(2._real32,0._real32),&
-       cmplx(3._real32,0._real32)]),&
+  tests(n) = assert(all(union([cmplx(1._real32,0._real32, kind=real32),cmplx(2._real32,0._real32, kind=real32)],&
+       [cmplx(2._real32,0._real32, kind=real32),cmplx(3._real32,0._real32, kind=real32)])&
+       == [cmplx(1._real32,0._real32, kind=real32),&
+       cmplx(2._real32,0._real32, kind=real32),&
+       cmplx(3._real32,0._real32, kind=real32)]),&
        'union, complex real32')
   n = n + 1
 
-  tests(n) = assert(all(union([cmplx(1._real64,0._real64),cmplx(2._real64,0._real64)],&
-       [cmplx(2._real64,0._real64),cmplx(3._real64,0._real64)])&
-       == [cmplx(1._real64,0._real64),&
-       cmplx(2._real64,0._real64),&
-       cmplx(3._real64,0._real64)]),&
+  tests(n) = assert(all(union([cmplx(1._real64,0._real64, kind=real64),cmplx(2._real64,0._real64, kind=real64)],&
+       [cmplx(2._real64,0._real64, kind=real64),cmplx(3._real64,0._real64, kind=real64)])&
+       == [cmplx(1._real64,0._real64, kind=real64),&
+       cmplx(2._real64,0._real64, kind=real64),&
+       cmplx(3._real64,0._real64, kind=real64)]),&
        'union, complex real64')
   n = n + 1
 
-  tests(n) = assert(all(union([cmplx(1._real128,0._real128),cmplx(2._real128,0._real128)],&
-       [cmplx(2._real128,0._real128),cmplx(3._real128,0._real128)])&
-       == [cmplx(1._real128,0._real128),&
-       cmplx(2._real128,0._real128),&
-       cmplx(3._real128,0._real128)]),&
+  tests(n) = assert(all(union([cmplx(1._real128,0._real128, kind=real128),cmplx(2._real128,0._real128, kind=real128)],&
+       [cmplx(2._real128,0._real128, kind=real128),cmplx(3._real128,0._real128, kind=real128)])&
+       == [cmplx(1._real128,0._real128, kind=real128),&
+       cmplx(2._real128,0._real128, kind=real128),&
+       cmplx(3._real128,0._real128, kind=real128)]),&
        'union, complex real128')
   n = n + 1
 

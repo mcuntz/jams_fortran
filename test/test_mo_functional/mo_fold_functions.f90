@@ -26,7 +26,7 @@ contains
   end function sum_i2
 
   pure integer(kind=int32) function sum_i4(x,y) result(res)
-    use mo_kind, only: in32=>i4
+    use mo_kind, only: int32=>i4
     integer(kind=int32),intent(in) :: x,y
     res = x + y
   end function sum_i4

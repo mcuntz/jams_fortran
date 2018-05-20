@@ -1065,7 +1065,7 @@ contains
     do concurrent(i=1:length)
 #endif
        arange(i) = cmplx(real(start)+(i-1)*real(incr),&
-            aimag(start)+(i-1)*aimag(incr))
+            aimag(start)+(i-1)*aimag(incr), kind=r4)
     enddo
   end function arange_c4
 
@@ -1102,7 +1102,7 @@ contains
     do concurrent(i=1:length)
 #endif
        arange(i) = cmplx(real(start)+(i-1)*real(incr),&
-            aimag(start)+(i-1)*aimag(incr))
+            aimag(start)+(i-1)*aimag(incr), kind=r8)
     enddo
   end function arange_c8
 
@@ -1139,7 +1139,7 @@ contains
     do concurrent(i=1:length)
 #endif
        arange(i) = cmplx(real(start)+(i-1)*real(incr),&
-            aimag(start)+(i-1)*aimag(incr))
+            aimag(start)+(i-1)*aimag(incr), kind=r16)
     enddo
   end function arange_c16
 
@@ -1309,7 +1309,7 @@ contains
     integer(kind=i4) :: n
     a = set(x)
     b = set(y)
-    complement = arange(cmplx(1._r4,0._r4),cmplx(0._r4,0._r4))
+    complement = arange(cmplx(1._r4,0._r4, kind=r4),cmplx(0._r4,0._r4, kind=r4))
 #ifdef pgiFortran
     do n=1, size(a)
 #else
@@ -1331,7 +1331,7 @@ contains
     integer(kind=i4) :: n
     a = set(x)
     b = set(y)
-    complement = arange(cmplx(1._r4,0._r4),cmplx(0._r4,0._r4))
+    complement = arange(cmplx(1._r8,0._r8, kind=r8),cmplx(0._r8,0._r8, kind=r8))
 #ifdef pgiFortran
     do n=1, size(a)
 #else
@@ -1353,7 +1353,7 @@ contains
     integer(kind=i4) :: n
     a = set(x)
     b = set(y)
-    complement = arange(cmplx(1._r16,0._r16),cmplx(0._r16,0._r16))
+    complement = arange(cmplx(1._r16,0._r16, kind=r16),cmplx(0._r16,0._r16, kind=r16))
 #ifdef pgiFortran
     do n=1, size(a)
 #else
@@ -1752,7 +1752,7 @@ contains
     procedure(f2_i8) :: f !! Folding function
     integer(kind=i8),intent(in) :: start !! Accumulator start value
     integer(kind=i8),dimension(:),intent(in) :: x !! Input array
-    if(size(x) < 1)then
+    if (size(x) < 1) then
        res = start
     else
        res = foldl(f,f(start,x(1)),x(2:))
@@ -2789,7 +2789,7 @@ contains
     integer(kind=i4) :: n
     a = set(x)
     b = set(y)
-    res = empty(cmplx(1._r4,0._r4))
+    res = empty(cmplx(1._r4,0._r4, kind=r4))
     if(size(a) > size(b))then
 #ifdef pgiFortran
        do n=1, size(b)
@@ -2821,7 +2821,7 @@ contains
     integer(kind=i4) :: n
     a = set(x)
     b = set(y)
-    res = empty(cmplx(1._r8,0._r8))
+    res = empty(cmplx(1._r8,0._r8, kind=r8))
     if(size(a) > size(b))then
 #ifdef pgiFortran
        do n=1, size(b)
@@ -2853,7 +2853,7 @@ contains
     integer(kind=i4) :: n
     a = set(x)
     b = set(y)
-    res = empty(cmplx(1._r16,0._r16))
+    res = empty(cmplx(1._r16,0._r16, kind=r16))
     if(size(a) > size(b))then
 #ifdef pgiFortran
        do n=1, size(b)
@@ -3218,7 +3218,7 @@ contains
     complex(kind=r4),intent(in) :: a !! First limit
     complex(kind=r4),intent(in) :: b !! Second limit
     limit = cmplx(min(max(real(x),min(real(a),real(b))),max(real(a),real(b))),&
-         min(max(aimag(x),min(aimag(a),aimag(b))),max(aimag(a),aimag(b))))
+         min(max(aimag(x),min(aimag(a),aimag(b))),max(aimag(a),aimag(b))), kind=r4)
   end function limit_c4
 
 
@@ -3232,7 +3232,7 @@ contains
     complex(kind=r8),intent(in) :: a !! First limit
     complex(kind=r8),intent(in) :: b !! Second limit
     limit = cmplx(min(max(real(x),min(real(a),real(b))),max(real(a),real(b))),&
-         min(max(aimag(x),min(aimag(a),aimag(b))),max(aimag(a),aimag(b))))
+         min(max(aimag(x),min(aimag(a),aimag(b))),max(aimag(a),aimag(b))), kind=r8)
   end function limit_c8
 
 
@@ -3246,7 +3246,7 @@ contains
     complex(kind=r16),intent(in) :: a !! First limit
     complex(kind=r16),intent(in) :: b !! Second limit
     limit = cmplx(min(max(real(x),min(real(a),real(b))),max(real(a),real(b))),&
-         min(max(aimag(x),min(aimag(a),aimag(b))),max(aimag(a),aimag(b))))
+         min(max(aimag(x),min(aimag(a),aimag(b))),max(aimag(a),aimag(b))), kind=r16)
   end function limit_c16
 
 
