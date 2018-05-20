@@ -441,6 +441,7 @@ MODULE mo_linear_algebra
   !     HISTORY
   !>        \author Sebastian Mueller
   !>        \date October 2016
+  !         Modified, Matthias Cuntz, May 2018 - allocate output for solve_linear_equations_band_1_sp
   INTERFACE solve_linear_equations_band
      MODULE PROCEDURE solve_linear_equations_band_1_dp, solve_linear_equations_band_1_sp
   END INTERFACE solve_linear_equations_band
@@ -1047,6 +1048,7 @@ CONTAINS
     LOGICAL,  OPTIONAL,       INTENT(IN) :: condition
     REAL(sp), DIMENSION(:), allocatable  :: solve_linear_equations_band_1_sp
 
+    allocate(solve_linear_equations_band_1_sp(size(rhs,1)))
     solve_linear_equations_band_1_sp = real(solve_linear_equations_band_1_dp(real(lhsb,dp), real(rhs,dp), l, u, condition), sp)
 
   END FUNCTION solve_linear_equations_band_1_sp
