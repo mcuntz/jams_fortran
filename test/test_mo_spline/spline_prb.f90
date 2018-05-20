@@ -3945,7 +3945,7 @@ subroutine test18 ( )
      write(30, '(a)' ) '   SPLINE"(T)      F"(T):'
      write(30, '(a)' ) ' '
      do i = 1, n
-        write(30, '(2x,2g14.6)' ) ypp(i), fppcube(t(i))
+        write(30, '(2x,2f14.5)' ) ypp(i), fppcube(t(i))
      end do
 
      write(30, '(a)' ) ' '
@@ -3980,10 +3980,10 @@ subroutine test18 ( )
 
            call spline_cubic_val ( n, t, y, ypp, tval, yval, ypval, yppval )
 
-           write(30, '(2x,f10.4)' ) tval
-           write(30, '(2x,10x,2f10.4)' )   yval, fcube ( tval )
-           write(30, '(2x,10x,2f10.4)' )   ypval, fpcube ( tval )
-           write(30, '(2x,10x,2f10.4)' )   yppval, fppcube ( tval )
+           write(30, '(2x,f14.4)' ) tval
+           write(30, '(2x,10x,2f14.4)' )   yval, fcube( tval )
+           write(30, '(2x,10x,2f14.4)' )   ypval, fpcube( tval )
+           write(30, '(2x,10x,2f14.4)' )   yppval, fppcube( tval )
 
         end do
      end do
