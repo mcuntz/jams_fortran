@@ -154,6 +154,7 @@ MODULE mo_kernel
   !         Modified, Matthias Cuntz, Mar 2013
   !                   Matthias Cuntz, May 2014 - sort -> qsort
   !                   Matthias Cuntz, Jun 2016 - Romberg integration
+  !                   Matthias Cuntz, May 2018 - allocate correct size for kernel_pdf in romberg=.false.
 
   INTERFACE kernel_cumdensity
      MODULE PROCEDURE kernel_cumdensity_1d_dp, kernel_cumdensity_1d_sp
@@ -703,13 +704,13 @@ CONTAINS
 
     ! cumulative integration of pdf with Simpson's and trapezoidal rules as in Numerical recipes (qsimp)
     ! We do the i=1 step of trapzd ourselves to save kernel evaluations
-    allocate(kernel_pdf(nout))
     allocate(kernel_cumdensity_1d_dp(nout))
 
     lower_x  = minval(x) - 3.0_dp * stddev(x)
 
     if (doromberg) then
        allocate(s(trapzmax+1), hs(trapzmax+1))
+       allocate(kernel_pdf(nout))
 
        kernel_pdf = kernel_density(x, hh, xout=xxout)
        klower_x   = kernel_density(x, hh, xout=(/lower_x/))
@@ -751,6 +752,7 @@ CONTAINS
        deallocate(s, hs)
     else
        ! loop through all regression points
+       allocate(kernel_pdf(trapzmax))
        do ii = 1, nout
           if (ii .eq. 1_i4) then
              delta                       = (xxout(ii)-lower_x) / real(trapzmax-1,dp)

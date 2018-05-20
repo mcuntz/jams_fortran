@@ -107,21 +107,19 @@ program test_kernel
 
   ! ---------------------------------------------------------------------------------
   write(*,*) 'Testing kernel cum. density (CDF) estimation'
-  
+
   yin_1d = kernel_cumdensity(xin_1d, h=h(1), silverman=.false., romberg=.false.)
-  
+
   write(*,'(A4,A7,A4,A7)') '    ','x      ','    ','cdf(x) '
   do ii=1,size(yin_1d)
-     write(*,'(A4,F7.4,A4,F8.5)') '    ', xin_1d(ii), '    ',yin_1d(ii)
+     write(*,'(A4,F7.4,A4,F8.5)') '    ', xin_1d(ii), '    ', yin_1d(ii)
   end do
 
   ! With normalisation: test1 = (/ 8847_i4, 4544_i4, 6062_i4, 4544_i4, 2363_i4, 3437_i4, 9332_i4, 6490_i4, 0607_i4, 0_i4 /)
   test1 = (/ 8461_i4, 4744_i4, 6055_i4, 4744_i4, 2861_i4, 3789_i4, 8880_i4, 6425_i4, 1344_i4, 819_i4 /)
   do ii=1,10
-     print*, int(yin_1d(ii)*10000.0_dp,i4), test1(ii), yin_1d(ii)
      if (int(yin_1d(ii)*10000.0_dp,i4) .ne. test1(ii)) isgood = .false.
   end do
-  if (.not. isgood) print*, 'Ha08'
 
   write(*,*) ' '
 
