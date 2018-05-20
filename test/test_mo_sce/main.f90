@@ -106,15 +106,11 @@ program test_sce
   if (isgood) then
      write(*,*) 'mo_sce o.k.'
   else
-     write(*,*) 'mo_sce failed!'
+     write(*,*) 'mo_sce 1 failed!'
   endif
 
 
   ! Check restart
-  bestf   = 0.
-  neval   = 0
-  history = 0.
-
   opt = sce(ackley,       & ! Mandatory IN  : Objective function
        pini,               & ! Mandatory IN  : initial guess
        prange,             & ! Mandatory IN  : range for each parameter (min, max)

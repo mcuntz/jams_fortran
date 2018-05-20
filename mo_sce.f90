@@ -1490,6 +1490,7 @@ CONTAINS
       if (present(bestf) .and. .not. maxit) bestf = bestf_tmp
       if (present(bestf) .and. maxit)       bestf = -bestf_tmp
       if (present(history)) then
+         if (allocated(history)) deallocate(history)
          allocate(history(icall))
          history(:) = history_tmp(1:icall)
       end if
