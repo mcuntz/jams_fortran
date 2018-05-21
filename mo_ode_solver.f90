@@ -1269,8 +1269,10 @@ contains
 
             if ( ge((x-x2)*(x2-x1), 0.0_dp) )   then                    ! are we done?!?!
                 call save_a_step                                        ! save final step
+                if (allocated(xout)) deallocate(xout)
                 allocate( xout(kount) )                                 ! allocate storage for outputs
                 xout(:) = xp(1:kount)
+                if (allocated(yout)) deallocate(yout)
                 allocate( yout(kount, size(yp,2)) )                     ! allocate storage for outputs
                 yout(:,:) = yp(1:kount, :)
                 deallocate( xp, yp )                                    ! clear out old stored variables
@@ -2063,8 +2065,10 @@ contains
 
             if ( (x-x2)*(x2-x1) .ge. 0.0_sp )   then            ! are we done?!?!
                 call save_a_step                                ! save final step
+                if (allocated(xout)) deallocate(xout)
                 allocate( xout(kount) )                         ! allocate storage for outputs
                 xout(:) = xp(1:kount)
+                if (allocated(yout)) deallocate(yout)
                 allocate( yout(kount, size(yp,2)) )             ! allocate storage for outputs
                 yout(:,:) = yp(1:kount, :)
                 deallocate( xp, yp )                            ! clear out old stored variables
@@ -2209,8 +2213,10 @@ contains
 
             if ( (x-x2)*(x2-x1) .ge. 0.0_dp )   then        ! are we done?!?!
                 call save_a_step                            ! save final step
+                if (allocated(xout)) deallocate(xout)
                 allocate( xout(kount) )                     ! allocate storage for outputs
                 xout(:) = xp(1:kount)
+                if (allocated(yout)) deallocate(yout)
                 allocate( yout(kount, size(yp,2)) )         ! allocate storage for outputs
                 yout(:,:) = yp(1:kount, :)
                 deallocate( xp, yp )                        ! clear out old stored variables
@@ -2344,8 +2350,10 @@ contains
 
             if ( ge((x-x2)*(x2-x1), 0.0_sp) )   then                    ! are we done?!?!
                 call save_a_step                                        ! save final step
+                if (allocated(xout)) deallocate(xout)
                 allocate( xout(kount) )                                 ! allocate storage for outputs
                 xout(:) = xp(1:kount)
+                if (allocated(yout)) deallocate(yout)
                 allocate( yout(kount, size(yp,2)) )                     ! allocate storage for outputs
                 yout(:,:) = yp(1:kount, :)
                 deallocate( xp, yp )                                    ! clear out old stored variables
@@ -2477,8 +2485,10 @@ contains
 
             if ( ge((x-x2)*(x2-x1), 0.0_dp) )   then                    ! are we done?!?!
                 call save_a_step                                        ! save final step
+                if (allocated(xout)) deallocate(xout)
                 allocate( xout(kount) )                                 ! allocate storage for outputs
                 xout(:) = xp(1:kount)
+                if (allocated(yout)) deallocate(yout)
                 allocate( yout(kount, size(yp,2)) )                     ! allocate storage for outputs
                 yout(:,:) = yp(1:kount, :)
                 deallocate( xp, yp )                                    ! clear out old stored variables
