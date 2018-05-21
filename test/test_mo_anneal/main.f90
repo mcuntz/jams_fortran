@@ -106,9 +106,9 @@ PROGRAM anneal_test
   print*, '   costbest = ', costbestAll
   print*, '   parabest = ', parabestAll
 
-  ! Is program running properly?   costbestAll = 3.1142480812726376E-02
+  ! Is program running properly?   costbestAll = 1.5210594853672710E-002
   print*, '-----------------------------------'
-  if ( nint(costbestAll*100000) .eq. 3114 ) then
+  if ( nint(costbestAll*100000) .eq. 1521 ) then
      print*, 'mo_anneal: o.k.'
   else
      print*, 'mo_anneal: failed '

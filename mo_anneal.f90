@@ -4,26 +4,28 @@ MODULE mo_anneal
   ! and is part of the JAMS CHS Fortran library.
 
 
-  ! Written  Juliane Mai, Mar 2012 : module implementation
-  ! Modified Juliane Mai, May 2012 : anneal: sp version
-  !          Juliane Mai, May 2012 : anneal: documentation
-  !          Juliane Mai, May 2012 : GetTemperature: sp and dp version
-  !          Juliane Mai, Jun 2012 : weighted parameter selection
-  !          Juliane Mai, Aug 2012 : - function anneal instead of subroutine
-  !                                  - using new module get_timeseed as default for seeding
-  !                                  - new optional for minimization or maximization
-  !                                  - fixed parameter ranges possible instead of interface range
-  !          Juliane Mai, Nov 2012 : history of achieved objective function values as optional out
-  !                                  only in anneal but not anneal_valid
-  !          Juliane Mai, Jan 2013 : - including DDS features in anneal, i.e. reflection at parameter boundaries,
-  !                                    different parameter selection modes (one, all, neighborhood), and
-  !                                    different parameter pertubation modes (flexible r=dR (anneal version) or
-  !                                    constant r=0.2 (dds version))
-  !                                  - remove sp versions
-  !                                  - fixed and flexible parameter ranges are now in one function
-  !                                    using optional arguments
-  !                                  - undef_funcval instead of anneal_valid function
-  !          Juliane Mai, Feb 2013 : - xor4096 optionals combined in save_state
+  ! Written  Juliane Mai, Mar 2012 :    module implementation
+  ! Modified Juliane Mai, May 2012 :    anneal: sp version
+  !          Juliane Mai, May 2012 :    anneal: documentation
+  !          Juliane Mai, May 2012 :    GetTemperature: sp and dp version
+  !          Juliane Mai, Jun 2012 :    weighted parameter selection
+  !          Juliane Mai, Aug 2012 :    - function anneal instead of subroutine
+  !                                     - using new module get_timeseed as default for seeding
+  !                                     - new optional for minimization or maximization
+  !                                     - fixed parameter ranges possible instead of interface range
+  !          Juliane Mai, Nov 2012 :    history of achieved objective function values as optional out
+  !                                     only in anneal but not anneal_valid
+  !          Juliane Mai, Jan 2013 :    - including DDS features in anneal, i.e. reflection at parameter boundaries,
+  !                                       different parameter selection modes (one, all, neighborhood), and
+  !                                       different parameter pertubation modes (flexible r=dR (anneal version) or
+  !                                       constant r=0.2 (dds version))
+  !                                     - remove sp versions
+  !                                     - fixed and flexible parameter ranges are now in one function
+  !                                       using optional arguments
+  !                                     - undef_funcval instead of anneal_valid function
+  !          Juliane Mai, Feb 2013 :    - xor4096 optionals combined in save_state
+  !          Matthias Cuntz, May 2018 : Change in cost function must be better 1e-15 instead of 0.0 to accept
+  !                                     new state because of numerics of different compilers
 
   ! License
   ! -------
@@ -552,7 +554,7 @@ CONTAINS
 
     if (present(Len)) then
        if (Len .lt. Max(20_i4*n,250_i4)) then
-          print*, 'WARNING: Input argument LEN should be greater than Max(250,20*N), N=number of parameters'
+          write(*,*) 'WARNING: Input argument LEN should be greater than Max(250,20*N), N=number of parameters'
           LEN_IN = Len
        else
           LEN_IN = Len
@@ -665,7 +667,7 @@ CONTAINS
           end if
        end if
     end if
-
+    
     if (present(changeParaMode)) then
        changeParaMode_inin = changeParaMode
     else
@@ -709,7 +711,7 @@ CONTAINS
     end do
 
     if (printflag_in) then
-       print*, 'Following parameters will be optimized: ',truepara
+       write(*,*) 'Following parameters will be optimized: ',truepara
     end if
 
     weight_in = 0.0_dp
@@ -824,7 +826,7 @@ CONTAINS
           select case(changeParaMode_inin)
           case(1_i4)  ! only one parameter is changed
              ! (1a) Change one parameter traditionally
-             call xor4096(seeds_in(2),RN2, save_state=save_state_2)
+             call xor4096(seeds_in(2), RN2, save_state=save_state_2)
              iPar=1_i4
              !
              do while (weightGrad(iPar) .lt. RN2)
@@ -839,11 +841,11 @@ CONTAINS
              gamm(iPar)%min = iParRange(1)
              gamm(iPar)%max = iParRange(2)
              if (reflectionFlag_inin) then
-                call xor4096g(seeds_in(3),RN3, save_state=save_state_3)
+                call xor4096g(seeds_in(3), RN3, save_state=save_state_3)
                 gamm(iPar)%new = parGen_dds_dp( gamm(iPar)%old, pertubationR, &
                      gamm(iPar)%min, gamm(iPar)%max,RN3)
              else
-                call xor4096(seeds_in(2),RN2, save_state=save_state_2)
+                call xor4096(seeds_in(2), RN2, save_state=save_state_2)
                 gamm(iPar)%new = parGen_anneal_dp( gamm(iPar)%old, dR, &
                      gamm(iPar)%min, gamm(iPar)%max,RN2)
              end if
@@ -917,32 +919,33 @@ CONTAINS
              df = fn-fo
 
              ! analyze change in the objective function: df
-             if (df < 0.0_DP) then
+             !if (df < 0.0_DP) then
+             if (df < (-1.e-15)) then
 
                 ! accept the new state
-                Ipos=Ipos+1_i4
+                Ipos = Ipos+1_i4
                 fo = fn
-                gamm(:)%old   = gamm(:)%new
+                gamm(:)%old = gamm(:)%new
 
                 ! keep best solution
                 if (fo < fBest) then
                    fBest =  fo
-                   gamm(:)%best   = gamm(:)%new
+                   gamm(:)%best = gamm(:)%new
                 endif
              else
                 if ( df >  eps_in ) then
-                   rho=-df/T_in
+                   rho = -df/T_in
                    if (rho < small) then
-                      pa=0.0_DP
+                      pa = 0.0_DP
                    else
-                      pa=EXP(rho)
+                      pa = EXP(rho)
                    end if
   	           !
                    call xor4096(seeds_in(1), RN1, save_state=save_state_1)
                    !
                    if (pa > RN1) then
                       ! accept new state with certain probability
-                      Ineg=Ineg+1_i4
+                      Ineg = Ineg+1_i4
                       fo = fn
                       ! save old state
                       gamm(:)%old   = gamm(:)%new
@@ -1054,6 +1057,11 @@ CONTAINS
           iStop=.FALSE.
        end if
 
+       if (printflag_in) then
+          print '(I8, 2I5, E15.7, 3E15.7)', ITotalCounter, Ipos, Ineg, ac_ratio, T_in, &
+               fo*NormPhi*maxit_in, fBest*NormPhi*maxit_in
+       end if
+
     end do loopTest
 
     ! calculate cost function again (only for check and return values)
@@ -1076,6 +1084,7 @@ CONTAINS
     end if
 
     if (present(history)) then
+       if (allocated(history)) deallocate(history)
        allocate(history(size(history_out,1)-1,size(history_out,2)))
        history(:,:) = history_out(1:size(history_out,1)-1,:)
     end if
@@ -1206,8 +1215,8 @@ CONTAINS
     if (present(samplesize)) then
        if (samplesize .lt. Max(20_i4*n,250_i4)) then
           !stop 'Input argument LEN must be greater than Max(250,20*N), N=number of parameters'
-          print*, 'WARNING (GetTemperature): '
-          print*, 'Input argument samplesize should be greater than Max(250,20*N), N=number of parameters'
+          write(*,*) 'WARNING (GetTemperature): '
+          write(*,*) 'Input argument samplesize should be greater than Max(250,20*N), N=number of parameters'
           samplesize_in = samplesize
        else
           samplesize_in = samplesize
@@ -1231,7 +1240,7 @@ CONTAINS
     else
        ! Seeds depend on actual time
        call get_timeseed(seeds_in)
-       print*,'temp: seeds(1)=', seeds_in(1)
+       write(*,*) 'temp: seeds(1)=', seeds_in(1)
     endif
 
     if (present(printflag)) then
@@ -1350,14 +1359,14 @@ CONTAINS
 
     acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
     if (printflag_in) then
-       print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
+       write(*,*) "acc_estimate = ", acc_estim, "    ( T = ",T," )"
     end if
     Do While ( (acc_estim .lt. 1.0_dp) .and. (abs(acc_estim - acc_goal) .gt. 0.0001_dp))
        T = T * (Log(acc_estim)/Log(acc_goal))**(0.5_dp) ! **(1.0/p)  with p=1.0
        if ( all(T .gt. Energy(:,1)/709._dp) .and. all(T .gt. Energy(:,2)/709._dp) ) then
           acc_estim = sum(exp(-(Energy(:,2)/T))) / sum(exp(-(Energy(:,1)/T)))
           if (printflag_in) then
-             print*, "acc_estimate = ", acc_estim, "    ( T = ",T," )"
+             write(*,*) "acc_estimate = ", acc_estim, "    ( T = ",T," )"
           end if
        else
           T = T/(Log(acc_estim)/Log(acc_goal))**(0.5_dp)
