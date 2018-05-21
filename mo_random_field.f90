@@ -129,9 +129,8 @@ module mo_random_field
 
 contains
 
-  function random_velocity_field_gauss_dp(coord, corr_length, ncosinemode, sigma2, seed, cosine_modes_in, &
-       cosine_modes_out, potential) &
-       result (velocity)
+  function random_velocity_field_gauss_dp(coord, corr_length, ncosinemode, sigma2, seed, &
+    cosine_modes_in, cosine_modes_out, potential) result (velocity)
 
     use mo_constants,    only: pi_dp
     use mo_xor4096,      only: xor4096g, get_timeseed
@@ -156,13 +155,13 @@ contains
     !                                                                                ! and potential are determined
     !                                                                                !    dim1: number of cosine modes
     !                                                                                !    dim2: number of dimensions
-    real(dp), dimension(:,:), allocatable, intent(out), optional :: cosine_modes_out ! returns the random cosine modes which 
+    real(dp), dimension(:,:), allocatable, intent(out), optional :: cosine_modes_out ! returns the random cosine modes which
     !                                                                                ! define the field
     !                                                                                !    dim1: number of cosine modes
     !                                                                                !    dim2: number of dimensions
     real(dp), dimension(size(coord,1)),    intent(out), optional :: potential        ! potential of field at given point
     !                                                                                !    dim1: number of requested points
-    real(dp), dimension(size(coord,1), size(coord,2))            :: velocity         ! velocity at given point
+    real(dp), dimension(size(coord,1),size(coord,2))             :: velocity         ! velocity at given point
     !                                                                                !    dim1: number of requested points
     !                                                                                !    dim2: number of dimensions
 
@@ -245,22 +244,24 @@ contains
        do idim=1, dims
           modes(:,idim) = modes(:,idim) * 1.0_dp/corr_length(idim)
        end do
+
+       deallocate(iseed)
     end if set_modes
 
     velocity(:,:) = 0.0_dp
     ipotential(:) = 0.0_dp
-    do ipoint=1,npoints
-       do imode=1,incosinemode
+    do ipoint=1, npoints
+       do imode=1, incosinemode
           h     = 0.0_dp ! velocity
           h_pot = 0.0_dp ! potential
-          do idim=1,dims
+          do idim=1, dims
              h  = h + modes(imode,idim) * coord(ipoint,idim)
           end do
           h_pot = h
           h     = cos( h     + real(imode,dp)*2.0_dp*pi_dp/real(incosinemode,dp) )
           h_pot = sin( h_pot + real(imode,dp)*2.0_dp*pi_dp/real(incosinemode,dp) )
           velocity(ipoint,:) = velocity(ipoint,:) + h * modes(imode,:)   
-          ipotential(ipoint)  = ipotential(ipoint)  + h_pot
+          ipotential(ipoint) = ipotential(ipoint) + h_pot
        end do
     end do
 
@@ -270,6 +271,7 @@ contains
     ipotential(:) = ipotential(:) * (isigma2) * sqrt( 2.0_dp/real(incosinemode,dp) ) 
 
     if (present(cosine_modes_out)) then
+       if (allocated(cosine_modes_out)) deallocate(cosine_modes_out)
        allocate(cosine_modes_out(incosinemode, dims))
        cosine_modes_out = modes
     end if
@@ -278,6 +280,8 @@ contains
        potential = ipotential
     end if
 
+    deallocate(modes)
+    
   end function random_velocity_field_gauss_dp
 
 

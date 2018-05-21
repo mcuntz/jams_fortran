@@ -7,8 +7,8 @@ program test_mo_random_field
 
   real(dp), dimension(:,:), allocatable  :: coord
   real(dp), dimension(2)                 :: corr_length
-  real(dp), dimension(:,:), allocatable  :: velocity
-  real(dp), dimension(:),   allocatable  :: potential
+  real(dp), dimension(:,:), allocatable  :: velocity, vet1
+  real(dp), dimension(:),   allocatable  :: potential, pot1
   real(dp), dimension(:,:), allocatable  :: cosine_mode
 
   integer(i4) :: i,n
@@ -33,20 +33,20 @@ program test_mo_random_field
 
   corr_length = (/ 0.05_dp, 0.01_dp /)
 
-  ! random field, i.e. cosine_modes, is determined and 
-  ! velocity (all dimensions) and potential (scalar) is calculated for 3 points
+  ! random field, i.e. cosine_modes, is determined and
+  ! velocity (all dimensions) and potential (scalar) are calculated for 3 points
   velocity(1:3,:) = random_velocity_field_gauss(coord(1:3,:), corr_length, &
        sigma2=0.001_dp, seed=13546_i8, &
        cosine_modes_out=cosine_mode, &
        potential=potential(1:3) )
 
-  ! perviously determined modes are used to calculate velocity and potential 
+  ! previously determined modes are used to calculate velocity and potential 
   ! for additional points 4 to 10
   velocity(4:16,:) = random_velocity_field_gauss(coord(4:16,:), corr_length, &
        sigma2=0.001_dp, &
        cosine_modes_in=cosine_mode, &
        potential=potential(4:16) )
-
+  
   write(*,*) ''
   write(*,*) ' x      y             velocity_x    velocity_y    potential'
   write(*,*) '--------------------------------------------------------------'
@@ -55,11 +55,13 @@ program test_mo_random_field
   end do
   write(*,*) ''
 
-  print*, int(potential(:)*100000.0_dp)
+  ! write(*,*) 'velocity ', int(velocity(:,1)*100000.0_dp)
   if ( any(int(velocity(:,1)*100000.0_dp) .ne. (/-1286, 1541, -709,  173, 1188, -497, 1077, &
        2775, -2006, 2563, -369, -499, -1108,  992,  262,  235/)) ) isgood = .false.
+  ! write(*,*) 'velocity ', int(velocity(:,2)*100000.0_dp)
   if ( any(int(velocity(:,2)*100000.0_dp) .ne. (/-13247, 2117, 2852, -2973, -6919, -3199, &
        -10483, 13322, -24272, 15308, -9172, -264, -2682, -6343, -13550, -9434/)) ) isgood = .false.
+  ! write(*,*) 'potential ', int(potential(:)*100000.0_dp)
   if ( any(int(potential(:)*100000.0_dp) .ne. (/0, 71, -126, -215, -40, 58, 26, 127, 11, &
        -37, 70, 69, 103, 68, -57, -21/)) ) isgood = .false.
   write(*,*) ''
