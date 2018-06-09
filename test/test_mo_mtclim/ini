@@ -1,0 +1,26 @@
+ &io_ini
+ in_meteo = '../fortran/test/test_mo_mtclim/miss84.mtcin' !Name of input meteorological data file
+ outprefix = '../fortran/test/test_mo_mtclim/miss84'      !Prefix for output meteorological data file
+ /
+ &control_ini
+ nhead = 0              !(int) Number of header lines in input file
+ ndays = 365            !(int) Number of days of data in input file
+ indewpt = 0            !(int) Dewpoint temperature input? (0=NO, 1=YES)
+ outhum = 0             !(int) Humidity output flag (0=VPD, 1=VP)
+ inyear = 0             !(int) Year field in input file?   (0=NO, 1=YES)
+ lwrad = 0              !(int) Longwave radiation estimation ? (0=NO, 1=BRAS et al. 1999, 2=BOHN et al. 2013)
+ netlwrad = 2           !(int) Net longwave radiation estimation ? (0=NO, 1=BRAS et al. 1999, 2=ALLEN et al. 1998)
+ /
+ &parameters_ini
+ base_elev = 1000.0     !(double) Base elevation, meters
+ base_isoh = 16.0       !(double) Base annual precip isohyet, cm
+ site_lat = 45.0        !(double) Site latitude, degrees (- for south)
+ site_elev = 1000.0     !(double) Site elevation, meters
+ site_slp = 0.0         !(double) Site slope, degrees
+ site_asp = 0.0         !(double) Site aspect, degrees (0=N,90=E,180=S,270=W)
+ site_isoh = 16.0       !(double) Site annual precip isohyet, cm
+ site_ehoriz = 0.0      !(double) Site east horizon, degrees
+ site_whoriz = 0.0      !(double) Site west horizon, degrees
+ tmax_lr = -6.0         !(double) Maximum temperature lapse rate (deg C/ km)
+ tmin_lr = -3.0         !(double) Minimum temperature lapse rate (deg C/ km)
+ /
