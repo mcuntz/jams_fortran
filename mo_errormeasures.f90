@@ -6,7 +6,8 @@ MODULE mo_errormeasures
   ! Note: all except variance and standard deviation are population and not sample moments,
   !       i.e. they are normally divided by n and not (n-1)
 
-  ! Written Aug 2012, Matthias Zink
+  ! Written  Aug 2012,  Matthias Zink
+  ! Modified 2012-2018, Juliane Mai, Stephan Thober, Matthias Cuntz
 
   ! License
   ! -------
@@ -37,7 +38,7 @@ MODULE mo_errormeasures
   PUBLIC :: LNNSE                        ! Logarithmic Nash Sutcliffe efficiency
   PUBLIC :: MAE                          ! Mean of absolute errors
   PUBLIC :: MAE_PROB_ONE ! Mean absolute error of occurence probability with ONE cdf for obs and mod
-  !MC until mo_empcdf commited
+  ! comment until mo_empcdf is commited
   ! PUBLIC :: MAE_PROB_TWO ! Mean absolute error of occurence probability with TWO separate cdfs for obs and mod
   PUBLIC :: MSE                          ! Mean of squared errors
   PUBLIC :: NSE                          ! Nash Sutcliffe efficiency
@@ -103,7 +104,7 @@ MODULE mo_errormeasures
   !     HISTORY
   !         Written,  Matthias Zink, Sept 2012
   INTERFACE BIAS
-     MODULE PROCEDURE BIAS_sp_1d, BIAS_dp_1d, BIAS_sp_2d, BIAS_dp_2d, BIAS_sp_3d, BIAS_dp_3d
+     MODULE PROCEDURE BIAS_1d_sp, BIAS_1d_dp, BIAS_2d_sp, BIAS_2d_dp, BIAS_3d_sp, BIAS_3d_dp
   END INTERFACE BIAS
 
   ! ------------------------------------------------------------------
@@ -118,16 +119,16 @@ MODULE mo_errormeasures
   !>                 where \n
   !>                     \f$ r \f$      = Pearson product-moment correlation coefficient \n
   !>                     \f$ \alpha \f$ = ratio of simulated mean to observed mean  \n
-  !>                     \f$ \beta  \f$ = ratio of simulated standard deviation to 
+  !>                     \f$ \beta  \f$ = ratio of simulated standard deviation to
   !>                                      observed standard deviation \n
-  !>                 This three measures are calculated between two arrays (1d, 2d, or 3d). 
+  !>                 This three measures are calculated between two arrays (1d, 2d, or 3d).
   !>                 Usually, one is an observation and the second is a modelled variable.\n
   !>
-  !>                 The higher the KGE the better the observation and simulation are matching. 
+  !>                 The higher the KGE the better the observation and simulation are matching.
   !>                 The upper limit of KGE is 1.\n
-  !>                 
-  !>                 Therefore, if you apply a minimization algorithm to calibrate regarding 
-  !>                 KGE you have to use the objective function 
+  !>
+  !>                 Therefore, if you apply a minimization algorithm to calibrate regarding
+  !>                 KGE you have to use the objective function
   !>                     \f[ obj\_value = 1.0 - KGE \f]
   !>                 which has then the optimum at 0.0.
   !>                 (Like for the NSE where you always optimize 1-NSE.)\n
@@ -170,9 +171,9 @@ MODULE mo_errormeasures
   !         kge = kge(x,y,mask=mask)
 
   !     LITERATURE
-  !>        Gupta, Hoshin V., et al. 
-  !>           "Decomposition of the mean squared error and NSE performance criteria: 
-  !>           Implications for improving hydrological modelling." 
+  !>        Gupta, Hoshin V., et al.
+  !>           "Decomposition of the mean squared error and NSE performance criteria:
+  !>           Implications for improving hydrological modelling."
   !>           Journal of Hydrology 377.1 (2009): 80-91.
 
 
@@ -185,7 +186,7 @@ MODULE mo_errormeasures
   !                                         - 1d, 2d, 3d, version in sp and dp
 
   INTERFACE KGE
-     MODULE PROCEDURE KGE_dp_1d, KGE_dp_2d, KGE_dp_3d, KGE_sp_1d, KGE_sp_2d, KGE_sp_3d
+     MODULE PROCEDURE KGE_1d_dp, KGE_2d_dp, KGE_3d_dp, KGE_1d_sp, KGE_2d_sp, KGE_3d_sp
   END INTERFACE KGE
 
   ! ------------------------------------------------------------------
@@ -250,7 +251,7 @@ MODULE mo_errormeasures
   !         Written,  Juliane Mai, May 2013
   !         updated,  Rohin Kumar, May 2013  ! for mean of logQ
   INTERFACE LNNSE
-     MODULE PROCEDURE LNNSE_sp_1d, LNNSE_dp_1d, LNNSE_dp_2d, LNNSE_sp_2d, LNNSE_sp_3d, LNNSE_dp_3d
+     MODULE PROCEDURE LNNSE_1d_sp, LNNSE_1d_dp, LNNSE_2d_dp, LNNSE_2d_sp, LNNSE_3d_sp, LNNSE_3d_dp
   END INTERFACE LNNSE
 
   ! ------------------------------------------------------------------
@@ -311,7 +312,7 @@ MODULE mo_errormeasures
   !     HISTORY
   !         Written,  Matthias Zink, Sept 2012
   INTERFACE MAE
-     MODULE PROCEDURE MAE_sp_1d, MAE_dp_1d, MAE_sp_2d, MAE_dp_2d, MAE_sp_3d, MAE_dp_3d
+     MODULE PROCEDURE MAE_1d_sp, MAE_1d_dp, MAE_2d_sp, MAE_2d_dp, MAE_3d_sp, MAE_3d_dp
   END INTERFACE MAE
 
   ! ! ------------------------------------------------------------------
@@ -485,7 +486,7 @@ MODULE mo_errormeasures
   !     HISTORY
   !         Written,  Matthias Zink, Sept 2012
   INTERFACE MSE
-     MODULE PROCEDURE MSE_sp_1d, MSE_dp_1d, MSE_sp_2d, MSE_dp_2d, MSE_sp_3d, MSE_dp_3d
+     MODULE PROCEDURE MSE_1d_sp, MSE_1d_dp, MSE_2d_sp, MSE_2d_dp, MSE_3d_sp, MSE_3d_dp
   END INTERFACE MSE
 
   ! ------------------------------------------------------------------
@@ -548,7 +549,7 @@ MODULE mo_errormeasures
   !     HISTORY
   !         Written,  Matthias Zink, Sept 2012
   INTERFACE NSE
-     MODULE PROCEDURE NSE_sp_1d, NSE_dp_1d, NSE_dp_2d, NSE_sp_2d, NSE_sp_3d, NSE_dp_3d
+     MODULE PROCEDURE NSE_1d_sp, NSE_1d_dp, NSE_2d_dp, NSE_2d_sp, NSE_3d_sp, NSE_3d_dp
   END INTERFACE NSE
 
   ! ------------------------------------------------------------------
@@ -609,7 +610,7 @@ MODULE mo_errormeasures
   !     HISTORY
   !         Written,  Matthias Zink, Sept 2012
   INTERFACE SAE
-     MODULE PROCEDURE SAE_sp_1d, SAE_dp_1d, SAE_sp_2d, SAE_dp_2d, SAE_sp_3d, SAE_dp_3d
+     MODULE PROCEDURE SAE_1d_sp, SAE_1d_dp, SAE_2d_sp, SAE_2d_dp, SAE_3d_sp, SAE_3d_dp
   END INTERFACE SAE
 
   ! ------------------------------------------------------------------
@@ -670,7 +671,7 @@ MODULE mo_errormeasures
   !     HISTORY
   !         Written,  Matthias Zink, Sept 2012
   INTERFACE SSE
-     MODULE PROCEDURE SSE_sp_1d, SSE_dp_1d, SSE_sp_2d, SSE_dp_2d, SSE_sp_3d, SSE_dp_3d
+     MODULE PROCEDURE SSE_1d_sp, SSE_1d_dp, SSE_2d_sp, SSE_2d_dp, SSE_3d_sp, SSE_3d_dp
   END INTERFACE SSE
 
   ! ------------------------------------------------------------------
@@ -731,9 +732,9 @@ MODULE mo_errormeasures
   !     HISTORY
   !         Written,  Matthias Zink, Sept 2012
   INTERFACE RMSE
-     MODULE PROCEDURE RMSE_sp_1d, RMSE_dp_1d, RMSE_sp_2d, RMSE_dp_2d, RMSE_sp_3d, RMSE_dp_3d
+     MODULE PROCEDURE RMSE_1d_sp, RMSE_1d_dp, RMSE_2d_sp, RMSE_2d_dp, RMSE_3d_sp, RMSE_3d_dp
   END INTERFACE RMSE
-  
+
   ! ------------------------------------------------------------------
 
   PRIVATE
@@ -744,7 +745,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION BIAS_sp_1d(x, y, mask)
+  FUNCTION BIAS_1d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -752,7 +753,7 @@ CONTAINS
 
     REAL(sp), DIMENSION(:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: BIAS_sp_1d
+    REAL(sp)                                      :: BIAS_1d_sp
 
     INTEGER(i4)                                   :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )       :: shapemask
@@ -765,7 +766,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'BIAS_sp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'BIAS_1d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -775,13 +776,13 @@ CONTAINS
        n = size(x)
     endif
     !
-    if (n .LE. 1_i4) stop 'BIAS_sp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'BIAS_1d_sp: number of arguments must be at least 2'
     !
-    BIAS_sp_1d = average(y, mask=maske) - average(x, mask=maske)
+    BIAS_1d_sp = average(y, mask=maske) - average(x, mask=maske)
 
-  END FUNCTION BIAS_sp_1d
+  END FUNCTION BIAS_1d_sp
 
-  FUNCTION BIAS_dp_1d(x, y, mask)
+  FUNCTION BIAS_1d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -789,7 +790,7 @@ CONTAINS
 
     REAL(dp), DIMENSION(:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: BIAS_dp_1d
+    REAL(dp)                                      :: BIAS_1d_dp
 
     INTEGER(i4)                                   :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )       :: shapemask
@@ -802,7 +803,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'BIAS_dp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'BIAS_1d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -811,13 +812,13 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'BIAS_dp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'BIAS_1d_dp: number of arguments must be at least 2'
     !
-    BIAS_dp_1d = average(y, mask=maske) - average(x, mask=maske)
+    BIAS_1d_dp = average(y, mask=maske) - average(x, mask=maske)
 
-  END FUNCTION BIAS_dp_1d
+  END FUNCTION BIAS_1d_dp
 
-  FUNCTION BIAS_sp_2d(x, y, mask)
+  FUNCTION BIAS_2d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -825,7 +826,7 @@ CONTAINS
 
     REAL(sp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(sp)                                          :: BIAS_sp_2d
+    REAL(sp)                                          :: BIAS_2d_sp
 
     INTEGER(i4)                                       :: n
 
@@ -839,7 +840,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'BIAS_sp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'BIAS_2d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -849,16 +850,16 @@ CONTAINS
        n     = size(x, dim=1) * size(x, dim=2)
     endif
     !
-    if (n .LE. 1_i4) stop 'BIAS_sp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'BIAS_2d_sp: number of arguments must be at least 2'
     !
-    BIAS_sp_2d = average(reshape(y,    (/size(y,dim=1) * size(y,dim=2)/)),      &
+    BIAS_2d_sp = average(reshape(y,    (/size(y,dim=1) * size(y,dim=2)/)),      &
          mask=reshape(maske,(/size(y,dim=1) * size(y,dim=2)/)))   -  &
          average(reshape(x,    (/size(x,dim=1) * size(x,dim=2)/)),      &
          mask=reshape(maske,(/size(x,dim=1) * size(x,dim=2)/)))
     !
-  END FUNCTION BIAS_sp_2d
+  END FUNCTION BIAS_2d_sp
 
-  FUNCTION BIAS_dp_2d(x, y, mask)
+  FUNCTION BIAS_2d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -866,7 +867,7 @@ CONTAINS
 
     REAL(dp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(dp)                                          :: BIAS_dp_2d
+    REAL(dp)                                          :: BIAS_2d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -879,7 +880,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'BIAS_dp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'BIAS_2d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -889,16 +890,16 @@ CONTAINS
        n     = size(x, dim=1) * size(x, dim=2)
     endif
     !
-    if (n .LE. 1_i4) stop 'BIAS_dp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'BIAS_2d_dp: number of arguments must be at least 2'
     !
-    BIAS_dp_2d = average(reshape(y,    (/size(y,dim=1) * size(y,dim=2)/)),      &
+    BIAS_2d_dp = average(reshape(y,    (/size(y,dim=1) * size(y,dim=2)/)),      &
          mask=reshape(maske,(/size(y,dim=1) * size(y,dim=2)/)))   -  &
          average(reshape(x,    (/size(x,dim=1) * size(x,dim=2)/)),      &
          mask=reshape(maske,(/size(x,dim=1) * size(x,dim=2)/)))
     !
-  END FUNCTION BIAS_dp_2d
+  END FUNCTION BIAS_2d_dp
 
-  FUNCTION BIAS_sp_3d(x, y, mask)
+  FUNCTION BIAS_3d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -906,7 +907,7 @@ CONTAINS
 
     REAL(sp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                          :: BIAS_sp_3d
+    REAL(sp)                                          :: BIAS_3d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -920,7 +921,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'BIAS_sp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'BIAS_3d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -931,16 +932,16 @@ CONTAINS
     endif
     !
     ! not really sopisticated, it has to be checked if the 3 numbers of x and y are matching in arry position
-    if (n .LE. 1_i4) stop 'BIAS_sp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'BIAS_3d_sp: number of arguments must be at least 2'
     !
-    BIAS_sp_3d = average(reshape(y,    (/size(y,dim=1) * size(y,dim=2) * size(y,dim=3)/)),      &
+    BIAS_3d_sp = average(reshape(y,    (/size(y,dim=1) * size(y,dim=2) * size(y,dim=3)/)),      &
          mask=reshape(maske,(/size(y,dim=1) * size(y,dim=2) * size(y,dim=3)/)))   -  &
          average(reshape(x,    (/size(x,dim=1) * size(x,dim=2) * size(x,dim=3)/)),      &
          mask=reshape(maske,(/size(x,dim=1) * size(x,dim=2) * size(x,dim=3)/)))
     !
-  END FUNCTION BIAS_sp_3d
+  END FUNCTION BIAS_3d_sp
 
-  FUNCTION BIAS_dp_3d(x, y, mask)
+  FUNCTION BIAS_3d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -948,7 +949,7 @@ CONTAINS
 
     REAL(dp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                          :: BIAS_dp_3d
+    REAL(dp)                                          :: BIAS_3d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -962,7 +963,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'BIAS_dp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'BIAS_3d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -973,18 +974,18 @@ CONTAINS
     endif
     !
     ! not really sopisticated, it has to be checked if the 3 numbers of x and y are matching in arry position
-    if (n .LE. 1_i4) stop 'BIAS_dp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'BIAS_3d_dp: number of arguments must be at least 2'
     !
-    BIAS_dp_3d = average(reshape(y,    (/size(y,dim=1) * size(y,dim=2) * size(y,dim=3)/)),      &
+    BIAS_3d_dp = average(reshape(y,    (/size(y,dim=1) * size(y,dim=2) * size(y,dim=3)/)),      &
          mask=reshape(maske,(/size(y,dim=1) * size(y,dim=2) * size(y,dim=3)/)))   -  &
          average(reshape(x,    (/size(x,dim=1) * size(x,dim=2) * size(x,dim=3)/)),      &
          mask=reshape(maske,(/size(x,dim=1) * size(x,dim=2) * size(x,dim=3)/)))
     !
-  END FUNCTION BIAS_dp_3d
+  END FUNCTION BIAS_3d_dp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION KGE_sp_1d(x, y, mask)
+  FUNCTION KGE_1d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average, stddev, correlation
 
@@ -992,13 +993,13 @@ CONTAINS
 
     REAL(sp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(sp)                                          :: KGE_sp_1d
+    REAL(sp)                                          :: KGE_1d_sp
 
     ! local variables
     INTEGER(i4)                             :: n
     INTEGER(i4), DIMENSION(size(shape(x)) ) :: shapemask
     LOGICAL,     DIMENSION(size(x))         :: maske
-    
+
     REAL(sp)                                :: mu_Obs, mu_Sim       ! Mean          of x and y
     REAL(sp)                                :: sigma_Obs, sigma_Sim ! Standard dev. of x and y
     REAL(sp)                                :: pearson_coor         ! Pearson Corr. of x and y
@@ -1009,7 +1010,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'KGE_sp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'KGE_1d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1018,26 +1019,26 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'KGE_sp_1d: sample size must be at least 2'
+    if (n .LE. 1_i4) stop 'KGE_1d_sp: sample size must be at least 2'
 
     ! Mean
-    mu_Obs = average(x, mask=maske) 
-    mu_Sim = average(y, mask=maske)  
+    mu_Obs = average(x, mask=maske)
+    mu_Sim = average(y, mask=maske)
     ! Standard Deviation
     sigma_Obs = stddev(x, mask=maske, ddof=1_i4)
     sigma_Sim = stddev(y, mask=maske, ddof=1_i4)
     ! Pearson product-moment correlation coefficient
     pearson_coor = correlation(x, y, mask=maske, ddof=1_i4)
-    ! 
-    KGE_sp_1d = 1.0 - SQRT( &
+    !
+    KGE_1d_sp = 1.0 - SQRT( &
          ( 1.0_sp - (mu_Sim/mu_Obs)       )**2 + &
          ( 1.0_sp - (sigma_Sim/sigma_Obs) )**2 + &
-         ( 1.0_sp - pearson_coor)**2             &  	   
+         ( 1.0_sp - pearson_coor)**2             &
          )
- 
-  END FUNCTION KGE_sp_1d
 
-  FUNCTION KGE_sp_2d(x, y, mask)
+  END FUNCTION KGE_1d_sp
+
+  FUNCTION KGE_2d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average, stddev, correlation
 
@@ -1045,7 +1046,7 @@ CONTAINS
 
     REAL(sp), DIMENSION(:,:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(sp)                                            :: KGE_sp_2d
+    REAL(sp)                                            :: KGE_2d_sp
 
     ! local variables
     INTEGER(i4)                                            :: n
@@ -1061,7 +1062,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'KGE_sp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'KGE_2d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1070,37 +1071,37 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'KGE_sp_2d: sample size must be at least 2'
+    if (n .LE. 1_i4) stop 'KGE_2d_sp: sample size must be at least 2'
 
     ! Mean
     mu_Obs = average( &
          reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/))) 
+         mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/)))
     mu_Sim = average( &
          reshape(y(:,:), (/size(y, dim=1)*size(y, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/))) 
+         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)))
     ! Standard Deviation
     sigma_Obs = stddev( &
          reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
          mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/)), ddof=1_i4)
     sigma_Sim = stddev( &
          reshape(y(:,:), (/size(y, dim=1)*size(y, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)), ddof=1_i4) 
+         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)), ddof=1_i4)
     ! Pearson product-moment correlation coefficient
     pearson_coor = correlation(&
          reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
          reshape(y(:,:), (/size(y, dim=1)*size(y, dim=2)/)), &
          mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)), ddof=1_i4)
-    ! 
-    KGE_sp_2d = 1.0 - SQRT( &
+    !
+    KGE_2d_sp = 1.0 - SQRT( &
          ( 1.0_sp - (mu_Sim/mu_Obs)       )**2 + &
          ( 1.0_sp - (sigma_Sim/sigma_Obs) )**2 + &
-         ( 1.0_sp - pearson_coor)**2             &  	   
+         ( 1.0_sp - pearson_coor)**2             &
          )
- 
-  END FUNCTION KGE_sp_2d
 
-  FUNCTION KGE_sp_3d(x, y, mask)
+  END FUNCTION KGE_2d_sp
+
+  FUNCTION KGE_3d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average, stddev, correlation
 
@@ -1108,7 +1109,7 @@ CONTAINS
 
     REAL(sp), DIMENSION(:,:,:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(sp)                                            :: KGE_sp_3d
+    REAL(sp)                                            :: KGE_3d_sp
 
     ! local variables
     INTEGER(i4)                                                            :: n
@@ -1124,7 +1125,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'KGE_sp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'KGE_3d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1133,37 +1134,37 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'KGE_sp_3d: sample size must be at least 2'
+    if (n .LE. 1_i4) stop 'KGE_3d_sp: sample size must be at least 2'
 
     ! Mean
     mu_Obs = average( &
          reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/))) 
+         mask=reshape(maske(:,:,:),  (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
     mu_Sim = average( &
          reshape(y(:,:,:), (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/))) 
+         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)))
     ! Standard Deviation
     sigma_Obs = stddev( &
          reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
          mask=reshape(maske(:,:,:),  (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), ddof=1_i4)
     sigma_Sim = stddev( &
          reshape(y(:,:,:), (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), ddof=1_i4) 
+         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), ddof=1_i4)
     ! Pearson product-moment correlation coefficient
     pearson_coor = correlation(&
          reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
          reshape(y(:,:,:), (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), &
          mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), ddof=1_i4)
-    ! 
-    KGE_sp_3d = 1.0 - SQRT( &
+    !
+    KGE_3d_sp = 1.0 - SQRT( &
          ( 1.0_sp - (mu_Sim/mu_Obs)       )**2 + &
          ( 1.0_sp - (sigma_Sim/sigma_Obs) )**2 + &
-         ( 1.0_sp - pearson_coor)**2             &  	   
+         ( 1.0_sp - pearson_coor)**2             &
          )
- 
-  END FUNCTION KGE_sp_3d
 
-  FUNCTION KGE_dp_1d(x, y, mask)
+  END FUNCTION KGE_3d_sp
+
+  FUNCTION KGE_1d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average, stddev, correlation
 
@@ -1171,13 +1172,13 @@ CONTAINS
 
     REAL(dp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(dp)                                          :: KGE_dp_1d
+    REAL(dp)                                          :: KGE_1d_dp
 
     ! local variables
     INTEGER(i4)                             :: n
     INTEGER(i4), DIMENSION(size(shape(x)) ) :: shapemask
     LOGICAL,     DIMENSION(size(x))         :: maske
-    
+
     REAL(dp)                                :: mu_Obs, mu_Sim       ! Mean          of x and y
     REAL(dp)                                :: sigma_Obs, sigma_Sim ! Standard dev. of x and y
     REAL(dp)                                :: pearson_coor         ! Pearson Corr. of x and y
@@ -1188,7 +1189,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'KGE_dp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'KGE_1d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1197,26 +1198,26 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'KGE_dp_1d: sample size must be at least 2'
+    if (n .LE. 1_i4) stop 'KGE_1d_dp: sample size must be at least 2'
 
     ! Mean
-    mu_Obs = average(x, mask=maske) 
-    mu_Sim = average(y, mask=maske)  
+    mu_Obs = average(x, mask=maske)
+    mu_Sim = average(y, mask=maske)
     ! Standard Deviation
     sigma_Obs = stddev(x, mask=maske, ddof=1_i4)
     sigma_Sim = stddev(y, mask=maske, ddof=1_i4)
     ! Pearson product-moment correlation coefficient
     pearson_coor = correlation(x, y, mask=maske, ddof=1_i4)
-    ! 
-    KGE_dp_1d = 1.0 - SQRT( &
+    !
+    KGE_1d_dp = 1.0 - SQRT( &
          ( 1.0_dp - (mu_Sim/mu_Obs)       )**2 + &
          ( 1.0_dp - (sigma_Sim/sigma_Obs) )**2 + &
-         ( 1.0_dp - pearson_coor)**2             &  	   
+         ( 1.0_dp - pearson_coor)**2             &
          )
- 
-  END FUNCTION KGE_dp_1d
 
-  FUNCTION KGE_dp_2d(x, y, mask)
+  END FUNCTION KGE_1d_dp
+
+  FUNCTION KGE_2d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average, stddev, correlation
 
@@ -1224,7 +1225,7 @@ CONTAINS
 
     REAL(dp), DIMENSION(:,:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(dp)                                            :: KGE_dp_2d
+    REAL(dp)                                            :: KGE_2d_dp
 
     ! local variables
     INTEGER(i4)                                            :: n
@@ -1240,7 +1241,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'KGE_dp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'KGE_2d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1249,37 +1250,37 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'KGE_dp_2d: sample size must be at least 2'
+    if (n .LE. 1_i4) stop 'KGE_2d_dp: sample size must be at least 2'
 
     ! Mean
     mu_Obs = average( &
          reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/))) 
+         mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/)))
     mu_Sim = average( &
          reshape(y(:,:), (/size(y, dim=1)*size(y, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/))) 
+         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)))
     ! Standard Deviation
     sigma_Obs = stddev( &
          reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
          mask=reshape(maske(:,:),  (/size(x, dim=1)*size(x, dim=2)/)), ddof=1_i4)
     sigma_Sim = stddev( &
          reshape(y(:,:), (/size(y, dim=1)*size(y, dim=2)/)), &
-         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)), ddof=1_i4) 
+         mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)), ddof=1_i4)
     ! Pearson product-moment correlation coefficient
     pearson_coor = correlation(&
          reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
          reshape(y(:,:), (/size(y, dim=1)*size(y, dim=2)/)), &
          mask=reshape(maske(:,:),  (/size(y, dim=1)*size(y, dim=2)/)), ddof=1_i4)
-    ! 
-    KGE_dp_2d = 1.0 - SQRT( &
+    !
+    KGE_2d_dp = 1.0 - SQRT( &
          ( 1.0_dp - (mu_Sim/mu_Obs)       )**2 + &
          ( 1.0_dp - (sigma_Sim/sigma_Obs) )**2 + &
-         ( 1.0_dp - pearson_coor)**2             &  	   
+         ( 1.0_dp - pearson_coor)**2             &
          )
- 
-  END FUNCTION KGE_dp_2d
 
-  FUNCTION KGE_dp_3d(x, y, mask)
+  END FUNCTION KGE_2d_dp
+
+  FUNCTION KGE_3d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average, stddev, correlation
 
@@ -1287,7 +1288,7 @@ CONTAINS
 
     REAL(dp), DIMENSION(:,:,:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(dp)                                            :: KGE_dp_3d
+    REAL(dp)                                            :: KGE_3d_dp
 
     ! local variables
     INTEGER(i4)                                                            :: n
@@ -1303,7 +1304,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'KGE_dp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'KGE_3d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1312,39 +1313,39 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'KGE_dp_3d: sample size must be at least 2'
+    if (n .LE. 1_i4) stop 'KGE_3d_dp: sample size must be at least 2'
 
     ! Mean
     mu_Obs = average( &
          reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/))) 
+         mask=reshape(maske(:,:,:),  (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
     mu_Sim = average( &
          reshape(y(:,:,:), (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/))) 
+         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)))
     ! Standard Deviation
     sigma_Obs = stddev( &
          reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
          mask=reshape(maske(:,:,:),  (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), ddof=1_i4)
     sigma_Sim = stddev( &
          reshape(y(:,:,:), (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), &
-         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), ddof=1_i4) 
+         mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), ddof=1_i4)
     ! Pearson product-moment correlation coefficient
     pearson_coor = correlation(&
          reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
          reshape(y(:,:,:), (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), &
          mask=reshape(maske(:,:,:),  (/size(y, dim=1)*size(y, dim=2)*size(y, dim=3)/)), ddof=1_i4)
-    ! 
-    KGE_dp_3d = 1.0 - SQRT( &
+    !
+    KGE_3d_dp = 1.0 - SQRT( &
          ( 1.0_dp - (mu_Sim/mu_Obs)       )**2 + &
          ( 1.0_dp - (sigma_Sim/sigma_Obs) )**2 + &
-         ( 1.0_dp - pearson_coor)**2             &  	   
+         ( 1.0_dp - pearson_coor)**2             &
          )
- 
-  END FUNCTION KGE_dp_3d
+
+  END FUNCTION KGE_3d_dp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION LNNSE_sp_1d(x, y, mask)
+  FUNCTION LNNSE_1d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -1352,7 +1353,7 @@ CONTAINS
 
     REAL(sp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(INOUT)   :: mask
-    REAL(sp)                                          :: LNNSE_sp_1d
+    REAL(sp)                                          :: LNNSE_1d_sp
 
     INTEGER(i4)                            :: n
     INTEGER(i4), DIMENSION(size(shape(x))) :: shapemask
@@ -1366,7 +1367,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'LNNSE_sp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'LNNSE_1d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1379,7 +1380,7 @@ CONTAINS
        maske = .false.
     end where
     n = count(maske)
-    if (n .LE. 1_i4) stop 'LNNSE_sp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'LNNSE_1d_sp: number of arguments must be at least 2'
 
     ! logarithms
     logx = 0.0_sp
@@ -1388,20 +1389,20 @@ CONTAINS
        logx = log(x)
        logy = log(y)
     end where
-    
+
     ! mean of x
     xmean = average(logx, mask=maske)
 
     ! NSE
     v1 = merge(logy - logx,  0.0_sp, maske)
     v2 = merge(logx - xmean, 0.0_sp, maske)
-    LNNSE_sp_1d = 1.0_sp - dot_product(v1,v1) / dot_product(v2,v2)
+    LNNSE_1d_sp = 1.0_sp - dot_product(v1,v1) / dot_product(v2,v2)
 
-  END FUNCTION LNNSE_sp_1d
+  END FUNCTION LNNSE_1d_sp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION LNNSE_dp_1d(x, y, mask)
+  FUNCTION LNNSE_1d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -1409,7 +1410,7 @@ CONTAINS
 
     REAL(dp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(INOUT)   :: mask
-    REAL(dp)                                          :: LNNSE_dp_1d
+    REAL(dp)                                          :: LNNSE_1d_dp
 
     INTEGER(i4)                            :: n
     INTEGER(i4), DIMENSION(size(shape(x))) :: shapemask
@@ -1423,7 +1424,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'LNNSE_dp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'LNNSE_1d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1436,7 +1437,7 @@ CONTAINS
        maske = .false.
     end where
     n = count(maske)
-    if (n .LE. 1_i4) stop 'LNNSE_dp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'LNNSE_1d_dp: number of arguments must be at least 2'
 
     ! logarithms
     logx = 0.0_dp
@@ -1445,20 +1446,20 @@ CONTAINS
        logx = log(x)
        logy = log(y)
     end where
-    
+
     ! mean of x
     xmean = average(logx, mask=maske)
 
     ! NSE
     v1 = merge(logy - logx,  0.0_dp, maske)
     v2 = merge(logx - xmean, 0.0_dp, maske)
-    LNNSE_dp_1d = 1.0_dp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
+    LNNSE_1d_dp = 1.0_dp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
 
-  END FUNCTION LNNSE_dp_1d
+  END FUNCTION LNNSE_1d_dp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION LNNSE_sp_2d(x, y, mask)
+  FUNCTION LNNSE_2d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -1466,7 +1467,7 @@ CONTAINS
 
     REAL(sp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: mask
-    REAL(sp)                                          :: LNNSE_sp_2d
+    REAL(sp)                                          :: LNNSE_2d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)))            :: shapemask
@@ -1480,7 +1481,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'LNNSE_sp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'LNNSE_2d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1493,7 +1494,7 @@ CONTAINS
        maske = .false.
     end where
     n = count(maske)
-    if (n .LE. 1_i4) stop 'LNNSE_sp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'LNNSE_2d_sp: number of arguments must be at least 2'
 
     ! logarithms
     logx = 0.0_sp
@@ -1502,20 +1503,20 @@ CONTAINS
        logx = log(x)
        logy = log(y)
     end where
-    
+
     ! mean of x
     xmean = average(pack(logx,maske))
 
     ! NSE
     v1 = merge(logy - logx,  0.0_sp, maske)
     v2 = merge(logx - xmean, 0.0_sp, maske)
-    LNNSE_sp_2d = 1.0_sp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
+    LNNSE_2d_sp = 1.0_sp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
 
-  END FUNCTION LNNSE_sp_2d
+  END FUNCTION LNNSE_2d_sp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION LNNSE_dp_2d(x, y, mask)
+  FUNCTION LNNSE_2d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -1523,7 +1524,7 @@ CONTAINS
 
     REAL(dp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: mask
-    REAL(dp)                                          :: LNNSE_dp_2d
+    REAL(dp)                                          :: LNNSE_2d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)))            :: shapemask
@@ -1537,7 +1538,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'LNNSE_dp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'LNNSE_2d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1550,7 +1551,7 @@ CONTAINS
        maske = .false.
     end where
     n = count(maske)
-    if (n .LE. 1_i4) stop 'LNNSE_dp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'LNNSE_2d_dp: number of arguments must be at least 2'
 
     ! logarithms
     logx = 0.0_dp
@@ -1559,20 +1560,20 @@ CONTAINS
        logx = log(x)
        logy = log(y)
     end where
-    
+
     ! mean of x
     xmean = average(pack(logx,maske))
 
     ! NSE
     v1 = merge(logy - logx,  0.0_dp, maske)
     v2 = merge(logx - xmean, 0.0_dp, maske)
-    LNNSE_dp_2d = 1.0_dp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
+    LNNSE_2d_dp = 1.0_dp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
 
-  END FUNCTION LNNSE_dp_2d
+  END FUNCTION LNNSE_2d_dp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION LNNSE_sp_3d(x, y, mask)
+  FUNCTION LNNSE_3d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -1580,21 +1581,21 @@ CONTAINS
 
     REAL(sp), DIMENSION(:,:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(INOUT) :: mask
-    REAL(sp)                                            :: LNNSE_sp_3d
+    REAL(sp)                                            :: LNNSE_3d_sp
 
     INTEGER(i4)                                         :: n
     INTEGER(i4), DIMENSION(size(shape(x)))              :: shapemask
     REAL(sp)                                            :: xmean
     REAL(sp), DIMENSION(size(x,dim=1),size(x,dim=2),size(x,dim=3)) :: logx, logy, v1, v2
     LOGICAL,  DIMENSION(size(x,dim=1),size(x,dim=2),size(x,dim=3)) :: maske
-    
+
     if (present(mask)) then
        shapemask = shape(mask)
     else
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'LNNSE_sp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'LNNSE_3d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1607,7 +1608,7 @@ CONTAINS
        maske = .false.
     end where
     n = count(maske)
-    if (n .LE. 1_i4) stop 'LNNSE_sp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'LNNSE_3d_sp: number of arguments must be at least 2'
 
     ! logarithms
     logx = 0.0_sp
@@ -1616,20 +1617,20 @@ CONTAINS
        logx = log(x)
        logy = log(y)
     end where
-    
+
     ! mean of x
     xmean = average(pack(logx,maske))
 
     ! NSE
     v1 = merge(logy - logx,  0.0_sp, maske)
     v2 = merge(logx - xmean, 0.0_sp, maske)
-    LNNSE_sp_3d = 1.0_sp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
+    LNNSE_3d_sp = 1.0_sp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
 
-  END FUNCTION LNNSE_sp_3d
+  END FUNCTION LNNSE_3d_sp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION LNNSE_dp_3d(x, y, mask)
+  FUNCTION LNNSE_3d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -1637,21 +1638,21 @@ CONTAINS
 
     REAL(dp), DIMENSION(:,:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(INOUT) :: mask
-    REAL(dp)                                            :: LNNSE_dp_3d
+    REAL(dp)                                            :: LNNSE_3d_dp
 
     INTEGER(i4)                                         :: n
     INTEGER(i4), DIMENSION(size(shape(x)))              :: shapemask
     REAL(dp)                                            :: xmean
     REAL(dp), DIMENSION(size(x,dim=1),size(x,dim=2),size(x,dim=3)) :: logx, logy, v1, v2
     LOGICAL,  DIMENSION(size(x,dim=1),size(x,dim=2),size(x,dim=3)) :: maske
-    
+
     if (present(mask)) then
        shapemask = shape(mask)
     else
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'LNNSE_dp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'LNNSE_3d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1664,7 +1665,7 @@ CONTAINS
        maske = .false.
     end where
     n = count(maske)
-    if (n .LE. 1_i4) stop 'LNNSE_dp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'LNNSE_3d_dp: number of arguments must be at least 2'
 
     ! logarithms
     logx = 0.0_dp
@@ -1673,26 +1674,26 @@ CONTAINS
        logx = log(x)
        logy = log(y)
     end where
-    
+
     ! mean of x
     xmean = average(pack(logx,maske))
 
     ! NSE
     v1 = merge(logy - logx,  0.0_dp, maske)
     v2 = merge(logx - xmean, 0.0_dp, maske)
-    LNNSE_dp_3d = 1.0_dp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
+    LNNSE_3d_dp = 1.0_dp - sum(v1*v1, mask=maske) / sum(v2*v2, mask=maske)
 
-  END FUNCTION LNNSE_dp_3d
+  END FUNCTION LNNSE_3d_dp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION MAE_sp_1d(x, y, mask)
+  FUNCTION MAE_1d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(sp)                                          :: MAE_sp_1d
+    REAL(sp)                                          :: MAE_1d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -1704,7 +1705,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MAE_sp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MAE_1d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1713,19 +1714,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1)
     endif
-    if (n .LE. 1_i4) stop 'MAE_sp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MAE_1d_sp: number of arguments must be at least 2'
     !
-    MAE_sp_1d = SAE_sp_1d(x,y,mask=maske) / real(n, sp)
+    MAE_1d_sp = SAE_1d_sp(x,y,mask=maske) / real(n, sp)
 
-  END FUNCTION MAE_sp_1d
+  END FUNCTION MAE_1d_sp
 
-  FUNCTION MAE_dp_1d(x, y, mask)
+  FUNCTION MAE_1d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(dp)                                          :: MAE_dp_1d
+    REAL(dp)                                          :: MAE_1d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -1737,7 +1738,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MAE_dp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MAE_1d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1746,19 +1747,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1)
     endif
-    if (n .LE. 1_i4) stop 'MAE_dp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MAE_1d_dp: number of arguments must be at least 2'
     !
-    MAE_dp_1d = SAE_dp_1d(x,y,mask=maske) / real(n, dp)
+    MAE_1d_dp = SAE_1d_dp(x,y,mask=maske) / real(n, dp)
 
-  END FUNCTION MAE_dp_1d
+  END FUNCTION MAE_1d_dp
 
-  FUNCTION MAE_sp_2d(x, y, mask)
+  FUNCTION MAE_2d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(sp)                                          :: MAE_sp_2d
+    REAL(sp)                                          :: MAE_2d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -1770,7 +1771,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MAE_sp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MAE_2d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1779,19 +1780,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2)
     endif
-    if (n .LE. 1_i4) stop 'MAE_sp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MAE_2d_sp: number of arguments must be at least 2'
     !
-    MAE_sp_2d = SAE_sp_2d(x,y,mask=maske) / real(n, sp)
+    MAE_2d_sp = SAE_2d_sp(x,y,mask=maske) / real(n, sp)
 
-  END FUNCTION MAE_sp_2d
+  END FUNCTION MAE_2d_sp
 
-  FUNCTION MAE_dp_2d(x, y, mask)
+  FUNCTION MAE_2d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(dp)                                          :: MAE_dp_2d
+    REAL(dp)                                          :: MAE_2d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -1803,7 +1804,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MAE_dp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MAE_2d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1812,19 +1813,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2)
     endif
-    if (n .LE. 1_i4) stop 'MAE_dp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MAE_2d_dp: number of arguments must be at least 2'
     !
-    MAE_dp_2d = SAE_dp_2d(x,y,mask=maske) / real(n, dp)
+    MAE_2d_dp = SAE_2d_dp(x,y,mask=maske) / real(n, dp)
 
-  END FUNCTION MAE_dp_2d
+  END FUNCTION MAE_2d_dp
 
-  FUNCTION MAE_sp_3d(x, y, mask)
+  FUNCTION MAE_3d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                          :: MAE_sp_3d
+    REAL(sp)                                          :: MAE_3d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -1837,7 +1838,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MAE_sp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MAE_3d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1846,19 +1847,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2) * size(x,dim=3)
     endif
-    if (n .LE. 1_i4) stop 'MAE_sp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MAE_3d_sp: number of arguments must be at least 2'
     !
-    MAE_sp_3d = SAE_sp_3d(x,y,mask=maske) / real(n, sp)
+    MAE_3d_sp = SAE_3d_sp(x,y,mask=maske) / real(n, sp)
 
-  END FUNCTION MAE_sp_3d
+  END FUNCTION MAE_3d_sp
 
-  FUNCTION MAE_dp_3d(x, y, mask)
+  FUNCTION MAE_3d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                          :: MAE_dp_3d
+    REAL(dp)                                          :: MAE_3d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -1871,7 +1872,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MAE_dp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MAE_3d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -1880,11 +1881,11 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2) * size(x,dim=3)
     endif
-    if (n .LE. 1_i4) stop 'MAE_dp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MAE_3d_dp: number of arguments must be at least 2'
     !
-    MAE_dp_3d = SAE_dp_3d(x,y,mask=maske) / real(n, dp)
+    MAE_3d_dp = SAE_3d_dp(x,y,mask=maske) / real(n, dp)
 
-  END FUNCTION MAE_dp_3d
+  END FUNCTION MAE_3d_dp
 
   ! ------------------------------------------------------------------
 
@@ -1942,7 +1943,7 @@ CONTAINS
        endif
     endif
     MAE_PROB_ONE_1d_dp = MAE_PROB_ONE_1d_dp * 100._dp ! unit is [%]
-    
+
   END FUNCTION MAE_PROB_ONE_1d_dp
 
   ! ------------------------------------------------------------------
@@ -1986,13 +1987,13 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION MSE_sp_1d(x, y, mask)
+  FUNCTION MSE_1d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(sp)                                          :: MSE_sp_1d
+    REAL(sp)                                          :: MSE_1d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2004,7 +2005,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MSE_sp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MSE_1d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2013,19 +2014,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1)
     endif
-    if (n .LE. 1_i4) stop 'MSE_sp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MSE_1d_sp: number of arguments must be at least 2'
     !
-    MSE_sp_1d = SSE_sp_1d(x,y,mask=maske) / real(n, sp)
+    MSE_1d_sp = SSE_1d_sp(x,y,mask=maske) / real(n, sp)
 
-  END FUNCTION MSE_sp_1d
+  END FUNCTION MSE_1d_sp
 
-  FUNCTION MSE_dp_1d(x, y, mask)
+  FUNCTION MSE_1d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(dp)                                          :: MSE_dp_1d
+    REAL(dp)                                          :: MSE_1d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2037,7 +2038,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MSE_dp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MSE_1d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2046,19 +2047,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1)
     endif
-    if (n .LE. 1_i4) stop 'MSE_dp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MSE_1d_dp: number of arguments must be at least 2'
     !
-    MSE_dp_1d = SSE_dp_1d(x,y,mask=maske) / real(n, dp)
+    MSE_1d_dp = SSE_1d_dp(x,y,mask=maske) / real(n, dp)
 
-  END FUNCTION MSE_dp_1d
+  END FUNCTION MSE_1d_dp
 
-  FUNCTION MSE_sp_2d(x, y, mask)
+  FUNCTION MSE_2d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(sp)                                          :: MSE_sp_2d
+    REAL(sp)                                          :: MSE_2d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2070,7 +2071,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MSE_sp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MSE_2d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2079,19 +2080,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2)
     endif
-    if (n .LE. 1_i4) stop 'MSE_sp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MSE_2d_sp: number of arguments must be at least 2'
     !
-    MSE_sp_2d = SSE_sp_2d(x,y,mask=maske) / real(n, sp)
+    MSE_2d_sp = SSE_2d_sp(x,y,mask=maske) / real(n, sp)
 
-  END FUNCTION MSE_sp_2d
+  END FUNCTION MSE_2d_sp
 
-  FUNCTION MSE_dp_2d(x, y, mask)
+  FUNCTION MSE_2d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(dp)                                          :: MSE_dp_2d
+    REAL(dp)                                          :: MSE_2d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2103,7 +2104,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MSE_dp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MSE_2d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2112,19 +2113,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2)
     endif
-    if (n .LE. 1_i4) stop 'MSE_dp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MSE_2d_dp: number of arguments must be at least 2'
     !
-    MSE_dp_2d = SSE_dp_2d(x,y,mask=maske) / real(n, dp)
+    MSE_2d_dp = SSE_2d_dp(x,y,mask=maske) / real(n, dp)
 
-  END FUNCTION MSE_dp_2d
+  END FUNCTION MSE_2d_dp
 
-  FUNCTION MSE_sp_3d(x, y, mask)
+  FUNCTION MSE_3d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                          :: MSE_sp_3d
+    REAL(sp)                                          :: MSE_3d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2137,7 +2138,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MSE_sp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MSE_3d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2146,19 +2147,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2) * size(x,dim=3)
     endif
-    if (n .LE. 1_i4) stop 'MSE_sp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MSE_3d_sp: number of arguments must be at least 2'
     !
-    MSE_sp_3d = SSE_sp_3d(x,y,mask=maske) / real(n, sp)
+    MSE_3d_sp = SSE_3d_sp(x,y,mask=maske) / real(n, sp)
 
-  END FUNCTION MSE_sp_3d
+  END FUNCTION MSE_3d_sp
 
-  FUNCTION MSE_dp_3d(x, y, mask)
+  FUNCTION MSE_3d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                          :: MSE_dp_3d
+    REAL(dp)                                          :: MSE_3d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2171,7 +2172,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'MSE_dp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'MSE_3d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2180,15 +2181,15 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2) * size(x,dim=3)
     endif
-    if (n .LE. 1_i4) stop 'MSE_dp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'MSE_3d_dp: number of arguments must be at least 2'
     !
-    MSE_dp_3d = SSE_dp_3d(x,y,mask=maske) / real(n, dp)
+    MSE_3d_dp = SSE_3d_dp(x,y,mask=maske) / real(n, dp)
 
-  END FUNCTION MSE_dp_3d
+  END FUNCTION MSE_3d_dp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION NSE_sp_1d(x, y, mask)
+  FUNCTION NSE_1d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -2196,7 +2197,7 @@ CONTAINS
 
     REAL(sp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(sp)                                          :: NSE_sp_1d
+    REAL(sp)                                          :: NSE_1d_sp
 
     INTEGER(i4)                            :: n
     INTEGER(i4), DIMENSION(size(shape(x))) :: shapemask
@@ -2210,7 +2211,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'NSE_sp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'NSE_1d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2219,18 +2220,18 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'NSE_sp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'NSE_1d_sp: number of arguments must be at least 2'
     ! mean of x
     xmean = average(x, mask=maske)
     !
     v1 = merge(y - x    , 0.0_sp, maske)
     v2 = merge(x - xmean, 0.0_sp, maske)
     !
-    NSE_sp_1d = 1.0_sp - dot_product(v1,v1) / dot_product(v2,v2)
+    NSE_1d_sp = 1.0_sp - dot_product(v1,v1) / dot_product(v2,v2)
 
-  END FUNCTION NSE_sp_1d
+  END FUNCTION NSE_1d_sp
 
-  FUNCTION NSE_dp_1d(x, y, mask)
+  FUNCTION NSE_1d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -2238,7 +2239,7 @@ CONTAINS
 
     REAL(dp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(dp)                                          :: NSE_dp_1d
+    REAL(dp)                                          :: NSE_1d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2252,7 +2253,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'NSE_dp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'NSE_1d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2261,18 +2262,18 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'NSE_dp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'NSE_1d_dp: number of arguments must be at least 2'
     ! mean of x
     xmean = average(x, mask=maske)
     !
     v1 = merge(y - x    , 0.0_dp, maske)
     v2 = merge(x - xmean, 0.0_dp, maske)
     !
-    NSE_dp_1d = 1.0_dp - dot_product(v1,v1) / dot_product(v2,v2)
+    NSE_1d_dp = 1.0_dp - dot_product(v1,v1) / dot_product(v2,v2)
 
-  END FUNCTION NSE_dp_1d
+  END FUNCTION NSE_1d_dp
 
-  FUNCTION NSE_sp_2d(x, y, mask)
+  FUNCTION NSE_2d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -2280,7 +2281,7 @@ CONTAINS
 
     REAL(sp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(sp)                                          :: NSE_sp_2d
+    REAL(sp)                                          :: NSE_2d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2293,7 +2294,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'NSE_sp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'NSE_2d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2303,16 +2304,16 @@ CONTAINS
        n     = size(x, dim=1) * size(x, dim=2)
     endif
     !
-    if (n .LE. 1_i4) stop 'NSE_sp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'NSE_2d_sp: number of arguments must be at least 2'
     ! mean of x
     xmean = average(reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
          mask=reshape(maske(:,:), (/size(x, dim=1)*size(x, dim=2)/)))
     !
-    NSE_sp_2d = 1.0_sp - sum((y-x)*(y-x), mask=maske) / sum((x-xmean)*(x-xmean), mask=maske)
+    NSE_2d_sp = 1.0_sp - sum((y-x)*(y-x), mask=maske) / sum((x-xmean)*(x-xmean), mask=maske)
     !
-  END FUNCTION NSE_sp_2d
+  END FUNCTION NSE_2d_sp
 
-  FUNCTION NSE_dp_2d(x, y, mask)
+  FUNCTION NSE_2d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -2320,7 +2321,7 @@ CONTAINS
 
     REAL(dp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(dp)                                          :: NSE_dp_2d
+    REAL(dp)                                          :: NSE_2d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2333,7 +2334,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'NSE_dp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'NSE_2d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2343,16 +2344,16 @@ CONTAINS
        n     = size(x, dim=1) * size(x, dim=2)
     endif
     !
-    if (n .LE. 1_i4) stop 'NSE_dp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'NSE_2d_dp: number of arguments must be at least 2'
     ! mean of x
     xmean = average(reshape(x(:,:), (/size(x, dim=1)*size(x, dim=2)/)), &
          mask=reshape(maske(:,:), (/size(x, dim=1)*size(x, dim=2)/)))
     !
-    NSE_dp_2d = 1.0_dp - sum((y-x)*(y-x), mask=maske) / sum((x-xmean)*(x-xmean), mask=maske)
+    NSE_2d_dp = 1.0_dp - sum((y-x)*(y-x), mask=maske) / sum((x-xmean)*(x-xmean), mask=maske)
     !
-  END FUNCTION NSE_dp_2d
+  END FUNCTION NSE_2d_dp
 
-  FUNCTION NSE_sp_3d(x, y, mask)
+  FUNCTION NSE_3d_sp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -2360,7 +2361,7 @@ CONTAINS
 
     REAL(sp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                          :: NSE_sp_3d
+    REAL(sp)                                          :: NSE_3d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2374,7 +2375,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'NSE_sp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'NSE_3d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2384,16 +2385,16 @@ CONTAINS
        n     = size(x, dim=1) * size(x, dim=2) * size(x, dim=3)
     endif
     !
-    if (n .LE. 1_i4) stop 'NSE_sp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'NSE_3d_sp: number of arguments must be at least 2'
     ! mean of x
     xmean = average(reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
          mask=reshape(maske(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
     !
-    NSE_sp_3d = 1.0_sp - sum((y-x)*(y-x), mask=maske) / sum((x-xmean)*(x-xmean), mask=maske)
+    NSE_3d_sp = 1.0_sp - sum((y-x)*(y-x), mask=maske) / sum((x-xmean)*(x-xmean), mask=maske)
     !
-  END FUNCTION NSE_sp_3d
+  END FUNCTION NSE_3d_sp
 
-  FUNCTION NSE_dp_3d(x, y, mask)
+  FUNCTION NSE_3d_dp(x, y, mask)
 
     USE mo_moment, ONLY: average
 
@@ -2401,7 +2402,7 @@ CONTAINS
 
     REAL(dp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                          :: NSE_dp_3d
+    REAL(dp)                                          :: NSE_3d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2415,7 +2416,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'NSE_dp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'NSE_3d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2425,25 +2426,25 @@ CONTAINS
        n     = size(x, dim=1) * size(x, dim=2) * size(x, dim=3)
     endif
     !
-    if (n .LE. 1_i4) stop 'NSE_dp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'NSE_3d_dp: number of arguments must be at least 2'
     ! Average of x
     xmean = average(reshape(x(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)), &
          mask=reshape(maske(:,:,:), (/size(x, dim=1)*size(x, dim=2)*size(x, dim=3)/)))
     !
-    NSE_dp_3d = 1.0_dp - sum((y-x)*(y-x), mask=maske) / sum((x-xmean)*(x-xmean), mask=maske)
+    NSE_3d_dp = 1.0_dp - sum((y-x)*(y-x), mask=maske) / sum((x-xmean)*(x-xmean), mask=maske)
     !
-  END FUNCTION NSE_dp_3d
+  END FUNCTION NSE_3d_dp
 
 
   ! ------------------------------------------------------------------
 
-  FUNCTION SAE_sp_1d(x, y, mask)
+  FUNCTION SAE_1d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(sp)                                          :: SAE_sp_1d
+    REAL(sp)                                          :: SAE_1d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2456,7 +2457,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SAE_sp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SAE_1d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2465,19 +2466,19 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'SAE_sp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SAE_1d_sp: number of arguments must be at least 2'
     !
-    SAE_sp_1d = sum(abs(y - x) ,mask = maske)
+    SAE_1d_sp = sum(abs(y - x) ,mask = maske)
 
-  END FUNCTION SAE_sp_1d
+  END FUNCTION SAE_1d_sp
 
-  FUNCTION SAE_dp_1d(x, y, mask)
+  FUNCTION SAE_1d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(dp)                                          :: SAE_dp_1d
+    REAL(dp)                                          :: SAE_1d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2490,7 +2491,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SAE_dp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SAE_1d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2499,19 +2500,19 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'SAE_dp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SAE_1d_dp: number of arguments must be at least 2'
     !
-    SAE_dp_1d = sum(abs(y - x) ,mask = maske)
+    SAE_1d_dp = sum(abs(y - x) ,mask = maske)
 
-  END FUNCTION SAE_dp_1d
+  END FUNCTION SAE_1d_dp
 
-  FUNCTION SAE_sp_2d(x, y, mask)
+  FUNCTION SAE_2d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(sp)                                          :: SAE_sp_2d
+    REAL(sp)                                          :: SAE_2d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2524,7 +2525,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SAE_sp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SAE_2d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2533,21 +2534,21 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2)
     endif
-    if (n .LE. 1_i4) stop 'SAE_sp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SAE_2d_sp: number of arguments must be at least 2'
     !
-    SAE_sp_2d = SAE_sp_1d(reshape(x, (/size(x, dim=1) * size(x, dim=2)/)),                 &
+    SAE_2d_sp = SAE_1d_sp(reshape(x, (/size(x, dim=1) * size(x, dim=2)/)),                 &
          reshape(y, (/size(y, dim=1) * size(y, dim=2)/)),                 &
          mask=reshape(maske, (/size(maske, dim=1) * size(maske, dim=2)/)) )
 
-  END FUNCTION SAE_sp_2d
+  END FUNCTION SAE_2d_sp
 
-  FUNCTION SAE_dp_2d(x, y, mask)
+  FUNCTION SAE_2d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(dp)                                          :: SAE_dp_2d
+    REAL(dp)                                          :: SAE_2d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2560,7 +2561,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SAE_dp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SAE_2d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2569,21 +2570,21 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2)
     endif
-    if (n .LE. 1_i4) stop 'SAE_dp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SAE_2d_dp: number of arguments must be at least 2'
     !
-    SAE_dp_2d = SAE_dp_1d(reshape(x, (/size(x, dim=1) * size(x, dim=2)/)),                 &
+    SAE_2d_dp = SAE_1d_dp(reshape(x, (/size(x, dim=1) * size(x, dim=2)/)),                 &
          reshape(y, (/size(y, dim=1) * size(y, dim=2)/)),                 &
          mask=reshape(maske, (/size(maske, dim=1) * size(maske, dim=2)/)) )
 
-  END FUNCTION SAE_dp_2d
+  END FUNCTION SAE_2d_dp
 
-  FUNCTION SAE_sp_3d(x, y, mask)
+  FUNCTION SAE_3d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                          :: SAE_sp_3d
+    REAL(sp)                                          :: SAE_3d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2597,7 +2598,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SAE_sp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SAE_3d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2606,22 +2607,22 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2) * size(x,dim=3)
     endif
-    if (n .LE. 1_i4) stop 'SAE_sp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SAE_3d_sp: number of arguments must be at least 2'
     !
-    SAE_sp_3d = SAE_sp_1d(reshape(x, (/size(x, dim=1) * size(x, dim=2) * size(x, dim=3)/)),                 &
+    SAE_3d_sp = SAE_1d_sp(reshape(x, (/size(x, dim=1) * size(x, dim=2) * size(x, dim=3)/)),                 &
          reshape(y, (/size(y, dim=1) * size(y, dim=2) * size(x, dim=3)/)),                 &
          mask=reshape(maske, (/size(maske, dim=1) * size(maske, dim=2) &
          * size(maske, dim=3)/)) )
 
-  END FUNCTION SAE_sp_3d
+  END FUNCTION SAE_3d_sp
 
-  FUNCTION SAE_dp_3d(x, y, mask)
+  FUNCTION SAE_3d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                          :: SAE_dp_3d
+    REAL(dp)                                          :: SAE_3d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2635,7 +2636,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SAE_dp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SAE_3d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2644,24 +2645,24 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2) * size(x,dim=3)
     endif
-    if (n .LE. 1_i4) stop 'SAE_dp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SAE_3d_dp: number of arguments must be at least 2'
     !
-    SAE_dp_3d = SAE_dp_1d(reshape(x, (/size(x, dim=1) * size(x, dim=2) * size(x, dim=3)/)),                 &
+    SAE_3d_dp = SAE_1d_dp(reshape(x, (/size(x, dim=1) * size(x, dim=2) * size(x, dim=3)/)),                 &
          reshape(y, (/size(y, dim=1) * size(y, dim=2) * size(x, dim=3)/)),                 &
          mask=reshape(maske, (/size(maske, dim=1) * size(maske, dim=2) &
          * size(maske, dim=3)/)) )
 
-  END FUNCTION SAE_dp_3d
+  END FUNCTION SAE_3d_dp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION SSE_sp_1d(x, y, mask)
+  FUNCTION SSE_1d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                      :: SSE_sp_1d
+    REAL(sp)                                      :: SSE_1d_sp
 
     INTEGER(i4)                                   :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )       :: shapemask
@@ -2674,7 +2675,7 @@ CONTAINS
     end if
     !
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SSE_sp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SSE_1d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2683,19 +2684,19 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'SSE_sp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SSE_1d_sp: number of arguments must be at least 2'
     !
-    SSE_sp_1d = sum((y - x)**2_i4 ,mask = maske)
+    SSE_1d_sp = sum((y - x)**2_i4 ,mask = maske)
 
-  END FUNCTION SSE_sp_1d
+  END FUNCTION SSE_1d_sp
 
-  FUNCTION SSE_dp_1d(x, y, mask)
+  FUNCTION SSE_1d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                      :: SSE_dp_1d
+    REAL(dp)                                      :: SSE_1d_dp
 
     INTEGER(i4)                                   :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )       :: shapemask
@@ -2707,7 +2708,7 @@ CONTAINS
        shapemask = shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SSE_dp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SSE_1d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2716,19 +2717,19 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'SSE_dp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SSE_1d_dp: number of arguments must be at least 2'
     !
-    SSE_dp_1d = sum((y - x)**2_i4 ,mask = maske)
+    SSE_1d_dp = sum((y - x)**2_i4 ,mask = maske)
 
-  END FUNCTION SSE_dp_1d
+  END FUNCTION SSE_1d_dp
 
-  FUNCTION SSE_sp_2d(x, y, mask)
+  FUNCTION SSE_2d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(sp)                                          :: SSE_sp_2d
+    REAL(sp)                                          :: SSE_2d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)))            :: shapemask
@@ -2740,7 +2741,7 @@ CONTAINS
        shapemask = shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SSE_sp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SSE_2d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2749,21 +2750,21 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'SSE_sp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SSE_2d_sp: number of arguments must be at least 2'
     !
-    SSE_sp_2d = SSE_sp_1d(reshape(x, (/size(x, dim=1) * size(x, dim=2)/)),                 &
+    SSE_2d_sp = SSE_1d_sp(reshape(x, (/size(x, dim=1) * size(x, dim=2)/)),                 &
          reshape(y, (/size(y, dim=1) * size(y, dim=2)/)),                 &
          mask=reshape(maske, (/size(maske, dim=1) * size(maske, dim=2)/)) )
 
-  END FUNCTION SSE_sp_2d
+  END FUNCTION SSE_2d_sp
 
-  FUNCTION SSE_dp_2d(x, y, mask)
+  FUNCTION SSE_2d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(dp)                                          :: SSE_dp_2d
+    REAL(dp)                                          :: SSE_2d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)))            :: shapemask
@@ -2775,7 +2776,7 @@ CONTAINS
        shapemask = shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SSE_dp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SSE_2d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2784,21 +2785,21 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'SSE_dp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SSE_2d_dp: number of arguments must be at least 2'
     !
-    SSE_dp_2d = SSE_dp_1d(reshape(x, (/size(x, dim=1) * size(x, dim=2)/)),                 &
+    SSE_2d_dp = SSE_1d_dp(reshape(x, (/size(x, dim=1) * size(x, dim=2)/)),                 &
          reshape(y, (/size(y, dim=1) * size(y, dim=2)/)),                 &
          mask=reshape(maske, (/size(maske, dim=1) * size(maske, dim=2)/)) )
 
-  END FUNCTION SSE_dp_2d
+  END FUNCTION SSE_2d_dp
 
-  FUNCTION SSE_sp_3d(x, y, mask)
+  FUNCTION SSE_3d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                          :: SSE_sp_3d
+    REAL(sp)                                          :: SSE_3d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)))            :: shapemask
@@ -2811,7 +2812,7 @@ CONTAINS
        shapemask = shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SSE_sp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SSE_3d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2820,22 +2821,22 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'SSE_sp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SSE_3d_sp: number of arguments must be at least 2'
     !
-    SSE_sp_3d = SSE_sp_1d(reshape(x, (/size(x, dim=1) * size(x, dim=2) * size(x, dim=3)/)),                 &
+    SSE_3d_sp = SSE_1d_sp(reshape(x, (/size(x, dim=1) * size(x, dim=2) * size(x, dim=3)/)),                 &
          reshape(y, (/size(y, dim=1) * size(y, dim=2) * size(x, dim=3)/)),                 &
          mask=reshape(maske, (/size(maske, dim=1) * size(maske, dim=2)   &
          * size(maske, dim=3)/)))
 
-  END FUNCTION SSE_sp_3d
+  END FUNCTION SSE_3d_sp
 
-  FUNCTION SSE_dp_3d(x, y, mask)
+  FUNCTION SSE_3d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                          :: SSE_dp_3d
+    REAL(dp)                                          :: SSE_3d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)))            :: shapemask
@@ -2848,7 +2849,7 @@ CONTAINS
        shapemask = shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'SSE_dp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'SSE_3d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2857,24 +2858,24 @@ CONTAINS
        maske = .true.
        n = size(x)
     endif
-    if (n .LE. 1_i4) stop 'SSE_dp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'SSE_3d_dp: number of arguments must be at least 2'
     !
-    SSE_dp_3d = SSE_dp_1d(reshape(x, (/size(x, dim=1) * size(x, dim=2) * size(x, dim=3)/)),                 &
+    SSE_3d_dp = SSE_1d_dp(reshape(x, (/size(x, dim=1) * size(x, dim=2) * size(x, dim=3)/)),                 &
          reshape(y, (/size(y, dim=1) * size(y, dim=2) * size(x, dim=3)/)),                 &
          mask=reshape(maske, (/size(maske, dim=1) * size(maske, dim=2)   &
          * size(maske, dim=3)/)))
 
-  END FUNCTION SSE_dp_3d
+  END FUNCTION SSE_3d_dp
 
   ! ------------------------------------------------------------------
 
-  FUNCTION RMSE_sp_1d(x, y, mask)
+  FUNCTION RMSE_1d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(sp)                                          :: RMSE_sp_1d
+    REAL(sp)                                          :: RMSE_1d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2886,7 +2887,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'RMSE_sp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'RMSE_1d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2895,19 +2896,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1)
     endif
-    if (n .LE. 1_i4) stop 'RMSE_sp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'RMSE_1d_sp: number of arguments must be at least 2'
     !
-    RMSE_sp_1d = sqrt(MSE_sp_1d(x,y,mask=maske))
+    RMSE_1d_sp = sqrt(MSE_1d_sp(x,y,mask=maske))
 
-  END FUNCTION RMSE_sp_1d
+  END FUNCTION RMSE_1d_sp
 
-  FUNCTION RMSE_dp_1d(x, y, mask)
+  FUNCTION RMSE_1d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:),           INTENT(IN)      :: x, y
     LOGICAL,  DIMENSION(:), OPTIONAL, INTENT(IN)      :: mask
-    REAL(dp)                                          :: RMSE_dp_1d
+    REAL(dp)                                          :: RMSE_1d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2919,7 +2920,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'RMSE_dp_1d: shapes of inputs(x,y) or mask are not matching'
+         stop 'RMSE_1d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2928,19 +2929,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1)
     endif
-    if (n .LE. 1_i4) stop 'RMSE_dp_1d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'RMSE_1d_dp: number of arguments must be at least 2'
     !
-    RMSE_dp_1d = sqrt(MSE_dp_1d(x,y,mask=maske))
+    RMSE_1d_dp = sqrt(MSE_1d_dp(x,y,mask=maske))
 
-  END FUNCTION RMSE_dp_1d
+  END FUNCTION RMSE_1d_dp
 
-  FUNCTION RMSE_sp_2d(x, y, mask)
+  FUNCTION RMSE_2d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(sp)                                          :: RMSE_sp_2d
+    REAL(sp)                                          :: RMSE_2d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2952,7 +2953,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'RMSE_sp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'RMSE_2d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2961,19 +2962,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2)
     endif
-    if (n .LE. 1_i4) stop 'RMSE_sp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'RMSE_2d_sp: number of arguments must be at least 2'
     !
-    RMSE_sp_2d = sqrt(MSE_sp_2d(x,y,mask=maske))
+    RMSE_2d_sp = sqrt(MSE_2d_sp(x,y,mask=maske))
 
-  END FUNCTION RMSE_sp_2d
+  END FUNCTION RMSE_2d_sp
 
-  FUNCTION RMSE_dp_2d(x, y, mask)
+  FUNCTION RMSE_2d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:,:),           INTENT(IN)    :: x, y
     LOGICAL,  DIMENSION(:,:), OPTIONAL, INTENT(IN)    :: mask
-    REAL(dp)                                          :: RMSE_dp_2d
+    REAL(dp)                                          :: RMSE_2d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -2985,7 +2986,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'RMSE_dp_2d: shapes of inputs(x,y) or mask are not matching'
+         stop 'RMSE_2d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -2994,19 +2995,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2)
     endif
-    if (n .LE. 1_i4) stop 'RMSE_dp_2d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'RMSE_2d_dp: number of arguments must be at least 2'
     !
-    RMSE_dp_2d = sqrt(MSE_dp_2d(x,y,mask=maske))
+    RMSE_2d_dp = sqrt(MSE_2d_dp(x,y,mask=maske))
 
-  END FUNCTION RMSE_dp_2d
+  END FUNCTION RMSE_2d_dp
 
-  FUNCTION RMSE_sp_3d(x, y, mask)
+  FUNCTION RMSE_3d_sp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(sp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(sp)                                          :: RMSE_sp_3d
+    REAL(sp)                                          :: RMSE_3d_sp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -3019,7 +3020,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'RMSE_sp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'RMSE_3d_sp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -3028,19 +3029,19 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2) * size(x,dim=3)
     endif
-    if (n .LE. 1_i4) stop 'RMSE_sp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'RMSE_3d_sp: number of arguments must be at least 2'
     !
-    RMSE_sp_3d = sqrt(MSE_sp_3d(x,y,mask=maske))
+    RMSE_3d_sp = sqrt(MSE_3d_sp(x,y,mask=maske))
 
-  END FUNCTION RMSE_sp_3d
+  END FUNCTION RMSE_3d_sp
 
-  FUNCTION RMSE_dp_3d(x, y, mask)
+  FUNCTION RMSE_3d_dp(x, y, mask)
 
     IMPLICIT NONE
 
     REAL(dp), DIMENSION(:,:,:),           INTENT(IN)  :: x, y
     LOGICAL,  DIMENSION(:,:,:), OPTIONAL, INTENT(IN)  :: mask
-    REAL(dp)                                          :: RMSE_dp_3d
+    REAL(dp)                                          :: RMSE_3d_dp
 
     INTEGER(i4)                                       :: n
     INTEGER(i4), DIMENSION(size(shape(x)) )           :: shapemask
@@ -3053,7 +3054,7 @@ CONTAINS
        shapemask =  shape(x)
     end if
     if ( (any(shape(x) .NE. shape(y))) .OR. (any(shape(x) .NE. shapemask)) ) &
-         stop 'RMSE_dp_3d: shapes of inputs(x,y) or mask are not matching'
+         stop 'RMSE_3d_dp: shapes of inputs(x,y) or mask are not matching'
     !
     if (present(mask)) then
        maske = mask
@@ -3062,10 +3063,10 @@ CONTAINS
        maske = .true.
        n = size(x,dim=1) * size(x,dim=2) * size(x,dim=3)
     endif
-    if (n .LE. 1_i4) stop 'RMSE_dp_3d: number of arguments must be at least 2'
+    if (n .LE. 1_i4) stop 'RMSE_3d_dp: number of arguments must be at least 2'
     !
-    RMSE_dp_3d = sqrt(MSE_dp_3d(x,y,mask=maske))
+    RMSE_3d_dp = sqrt(MSE_3d_dp(x,y,mask=maske))
 
-  END FUNCTION RMSE_dp_3d
-  
+  END FUNCTION RMSE_3d_dp
+
 END MODULE mo_errormeasures
