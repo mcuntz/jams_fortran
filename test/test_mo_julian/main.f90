@@ -22,7 +22,6 @@ program main
 
   write(*,*) ''
   write(*,*) 'Test mo_julian.f90'
-
   
   allgood = .true.
   
@@ -161,9 +160,9 @@ program main
   allgood = allgood .and. isgood
   
   if (isgood) then
-     write(*,*) 'mo_julian lilian o.k.'
+     write(*,*) 'mo_julian standard o.k.'
   else
-     write(*,*) 'mo_julian lilian failed!'
+     write(*,*) 'mo_julian standard failed!'
   endif
 
   
@@ -293,9 +292,9 @@ program main
   allgood = allgood .and. isgood
   
   if (isgood) then
-     write(*,*) 'mo_julian lilian o.k.'
+     write(*,*) 'mo_julian 360day o.k.'
   else
-     write(*,*) 'mo_julian lilian failed!'
+     write(*,*) 'mo_julian 360day failed!'
   endif
 
   
@@ -410,9 +409,9 @@ program main
   allgood = allgood .and. isgood
   
   if (isgood) then
-     write(*,*) 'mo_julian lilian o.k.'
+     write(*,*) 'mo_julian 365day o.k.'
   else
-     write(*,*) 'mo_julian lilian failed!'
+     write(*,*) 'mo_julian 365day failed!'
   endif
 
 
@@ -546,26 +545,36 @@ program main
      write(*,*) 'mo_julian failed!'
   endif
 
-  ! !  ! ! Check 59 minutes, 60 seconds problem if eps too small in dec2date
-  ! !  ! dec1(1) = 2443879.5_dp
-  ! !  ! write(*,*) '#00: ', dec1(1), 1._dp/24._dp, date2dec(1,1,1990,1,0,0) - date2dec(1,1,1990,0,0,0)
-  ! !  ! call dec2date(dec1(1), dd, mm, yy, hh, nn, ss)
-  ! !  ! write(*,*) '#01: ', dec1(1), dd, mm, yy, hh, nn, ss
-  ! !  ! dec1(1) = dec1(1) + 1._dp/24._dp
-  ! !  ! call dec2date(dec1(1), dd, mm, yy, hh, nn, ss)
-  ! !  ! write(*,*) '#02: ', dec1(1), dd, mm, yy, hh, nn, ss
-  ! !  ! dec1(1) = dec1(1) - 1._dp/24._dp
-  ! !  ! call dec2date(dec1(1), dd, mm, yy, hh, nn, ss)
-  ! !  ! write(*,*) '#03: ', dec1(1), dd, mm, yy, hh, nn, ss
-  ! !  ! dec1(1) = dec1(1) + date2dec(1,1,1990,1,0,0) - date2dec(1,1,1990,0,0,0)
-  ! !  ! call dec2date(dec1(1), dd, mm, yy, hh, nn, ss)
-  ! !  ! write(*,*) '#04: ', dec1(1), dd, mm, yy, hh, nn, ss
+  ! ! Check 59 minutes, 60 seconds problem if eps too small in dec2date
+  ! dec1(1) = 2443879.5_dp
+  ! write(*,*) '#00: ', dec1(1), 1._dp/24._dp, date2dec(1,1,1990,1,0,0) - date2dec(1,1,1990,0,0,0)
+  ! call dec2date(dec1(1), dd, mm, yy, hh, nn, ss)
+  ! write(*,*) '#01: ', dec1(1), dd, mm, yy, hh, nn, ss
+  ! dec1(1) = dec1(1) + 1._dp/24._dp
+  ! call dec2date(dec1(1), dd, mm, yy, hh, nn, ss)
+  ! write(*,*) '#02: ', dec1(1), dd, mm, yy, hh, nn, ss
+  ! dec1(1) = dec1(1) - 1._dp/24._dp
+  ! call dec2date(dec1(1), dd, mm, yy, hh, nn, ss)
+  ! write(*,*) '#03: ', dec1(1), dd, mm, yy, hh, nn, ss
+  ! dec1(1) = dec1(1) + date2dec(1,1,1990,1,0,0) - date2dec(1,1,1990,0,0,0)
+  ! call dec2date(dec1(1), dd, mm, yy, hh, nn, ss)
+  ! write(*,*) '#04: ', dec1(1), dd, mm, yy, hh, nn, ss
 
-  ! !  ! ! Check date2dec with John
-  ! !  ! write(*,*) '#05: ', date2dec(22,12,2005,15,00,00)
-  ! !  ! write(*,*) '#06: ', date2dec(22,12,2005,16,00,00)
-  ! !  ! write(*,*) '#07: ', date2dec(22,12,2005,17,00,00)
-  ! !  ! write(*,*) '#08: ', date2dec(22,12,2005,17,01,00)
-  ! !  ! write(*,*) '#09: ', date2dec(22,12,2005,17,00,01)
+  ! ! Check date2dec with John
+  ! write(*,*) '#05: ', date2dec(22,12,2005,15,00,00)
+  ! write(*,*) '#06: ', date2dec(22,12,2005,16,00,00)
+  ! write(*,*) '#07: ', date2dec(22,12,2005,17,00,00)
+  ! write(*,*) '#08: ', date2dec(22,12,2005,17,01,00)
+  ! write(*,*) '#09: ', date2dec(22,12,2005,17,00,01)
+
+  ! ! Check Python
+  ! dd2 = 16
+  ! mm2 = 1
+  ! yy2 = 2004
+  ! hh2 = 12
+  ! nn2 = 0
+  ! ss2 = 0
+  ! gg = date2dec(16,01,2004,12,0) - date2dec(01,01,1850)
+  ! print*, 'days of 16.01.2004 12:00 from 01.01.1850 00:00: ', gg
 
 END PROGRAM main
