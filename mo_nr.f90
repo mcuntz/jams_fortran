@@ -1023,6 +1023,18 @@ MODULE mo_nr
        REAL(SP), DIMENSION(:), INTENT(IN) :: x
        REAL(SP), DIMENSION(size(x)) :: erfcc_v
      END FUNCTION erfcc_v
+     !MC
+     FUNCTION derfcc_s(x)
+       USE mo_kind
+       REAL(DP), INTENT(IN) :: x
+       REAL(DP) :: derfcc_s
+     END FUNCTION derfcc_s
+     !MC
+     FUNCTION derfcc_v(x)
+       USE mo_kind
+       REAL(DP), DIMENSION(:), INTENT(IN) :: x
+       REAL(DP), DIMENSION(size(x)) :: derfcc_v
+     END FUNCTION derfcc_v
   END INTERFACE
   INTERFACE
      SUBROUTINE eulsum(sum,term,jterm)
