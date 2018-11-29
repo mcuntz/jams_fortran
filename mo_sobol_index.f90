@@ -130,10 +130,10 @@ MODULE mo_sobol_index
   !     LITERATURE
   !         Homma, T., & Saltelli, A. (1996). 
   !                Importance measures in global sensitivity analysis of nonlinear models. 
-  !                Reliability Engineering & System Safety, 52(1), 1–17.
+  !                Reliability Engineering & System Safety, 52(1), 1-17.
   !         Saltelli, A. (2002). 
   !                Making best use of model evaluations to compute sensitivity indices. 
-  !                Computer Physics Communications, 145(2), 280–297. doi:10.1016/S0010-4655(02)00280-1
+  !                Computer Physics Communications, 145(2), 280-297. doi:10.1016/S0010-4655(02)00280-1
   !         Saltelli, A., Ratto, M., Andres, T., Campolongo, F., Cariboni, J., Gatelli, D., et al. (2008).
   !                Global Sensitivity Analysis. Wiley-Interscience.
 
