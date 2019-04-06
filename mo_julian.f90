@@ -28,6 +28,7 @@
 
 !> \note Units in dec2date can only be "days/minutes/hours/seconds since YYYY-MM-DD hh:mm:ss".
 !> Any precision after reference time giving the time zone (Z, +hh:mm) will be ignored.
+!> Numbers in reference date do not have to have leading zeros.
 
 !> \author Matthias Cuntz
 !> \date Dec 2011
@@ -49,6 +50,7 @@ MODULE mo_julian
   ! Modified Matthias Cuntz, Mar 2018 - units in dec2date
   ! Modified Matthias Cuntz, Oct 2018 - calendars 360_day, 365_day/noleap, 366_day/all_leap
   !                                   - complete all missing routines of 36*day
+  ! Modified Matthias Cuntz, Apr 2019 - allow non-leading zero notation in units
 
   ! License
   ! -------
@@ -68,7 +70,7 @@ MODULE mo_julian
   ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
   ! If not, see <http://www.gnu.org/licenses/>.
 
-  ! Copyright 2011-2018 Matthias Cuntz
+  ! Copyright 2011-2019 Matthias Cuntz
 
   USE mo_kind, ONLY: i4, i8, dp
 
@@ -291,8 +293,11 @@ CONTAINS
   !>        \param[in] "character(len=*), optional :: units"       Units of decimal date in ISO 8601 format.\n
   !>                   Can only be "days/minutes/hours/seconds since YYYY-MM-DD hh:mm:ss".\n
   !>                   Any precision after reference time giving the time zone
-  !>                   (http://www.cl.cam.ac.uk/%7Emgk25/iso-time.html : Z, +hh:mm) will be ignored, e.g.
-  !>                   YYYY-MM-DD hh:mm:ssZ for UTC ot YYYY-MM-DD hh:mm:ss+hh:mm for a specific time zone.
+  !>                   (http://www.cl.cam.ac.uk/%7Emgk25/iso-time.html -> Z, +hh:mm) will be ignored, e.g.
+  !>                   YYYY-MM-DD hh:mm:ssZ for UTC or YYYY-MM-DD hh:mm:ss+hh:mm for a specific time zone.
+  !>
+  !>                   Allow exception to ISO 8601 that numbers must not have leading zeros, i.e.
+  !>                   Y-M-D h:m, which is for example produced by the climate data operators (cdo).
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -314,6 +319,7 @@ CONTAINS
   !>        \date Jan 2015
   !>        Modified, Matthias Cuntz, Mar 2018 - units
   !>        Modified, Matthias Cuntz, Oct 2018 - added more calendars
+  !>        Modified, Matthias Cuntz, Apr 2019 - allow non-leading zero notation in units
   elemental subroutine dec2date(julian, dd, mm, yy, hh, nn, ss, fracday, calendar, units)
 
     implicit none
@@ -335,29 +341,34 @@ CONTAINS
     ! No write in pure routines so no error handling (commented)
     if (present(units)) then
        ! get reference date
-       ! if (index(trim(units),'since') == 0) then
-       !    write(*,*) 'Error dec2date: No "since" in units.'
-       !    write(*,*) '    Units must be "days/minutes/hours/seconds since YYYY-MM-DD hh:mm:ss".'
-       !    write(*,*) '    hh:mm:ss can be omitted. Units given: ', trim(units)
-       !    stop
-       ! endif
-       iunit  = units(1:index(trim(units),'since')-1)
-       idate0 = units(index(trim(units),'since')+6:)
-       ! if (len_trim(idate0) < 10) then
-       !    write(*,*) 'Error dec2date: Reference date must be given.'
-       !    write(*,*) '    Units must be "days/minutes/hours/seconds since YYYY-MM-DD hh:mm:ss".'
-       !    write(*,*) '    hh:mm:ss can be omitted. Units given: ', trim(units)
-       !    stop
-       ! endif
-       read(idate0(1:4),*) year0
-       read(idate0(6:7),*) month0
-       read(idate0(9:10),*) day0
        hour0   = 0
        minute0 = 0
        second0 = 0
-       if (len_trim(idate0) >= 13) read(idate0(12:13),*) hour0
-       if (len_trim(idate0) >= 16) read(idate0(15:16),*) minute0
-       if (len_trim(idate0) >= 19) read(idate0(18:19),*) second0
+       iunit  = units(1:index(trim(units),'since')-1) ! days/minutes/hours/seconds
+       idate0 = units(index(trim(units),'since')+6:)  ! YYYY-MM-DD hh:mm:ss
+       read(idate0(1:index(trim(idate0),'-')-1),*) year0
+       idate0 = idate0(index(trim(idate0),'-')+1:) ! MM-DD hh:mm:ss
+       read(idate0(1:index(trim(idate0),'-')-1),*) month0
+       idate0 = idate0(index(trim(idate0),'-')+1:) ! DD hh:mm:ss
+       if (index(trim(idate0),' ') > 0) then
+          read(idate0(1:index(trim(idate0),' ')-1),*) day0
+          idate0 = idate0(index(trim(idate0),' ')+1:) ! hh:mm:ss
+          if (index(trim(idate0),':') > 0) then
+             read(idate0(1:index(trim(idate0),':')-1),*) hour0
+             idate0 = idate0(index(trim(idate0),':')+1:) ! mm:ss
+             if (index(trim(idate0),':') > 0) then
+                read(idate0(1:index(trim(idate0),':')-1),*) minute0
+                idate0 = idate0(index(trim(idate0),':')+1:) ! ss
+                if (len_trim(idate0) > 0) read(idate0(1:len_trim(idate0)),*) second0
+             else
+                read(idate0(1:len_trim(idate0)),*) minute0
+             endif
+          else
+             read(idate0(1:len_trim(idate0)),*) hour0
+          endif
+       else
+          read(idate0(1:len_trim(idate0)),*) day0
+       endif
        jdate0 = date2dec(day0, month0, year0, hour0, minute0, second0, calendar=icalendar)
        ! Julian date should have a small offset proportional to julian date for correct re-conversion.
        ! Add it to final Julian date so substract it from jdate0

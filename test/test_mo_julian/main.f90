@@ -213,20 +213,20 @@ program main
         if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) &
              isgood = .false.
         gg = gg * 24._dp ! hours since 01.01.1900 00:00:00
-        call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='hours since 1900-01-01 00:00:00',calendar=trim(iscal))
+        call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='hours since 1900-1-01 00:00:00',calendar=trim(iscal))
         if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) &
              isgood = .false.
         gg = gg * 60._dp ! minutes since 01.01.1900 00:00:00
-        call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='minutes since 1900-01-01 00:00:00',calendar=trim(iscal))
+        call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='minutes since 1900-01-1 00:00',calendar=trim(iscal))
         if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) &
              isgood = .false.
         gg = gg * 60._dp ! seconds since 01.01.1900 00:00:00
-        call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='seconds since 1900-01-01 00:00:00',calendar=trim(iscal))
+        call dec2date(gg,dd2,mm2,yy2,hh2,nn2,ss2,units='seconds since 1900-1-1 00',calendar=trim(iscal))
         if ((dd /= dd2) .or. (mm /= mm2) .or. (yy /= yy2) .or. (hh /= hh2) .or. (nn /= nn2) .or. (ss /= ss2)) &
              isgood = .false.
      end do
 
-     call dec2date(0.5_dp, dd, mm, yy, hh, nn, ss, units='days since 1900-01-01',calendar=trim(iscal))
+     call dec2date(0.5_dp, dd, mm, yy, hh, nn, ss, units='days since 1900-1-1',calendar=trim(iscal))
      if ((dd /= 1) .or. (mm /= 1) .or. (yy /= 1900) .or. (hh /= 12) .or. (nn /= 0) .or. (ss /= 0)) isgood = .false.
      call dec2date(12.0_dp, dd, mm, yy, hh, nn, ss, units='hours since 1900-01-01 12:00',calendar=trim(iscal))
      if ((dd /= 2) .or. (mm /= 1) .or. (yy /= 1900) .or. (hh /= 0) .or. (nn /= 0) .or. (ss /= 0)) isgood = .false.
