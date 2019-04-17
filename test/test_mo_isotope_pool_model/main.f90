@@ -1,8 +1,7 @@
 program main
 
   use mo_kind,   only: dp, i4
-  use mo_utils,  only: ne
-  use mo_isotope_pool_model, only: isotope_pool_model
+  use mo_isotope_pool_model, only: isotope_pool_model, isotope_luc_model
 
   implicit none
 
@@ -10,9 +9,9 @@ program main
   real(dp),    parameter :: vpdb = 0.0112372_dp
 
   ! input / output
-  real(dp) :: dt
-  real(dp), dimension(nn)    :: Ci, C, Ct, S, Rs, Si, beta, trash
-  real(dp), dimension(nn,nn) :: F, alpha
+  real(dp) :: dt, Citot
+  real(dp), dimension(nn)    :: Ci, C, Ct, S, Rs, Si, beta, trash, A, At
+  real(dp), dimension(nn,nn) :: F, alpha, dA
 
   integer(i4) :: i, j, nstep
 
@@ -24,7 +23,7 @@ program main
   allgood = .true.
   
   ! -----------------------
-  ! No fractionation - Sink
+  ! isotope_pool_model - No fractionation - Sink
 
   isgood = .true.
 
@@ -67,13 +66,13 @@ program main
   allgood = allgood .and. isgood
   
   if (isgood) then
-     write(*,*) 'mo_isotope_pool_model no frac sink o.k.'
+     write(*,*) 'mo_isotope_pool_model pool no frac sink o.k.'
   else
-     write(*,*) 'mo_isotope_pool_model no frac sink failed!'
+     write(*,*) 'mo_isotope_pool_model pool no frac sink failed!'
   endif
   
   ! -----------------------
-  ! No fractionation - beta
+  ! isotope_pool_model - No fractionation - beta
 
   isgood = .true.
 
@@ -116,13 +115,13 @@ program main
   allgood = allgood .and. isgood
   
   if (isgood) then
-     write(*,*) 'mo_isotope_pool_model no frac beta o.k.'
+     write(*,*) 'mo_isotope_pool_model pool no frac beta o.k.'
   else
-     write(*,*) 'mo_isotope_pool_model no frac beta failed!'
+     write(*,*) 'mo_isotope_pool_model pool no frac beta failed!'
   endif
   
   ! -----------------------
-  ! One pool, different source composition
+  ! isotope_pool_model - One pool, different source composition
 
   isgood = .true.
 
@@ -159,13 +158,13 @@ program main
   allgood = allgood .and. isgood
   
   if (isgood) then
-     write(*,*) 'mo_isotope_pool_model one pool source o.k.'
+     write(*,*) 'mo_isotope_pool_model pool one pool source o.k.'
   else
-     write(*,*) 'mo_isotope_pool_model one pool source failed!'
+     write(*,*) 'mo_isotope_pool_model pool one pool source failed!'
   endif
   
   ! -----------------------
-  ! Two pool, source in 1st pool, everything shuffled to 2nd pool
+  ! isotope_pool_model - Two pool, source in 1st pool, everything shuffled to 2nd pool
 
   isgood = .true.
 
@@ -204,9 +203,309 @@ program main
   allgood = allgood .and. isgood
   
   if (isgood) then
-     write(*,*) 'mo_isotope_pool_model two pool shuffle o.k.'
+     write(*,*) 'mo_isotope_pool_model pool two pool shuffle o.k.'
   else
-     write(*,*) 'mo_isotope_pool_model two pool shuffle failed!'
+     write(*,*) 'mo_isotope_pool_model pool two pool shuffle failed!'
+  endif
+  
+  ! -----------------------
+  ! isotope_luc_model - Same isotopic composition
+
+  isgood = .true.
+
+  dt    = 0.023_dp
+  C     = 1.2345_dp
+  Rs    = vpdb ! ~alpha=1
+  Ci    = Rs*C
+  A     = 0.1_dp
+  trash = 0._dp
+
+  do i=1, nn
+     do j=1, nn
+        if (i == j) then
+           dA(i,j) = 0._dp
+        else if  (i < j) then    ! outgoing fluxes
+           if (i==1) then
+              dA(i,j) = 0.01_dp
+           else
+              dA(i,j) = 0.02_dp
+           endif
+        else                     ! incoming fluxes
+           if (j==1) then
+              dA(i,j) = 0.01_dp
+           else
+              dA(i,j) = 0.02_dp
+           endif
+        endif
+     end do
+  end do
+
+  nstep = 20
+  do i=1, nstep
+     Ct = C
+     At = A
+     A = At - sum(dA,2) + sum(dA,1)
+     C = (Ct*(At-sum(dA,2)) + sum(dA*spread(Ct,dim=2,ncopies=nn),1)) / A
+     call isotope_luc_model(Ci, At, dA, trash=trash)
+  end do
+
+  if (any(abs(Ci/C/vpdb-1.)*1000.>1e-9)) isgood = .false.
+  
+  allgood = allgood .and. isgood
+  
+  if (isgood) then
+     write(*,*) 'mo_isotope_pool_model luc Ci all same o.k.'
+  else
+     write(*,*) 'mo_isotope_pool_model luc Ci all same failed!'
+  endif
+  
+  ! -----------------------
+  ! isotope_luc_model - Same isotopic composition - empty land-use class
+
+  isgood = .true.
+
+  dt    = 0.023_dp
+  C     = 1.2345_dp
+  Rs    = vpdb ! R
+  Ci    = Rs*C
+  A     = 0.1_dp
+  trash = 0._dp
+
+  dA(1,:) = (/ 0._dp, 0.01_dp, 0.02_dp /)
+  dA(2,:) = (/ 0.02_dp, 0._dp, 0.01_dp /)
+  dA(3,:) = (/ 0.01_dp, 0.01_dp, 0._dp /)
+
+  nstep = 20
+  do i=1, nstep
+     Ct = C
+     At = A
+     A = At - sum(dA,2) + sum(dA,1)
+     if (A(1) < 0._dp) then
+        dA(1,2) = 0._dp ! set outgoing fluxes = 0.
+        dA(1,3) = 0._dp
+        A = At - sum(dA,2) + sum(dA,1)
+     endif
+     if (A(2) < 0._dp) then
+        dA(2,1) = 0._dp 
+        dA(2,3) = 0._dp
+        A = At - sum(dA,2) + sum(dA,1)
+     endif
+     if (A(3) < 0._dp) then
+        dA(3,1) = 0._dp 
+        dA(3,2) = 0._dp
+        A = At - sum(dA,2) + sum(dA,1)
+     endif
+     C = (Ct*(At-sum(dA,2)) + sum(dA*spread(Ct,dim=2,ncopies=nn),1)) / A
+     call isotope_luc_model(Ci, At, dA, trash=trash)
+  end do
+
+  if (any(abs(Ci/C/vpdb-1.)*1000.>1e-9)) isgood = .false.
+  
+  allgood = allgood .and. isgood
+  
+  if (isgood) then
+     write(*,*) 'mo_isotope_pool_model luc empty class o.k.'
+  else
+     write(*,*) 'mo_isotope_pool_model luc empty class failed!'
+  endif
+  
+  ! -----------------------
+  ! isotope_luc_model - Shuffle to last pool
+
+  isgood = .true.
+
+  dt    = 0.023_dp
+  C     = 1.2345_dp
+  forall(i=1:nn) Rs(i) = (1._dp+real(i,dp)/10._dp) * vpdb ! R
+  Ci    = Rs*C
+  A     = 0.1_dp
+  trash = 0._dp
+  Citot = sum(A*Ci)/sum(A)
+
+  dA(1,:) = (/ 0._dp, 0.0_dp, 0.02_dp /) ! 1->3
+  dA(2,:) = (/ 0.0_dp, 0._dp, 0.01_dp /) ! 2->3
+  dA(3,:) = 0._dp
+
+  nstep = 20
+  do i=1, nstep
+     Ct = C
+     At = A
+     A = At - sum(dA,2) + sum(dA,1)
+     if (A(1) < 0._dp) then
+        dA(1,2) = 0._dp ! set outgoing fluxes = 0.
+        dA(1,3) = At(1)
+        A = At - sum(dA,2) + sum(dA,1)
+     endif
+     if (A(2) < 0._dp) then
+        dA(2,1) = 0._dp 
+        dA(2,3) = At(2)
+        A = At - sum(dA,2) + sum(dA,1)
+     endif
+     C = (Ct*(At-sum(dA,2)) + sum(dA*spread(Ct,dim=2,ncopies=nn),1)) / A
+     call isotope_luc_model(Ci, At, dA, trash=trash)
+  end do
+
+  if (abs(Ci(3) - Citot) > epsilon(1.0_dp)) isgood = .false.
+  if (abs(sum(A*Ci)/sum(A) - Citot) > epsilon(1.0_dp)) isgood = .false.
+  
+  allgood = allgood .and. isgood
+  
+  if (isgood) then
+     write(*,*) 'mo_isotope_pool_model luc shuffle o.k.'
+  else
+     write(*,*) 'mo_isotope_pool_model luc shuffle failed!'
+  endif
+  
+  ! -----------------------
+  ! isotope_luc_model - Same isotopic composition, passing C
+
+  isgood = .true.
+
+  dt    = 0.023_dp
+  C     = 1.2345_dp
+  Rs    = vpdb ! ~alpha=1
+  Ci    = Rs*C
+  A     = 0.1_dp
+  trash = 0._dp
+
+  do i=1, nn
+     do j=1, nn
+        if (i == j) then
+           dA(i,j) = 0._dp
+        else if  (i < j) then    ! outgoing fluxes
+           if (i==1) then
+              dA(i,j) = 0.01_dp
+           else
+              dA(i,j) = 0.02_dp
+           endif
+        else                     ! incoming fluxes
+           if (j==1) then
+              dA(i,j) = 0.01_dp
+           else
+              dA(i,j) = 0.02_dp
+           endif
+        endif
+     end do
+  end do
+
+  nstep = 20
+  do i=1, nstep
+     Ct = C
+     At = A
+     A = At - sum(dA,2) + sum(dA,1)
+     C = (Ct*(At-sum(dA,2)) + sum(dA*spread(Ct,dim=2,ncopies=nn),1)) / A
+     call isotope_luc_model(Ci, At, dA, Ct, trash=trash)
+  end do
+
+  if (any(abs(Ci/C/vpdb-1.)*1000.>1e-9)) isgood = .false.
+  
+  allgood = allgood .and. isgood
+  
+  if (isgood) then
+     write(*,*) 'mo_isotope_pool_model luc Ci all same C o.k.'
+  else
+     write(*,*) 'mo_isotope_pool_model luc Ci all same C failed!'
+  endif
+  
+  ! -----------------------
+  ! isotope_luc_model - Same isotopic composition - empty land-use class, passing C
+
+  isgood = .true.
+
+  dt    = 0.023_dp
+  C     = 1.2345_dp
+  Rs    = vpdb ! R
+  Ci    = Rs*C
+  A     = 0.1_dp
+  trash = 0._dp
+
+  dA(1,:) = (/ 0._dp, 0.01_dp, 0.02_dp /)
+  dA(2,:) = (/ 0.02_dp, 0._dp, 0.01_dp /)
+  dA(3,:) = (/ 0.01_dp, 0.01_dp, 0._dp /)
+
+  nstep = 20
+  do i=1, nstep
+     Ct = C
+     At = A
+     A = At - sum(dA,2) + sum(dA,1)
+     if (A(1) < 0._dp) then
+        dA(1,2) = 0._dp ! set outgoing fluxes = 0.
+        dA(1,3) = 0._dp
+        A = At - sum(dA,2) + sum(dA,1)
+     endif
+     if (A(2) < 0._dp) then
+        dA(2,1) = 0._dp 
+        dA(2,3) = 0._dp
+        A = At - sum(dA,2) + sum(dA,1)
+     endif
+     if (A(3) < 0._dp) then
+        dA(3,1) = 0._dp 
+        dA(3,2) = 0._dp
+        A = At - sum(dA,2) + sum(dA,1)
+     endif
+     C = (Ct*(At-sum(dA,2)) + sum(dA*spread(Ct,dim=2,ncopies=nn),1)) / A
+     call isotope_luc_model(Ci, At, dA, Ct, trash=trash)
+  end do
+
+  if (any(abs(Ci/C/vpdb-1.)*1000.>1e-9)) isgood = .false.
+  
+  allgood = allgood .and. isgood
+  
+  if (isgood) then
+     write(*,*) 'mo_isotope_pool_model luc empty class C o.k.'
+  else
+     write(*,*) 'mo_isotope_pool_model luc empty class C failed!'
+  endif
+  
+  ! -----------------------
+  ! isotope_luc_model - Shuffle to last pool, passing C
+
+  isgood = .true.
+
+  dt    = 0.023_dp
+  C     = 1.2345_dp
+  forall(i=1:nn) Rs(i) = (1._dp+real(i,dp)/10._dp) * vpdb ! R
+  Ci    = Rs*C
+  A     = 0.1_dp
+  trash = 0._dp
+  Citot = sum(A*Ci)/sum(A)
+
+  dA(1,:) = (/ 0._dp, 0.0_dp, 0.02_dp /) ! 1->3
+  dA(2,:) = (/ 0.0_dp, 0._dp, 0.01_dp /) ! 2->3
+  dA(3,:) = 0._dp
+
+  nstep = 20
+  do i=1, nstep
+     Ct = C
+     At = A
+     A = At - sum(dA,2) + sum(dA,1)
+     if (A(1) < 0._dp) then
+        dA(1,2) = 0._dp ! set outgoing fluxes = 0.
+        dA(1,3) = At(1)
+        A = At - sum(dA,2) + sum(dA,1)
+     endif
+     if (A(2) < 0._dp) then
+        dA(2,1) = 0._dp 
+        dA(2,3) = At(2)
+        A = At - sum(dA,2) + sum(dA,1)
+     endif
+     where (A > 0._dp)
+        C = (Ct*(At-sum(dA,2)) + sum(dA*spread(Ct,dim=2,ncopies=nn),1)) / A
+     elsewhere
+        C = 0._dp
+     endwhere
+     call isotope_luc_model(Ci, At, dA, Ct, trash=trash)
+  end do
+
+  if (abs(Ci(3) - Citot) > epsilon(1.0_dp)) isgood = .false.
+  if (abs(sum(A*Ci)/sum(A) - Citot) > epsilon(1.0_dp)) isgood = .false.
+  
+  allgood = allgood .and. isgood
+  
+  if (isgood) then
+     write(*,*) 'mo_isotope_pool_model luc shuffle C o.k.'
+  else
+     write(*,*) 'mo_isotope_pool_model luc shuffle C failed!'
   endif
 
   ! ----------------------

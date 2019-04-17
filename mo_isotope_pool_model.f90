@@ -1,10 +1,13 @@
 !> \file mo_isotope_pool_model.f90
 
-!> \brief Generic isotopic pool model
+!> \brief Generic isotopic pool model and generic land-use change model
 
 !> \details Explicit solution of a generic pool model,
 !> given sink, sources and all the fluxes between all pools,
-!> together associated fractionation factors.
+!> together with associated fractionation factors.
+
+!> Also explicit solution of a generic land-use change model,
+!> given all the fluxes and area changes between land use classes.
 
 !> \author Matthias Cuntz
 !> \date Apr 2019
@@ -15,10 +18,186 @@ MODULE mo_isotope_pool_model
 
   private
 
-  public :: isotope_pool_model ! Solves the next time step of the generic isotope model
+  public :: isotope_luc_model  ! Solves the next time step of a generic isotopic land-use change model
+  public :: isotope_pool_model ! Solves the next time step of a generic isotopic pool model
 
 contains
 
+  ! ------------------------------------------------------------------
+
+  !     NAME
+  !         isotope_luc_model
+
+  !     PURPOSE
+  !>        \brief Generic isotopic land-use change model
+
+  !>        \details Next explicit time step of the isotopic composition of a generic land-use change model,
+  !>        given all fluxes and area changes between land use classes.
+
+  !>        The land-use change model for land-use class i is:
+  !>            d(A(i)*C(i)) = -C(i)*sum(dA(i,:)) + sum(dA(:,i)*C(:))
+  !>        where C are the carbon concentrations in the land-use classes, A are the areas of the land-use classes
+  !>        and dA are the area changes between land-use classes for the time step (A>0, A(i,i)=0).
+
+  !>        Note: dA is change per time step, NOT per second.
+
+  !>        The land-use model is then solved from time step t to t+dt
+  !>            A(i,t+dt)*C(i,t+dt) - A(i,t)*C(i,t) = -C(i,t)*sum(dA(i,:)) + sum(dA(:,i)*C(:,t))
+  !>            C(i,t+dt) = (C(i,t)*(A(i,t)-sum(dA(i,:))) + sum(dA(:,i)*C(:,t))) / A(i,t+dt)
+  
+  !>        The isotopic land-use model is then:
+  !>            A(i,t+dt)*C'(i,t+dt) - A(i,t)*C'(i,t) = -C'(i,t)*sum(dA(i,:)) + sum(dA(:,i)*C'(:,t))
+  !>            C'(i,t+dt) = (C'(i,t)*(A(i,t)-sum(dA(i,:))) + sum(dA(:,i)*C'(:,t))) / A(i,t+dt)
+  !>        with C' the isotope carbon concentrations.
+
+  !>        The use can also give the carbon concentrations C of the land use classes
+  !>        at time t
+  !>            R(i,t) = C'(i,t) / C(i,t)
+  !>            A(i,t+dt)*C'(i,t+dt) - A(i,t)*R(i,t)*C(i,t) = -R(i,t)*C(i,t)*sum(dA(i,:)) + sum(dA(:,i)*R(:,t)*C(:,t))
+  !>            C'(i,t+dt) = (R(i,t)*C(i,t)*(A(i,t)-sum(dA(i,:))) + sum(dA(:,i)*R(:,t)*C(:,t))) / A(i,t+dt)
+
+  !     CALLING SEQUENCE
+  !         call isotope_luc_model(Ci, A, dA, C, trash)
+
+  !     INTENT
+  !>        \param[in]    "real(dp) :: dt"                       Time step
+  !>        \param[inout] "real(dp) :: Ci(1:n)"
+  !>                                   On entry: isotope concentrations in land-use classes at time step t-1
+  !>                                   On exit:  updated isotope concentrations of land-use classes at time step t
+  !>        \param[in]    "real(dp) :: A(1:n)"                   Areas of land-use classes at time step t-1
+  !>        \param[in]    "real(dp) :: dA(1:n,1:n)"              Change from each land-use class to the others
+  !>                                   during the time step
+  !>        where C are the carbon concentrations in the land-use classes, A are the areas of the land-use classes
+  !>        and dA are the area changes between land-use classes (A>0, A(i,i)=0),
+  !>        \param[in]    "real(dp), optional :: C(1:n)"         Non-isotope concentrations in land-use classes
+  !>                                   at time step t-1
+  !>        \param[inout] "real(dp), optional :: trash(1:n)"     Container to store possible inconsistencies,
+  !>                                   might be numeric, between non-isotope and isotope model.
+
+  !     HISTORY
+  !>        \author Written Matthias Cuntz
+  !>        \date Apr 2019
+  subroutine isotope_luc_model(Ci, A, dA, C, trash)
+
+    use mo_kind,           only: dp, i4
+    use mo_utils,          only: eq, ne
+
+    implicit none
+
+    real(dp), dimension(:),   intent(inout)           :: Ci     ! Iso land-use class
+    real(dp), dimension(:),   intent(in)              :: A      ! Land area land-use class
+    real(dp), dimension(:,:), intent(in)              :: dA     ! Land area changes between land-use classes
+    real(dp), dimension(:),   intent(in),    optional :: C      ! Non-iso land-use class
+    real(dp), dimension(:),   intent(inout), optional :: trash  ! garbage can for numerical inconsistencies
+
+    ! Local variables
+    integer(i4) :: i  ! counter
+    integer(i4) :: nn ! number of pools
+    real(dp), dimension(size(Ci,1)) :: R    ! Isotope ratio of pool
+    real(dp), dimension(size(Ci,1)) :: Anew ! A at t+dt
+    ! defaults for optional inputs
+    real(dp), dimension(size(Ci,1)) :: iC, itrash
+
+    ! Check sizes
+    nn = size(Ci,1)
+    if ( (size(A,1) /= nn) .or. (size(dA,1) /= nn) .or. (size(dA,2) /= nn) ) then
+       write(*,*) 'Error isotope_luc_model: non-fitting dimensions between isotopic concentrations,'
+       write(*,*) '                         land areas and land-area changes.'
+       write(*,*) '    size(Ci):   ', size(Ci,1)
+       write(*,*) '    size(A):    ', size(A,1)
+       write(*,*) '    size(dA,1): ', size(dA,1)
+       write(*,*) '    size(dA,2): ', size(dA,2)
+       stop 9
+    endif
+
+    ! Check dA >= 0
+    if (any(dA < 0._dp)) then
+       write(*,*) 'Error isotope_luc_model: land area changes between land use classes must be >= 0.'
+       write(*,*) '    dA: ', dA
+       stop 9
+    endif
+
+    ! Check dA(i,:) == 0. if Ci(i) == 0.
+    if (any(eq(Ci,0._dp))) then
+       do i=1, nn
+          if (eq(Ci(i),0._dp)) then
+             if (any(ne(dA(i,:),0._dp))) then
+                write(*,*) 'Error isotope_luc_model: land area changes from land-use class i must be 0'
+                write(*,*) '                         if isotope carbon concentration of land-use class is 0.'
+                write(*,*) '    i, Ci(i): ', i, Ci(i)
+                write(*,*) '       dA(i): ', dA(i,:)
+                stop 9
+             endif
+          endif
+       end do
+    endif
+
+    if (present(C)) then
+       ! Check dA(i,:) == 0. if C(i) == 0.
+       if (any(eq(C,0._dp))) then
+          do i=1, nn
+             if (eq(C(i),0._dp)) then
+                if (any(ne(dA(i,:),0._dp))) then
+                   write(*,*) 'Error isotope_luc_model: land area changes from land-use class i must be 0'
+                   write(*,*) '                         if carbon concentration of land-use class is 0.'
+                   write(*,*) '     i, C(i): ', i, C(i)
+                   write(*,*) '       dA(i): ', dA(i,:)
+                   stop 9
+                endif
+             endif
+          end do
+       endif
+    endif
+    
+    ! Set optionals
+    if (present(C)) then
+       iC = C
+    else
+       iC = 1._dp
+    endif
+    if (present(trash)) then
+       itrash = trash
+    else
+       itrash = 0._dp
+    endif
+
+    ! Isotope ratio
+    R(:) = 1._dp
+    where (iC > 0._dp) R = Ci / iC
+
+    ! Land areas at t+dt
+    Anew = A - sum(dA, dim=2) + sum(dA, dim=1)
+
+    ! isotopic LUC model
+    Ci = R * iC * (A - sum(dA, dim=2)) + sum(dA * spread(R*iC, dim=2, ncopies=nn), dim=1)
+    where (Anew > 0._dp)
+       Ci = Ci / Anew
+    elsewhere
+       Ci     = 0._dp
+       itrash = itrash + Ci
+    endwhere
+
+    ! Check final land-use classes
+    ! Isotope land-use class became < 0.
+    if (any(Ci < 0._dp)) then
+       itrash = itrash + merge(abs(Ci), 0._dp, Ci < 0._dp)
+       Ci = merge(0._dp, Ci, Ci < 0._dp)
+    endif
+    ! Non-isotope land-use class == 0. but isotope land-use class > 0.
+    if (any(eq(iC,0._dp) .and. (Ci > 0._dp))) then
+       itrash = itrash + merge(Ci, 0._dp, eq(iC,0._dp) .and. (Ci > 0._dp))
+       Ci = merge(0._dp, Ci, eq(iC,0._dp) .and. (Ci > 0._dp))
+    endif
+    ! Non-isotope land-use class >0. but isotope land-use class == 0.
+    ! ???
+
+    if (present(trash)) trash = itrash
+
+    return
+
+  end subroutine isotope_luc_model
+
+  
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -31,13 +210,13 @@ contains
   !>        given sink, sources and all the fluxes between all pools,
   !>        together associated fractionation factors.
 
-  !>        The pool model is:
+  !>        The pool model for pool i is:
   !>            dC(i)/dt = sum(F(:,i)) - sum(F(i,:)) + S(i) - Si(i)
   !>        where C are the pools, F the fluxes between pools (F>0, F(i,i)=0),
   !>        S a pool-independent source term, and Si a sink term, which can be pool-independent
   !>        or pool-dependent, i.e. Si(i) = beta(i)*C(i)
 
-  !>        The isotope model is then:
+  !>        The isotope model for pool i is then:
   !>            dC'(i)/dt = sum(alpha(:,i)*R(:)*F(:,i)) - R(i)*sum(alpha(i,:)*F(i,:)) + Rs(i)*S(i) - alpha(i,i)*R(i)*Si(i)
   !>        with C' the isotope pools. R are the isotope ratios of the pools at time t-dt,
   !>        and alpha are possible fractionation factors.
@@ -108,14 +287,15 @@ contains
     ! Check sizes
     nn = size(Ci,1)
     if ( (size(C,1) /= nn) .or. (size(F,1) /= nn) .or. (size(F,2) /= nn) ) then
-       write(*,*) 'Error isotope_pool_model: non-fitting dimensions betwwen isotopic pools, non-isotopic pools and fluxes.'
+       write(*,*) 'Error isotope_pool_model: non-fitting dimensions between isotopic pools,'
+       write(*,*) '                          non-isotopic pools and fluxes.'
        write(*,*) '    size(Ci):  ', size(Ci,1)
        write(*,*) '    size(C):   ', size(C,1)
        write(*,*) '    size(F,1): ', size(F,1)
        write(*,*) '    size(F,2): ', size(F,2)
        stop 9
     endif
-    
+
     ! Check F >= 0
     if (any(F < 0._dp)) then
        write(*,*) 'Error isotope_pool_model: fluxes between pools must be >= 0.'
@@ -202,8 +382,10 @@ contains
     ! Non-isotope pool >0. but isotope pool == 0.
     ! ???
 
+    if (present(trash)) trash = itrash
+
     return
 
-end subroutine isotope_pool_model
+  end subroutine isotope_pool_model
 
 END MODULE mo_isotope_pool_model
