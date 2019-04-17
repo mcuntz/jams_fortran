@@ -66,10 +66,14 @@ module mo_constants
   real(dp), parameter :: sqrt2_dp     = 1.41421356237309504880168872420969807856967_dp  ! sqrt(2)
   !> square root of 2 in single precision
   real(sp), parameter :: sqrt2_sp     = 1.41421356237309504880168872420969807856967_sp
+  !> 1/3 in double precision
+  real(dp), parameter :: onethird_dp  = 0.3333333333333333333333333333333333333_dp      ! 1/3
+  !> 1/3 in single precision
+  real(sp), parameter :: onethird_sp  = 0.3333333333333333333333333333333333333_sp
   !> 2/3 in double precision
-  real(dp), parameter :: twothird_dp  = 0.6666666666666666666666666666666666667_dp      ! 2/3
+  real(dp), parameter :: twothird_dp  = 1.0_dp - onethird_dp                            ! 2/3
   !> 2/3 in single precision
-  real(sp), parameter :: twothird_sp  = 0.6666666666666666666666666666666666667_sp
+  real(sp), parameter :: twothird_sp  = 1.0_sp - onethird_sp
   !> degree to radian conversion (pi/180) in double precision
   real(dp), parameter :: deg2rad_dp   = pi_dp/180._dp            ! deg2rad
   !> degree to radian conversion (pi/180) in single precision
@@ -153,8 +157,7 @@ module mo_constants
   real(dp), parameter :: lr_std_dp      = 0.0065_dp
   ! standard temperature lapse rate (-K m-1)
   real(sp), parameter :: lr_std_sp      = 0.0065_sp
-  
-  
+
   !> Standard atmosphere
   !> standard pressure [Pa] in double precision
   real(dp), parameter :: p0_dp    = 101325._dp      ! standard pressure [Pa]
