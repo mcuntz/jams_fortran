@@ -5,13 +5,16 @@ program main
 
   implicit none
 
-  integer(i4), parameter :: nn = 3 ! # of pools
-  real(dp),    parameter :: vpdb = 0.0112372_dp
+  integer(i4), parameter :: nland = 10 ! # of pools
+  integer(i4), parameter :: nn    = 3 ! # of pools
+  real(dp),    parameter :: vpdb  = 0.0112372_dp
 
   ! input / output
   real(dp) :: dt, Citot
   real(dp), dimension(nn)    :: Ci, C, Ct, S, Rs, Si, beta, trash, A, At
   real(dp), dimension(nn,nn) :: F, alpha, dA
+  real(dp), dimension(nn,nland)    :: Ci2, C2, Ct2, S2, Rs2, Si2, beta2, trash2, A2, At2
+  real(dp), dimension(nn,nn,nland) :: F2, alpha2, dA2
 
   integer(i4) :: i, j, nstep
 
@@ -206,6 +209,99 @@ program main
      write(*,*) 'mo_isotope_pool_model pool two pool shuffle o.k.'
   else
      write(*,*) 'mo_isotope_pool_model pool two pool shuffle failed!'
+  endif
+  
+  ! -----------------------
+  ! isotope_pool_model_2d - No fractionation - Sink
+
+  isgood = .true.
+
+  dt     = 0.023_dp
+  C2     = 1.2345_dp
+  S2     = 0.004_dp
+  Rs2    = vpdb ! ~alpha=1
+  Si2    = 0.003_dp
+  beta2  = 0._dp
+  trash2 = 0._dp
+
+  do i=1, nn
+     do j=1, nn
+        if (i == j) then
+           F2(i,j,:)     = 0._dp
+           alpha2(i,j,:) = 1.0_dp   ! sinks
+        else if  (i < j) then    ! outgoing fluxes
+           F2(i,j,:)     = 0.001_dp
+           alpha2(i,j,:) = 1._dp
+        else                     ! incoming fluxes
+           F2(i,j,:)     = 0.002_dp
+           alpha2(i,j,:) = 1._dp
+        endif
+     end do
+  end do
+
+  Ci2 = C2 * vpdb
+  nstep = 20
+  do i=1, nstep
+     Ct2 = C2
+     C2 = C2 + sum(F2, dim=1)*dt - sum(F2, dim=2)*dt + S2*dt - Si2*dt
+     call isotope_pool_model(dt, Ci2, Ct2, F2, S=S2, Rs=Rs2, Si=Si2, alpha=alpha2, trash=trash2)
+     ! print*, 'd ', (Ci/C/vpdb-1.)*1000.
+  end do
+  ! print*, 'Trash ', trash
+
+  if (any(abs(Ci2/C2/vpdb-1.)*1000.>1e-9)) isgood = .false.
+  
+  allgood = allgood .and. isgood
+  
+  if (isgood) then
+     write(*,*) 'mo_isotope_pool_model 2d pool no frac sink o.k.'
+  else
+     write(*,*) 'mo_isotope_pool_model 2d pool no frac sink failed!'
+  endif
+  
+  ! -----------------------
+  ! isotope_pool_model2d - Two pool, source in 1st pool, everything shuffled to 2nd pool
+
+  isgood = .true.
+
+  dt      = 23._dp
+  C2(1:2,:nland/2)   = 1.2345_dp
+  C2(1:2,nland/2+1:) = 2.2345_dp
+  C2(3:,:)   = 0._dp
+  S2(1,:)    = 0.04_dp
+  S2(2:,:)   = 0._dp
+  Rs2(1,:)   = vpdb * 1.1_dp
+  Rs2(2:,:)  = 0._dp ! only source in 1st pool
+  Si2(1,:)   = 0._dp
+  Si2(2,:)   = S(1)  ! remove in 2nd as much as is coming from 1st pool
+  Si2(3:,:)  = 0._dp
+  beta2    = 1._dp
+  where (C2 > 0.0_dp) beta2  = Si2 / C2
+  trash2   = 0._dp
+  F2       = 0._dp
+  F2(1,2,:) = S2(1,:)  ! shuffle to 2nd pool
+  alpha2   = 1._dp
+
+  Ci2 = C2 * vpdb
+  nstep = 200
+  do i=1, nstep
+     Ct2 = C2
+     C2 = C2 + sum(F2, dim=1)*dt - sum(F2, dim=2)*dt + S2*dt - beta2*C2*dt
+     call isotope_pool_model(dt, Ci2, Ct2, F2, S=S2, Rs=Rs2, beta=beta2, alpha=alpha2, trash=trash2)
+     ! print*, 'd ', (Ci(1:2)/C(1:2)/vpdb-1.)*1000.
+  end do
+  ! print*, 'Trash ', trash
+  ! write(*,*) 'delta_source ', (Rs(1)/vpdb-1.)*1000.
+  ! write(*,*) 'delta end    ', (Ci(2)/C(2)/vpdb-1.)*1000.
+  
+  if (any(abs(Ci2(2,:)/C2(2,:)/vpdb - Rs2(1,:)/vpdb)*1000.>1e-9)) isgood = .false.
+  
+  allgood = allgood .and. isgood
+  
+  if (isgood) then
+     write(*,*) 'mo_isotope_pool_model 2d pool two pool shuffle o.k.'
+  else
+     write(*,*) 'mo_isotope_pool_model 2d pool two pool shuffle failed!'
   endif
   
   ! -----------------------
