@@ -21,6 +21,10 @@ MODULE mo_isotope_pool_model
   public :: isotope_luc_model  ! Solves the next time step of a generic isotopic land-use change model
   public :: isotope_pool_model ! Solves the next time step of a generic isotopic pool model
 
+  ! ------------------------------------------------------------------
+
+  private :: diag
+
 contains
 
   ! ------------------------------------------------------------------
@@ -79,8 +83,8 @@ contains
   !>        \date Apr 2019
   subroutine isotope_luc_model(Ci, A, dA, C, trash)
 
-    use mo_kind,           only: dp, i4
-    use mo_utils,          only: eq, ne
+    use mo_kind,  only: dp, i4
+    use mo_utils, only: eq, ne
 
     implicit none
 
@@ -254,9 +258,8 @@ contains
   !>        \date Apr 2019
   subroutine isotope_pool_model(dt, Ci, C, F, S, Rs, Si, alpha, beta, trash)
 
-    use mo_kind,           only: dp, i4
-    use mo_utils,          only: eq, ne
-    use mo_linear_algebra, only: diag
+    use mo_kind,  only: dp, i4
+    use mo_utils, only: eq, ne
 
     implicit none
 
@@ -387,5 +390,26 @@ contains
     return
 
   end subroutine isotope_pool_model
+
+  
+  ! ------------------------------------------------------------------
+
+  function diag(matrix)
+
+    use mo_kind, only: dp, i4
+
+    implicit none
+
+    real(dp), dimension(:,:), intent(in) :: matrix
+    real(dp), dimension(:), allocatable  :: diag
+
+    integer(i4) :: i
+
+    if (size(matrix,1) /= size(matrix,2)) stop 'diag: array must be squared matrix.'
+    if (.not. allocated(diag)) allocate(diag(size(matrix,1)))
+
+    forall(i=1:size(matrix,1)) diag(i) = matrix(i,i)
+
+  end function diag
 
 END MODULE mo_isotope_pool_model
