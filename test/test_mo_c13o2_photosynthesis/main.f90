@@ -16,7 +16,7 @@ program main
   logical :: isgood, allgood
 
   write(*,*) ''
-  write(*,*) 'Test mo_c13o2'
+  write(*,*) 'Test mo_c13o2_photosynthesis'
   
   allgood = .true.
   
@@ -39,9 +39,9 @@ program main
   allgood = allgood .and. isgood
   
   if (isgood) then
-     write(*,*) 'mo_c13o2 init o.k.'
+     write(*,*) 'mo_c13o2_photosynthesis init o.k.'
   else
-     write(*,*) 'mo_c13o2 init failed!'
+     write(*,*) 'mo_c13o2_photosynthesis init failed!'
   endif
   
   ! -----------------------
@@ -95,9 +95,9 @@ program main
   allgood = allgood .and. isgood
   
   if (isgood) then
-     write(*,*) 'mo_isotope_pool_model delta o.k.'
+     write(*,*) 'mo_c13o2_photosynthesis simple discrimination o.k.'
   else
-     write(*,*) 'mo_isotope_pool_model delta failed!'
+     write(*,*) 'mo_c13o2_photosynthesis simple discrimination failed!'
   endif
 
   
@@ -110,9 +110,9 @@ program main
   ! ----------------------
   
   if (allgood) then
-     write(*,*) 'mo_c13o2 o.k.'
+     write(*,*) 'mo_c13o2_photosynthesis o.k.'
   else
-     write(*,*) 'mo_c13o2 failed!'
+     write(*,*) 'mo_c13o2_photosynthesis failed!'
   endif
 
 end program main
