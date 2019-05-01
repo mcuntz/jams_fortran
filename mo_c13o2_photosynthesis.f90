@@ -1,4 +1,4 @@
-!> \file mo_c13o2.f90
+!> \file mo_c13o2_photosynthesis.f90
 
 !> \brief Photosynthetic isotope discrimination
 
@@ -10,7 +10,7 @@
 !> \author Matthias Cuntz
 !> \date Apr 2019
 
-MODULE mo_c13o2
+MODULE mo_c13o2_photosynthesis
 
   use mo_kind, only: dp, i4
 
@@ -544,4 +544,4 @@ contains
 
   end subroutine init_ratio_leaf_pools
 
-END MODULE mo_c13o2
+END MODULE mo_c13o2_photosynthesis

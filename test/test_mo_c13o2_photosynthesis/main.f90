@@ -1,10 +1,10 @@
 program main
 
-  use mo_kind,    only: dp, i4
-  use mo_utils,   only: ne
-  use mo_isotope, only: vpdbc13
-  use mo_c13o2,   only: c13o2_discrimination_simple, init_ratio_leaf_pools!, c13o2_discrimination
-  use mo_c13o2,   only: Vstarch, Rsucrose, Rphoto, Rstarch
+  use mo_kind,                 only: dp, i4
+  use mo_utils,                only: ne
+  use mo_isotope,              only: vpdbc13
+  use mo_c13o2_photosynthesis, only: Vstarch, Rsucrose, Rphoto, Rstarch
+  use mo_c13o2_photosynthesis, only: c13o2_discrimination_simple, init_ratio_leaf_pools!, c13o2_discrimination
 
   implicit none
 
