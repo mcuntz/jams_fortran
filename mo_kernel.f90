@@ -18,8 +18,7 @@
 
 MODULE mo_kernel
 
-  ! This module provides functions for kernel regression and kernel density estimation and
-  ! is part of the JAMS CHS Fortran library.
+  ! This module provides functions for kernel regression and kernel density estimation.
 
   ! Written  Juliane Mai,    Mar 2013
   ! Modified Stephan Thober, Mar 2013
@@ -31,13 +30,27 @@ MODULE mo_kernel
 
   ! License
   ! -------
-  ! This file is part of the JAMS Fortran library.
-
-  ! It is NOT released under the GNU Lesser General Public License, yet.
-
-  ! If you use this routine, please contact Juliane Mai.
-
-  ! Copyright 2013-2014 Juliane Mai, Stephan Thober, Matthias Cuntz
+  ! This file is part of the JAMS Fortran package, distributed under the MIT License.
+  !
+  ! Copyright (c) 2013-2016 Juliane Mai, Stephan Thober, Matthias Cuntz - mc (at) macu (dot) de
+  !
+  ! Permission is hereby granted, free of charge, to any person obtaining a copy
+  ! of this software and associated documentation files (the "Software"), to deal
+  ! in the Software without restriction, including without limitation the rights
+  ! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ! copies of the Software, and to permit persons to whom the Software is
+  ! furnished to do so, subject to the following conditions:
+  !
+  ! The above copyright notice and this permission notice shall be included in all
+  ! copies or substantial portions of the Software.
+  !
+  ! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  ! SOFTWARE.
 
   USE mo_kind,      ONLY: i4, sp, dp
   USE mo_moment,    ONLY: stddev
@@ -373,7 +386,7 @@ MODULE mo_kernel
   !>        If the regression for other datapoints than x is needed the optional argument xout has to be specified.
   !>        The result will than be of the same size and precision as xout.\n
   !>        \n
-  !>        The code is adapted from the kernel_regression.py of the JAMS CHS Python library.
+  !>        The code is adapted from the kernel_regression.py of the JAMS Python library.
   !
   !     INTENT(IN)
   !>        \param[in] "real(sp/dp) :: x(:)/x(:,:)"  1D or ND array with independent variables
@@ -476,7 +489,7 @@ MODULE mo_kernel
   !>        The dataset x can be single or double precision. The result will have the same numerical precision.\n
   !>        The result of this function can be used as the optional input for kernel_regression.\n
   !>        \n
-  !>        The code is adapted from the kernel_regression.py of the JAMS CHS Python library.
+  !>        The code is adapted from the kernel_regression.py of the JAMS Python library.
   !
   !     INTENT(IN)
   !>        \param[in] "real(sp/dp) :: x(:)/x(:,:)"  1D or ND array with independent variables

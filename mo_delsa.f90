@@ -16,28 +16,32 @@ MODULE mo_delsa
 
   ! License
   ! -------
-  ! This file is part of the JAMS Fortran library.
+  ! This file is part of the JAMS Fortran package, distributed under the MIT License.
+  !
+  ! Copyright (c) 2014 Oldrich Rakovec
+  !
+  ! Permission is hereby granted, free of charge, to any person obtaining a copy
+  ! of this software and associated documentation files (the "Software"), to deal
+  ! in the Software without restriction, including without limitation the rights
+  ! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ! copies of the Software, and to permit persons to whom the Software is
+  ! furnished to do so, subject to the following conditions:
+  !
+  ! The above copyright notice and this permission notice shall be included in all
+  ! copies or substantial portions of the Software.
+  !
+  ! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  ! SOFTWARE.
 
   ! If you use this routine in your work, you should cite the following reference
   ! Rakovec, O., M. C. Hill, M. P. Clark, A. H. Weerts, A. J. Teuling, R. Uijlenhoet (2014), Distributed
   !     Evaluation of Local Sensitivity Analysis (DELSA), with application to hydrologic models,
   !     Water Resour. Res., 50, 1-18, doi:10.1002/2013WR014063.
-
-  ! The JAMS Fortran library is free software: you can redistribute it and/or modify
-  ! it under the terms of the GNU Lesser General Public License as published by
-  ! the Free Software Foundation, either version 3 of the License, or
-  ! (at your option) any later version.
-
-  ! The JAMS Fortran library is distributed in the hope that it will be useful,
-  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  ! GNU Lesser General Public License for more details.
-
-  ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
-  ! If not, see <http://www.gnu.org/licenses/>.
-
-  ! Copyright 2014 Oldrich Rakovec
 
   USE mo_kind, ONLY: i4, sp, dp
 
@@ -63,7 +67,7 @@ MODULE mo_delsa
   !>        \param[in] "real(sp/dp) :: parbase(:,:)"    array of base model parameters, first dimension is the sample size,
   !>                                                    i.e. number of parameter sets, second dimension is the number of
   !>                                                    parameters, which are recommended to be sampled using the Sobol'
-  !>                                                    quasi random sequence (see for example mo_sobol in FORTRAN_chs_lib)
+  !>                                                    quasi random sequence (see for example mo_sobol in test directory)
   !>        \param[in] "real(sp/dp) :: parpert(:,:)"    array of perturbed model parameters, first dimension is the sample size,
   !>                                                    i.e. number of parameter sets, second dimension is the number of
   !>                                                    parameters, which are recommended to be sampled using the Sobol'

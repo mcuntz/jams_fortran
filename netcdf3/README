@@ -18,4 +18,3 @@ So
   cp ./fortran/nfconfig.inc ../nfconfig.inc.yoursystem
   cd ..
   \rm -r netcdf-3.6.3
-

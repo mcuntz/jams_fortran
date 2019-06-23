@@ -3,8 +3,8 @@
 !> \brief Sort and ranking routines
 
 !> \details This module is the Orderpack 2.0 from Michel Olagnon.
-!>          It provides order and unconditional, unique, and partial 
- !>         ranking, sorting, and permutation.
+!>          It provides order and unconditional, unique, and partial
+!>          ranking, sorting, and permutation.
 
 !> \authors Michel Olagnon
 !> \date 2000-2012
@@ -18,23 +18,27 @@ MODULE mo_orderpack
 
   ! License
   ! -------
-  ! This file is part of the JAMS Fortran library.
-
-  ! The JAMS Fortran library is free software: you can redistribute it and/or modify
-  ! it under the terms of the GNU Lesser General Public License as published by
-  ! the Free Software Foundation, either version 3 of the License, or
-  ! (at your option) any later version.
-
-  ! The JAMS Fortran library is distributed in the hope that it will be useful,
-  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  ! GNU Lesser General Public License for more details.
-
-  ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
-  ! If not, see <http://www.gnu.org/licenses/>.
-
-  ! Copyright 2014 Matthias Cuntz
+  ! This file is part of the JAMS Fortran package, distributed under the MIT License.
+  !
+  ! Copyright (c) 2014-2015 Michel Olagnon, Matthias Cuntz - mc (at) macu (dot) de
+  !
+  ! Permission is hereby granted, free of charge, to any person obtaining a copy
+  ! of this software and associated documentation files (the "Software"), to deal
+  ! in the Software without restriction, including without limitation the rights
+  ! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ! copies of the Software, and to permit persons to whom the Software is
+  ! furnished to do so, subject to the following conditions:
+  !
+  ! The above copyright notice and this permission notice shall be included in all
+  ! copies or substantial portions of the Software.
+  !
+  ! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  ! SOFTWARE.
 
   USE mo_kind,  ONLY: i4, sp, dp
   USE mo_utils, ONLY: ne, eq, le
@@ -68,18 +72,18 @@ MODULE mo_orderpack
   public :: valnth
 
   !> Unconditional ranking
-  !> 
+  !>
   !> Subroutine MRGRNK (XVALT, IMULT)
   !> Ranks array XVALT into index array IRNGT, using merge-sort
   !> For performance reasons, the first 2 passes are taken out of the
   !> standard loop, and use dedicated coding.
-  !> 
+  !>
   !> Subroutine MRGREF (XVALT, IRNGT) Ranks array XVALT into index array
   !> IRNGT, using merge-sort This version is not optimized for performance,
   !> and is thus not as difficult to read as the previous one.
-  !> 
+  !>
   !> Partial ranking
-  !> 
+  !>
   !> Subroutine RNKPAR (XVALT, IRNGT, NORD) Ranks partially XVALT by IRNGT,
   !> up to order NORD (refined for speed) This routine uses a pivoting
   !> strategy such as the one of finding the median based on the quicksort
@@ -90,10 +94,10 @@ MODULE mo_orderpack
   !> on. It iterates until it can bring the number of values in ILOWT to
   !> exactly NORD, and then uses an insertion sort to rank this set, since
   !> it is supposedly small.
-  !> 
+  !>
   !> Subroutine RAPKNR (XVALT, IRNGT, NORD) Same as RNKPAR, but in
   !> decreasing order (RAPKNR = RNKPAR spelt backwards).
-  !> 
+  !>
   !> Subroutine REFPAR (XVALT, IRNGT, NORD) Ranks partially XVALT by IRNGT,
   !> up to order NORD This version is not optimized for performance, and is
   !> thus not as difficult to read as some other ones. It uses a pivoting
@@ -102,7 +106,7 @@ MODULE mo_orderpack
   !> ranked indices of the values. It iterates until it can bring the
   !> number of values lower than the pivot to exactly NORD, and then uses
   !> an insertion sort to rank this set, since it is supposedly small.
-  !> 
+  !>
   !> Subroutine RINPAR (XVALT, IRNGT, NORD) Ranks partially XVALT by IRNGT,
   !> up to order NORD This version is not optimized for performance, and is
   !> thus not as difficult to read as some other ones. It uses insertion
@@ -110,7 +114,7 @@ MODULE mo_orderpack
   !> work array and is faster when NORD is very small (2-5), but worst case
   !> behavior (intially inverse sorted) can easily happen. In many cases,
   !> the refined quicksort method is faster.
-  !> 
+  !>
   !> Integer Function INDNTH (XVALT, NORD) Returns the index of the NORDth
   !> value of XVALT (in increasing order) This routine uses a pivoting
   !> strategy such as the one of finding the median based on the quicksort
@@ -121,7 +125,7 @@ MODULE mo_orderpack
   !> on. It iterates until it can bring the number of values in ILOWT to
   !> exactly NORD, and then takes out the original index of the maximum
   !> value in this set.
-  !> 
+  !>
   !> Subroutine INDMED (XVALT, INDM) Returns the index of the median
   !> (((Size(XVALT)+1))/2th value) of XVALT This routine uses the recursive
   !> procedure described in Knuth, The Art of Computer Programming, vol. 3,
@@ -129,18 +133,18 @@ MODULE mo_orderpack
   !> able to interpolate in the set as the one used in INDNTH. It also has
   !> better worst case behavior than INDNTH, but is about 10% slower in
   !> average for random uniformly distributed values.
-  !> 
+  !>
   !> Note that in Orderpack 1.0, this routine was a Function procedure, and
   !> is now changed to a Subroutine.
-  !> 
+  !>
   !> Unique ranking
-  !> 
+  !>
   !> Subroutine UNIRNK (XVALT, IRNGT, NUNI) Ranks an array, removing
   !> duplicate entries (uses merge sort).  The routine is similar to pure
   !> merge-sort ranking, but on the last pass, it discards indices that
   !> correspond to duplicate entries. For performance reasons, the first 2
   !> passes are taken out of the standard loop, and use dedicated coding.
-  !> 
+  !>
   !> Subroutine UNIPAR (XVALT, IRNGT, NORD) Ranks partially XVALT by IRNGT,
   !> up to order NORD at most, removing duplicate entries This routine uses
   !> a pivoting strategy such as the one of finding the median based on the
@@ -153,22 +157,22 @@ MODULE mo_orderpack
   !> rank this set, since it is supposedly small. At all times, the NORD
   !> first values in ILOWT correspond to distinct values of the input
   !> array.
-  !> 
+  !>
   !> Subroutine UNIINV (XVALT, IGOEST) Inverse ranking of an array, with
   !> removal of duplicate entries The routine is similar to pure merge-sort
   !> ranking, but on the last pass, it sets indices in IGOEST to the rank
   !> of the original value in an ordered set with duplicates removed. For
   !> performance reasons, the first 2 passes are taken out of the standard
   !> loop, and use dedicated coding.
-  !> 
+  !>
   !> Subroutine MULCNT (XVALT, IMULT) Gives, for each array value, its
   !> multiplicity The number of times that a value appears in the array is
   !> computed by using inverse ranking, counting for each rank the number
   !> of values that ``collide'' to this rank, and returning this sum to the
   !> locations in the original set. Uses subroutine UNIINV.
-  !> 
+  !>
   !> Random permutation: an interesting use of ranking
-  !> 
+  !>
   !> A variation of the following problem was raised on the internet
   !> sci.math.num-analysis news group: Given an array, I would like to find
   !> a random permutation of this array that I could control with a
@@ -176,7 +180,7 @@ MODULE mo_orderpack
   !> locations. The ``nearbyness'' parameter ranges from 0 to 1, with 0
   !> such that no element moves from its initial location, and 1 such that
   !> the permutation is fully random.
-  !> 
+  !>
   !> Subroutine CTRPER (XVALT, PCLS) Permute array XVALT randomly, but
   !> leaving elements close to their initial locations The routine takes
   !> the 1...size(XVALT) index array as real values, takes a combination of
@@ -186,7 +190,7 @@ MODULE mo_orderpack
   !> random order is 1-PCLS / PCLS, thus when PCLS = 0, there is no change
   !> in the order whereas the new order is fully random when PCLS = 1. Uses
   !> subroutine MRGRNK.
-  !> 
+  !>
   !> The above solution found another application when I was asked the
   !> following question: I am given two arrays, representing parents'
   !> incomes and their children's incomes, but I do not know which parents
@@ -196,7 +200,7 @@ MODULE mo_orderpack
   !> these arrays so that the given correlation coefficient is attained,
   !> i.e. to reconstruct a realistic dataset, though very likely not to be
   !> the true one.
-  !> 
+  !>
   !> Program GIVCOR Given two arrays of equal length of unordered values,
   !> find a "matching value" in the second array for each value in the
   !> first so that the global correlation coefficient reaches exactly a
@@ -220,34 +224,34 @@ MODULE mo_orderpack
   !> correlation be desired, the program should be modified to start with
   !> one array in reverse order with respect to the other, i.e. coorelation
   !> as close to -1 as possible.
-  !> 
-  !> 
+  !>
+  !>
   !> Sorting
-  !> 
+  !>
   !> Full sorting
-  !> 
+  !>
   !> Subroutine INSSOR (XVALT) Sorts XVALT into increasing order (Insertion
   !> sort) This subroutine uses insertion sort. It does not use any work
   !> array and is faster when XVALT is of very small size (< 20), or
   !> already almost sorted, but worst case behavior (intially inverse
   !> sorted) can easily happen. In most cases, the quicksort or merge sort
   !> method is faster.
-  !> 
+  !>
   !> Subroutine REFSOR (XVALT) Sorts XVALT into increasing order (Quick
   !> sort) This version is not optimized for performance, and is thus not
   !> as difficult to read as some other ones. This subroutine uses
   !> quicksort in a recursive implementation, and insertion sort for the
   !> last steps with small subsets. It does not use any work array
-  !> 
+  !>
   !> Partial sorting
-  !> 
+  !>
   !> Subroutine INSPAR (XVALT, NORD) Sorts partially XVALT, bringing the
   !> NORD lowest values at the begining of the array.  This subroutine uses
   !> insertion sort, limiting insertion to the first NORD values. It does
   !> not use any work array and is faster when NORD is very small (2-5),
   !> but worst case behavior can happen fairly probably (initially inverse
   !> sorted). In many cases, the refined quicksort method is faster.
-  !> 
+  !>
   !> Function FNDNTH (XVALT, NORD) Finds out and returns the NORDth value
   !> in XVALT (ascending order) This subroutine uses insertion sort,
   !> limiting insertion to the first NORD values, and even less when one
@@ -257,10 +261,10 @@ MODULE mo_orderpack
   !> (initially inverse sorted). In many cases, the refined quicksort
   !> method implemented by VALNTH / INDNTH is faster, though much more
   !> difficult to read and understand.
-  !> 
+  !>
   !> Function VALNTH (XVALT, NORD) Finds out and returns the NORDth value
   !> in XVALT (ascending order) This subroutine simply calls INDNTH.
-  !> 
+  !>
   !> Function VALMED (XVALT) Finds out and returns the median
   !> (((Size(XVALT)+1))/2th value) of XVALT This routine uses the recursive
   !> procedure described in Knuth, The Art of Computer Programming, vol. 3,
@@ -268,13 +272,13 @@ MODULE mo_orderpack
   !> able to interpolate in the set as the one used in VALNTH/INDNTH. It
   !> also has better worst case behavior than VALNTH/INDNTH, and is about
   !> 20% faster in average for random uniformly distributed values.
-  !> 
+  !>
   !> Function OMEDIAN (XVALT) It is a modified version of VALMED that
   !> provides the average between the two middle values in the case
   !> Size(XVALT) is even.
-  !> 
+  !>
   !> Unique sorting
-  !> 
+  !>
   !> Subroutine UNISTA (XVALT, NUNI) Removes duplicates from an array This
   !> subroutine uses merge sort unique inverse ranking. It leaves in the
   !> initial set only those entries that are unique, packing the array, and
@@ -287,7 +291,7 @@ MODULE mo_orderpack
   interface sort_index
      module procedure sort_index_dp, sort_index_sp, sort_index_i4
   end interface sort_index
-  
+
   interface ctrper
      module procedure d_ctrper, r_ctrper, i_ctrper
   end interface ctrper

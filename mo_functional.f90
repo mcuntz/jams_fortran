@@ -2,6 +2,8 @@
 
 !> \brief functional-fortran - Functional programming for modern Fortran
 
+!> \url https://github.com/wavebitscientific/functional-fortran
+
 !> \details While not designed as a purely functional programming language,
 !> modern Fortran goes a long way by letting the programmer use pure functions
 !> to encourage good functional discipline, express code in mathematical form,
@@ -32,9 +34,9 @@ module mo_functional
 
   private
 
-  public :: arange,complement,empty,filter,foldl,foldr,foldt,head,init,&
-       insert,intersection,iterfold,last,limit,map,reverse,set,sort,&
-       split,subscript,tail,unfold,union
+  public :: arange, complement, empty, filter, foldl, foldr, foldt, head, init, &
+       insert, intersection, iterfold, last, limit, map, reverse, set, sort, &
+       split, subscript, tail, unfold, union
 
   public :: operator(.complement.)
   public :: operator(.head.)
@@ -47,785 +49,785 @@ module mo_functional
   public :: operator(.tail.)
   public :: operator(.union.)
 
-  public :: f_i1,f_i2,f_i4,f_i8
-  public :: f_r4,f_r8,f_r16
-  public :: f_c4,f_c8,f_c16
-  public :: f_array_i1,f_array_i2,f_array_i4,f_array_i8
-  public :: f_array_r4,f_array_r8,f_array_r16
-  public :: f_array_c4,f_array_c8,f_array_c16
-  public :: f2_i1,f2_i2,f2_i4,f2_i8
-  public :: f2_r4,f2_r8,f2_r16
-  public :: f2_c4,f2_c8,f2_c16
-  public :: f_i1_logical,f_i2_logical,f_i4_logical,f_i8_logical
-  public :: f_r4_logical,f_r8_logical,f_r16_logical
-  public :: f_c4_logical,f_c8_logical,f_c16_logical
+  public :: f_i1, f_i2, f_i4, f_i8
+  public :: f_r4, f_r8, f_r16
+  public :: f_c4, f_c8, f_c16
+  public :: f_array_i1, f_array_i2, f_array_i4, f_array_i8
+  public :: f_array_r4, f_array_r8, f_array_r16
+  public :: f_array_c4, f_array_c8, f_array_c16
+  public :: f2_i1, f2_i2, f2_i4, f2_i8
+  public :: f2_r4, f2_r8, f2_r16
+  public :: f2_c4, f2_c8, f2_c16
+  public :: f_i1_logical, f_i2_logical, f_i4_logical, f_i8_logical
+  public :: f_r4_logical, f_r8_logical, f_r16_logical
+  public :: f_c4_logical, f_c8_logical, f_c16_logical
 
   interface ! procedure interfaces
      pure integer(kind=i1) function f_i1(x)
        !! f :: i1 -> i1
        import :: i1
-       integer(kind=i1),intent(in) :: x
-     endfunction f_i1
+       integer(kind=i1), intent(in) :: x
+     end function f_i1
      !
      pure integer(kind=i2) function f_i2(x)
        !! f :: i2 -> i2
        import :: i2
-       integer(kind=i2),intent(in) :: x
-     endfunction f_i2
+       integer(kind=i2), intent(in) :: x
+     end function f_i2
      !
      pure integer(kind=i4) function f_i4(x)
        !! f :: i4 -> i4
        import :: i4
-       integer(kind=i4),intent(in) :: x
-     endfunction f_i4
+       integer(kind=i4), intent(in) :: x
+     end function f_i4
      !
      pure integer(kind=i8) function f_i8(x)
        !! f :: i8 -> i8
        import :: i8
-       integer(kind=i8),intent(in) :: x
-     endfunction f_i8
+       integer(kind=i8), intent(in) :: x
+     end function f_i8
      !
      pure real(kind=r4) function f_r4(x)
        !! f :: r4 -> r4
        import :: r4
-       real(kind=r4),intent(in) :: x
-     endfunction f_r4
+       real(kind=r4), intent(in) :: x
+     end function f_r4
      !
      pure real(kind=r8) function f_r8(x)
        !! f :: r8 -> r8
        import :: r8
-       real(kind=r8),intent(in) :: x
-     endfunction f_r8
+       real(kind=r8), intent(in) :: x
+     end function f_r8
      !
      pure real(kind=r16) function f_r16(x)
        !! f :: r16 -> r16
        import :: r16
-       real(kind=r16),intent(in) :: x
-     endfunction f_r16
+       real(kind=r16), intent(in) :: x
+     end function f_r16
      !
      pure complex(kind=r4) function f_c4(x)
        !! f :: c4 -> c4
        import :: r4
-       complex(kind=r4),intent(in) :: x
-     endfunction f_c4
+       complex(kind=r4), intent(in) :: x
+     end function f_c4
      !
      pure complex(kind=r8) function f_c8(x)
        !! f :: c8 -> c8
        import :: r8
-       complex(kind=r8),intent(in) :: x
-     endfunction f_c8
+       complex(kind=r8), intent(in) :: x
+     end function f_c8
      !
      pure complex(kind=r16) function f_c16(x)
        !! f :: c16 -> c16
        import :: r16
-       complex(kind=r16),intent(in) :: x
-     endfunction f_c16
+       complex(kind=r16), intent(in) :: x
+     end function f_c16
      !
      pure function f_array_i1(x) result(f)
        !! f :: [i1] -> [i1]
        import :: i1
-       integer(kind=i1),dimension(:),intent(in) :: x
-       integer(kind=i1),dimension(:),allocatable :: f
-     endfunction f_array_i1
+       integer(kind=i1), dimension(:), intent(in) :: x
+       integer(kind=i1), dimension(:), allocatable :: f
+     end function f_array_i1
      !
      pure function f_array_i2(x) result(f)
        !! f :: [i2] -> [i2]
        import :: i2
-       integer(kind=i2),dimension(:),intent(in) :: x
-       integer(kind=i2),dimension(:),allocatable :: f
-     endfunction f_array_i2
+       integer(kind=i2), dimension(:), intent(in) :: x
+       integer(kind=i2), dimension(:), allocatable :: f
+     end function f_array_i2
      !
      pure function f_array_i4(x) result(f)
        !! f :: [i4] -> [i4]
        import :: i4
-       integer(kind=i4),dimension(:),intent(in) :: x
-       integer(kind=i4),dimension(:),allocatable :: f
-     endfunction f_array_i4
+       integer(kind=i4), dimension(:), intent(in) :: x
+       integer(kind=i4), dimension(:), allocatable :: f
+     end function f_array_i4
      !
      pure function f_array_i8(x) result(f)
        !! f :: [i8] -> [i8]
        import :: i8
-       integer(kind=i8),dimension(:),intent(in) :: x
-       integer(kind=i8),dimension(:),allocatable :: f
-     endfunction f_array_i8
+       integer(kind=i8), dimension(:), intent(in) :: x
+       integer(kind=i8), dimension(:), allocatable :: f
+     end function f_array_i8
      !
      pure function f_array_r4(x) result(f)
        !! f :: [r4] -> [r4]
        import :: r4
-       real(kind=r4),dimension(:),intent(in) :: x
-       real(kind=r4),dimension(:),allocatable :: f
-     endfunction f_array_r4
+       real(kind=r4), dimension(:), intent(in) :: x
+       real(kind=r4), dimension(:), allocatable :: f
+     end function f_array_r4
      !
      pure function f_array_r8(x) result(f)
        !! f :: [r8] -> [r8]
        import :: r8
-       real(kind=r8),dimension(:),intent(in) :: x
-       real(kind=r8),dimension(:),allocatable :: f
-     endfunction f_array_r8
+       real(kind=r8), dimension(:), intent(in) :: x
+       real(kind=r8), dimension(:), allocatable :: f
+     end function f_array_r8
      !
      pure function f_array_r16(x) result(f)
        !! f :: [r16] -> [r16]
        import :: r16
-       real(kind=r16),dimension(:),intent(in) :: x
-       real(kind=r16),dimension(:),allocatable :: f
-     endfunction f_array_r16
+       real(kind=r16), dimension(:), intent(in) :: x
+       real(kind=r16), dimension(:), allocatable :: f
+     end function f_array_r16
      !
      pure function f_array_c4(x) result(f)
        !! f :: [c4] -> [c4]
        import :: r4
-       complex(kind=r4),dimension(:),intent(in) :: x
-       complex(kind=r4),dimension(:),allocatable :: f
-     endfunction f_array_c4
+       complex(kind=r4), dimension(:), intent(in) :: x
+       complex(kind=r4), dimension(:), allocatable :: f
+     end function f_array_c4
      !
      pure function f_array_c8(x) result(f)
        !! f :: [c8] -> [c8]
        import :: r8
-       complex(kind=r8),dimension(:),intent(in) :: x
-       complex(kind=r8),dimension(:),allocatable :: f
-     endfunction f_array_c8
+       complex(kind=r8), dimension(:), intent(in) :: x
+       complex(kind=r8), dimension(:), allocatable :: f
+     end function f_array_c8
      !
      pure function f_array_c16(x) result(f)
        !! f :: [c16] -> [c16]
        import :: r16
-       complex(kind=r16),dimension(:),intent(in) :: x
-       complex(kind=r16),dimension(:),allocatable :: f
-     endfunction f_array_c16
+       complex(kind=r16), dimension(:), intent(in) :: x
+       complex(kind=r16), dimension(:), allocatable :: f
+     end function f_array_c16
      !
      pure integer(kind=i1) function f2_i1(x,y)
        !! f :: i1 i1 -> i1
        import :: i1
-       integer(kind=i1),intent(in) :: x,y
-     endfunction f2_i1
+       integer(kind=i1), intent(in) :: x, y
+     end function f2_i1
      !
      pure integer(kind=i2) function f2_i2(x,y)
        !! f :: i2 i2 -> i2
        import :: i2
-       integer(kind=i2),intent(in) :: x,y
-     endfunction f2_i2
+       integer(kind=i2), intent(in) :: x, y
+     end function f2_i2
      !
      pure integer(kind=i4) function f2_i4(x,y)
        !! f :: i4 i4 -> i4
        import :: i4
-       integer(kind=i4),intent(in) :: x,y
-     endfunction f2_i4
+       integer(kind=i4), intent(in) :: x, y
+     end function f2_i4
      !
      pure integer(kind=i8) function f2_i8(x,y)
        !! f :: i8 i8 -> i8
        import :: i8
-       integer(kind=i8),intent(in) :: x,y
-     endfunction f2_i8
+       integer(kind=i8), intent(in) :: x, y
+     end function f2_i8
      !
      pure real(kind=r4) function f2_r4(x,y)
        !! f :: r4 r4 -> r4
        import :: r4
-       real(kind=r4),intent(in) :: x,y
-     endfunction f2_r4
+       real(kind=r4), intent(in) :: x, y
+     end function f2_r4
      !
      pure real(kind=r8) function f2_r8(x,y)
        !! f :: r8 r8 -> r8
        import :: r8
-       real(kind=r8),intent(in) :: x,y
-     endfunction f2_r8
+       real(kind=r8), intent(in) :: x, y
+     end function f2_r8
      !
      pure real(kind=r16) function f2_r16(x,y)
        !! f :: r16 r16 -> r16
        import :: r16
-       real(kind=r16),intent(in) :: x,y
-     endfunction f2_r16
+       real(kind=r16), intent(in) :: x, y
+     end function f2_r16
      !
      pure complex(kind=r4) function f2_c4(x,y)
        !! f :: c4 c4 -> c4
        import :: r4
-       complex(kind=r4),intent(in) :: x,y
-     endfunction f2_c4
+       complex(kind=r4), intent(in) :: x, y
+     end function f2_c4
      !
      pure complex(kind=r8) function f2_c8(x,y)
        !! f :: c8 c8 -> c8
        import :: r8
-       complex(kind=r8),intent(in) :: x,y
-     endfunction f2_c8
+       complex(kind=r8), intent(in) :: x, y
+     end function f2_c8
      !
      pure complex(kind=r16) function f2_c16(x,y)
        !! f :: c16 c16 -> c16
        import :: r16
-       complex(kind=r16),intent(in) :: x,y
-     endfunction f2_c16
+       complex(kind=r16), intent(in) :: x, y
+     end function f2_c16
      !
      pure logical function f_i1_logical(x)
        !! f :: i1 -> logical
        import :: i1
-       integer(kind=i1),intent(in) :: x
-     endfunction f_i1_logical
+       integer(kind=i1), intent(in) :: x
+     end function f_i1_logical
      !
      pure logical function f_i2_logical(x)
        !! f :: i2 -> logical
        import :: i2
-       integer(kind=i2),intent(in) :: x
-     endfunction f_i2_logical
+       integer(kind=i2), intent(in) :: x
+     end function f_i2_logical
      !
      pure logical function f_i4_logical(x)
        !! f :: i4 -> logical
        import :: i4
-       integer(kind=i4),intent(in) :: x
-     endfunction f_i4_logical
+       integer(kind=i4), intent(in) :: x
+     end function f_i4_logical
      !
      pure logical function f_i8_logical(x)
        !! f :: i8 -> logical
        import :: i8
-       integer(kind=i8),intent(in) :: x
-     endfunction f_i8_logical
+       integer(kind=i8), intent(in) :: x
+     end function f_i8_logical
      !
      pure logical function f_r4_logical(x)
        !! f :: r4 -> logical
        import :: r4
-       real(kind=r4),intent(in) :: x
-     endfunction f_r4_logical
+       real(kind=r4), intent(in) :: x
+     end function f_r4_logical
      !
      pure logical function f_r8_logical(x)
        !! f :: r8 -> logical
        import :: r8
-       real(kind=r8),intent(in) :: x
-     endfunction f_r8_logical
+       real(kind=r8), intent(in) :: x
+     end function f_r8_logical
      !
      pure logical function f_r16_logical(x)
        !! f :: r16 -> logical
        import :: r16
-       real(kind=r16),intent(in) :: x
-     endfunction f_r16_logical
+       real(kind=r16), intent(in) :: x
+     end function f_r16_logical
      !
      pure logical function f_c4_logical(x)
        !! f :: c4 -> logical
        import :: r4
-       complex(kind=r4),intent(in) :: x
-     endfunction f_c4_logical
+       complex(kind=r4), intent(in) :: x
+     end function f_c4_logical
      !
      pure logical function f_c8_logical(x)
        !! f :: c8 -> logical
        import :: r8
-       complex(kind=r8),intent(in) :: x
-     endfunction f_c8_logical
+       complex(kind=r8), intent(in) :: x
+     end function f_c8_logical
      !
      pure logical function f_c16_logical(x)
        !! f :: c16 -> logical
        import :: r16
-       complex(kind=r16),intent(in) :: x
-     endfunction f_c16_logical
+       complex(kind=r16), intent(in) :: x
+     end function f_c16_logical
   end interface
 
   interface arange
-     module procedure arange_i1,arange_i2,arange_i4,arange_i8, &
+     module procedure arange_i1, arange_i2, arange_i4, arange_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          arange_r4,arange_r8, &
+          arange_r4, arange_r8, &
 #else
-          arange_r4,arange_r8,arange_r16, &
+          arange_r4, arange_r8, arange_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          arange_c4,arange_c8
+          arange_c4, arange_c8
 #else
-          arange_c4,arange_c8,arange_c16
+          arange_c4, arange_c8, arange_c16
 #endif
   end interface arange
 
   interface complement
-     module procedure complement_i1,complement_i2,complement_i4,complement_i8, &
+     module procedure complement_i1, complement_i2, complement_i4, complement_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          complement_r4,complement_r8, &
+          complement_r4, complement_r8, &
 #else
-          complement_r4,complement_r8,complement_r16, &
+          complement_r4, complement_r8, complement_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          complement_c4,complement_c8
+          complement_c4, complement_c8
 #else
-          complement_c4,complement_c8,complement_c16
+          complement_c4, complement_c8, complement_c16
 #endif
   end interface complement
 
   interface operator(.complement.)
-     module procedure complement_i1,complement_i2,complement_i4,complement_i8, &
+     module procedure complement_i1, complement_i2, complement_i4, complement_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          complement_r4,complement_r8, &
+          complement_r4, complement_r8, &
 #else
-          complement_r4,complement_r8,complement_r16, &
+          complement_r4, complement_r8, complement_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          complement_c4,complement_c8
+          complement_c4, complement_c8
 #else
-          complement_c4,complement_c8,complement_c16
+          complement_c4, complement_c8, complement_c16
 #endif
   end interface operator(.complement.)
 
   interface empty
-     module procedure empty_i1,empty_i2,empty_i4,empty_i8, &
+     module procedure empty_i1, empty_i2, empty_i4, empty_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          empty_r4,empty_r8, &
+          empty_r4, empty_r8, &
 #else
-          empty_r4,empty_r8,empty_r16, &
+          empty_r4, empty_r8, empty_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          empty_c4,empty_c8
+          empty_c4, empty_c8
 #else
-          empty_c4,empty_c8,empty_c16
+          empty_c4, empty_c8, empty_c16
 #endif
   end interface empty
 
   interface filter
-     module procedure filter_i1,filter_i2,filter_i4,filter_i8, &
+     module procedure filter_i1, filter_i2, filter_i4, filter_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          filter_r4,filter_r8, &
+          filter_r4, filter_r8, &
 #else
-          filter_r4,filter_r8,filter_r16, &
+          filter_r4, filter_r8, filter_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          filter_c4,filter_c8
+          filter_c4, filter_c8
 #else
-          filter_c4,filter_c8,filter_c16
+          filter_c4, filter_c8, filter_c16
 #endif
   end interface filter
 
   interface foldl
-     module procedure foldl_i1,foldl_i2,foldl_i4,foldl_i8, &
+     module procedure foldl_i1, foldl_i2, foldl_i4, foldl_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          foldl_r4,foldl_r8, &
+          foldl_r4, foldl_r8, &
 #else
-          foldl_r4,foldl_r8,foldl_r16, &
+          foldl_r4, foldl_r8, foldl_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          foldl_c4,foldl_c8
+          foldl_c4, foldl_c8
 #else
-          foldl_c4,foldl_c8,foldl_c16
+          foldl_c4, foldl_c8, foldl_c16
 #endif
   end interface foldl
 
   interface foldr
-     module procedure foldr_i1,foldr_i2,foldr_i4,foldr_i8, &
+     module procedure foldr_i1, foldr_i2, foldr_i4, foldr_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          foldr_r4,foldr_r8, &
+          foldr_r4, foldr_r8, &
 #else
-          foldr_r4,foldr_r8,foldr_r16, &
+          foldr_r4, foldr_r8, foldr_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          foldr_c4,foldr_c8
+          foldr_c4, foldr_c8
 #else
-          foldr_c4,foldr_c8,foldr_c16
+          foldr_c4, foldr_c8, foldr_c16
 #endif
   end interface foldr
 
   interface foldt
-     module procedure foldt_i1,foldt_i2,foldt_i4,foldt_i8, &
+     module procedure foldt_i1, foldt_i2, foldt_i4, foldt_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          foldt_r4,foldt_r8, &
+          foldt_r4, foldt_r8, &
 #else
-          foldt_r4,foldt_r8,foldt_r16, &
+          foldt_r4, foldt_r8, foldt_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          foldt_c4,foldt_c8
+          foldt_c4, foldt_c8
 #else
-          foldt_c4,foldt_c8,foldt_c16
+          foldt_c4, foldt_c8, foldt_c16
 #endif
   end interface foldt
 
   interface head
-     module procedure head_i1,head_i2,head_i4,head_i8, &
+     module procedure head_i1, head_i2, head_i4, head_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          head_r4,head_r8, &
+          head_r4, head_r8, &
 #else
-          head_r4,head_r8,head_r16, &
+          head_r4, head_r8, head_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          head_c4,head_c8
+          head_c4, head_c8
 #else
-          head_c4,head_c8,head_c16
+          head_c4, head_c8, head_c16
 #endif
   end interface head
 
   interface operator(.head.)
-     module procedure head_i1,head_i2,head_i4,head_i8, &
+     module procedure head_i1, head_i2, head_i4, head_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          head_r4,head_r8, &
+          head_r4, head_r8, &
 #else
-          head_r4,head_r8,head_r16, &
+          head_r4, head_r8, head_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          head_c4,head_c8
+          head_c4, head_c8
 #else
-          head_c4,head_c8,head_c16
+          head_c4, head_c8, head_c16
 #endif
   end interface operator(.head.)
 
   interface init
-     module procedure init_i1,init_i2,init_i4,init_i8, &
+     module procedure init_i1, init_i2, init_i4, init_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          init_r4,init_r8, &
+          init_r4, init_r8, &
 #else
-          init_r4,init_r8,init_r16, &
+          init_r4, init_r8, init_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          init_c4,init_c8
+          init_c4, init_c8
 #else
-          init_c4,init_c8,init_c16
+          init_c4, init_c8, init_c16
 #endif
   end interface init
 
   interface operator(.init.)
-     module procedure init_i1,init_i2,init_i4,init_i8, &
+     module procedure init_i1, init_i2, init_i4, init_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          init_r4,init_r8, &
+          init_r4, init_r8, &
 #else
-          init_r4,init_r8,init_r16, &
+          init_r4, init_r8, init_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          init_c4,init_c8
+          init_c4, init_c8
 #else
-          init_c4,init_c8,init_c16
+          init_c4, init_c8, init_c16
 #endif
   end interface operator(.init.)
 
   interface insert
-     module procedure insert_i1,insert_i2,insert_i4,insert_i8, &
+     module procedure insert_i1, insert_i2, insert_i4, insert_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          insert_r4,insert_r8, &
+          insert_r4, insert_r8, &
 #else
-          insert_r4,insert_r8,insert_r16, &
+          insert_r4, insert_r8, insert_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          insert_c4,insert_c8
+          insert_c4, insert_c8
 #else
-          insert_c4,insert_c8,insert_c16
+          insert_c4, insert_c8, insert_c16
 #endif
   end interface insert
 
   interface intersection
-     module procedure intersection_i1,intersection_i2,intersection_i4,intersection_i8, &
+     module procedure intersection_i1, intersection_i2, intersection_i4, intersection_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          intersection_r4,intersection_r8, &
+          intersection_r4, intersection_r8, &
 #else
-          intersection_r4,intersection_r8,intersection_r16, &
+          intersection_r4, intersection_r8, intersection_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          intersection_c4,intersection_c8
+          intersection_c4, intersection_c8
 #else
-          intersection_c4,intersection_c8,intersection_c16
+          intersection_c4, intersection_c8, intersection_c16
 #endif
   end interface intersection
 
   interface operator(.intersection.)
-     module procedure intersection_i1,intersection_i2,intersection_i4,intersection_i8, &
+     module procedure intersection_i1, intersection_i2, intersection_i4, intersection_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          intersection_r4,intersection_r8, &
+          intersection_r4, intersection_r8, &
 #else
-          intersection_r4,intersection_r8,intersection_r16, &
+          intersection_r4, intersection_r8, intersection_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          intersection_c4,intersection_c8
+          intersection_c4, intersection_c8
 #else
-          intersection_c4,intersection_c8,intersection_c16
+          intersection_c4, intersection_c8, intersection_c16
 #endif
   end interface operator(.intersection.)
 
   interface iterfold
-     module procedure iterfold_i1,iterfold_i2,iterfold_i4,iterfold_i8, &
+     module procedure iterfold_i1, iterfold_i2, iterfold_i4, iterfold_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          iterfold_r4,iterfold_r8, &
+          iterfold_r4, iterfold_r8, &
 #else
-          iterfold_r4,iterfold_r8,iterfold_r16, &
+          iterfold_r4, iterfold_r8, iterfold_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          iterfold_c4,iterfold_c8
+          iterfold_c4, iterfold_c8
 #else
-          iterfold_c4,iterfold_c8,iterfold_c16
+          iterfold_c4, iterfold_c8, iterfold_c16
 #endif
   end interface iterfold
 
   interface last
-     module procedure last_i1,last_i2,last_i4,last_i8, &
+     module procedure last_i1, last_i2, last_i4, last_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          last_r4,last_r8, &
+          last_r4, last_r8, &
 #else
-          last_r4,last_r8,last_r16, &
+          last_r4, last_r8, last_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          last_c4,last_c8
+          last_c4, last_c8
 #else
-          last_c4,last_c8,last_c16
+          last_c4, last_c8, last_c16
 #endif
   end interface last
 
   interface operator(.last.)
-     module procedure last_i1,last_i2,last_i4,last_i8, &
+     module procedure last_i1, last_i2, last_i4, last_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          last_r4,last_r8, &
+          last_r4, last_r8, &
 #else
-          last_r4,last_r8,last_r16, &
+          last_r4, last_r8, last_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          last_c4,last_c8
+          last_c4, last_c8
 #else
-          last_c4,last_c8,last_c16
+          last_c4, last_c8, last_c16
 #endif
   end interface operator(.last.)
 
   interface limit
-     module procedure limit_i1,limit_i2,limit_i4,limit_i8, &
+     module procedure limit_i1, limit_i2, limit_i4, limit_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          limit_r4,limit_r8, &
+          limit_r4, limit_r8, &
 #else
-          limit_r4,limit_r8,limit_r16, &
+          limit_r4, limit_r8, limit_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          limit_c4,limit_c8
+          limit_c4, limit_c8
 #else
-          limit_c4,limit_c8,limit_c16
+          limit_c4, limit_c8, limit_c16
 #endif
   end interface limit
 
   interface map
-     module procedure map_i1,map_i2,map_i4,map_i8, &
+     module procedure map_i1, map_i2, map_i4, map_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          map_r4,map_r8, &
+          map_r4, map_r8, &
 #else
-          map_r4,map_r8,map_r16, &
+          map_r4, map_r8, map_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          map_c4,map_c8
+          map_c4, map_c8
 #else
-          map_c4,map_c8,map_c16
+          map_c4, map_c8, map_c16
 #endif
   end interface map
 
   interface reverse
-     module procedure reverse_i1,reverse_i2,reverse_i4,reverse_i8, &
+     module procedure reverse_i1, reverse_i2, reverse_i4, reverse_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          reverse_r4,reverse_r8, &
+          reverse_r4, reverse_r8, &
 #else
-          reverse_r4,reverse_r8,reverse_r16, &
+          reverse_r4, reverse_r8, reverse_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          reverse_c4,reverse_c8
+          reverse_c4, reverse_c8
 #else
-          reverse_c4,reverse_c8,reverse_c16
+          reverse_c4, reverse_c8, reverse_c16
 #endif
   end interface reverse
 
   interface operator(.reverse.)
-     module procedure reverse_i1,reverse_i2,reverse_i4,reverse_i8, &
+     module procedure reverse_i1, reverse_i2, reverse_i4, reverse_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          reverse_r4,reverse_r8, &
+          reverse_r4, reverse_r8, &
 #else
-          reverse_r4,reverse_r8,reverse_r16, &
+          reverse_r4, reverse_r8, reverse_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          reverse_c4,reverse_c8
+          reverse_c4, reverse_c8
 #else
-          reverse_c4,reverse_c8,reverse_c16
+          reverse_c4, reverse_c8, reverse_c16
 #endif
   end interface operator(.reverse.)
 
   interface set
-     module procedure set_i1,set_i2,set_i4,set_i8, &
+     module procedure set_i1, set_i2, set_i4, set_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          set_r4,set_r8, &
+          set_r4, set_r8, &
 #else
-          set_r4,set_r8,set_r16, &
+          set_r4, set_r8, set_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          set_c4,set_c8
+          set_c4, set_c8
 #else
-          set_c4,set_c8,set_c16
+          set_c4, set_c8, set_c16
 #endif
   end interface set
 
   interface operator(.set.)
-     module procedure set_i1,set_i2,set_i4,set_i8, &
+     module procedure set_i1, set_i2, set_i4, set_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          set_r4,set_r8, &
+          set_r4, set_r8, &
 #else
-          set_r4,set_r8,set_r16, &
+          set_r4, set_r8, set_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          set_c4,set_c8
+          set_c4, set_c8
 #else
-          set_c4,set_c8,set_c16
+          set_c4, set_c8, set_c16
 #endif
   end interface operator(.set.)
 
   interface sort
-     module procedure sort_i1,sort_i2,sort_i4,sort_i8, &
+     module procedure sort_i1, sort_i2, sort_i4, sort_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          sort_r4,sort_r8, &
+          sort_r4, sort_r8, &
 #else
-          sort_r4,sort_r8,sort_r16, &
+          sort_r4, sort_r8, sort_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          sort_c4,sort_c8
+          sort_c4, sort_c8
 #else
-          sort_c4,sort_c8,sort_c16
+          sort_c4, sort_c8, sort_c16
 #endif
   end interface sort
 
   interface operator(.sort.)
-     module procedure sort_i1,sort_i2,sort_i4,sort_i8, &
+     module procedure sort_i1, sort_i2, sort_i4, sort_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          sort_r4,sort_r8, &
+          sort_r4, sort_r8, &
 #else
-          sort_r4,sort_r8,sort_r16, &
+          sort_r4, sort_r8, sort_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          sort_c4,sort_c8
+          sort_c4, sort_c8
 #else
-          sort_c4,sort_c8,sort_c16
+          sort_c4, sort_c8, sort_c16
 #endif
   end interface operator(.sort.)
 
   interface split
-     module procedure split_i1,split_i2,split_i4,split_i8, &
+     module procedure split_i1, split_i2, split_i4, split_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          split_r4,split_r8, &
+          split_r4, split_r8, &
 #else
-          split_r4,split_r8,split_r16, &
+          split_r4, split_r8, split_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          split_c4,split_c8
+          split_c4, split_c8
 #else
-          split_c4,split_c8,split_c16
+          split_c4, split_c8, split_c16
 #endif
   end interface split
 
   interface subscript
-     module procedure subscript_i1,subscript_i2,subscript_i4,subscript_i8, &
+     module procedure subscript_i1, subscript_i2, subscript_i4, subscript_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          subscript_r4,subscript_r8, &
+          subscript_r4, subscript_r8, &
 #else
-          subscript_r4,subscript_r8,subscript_r16, &
+          subscript_r4, subscript_r8, subscript_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          subscript_c4,subscript_c8
+          subscript_c4, subscript_c8
 #else
-          subscript_c4,subscript_c8,subscript_c16
+          subscript_c4, subscript_c8, subscript_c16
 #endif
   end interface subscript
 
   interface tail
-     module procedure tail_i1,tail_i2,tail_i4,tail_i8, &
+     module procedure tail_i1, tail_i2, tail_i4, tail_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          tail_r4,tail_r8, &
+          tail_r4, tail_r8, &
 #else
-          tail_r4,tail_r8,tail_r16, &
+          tail_r4, tail_r8, tail_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          tail_c4,tail_c8
+          tail_c4, tail_c8
 #else
-          tail_c4,tail_c8,tail_c16
+          tail_c4, tail_c8, tail_c16
 #endif
   end interface tail
 
   interface operator(.tail.)
-     module procedure tail_i1,tail_i2,tail_i4,tail_i8, &
+     module procedure tail_i1, tail_i2, tail_i4, tail_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          tail_r4,tail_r8, &
+          tail_r4, tail_r8, &
 #else
-          tail_r4,tail_r8,tail_r16, &
+          tail_r4, tail_r8, tail_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          tail_c4,tail_c8
+          tail_c4, tail_c8
 #else
-          tail_c4,tail_c8,tail_c16
+          tail_c4, tail_c8, tail_c16
 #endif
   end interface operator(.tail.)
 
   interface unfold
-     module procedure unfold_i1,unfold_i2,unfold_i4,unfold_i8, &
+     module procedure unfold_i1, unfold_i2, unfold_i4, unfold_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          unfold_r4,unfold_r8, &
+          unfold_r4, unfold_r8, &
 #else
-          unfold_r4,unfold_r8,unfold_r16, &
+          unfold_r4, unfold_r8, unfold_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          unfold_c4,unfold_c8
+          unfold_c4, unfold_c8
 #else
-          unfold_c4,unfold_c8,unfold_c16
+          unfold_c4, unfold_c8, unfold_c16
 #endif
   end interface unfold
 
   interface union
-     module procedure union_i1,union_i2,union_i4,union_i8, &
+     module procedure union_i1, union_i2, union_i4, union_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          union_r4,union_r8, &
+          union_r4, union_r8, &
 #else
-          union_r4,union_r8,union_r16, &
+          union_r4, union_r8, union_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          union_c4,union_c8
+          union_c4, union_c8
 #else
-          union_c4,union_c8,union_c16
+          union_c4, union_c8, union_c16
 #endif
   end interface union
 
   interface operator(.union.)
-     module procedure union_i1,union_i2,union_i4,union_i8, &
+     module procedure union_i1, union_i2, union_i4, union_i8, &
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          union_r4,union_r8, &
+          union_r4, union_r8, &
 #else
-          union_r4,union_r8,union_r16, &
+          union_r4, union_r8, union_r16, &
 #endif
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-          union_c4,union_c8
+          union_c4, union_c8
 #else
-          union_c4,union_c8,union_c16
+          union_c4, union_c8, union_c16
 #endif
   end interface operator(.union.)
 
   interface operator(<)
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-     module procedure lt_c4,lt_c8
+     module procedure lt_c4, lt_c8
 #else
-     module procedure lt_c4,lt_c8,lt_c16
+     module procedure lt_c4, lt_c8, lt_c16
 #endif
   end interface operator(<)
 
   interface operator(>=)
 #if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
-     module procedure ge_c4,ge_c8
+     module procedure ge_c4, ge_c8
 #else
-     module procedure ge_c4,ge_c8,ge_c16
+     module procedure ge_c4, ge_c8, ge_c16
 #endif
   end interface operator(>=)
 
 contains
 
 
-  pure elemental logical function ge_c4(lhs,rhs) result(res)
+  pure elemental logical function ge_c4(lhs, rhs) result(res)
     !! Private `>=` implementation for 4-byte complex numbers.
-    complex(kind=r4),intent(in) :: lhs,rhs
+    complex(kind=r4), intent(in) :: lhs, rhs
     res = abs(lhs) >= abs(rhs)
   end function ge_c4
 
   pure elemental logical function ge_c8(lhs,rhs) result(res)
     !! Private `>=` implementation for 8-byte complex numbers.
-    complex(kind=r8),intent(in) :: lhs,rhs
+    complex(kind=r8), intent(in) :: lhs, rhs
     res = abs(lhs) >= abs(rhs)
   end function ge_c8
 
   pure elemental logical function ge_c16(lhs,rhs) result(res)
     !! Private `>=` implementation for 16-byte complex numbers.
-    complex(kind=r16),intent(in) :: lhs,rhs
+    complex(kind=r16), intent(in) :: lhs, rhs
     res = abs(lhs) >= abs(rhs)
   end function ge_c16
 
   pure elemental logical function lt_c4(lhs,rhs) result(res)
     !! Private `<` implementation for 4-byte complex numbers.
-    complex(kind=r4),intent(in) :: lhs,rhs
+    complex(kind=r4), intent(in) :: lhs, rhs
     res = abs(lhs) < abs(rhs)
   end function lt_c4
 
   pure elemental logical function lt_c8(lhs,rhs) result(res)
     !! Private `<` implementation for 8-byte complex numbers.
-    complex(kind=r8),intent(in) :: lhs,rhs
+    complex(kind=r8), intent(in) :: lhs, rhs
     res = abs(lhs) < abs(rhs)
   end function lt_c8
 
   pure elemental logical function lt_c16(lhs,rhs) result(res)
     !! Private `<` implementation for 16-byte complex numbers.
-    complex(kind=r16),intent(in) :: lhs,rhs
+    complex(kind=r16), intent(in) :: lhs, rhs
     res = abs(lhs) < abs(rhs)
   end function lt_c16
 
@@ -835,10 +837,10 @@ contains
     !! Increment defaults to 1 if not provided.
     !! This specific procedure is for 1-byte integers.
     !! Oveloaded by generic procedure `arange`.
-    integer(kind=i1),intent(in) :: start !! Start value of the array
-    integer(kind=i1),intent(in) :: end !! End value of the array
-    integer(kind=i1),intent(in),optional :: increment !! Array increment
-    integer(kind=i1),dimension(:),allocatable :: arange
+    integer(kind=i1), intent(in) :: start !! Start value of the array
+    integer(kind=i1), intent(in) :: end !! End value of the array
+    integer(kind=i1), intent(in), optional :: increment !! Array increment
+    integer(kind=i1), dimension(:), allocatable :: arange
     integer(kind=i1) :: incr
     integer(kind=i1) :: i
     integer(kind=i1) :: length
@@ -864,10 +866,10 @@ contains
     !! Increment defaults to 1 if not provided.
     !! This specific procedure is for 2-byte integers.
     !! Oveloaded by generic procedure `arange`.
-    integer(kind=i2),intent(in) :: start !! Start value of the array
-    integer(kind=i2),intent(in) :: end !! End value of the array
-    integer(kind=i2),intent(in),optional :: increment !! Array increment
-    integer(kind=i2),dimension(:),allocatable :: arange
+    integer(kind=i2), intent(in) :: start !! Start value of the array
+    integer(kind=i2), intent(in) :: end !! End value of the array
+    integer(kind=i2), intent(in), optional :: increment !! Array increment
+    integer(kind=i2), dimension(:), allocatable :: arange
     integer(kind=i2) :: incr
     integer(kind=i2) :: i
     integer(kind=i2) :: length
@@ -893,10 +895,10 @@ contains
     !! Increment defaults to 1 if not provided.
     !! This specific procedure is for 4-byte integers.
     !! Oveloaded by generic procedure `arange`.
-    integer(kind=i4),intent(in) :: start !! Start value of the array
-    integer(kind=i4),intent(in) :: end !! End value of the array
-    integer(kind=i4),intent(in),optional :: increment !! Array increment
-    integer(kind=i4),dimension(:),allocatable :: arange
+    integer(kind=i4), intent(in) :: start !! Start value of the array
+    integer(kind=i4), intent(in) :: end !! End value of the array
+    integer(kind=i4), intent(in), optional :: increment !! Array increment
+    integer(kind=i4), dimension(:), allocatable :: arange
     integer(kind=i4) :: incr
     integer(kind=i4) :: i
     integer(kind=i4) :: length
@@ -922,10 +924,10 @@ contains
     !! Increment defaults to 1 if not provided.
     !! This specific procedure is for 8-byte integers.
     !! Oveloaded by generic procedure `arange`.
-    integer(kind=i8),intent(in) :: start !! Start value of the array
-    integer(kind=i8),intent(in) :: end !! End value of the array
-    integer(kind=i8),intent(in),optional :: increment !! Array increment
-    integer(kind=i8),dimension(:),allocatable :: arange
+    integer(kind=i8), intent(in) :: start !! Start value of the array
+    integer(kind=i8), intent(in) :: end !! End value of the array
+    integer(kind=i8), intent(in), optional :: increment !! Array increment
+    integer(kind=i8), dimension(:), allocatable :: arange
     integer(kind=i8) :: incr
     integer(kind=i8) :: i
     integer(kind=i8) :: length
@@ -951,10 +953,10 @@ contains
     !! Increment defaults to 1 if not provided.
     !! This specific procedure is for 4-byte reals.
     !! Oveloaded by generic procedure `arange`.
-    real(kind=r4),intent(in) :: start !! Start value of the array
-    real(kind=r4),intent(in) :: end !! End value of the array
-    real(kind=r4),intent(in),optional :: increment !! Array increment
-    real(kind=r4),dimension(:),allocatable :: arange
+    real(kind=r4), intent(in) :: start !! Start value of the array
+    real(kind=r4), intent(in) :: end !! End value of the array
+    real(kind=r4), intent(in), optional :: increment !! Array increment
+    real(kind=r4), dimension(:), allocatable :: arange
     real(kind=r4) :: incr
     integer(kind=i4) :: i
     integer(kind=i4) :: length
@@ -980,10 +982,10 @@ contains
     !! Increment defaults to 1 if not provided.
     !! This specific procedure is for 8-byte reals.
     !! Oveloaded by generic procedure `arange`.
-    real(kind=r8),intent(in) :: start !! Start value of the array
-    real(kind=r8),intent(in) :: end !! End value of the array
-    real(kind=r8),intent(in),optional :: increment !! Array increment
-    real(kind=r8),dimension(:),allocatable :: arange
+    real(kind=r8), intent(in) :: start !! Start value of the array
+    real(kind=r8), intent(in) :: end !! End value of the array
+    real(kind=r8), intent(in), optional :: increment !! Array increment
+    real(kind=r8), dimension(:), allocatable :: arange
     real(kind=r8) :: incr
     integer(kind=i4) :: i
     integer(kind=i4) :: length

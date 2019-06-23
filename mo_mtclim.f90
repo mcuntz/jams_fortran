@@ -7,22 +7,22 @@ module mo_mtclim
 
   implicit none
   !
-  public::pulled_boxcar                 ! calculates a moving average of antecedent values in an array
-  public::atm_pres                      ! calculates the atmospheric pressure as a function of elevation
-  public::snowpack                      ! estimates the accumulation and melt of snow
-  public::calc_pet                      ! calculates the potential evapotranspiration for aridity
+  public :: pulled_boxcar                 ! calculates a moving average of antecedent values in an array
+  public :: atm_pres                      ! calculates the atmospheric pressure as a function of elevation
+  public :: snowpack                      ! estimates the accumulation and melt of snow
+  public :: calc_pet                      ! calculates the potential evapotranspiration for aridity
   ! corrections in calc_vpd(), according to kimball et al., 1997
-  public::calc_tair                     ! calculates daily air temperatures
-  public::calc_prcp                     ! calculates daily total precipitation
-  public::calc_srad_humidity_iterative  ! estimate srad and humidity with iterative algorithm
-  public::eval_mtclim                   ! mtclim model evaluation
+  public :: calc_tair                     ! calculates daily air temperatures
+  public :: calc_prcp                     ! calculates daily total precipitation
+  public :: calc_srad_humidity_iterative  ! estimate srad and humidity with iterative algorithm
+  public :: eval_mtclim                   ! mtclim model evaluation
 
   !
   !
   ! ------------------------------------------------------------------------------
   !    Name
   !        mtclim
-  !
+
   !    Purpose
   !        Uses observations of daily maximum temperature, minimum temperature, and precipitation from
   !        one location (the "base") to estimate the temperature, precipitation, incoming short-wave radiation, and
@@ -30,7 +30,7 @@ module mo_mtclim
   !        The base and the site can be at different elevations, and can have different slopes and aspects.
   !        Additionally, incoming long-wave radiation is estimated using the Prata (1996) clear-sky algorithm,
   !        combined with the Deardorff (1978) full-sky approach (also attributed to Crawford and Duchon, 1999).
-  !
+
   !    Restrictions
   !
 
@@ -56,9 +56,10 @@ module mo_mtclim
   !                     http://doi.org/10.1175/1520-0450(1999)038<0474:aipfee>2.0.co;2
 
   !    History
-  !        Written, most of the code was written by Peter e. Thornton at the Univeristy of Montana (see below).
+  !        Written, most of the code was written by Peter E Thornton at the Univeristy of Montana (see below).
   !                       Adapted by: Johannes Brenner (C to Fortran translation)
-  !                       Adaptation started on Sept 2016 using the mtclim v4.3 code from http://www.ntsg.umt.edu/project/mtclim
+  !                       Adaptation started on Sept 2016 using the mtclim v4.3 code from
+  !                       http://www.ntsg.umt.edu/project/mtclim
   !        Changes, Johannes Brenner, May 2017: longwave radiation calculation according to Bohn et al. 2013,
   !                                             marked as !*/begin longwave, !*/end longwave
   !        Changes, Johannes Brenner, May 2017: constants coming from mo_constants
@@ -67,8 +68,31 @@ module mo_mtclim
   !    Changes to mtclim v4.3
   !        - code includes calculation of incoming longwave radiation (Bohn et al. 2013) and
   !                                       outgoing net longwave radiation (Allen et al. 1999)
+
+  ! License
+  ! -------
+  ! This file is part of the JAMS Fortran package, distributed under the MIT License.
   !
+  ! Copyright (c) 2016 Peter E Thornton, Johannes Brenner
   !
+  ! Permission is hereby granted, free of charge, to any person obtaining a copy
+  ! of this software and associated documentation files (the "Software"), to deal
+  ! in the Software without restriction, including without limitation the rights
+  ! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ! copies of the Software, and to permit persons to whom the Software is
+  ! furnished to do so, subject to the following conditions:
+  !
+  ! The above copyright notice and this permission notice shall be included in all
+  ! copies or substantial portions of the Software.
+  !
+  ! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  ! SOFTWARE.
+
   ! ------------------------------------------------------------------------------
 
   private

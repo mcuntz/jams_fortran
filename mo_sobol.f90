@@ -6,34 +6,38 @@
 !>          The original code was provided by J. Burkardt who used a code by Bennett Fox. \n
 !>          Burkardt's code can be downloaded at http://people.sc.fsu.edu/~jburkardt/f_src/f_src.html.
 
-!> \authors Bennett Fox (F77), John Burkardt (F90), Juliane Mai (CHS)
+!> \authors Bennett Fox (F77), John Burkardt (F90), Juliane Mai (JAMS)
 !> \date May 2013
 
 MODULE mo_sobol
 
-  ! This module part of the JAMS CHS Fortran library.
+  ! This module part of the JAMS Fortran library.
 
   ! Written Juliane Mai, May 2013
 
   ! License
   ! -------
-  ! This file is part of the JAMS Fortran library.
-
-  ! The JAMS Fortran library is free software: you can redistribute it and/or modify
-  ! it under the terms of the GNU Lesser General Public License as published by
-  ! the Free Software Foundation, either version 3 of the License, or
-  ! (at your option) any later version.
-
-  ! The JAMS Fortran library is distributed in the hope that it will be useful,
-  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  ! GNU Lesser General Public License for more details.
-
-  ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
-  ! If not, see <http://www.gnu.org/licenses/>.
-
-  ! Copyright 2011-2013 Juliane Mai
+  ! This file is part of the JAMS Fortran package, distributed under the MIT License.
+  !
+  ! Copyright (c) 2011-2013 Bennet Fox, John Burkhardt, Juliane Mai
+  !
+  ! Permission is hereby granted, free of charge, to any person obtaining a copy
+  ! of this software and associated documentation files (the "Software"), to deal
+  ! in the Software without restriction, including without limitation the rights
+  ! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ! copies of the Software, and to permit persons to whom the Software is
+  ! furnished to do so, subject to the following conditions:
+  !
+  ! The above copyright notice and this permission notice shall be included in all
+  ! copies or substantial portions of the Software.
+  !
+  ! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  ! SOFTWARE.
 
   USE mo_kind, ONLY: i4, i8, sp, dp
 
@@ -52,7 +56,7 @@ MODULE mo_sobol
   !>        \brief Quasirandom Sobol vector.
   !
   !>        \details Generates a new quasirandom Sobol vector with each call. \n
-  !>                 The original code was by J. Burkardt and adapted to the CHS FORTRAN library standard.
+  !>                 The original code was by J. Burkardt and adapted to the JAMS Fortran library standard.
   !>
   !                  sobol has to be initialised with seed=0 once.
   !
@@ -153,7 +157,7 @@ MODULE mo_sobol
   !>                 The argument skip determines the number of vectors to be skipped at the beginning, 
   !>                 i.e. skip is the seed of the first vector returned. All following vectors have seed=skip+i. \n
   !>                 Basically, sobol_array is a wrapper of sobol. \n
-  !>                 The original code was by J. Burkardt and adapted to the CHS FORTRAN library standard.
+  !>                 The original code was by J. Burkardt and adapted to the JAMS Fortran library standard.
   !
   !     INTENT(IN)
   !>        \param[in] "integer(i4) :: m"                 Dimension of the Sobol vector \n

@@ -4,7 +4,7 @@
 
 !> \details This module contains routines to determine parameter sensitivities using 
 !>          the Parameter importance index (PI) based on the eigendecomposition of the sensitivity matrix.\n
-!>          Based on pi.py which is part of the Python CHS library.
+!>          Based on pi.py which is part of the JAMS Python library.
 
 !> \authors Juliane Mai
 !> \date Jul 2013
@@ -14,28 +14,32 @@ MODULE mo_pi_index
 
   ! License
   ! -------
-  ! This file is part of the JAMS Fortran library.
+  ! This file is part of the JAMS Fortran package, distributed under the MIT License.
+  !
+  ! Copyright (c) 2013 Juliane Mai
+  !
+  ! Permission is hereby granted, free of charge, to any person obtaining a copy
+  ! of this software and associated documentation files (the "Software"), to deal
+  ! in the Software without restriction, including without limitation the rights
+  ! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ! copies of the Software, and to permit persons to whom the Software is
+  ! furnished to do so, subject to the following conditions:
+  !
+  ! The above copyright notice and this permission notice shall be included in all
+  ! copies or substantial portions of the Software.
+  !
+  ! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  ! SOFTWARE.
 
   ! If you use this routine in your work, you should cite the following reference
   ! Goehler M, J Mai, and M Cuntz (2013)
   !     Use of eigendecomposition in a parameter sensitivity analysis of the Community Land Model,
   !     J Geophys Res 188, 904-921, doi:10.1002/jgrg.20072
-
-  ! The JAMS Fortran library is free software: you can redistribute it and/or modify
-  ! it under the terms of the GNU Lesser General Public License as published by
-  ! the Free Software Foundation, either version 3 of the License, or
-  ! (at your option) any later version.
-
-  ! The JAMS Fortran library is distributed in the hope that it will be useful,
-  ! but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  ! GNU Lesser General Public License for more details.
-
-  ! You should have received a copy of the GNU Lesser General Public License
-  ! along with the JAMS Fortran library (cf. gpl.txt and lgpl.txt).
-  ! If not, see <http://www.gnu.org/licenses/>.
-
-  ! Copyright 2013 Juliane Mai
 
   USE mo_kind,   ONLY: i4, sp, dp
   USE mo_mad,    ONLY: mad
@@ -130,7 +134,7 @@ MODULE mo_pi_index
   !>        \date Jul 2013
   !         Modified, 
 
-  !     The code is based on pi.py by Matthias Cuntz. Pi.py is part of the Python CHS library.
+  !     The code is based on pi.py by Matthias Cuntz. pi.py is part of the JAMS Python library.
 
   INTERFACE pi_index
      MODULE PROCEDURE pi_index_dp, pi_index_sp
