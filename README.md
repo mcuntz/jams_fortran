@@ -60,6 +60,12 @@ The library is compatible with the Fortran 2003 standard. It was
 tested with the GNU gfortran, Intel ifort, NAG nagfor, and
 PGI pgfortran compilers in various revisions.
 
+Interoperability with C is assured by the use of the intrinsic module
+iso\_c\_binding  in mo_kind. The use of C functions were tested using
+the C-header file cfortran.h, for example with the qhull library. See
+the use of cfortran.h in qhull/qhull\_c.c and the corresponding
+Fortran call in  mo\_qhull.f90.
+
 The library uses C preprocessor flags to deal with special compiler
 behaviours, i.e. one has to compile with the -cpp or -fpp compiler
 flag. For example, gfortran (revisions < 5) did not include an
@@ -76,13 +82,12 @@ netCDF. [BLAS](https://www.netlib.org/blas/),
 [MinPack](https://www.netlib.org/minpack/),
 [QHull](http://www.qhull.org), and
 [netCDF3](https://www.unidata.ucar.edu/software/netcdf/release-notes-3.6.3.html)
-are given as convenience with the 
-JAMS library. It is always recommended to use specific installations
-for the computer system, for example for blas and lapack, which are
-highly optimised. The netcdf3 directory includes only the parts of the
-netCDF 3.6.3 version that are necessary for Fortran projects. Read the
-README in the netcdf3 directory for two system-specific configuration
-files. The
+are given as convenience with the JAMS library. It is always
+recommended to use specific installations for the computer system, for
+example for blas and lapack, which are highly optimised. The netcdf3
+directory includes only the parts of the netCDF 3.6.3 version that are
+necessary for Fortran projects. Read the README in the netcdf3
+directory for two system-specific configuration files. The
 [JAMS Makefile project](https://github.com/mcuntz/jams_makefile)
 handles these kind of special configuration files.
 
@@ -112,7 +117,6 @@ Modules are provided in the following categories:
 
 | | | |
 | --- | --- | ------------------------------------------------------------------------------------------------------------- |
-| | cfortran.h | C headder file for calling C-functions from Fortran |
 | | mo\_anneal | Simulated Annealing with estimation of initial temperature |
 | | mo\_append | Appends vectors and/or matrixes like \*nix *cat* and *paste* |
 | | mo\_bootstrapping\_sensitivity\_analysis.f90 | Bootstrapping for sensitivity analysis |
@@ -194,7 +198,6 @@ Modules are provided in the following categories:
 
 | | | |
 | --- | --- | ------------------------------------------------------------------------------------------------------------- |
-| | cfortran.h | C headder file for calling C-functions from Fortran |
 | | mo\_append | Appends vectors and/or matrixes like \*nix *cat* and *paste* |
 | | mo\_constants | Mathematical and physical constants |
 | | mo\_functional.f90 | Functional programming for modern Fortran |
