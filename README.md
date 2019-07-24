@@ -101,7 +101,6 @@ Modules are provided in the following categories:
  * [Computational](#comp)  
  * [Date and Time](#date)  
  * [Input / Output](#io)  
- * [Isotopes](#iso)  
  * [Math /  Numerics](#math)  
  * [Miscellaneous](#misc)  
  * [Screening, Sensitivity Analysis and Optimising / Fitting](#opti)  
@@ -118,7 +117,6 @@ Modules are provided in the following categories:
 | | mo\_append | Appends vectors and/or matrixes like \*nix *cat* and *paste* |
 | | mo\_bootstrapping\_sensitivity\_analysis.f90 | Bootstrapping for sensitivity analysis |
 | | mo\_boxcox | Box-Cox transformation, inverse transformation & estimating best exponent for transformation |
-| | mo\_c13o2\_photosynthesis.f90 | Photosynthetic isotope discrimination |
 | | mo\_combinatorics | Combinatorial algorithms, e.g. binomial coefficient and k-subsets |
 | | mo\_constants | Mathematical and physical constants |
 | | mo\_corr | Correlation function with Fast Fourier Transform, or auto- & cross-correlations via direct calculation |
@@ -136,8 +134,6 @@ Modules are provided in the following categories:
 | | mo\_histo | Histogram of data (useable also for variogram) |
 | | mo\_integrate | Integration routines |
 | | mo\_interpol | Linear interpolation for irregular grids |
-| | mo\_isotope.f90 | Isotope parameters and helper routines |
-| | mo\_isotope\_pool\_model.f90 | Generic isotopic pool model and generic land-use change model |
 | | mo\_julian | Converts dates between calendars, e.g. Julian Day into Day, Month and Year, and vice versa; Standard and IMSL convention |
 | | mo\_kernel | Kernel regression and kernel density estimation for PDF and CDF |
 | | mo\_kind | Definition of numerical precisions |
@@ -236,15 +232,6 @@ Modules are provided in the following categories:
 | | mo\_ncwrite | Writing nc files using the netcdf4 library |
 | | mo\_tee.f90 | Write out concatenated strings on standard out and to a given file or unit |
 | | mo\_var2nc.f90 | Writing variables to netcdf files |
-
-
-<a name="iso"></a>**Isotopes**
-
-| | | |
-| --- | --- | ------------------------------------------------------------------------------------------------------------- |
-| | mo\_c13o2\_photosynthesis.f90 | Photosynthetic isotope discrimination |
-| | mo\_isotope.f90 | Isotope parameters and helper routines |
-| | mo\_isotope\_pool\_model.f90 | Generic isotopic pool model and generic land-use change model |
 
 
 <a name="math"></a>**Math / Numerics**
