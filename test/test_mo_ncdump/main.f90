@@ -36,7 +36,7 @@ program main
   real(dp), dimension(:,:),   allocatable, target :: Lon
 
   isgood   = .true.
-  Filename = '../fortran/test/test_mo_ncdump/pr_1961-2000.nc'
+  Filename = 'pr_1961-2000.nc'
 
   ! --------------------------------------------------------------------
   ! read all variables

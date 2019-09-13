@@ -71,7 +71,7 @@ MODULE mo_specan
   !         None
 
   !     EXAMPLE
-  !         see test example test/test_mo_specan
+  !         see test example test_mo_specan
 
   !     LITERATURE
   !         None
@@ -132,7 +132,7 @@ MODULE mo_specan
   !         None
 
   !     EXAMPLE
-  !         see test example test/test_mo_specan
+  !         see test example test_mo_specan
 
   !     LITERATURE
   !       Lynn W. Gelhar and John L. Wilson,
@@ -183,7 +183,7 @@ MODULE mo_specan
   !         None
 
   !     EXAMPLE
-  !         see test example test/test_mo_specan
+  !         see test example test_mo_specan
 
   !     LITERATURE
   !       P.N. Swarztrauber,
@@ -234,7 +234,7 @@ MODULE mo_specan
   !         None
 
   !     EXAMPLE
-  !         see test example test/test_mo_specan
+  !         see test example test_mo_specan
 
   !     LITERATURE
   !         None

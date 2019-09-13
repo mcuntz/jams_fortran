@@ -203,7 +203,7 @@ MODULE mo_anneal
   !>              Cost and prange_func are user defined functions. See interface definition.
 
   !     EXAMPLE
-  !         see test/test_mo_anneal/
+  !         see test_mo_anneal
 
   !     LITERATURE
   !         (1) S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi.
@@ -333,7 +333,7 @@ MODULE mo_anneal
   !>              Cost and prange_func are user defined functions. See interface definition.
 
   !     EXAMPLE
-  !         see test/test_mo_anneal/
+  !         see test_mo_anneal
 
   !     LITERATURE
   !         (1) Walid Ben-Ameur

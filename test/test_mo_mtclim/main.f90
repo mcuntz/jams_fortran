@@ -20,8 +20,8 @@ use mo_mtclim
 integer(i4)                         :: i
 real(dp), dimension(:), allocatable :: parameterset
 ! path namelists
-character(len=*), parameter :: fileini = "../fortran/test/test_mo_mtclim/ini"
-character(len=*), parameter :: fileparameters = "../fortran/test/test_mo_mtclim/parameters"
+character(len=*), parameter :: fileini = "ini"
+character(len=*), parameter :: fileparameters = "parameters"
 ! ini namefile
 ! input, output file names
 character(265)        :: in_meteo, outprefix

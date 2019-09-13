@@ -103,7 +103,7 @@ MODULE mo_append
   !         i.e. number of columns input1 = number of columns input2
 
   !     EXAMPLE
-  !         see test/test_mo_append/
+  !         see test_mo_append
 
   !     LITERATURE
 
@@ -177,7 +177,7 @@ MODULE mo_append
   !         i.e. number of rows input1 = number of rows input2
 
   !     EXAMPLE
-  !         see test/test_mo_append/
+  !         see test_mo_append
 
   !     LITERATURE
 

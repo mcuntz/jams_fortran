@@ -96,7 +96,7 @@ program main
   close(30)
 
   ! Check against standard output
-  open(unit=30, file="../fortran/test/test_mo_spline/spline_prb_std_output.txt", action="read", status="old")
+  open(unit=30, file="spline_prb_std_output.txt", action="read", status="old")
   open(unit=31, file="spline_make_check_test_file", action="read", status="old")
 
   ! If you do diff, you see small differences in the last digits with some compiler,

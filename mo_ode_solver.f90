@@ -160,7 +160,7 @@ module mo_ode_solver
 
     !     EXAMPLE
     !         call Euler( vstart, x1, x2, h, derivs, xout, yout )
-    !         --> see example in test directory --> test/test_mo_ode_solver
+    !         --> see example in test directory --> test_mo_ode_solver
 
     !     LITERATURE
     !         http://en.wikipedia.org/wiki/Euler_method
@@ -251,7 +251,7 @@ module mo_ode_solver
 
     !     EXAMPLE
     !           call RK4( vstart, x1, x2, h, derivs, xout, yout )
-    !           --> see example in test directory --> test/test_mo_ode_solver
+    !           --> see example in test directory --> test_mo_ode_solver
 
     !     LITERATURE
     !        1) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 77 -
@@ -352,7 +352,7 @@ module mo_ode_solver
 
     !     EXAMPLE
     !           call RK4as( ystart, x1, x2, h, derivs, xout, yout, hmin, eps )
-    !           --> see example in test directory --> test/test_mo_ode_solver
+    !           --> see example in test directory --> test_mo_ode_solver
 
     !     LITERATURE
     !        1) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 77 -
@@ -472,7 +472,7 @@ module mo_ode_solver
 
     !     EXAMPLE
     !           call RK4as( ystart, x1, x2, h, derivs, jacobn, xout, yout, hmin, eps )
-    !           --> see example in test directory --> test/test_mo_ode_solver
+    !           --> see example in test directory --> test_mo_ode_solver
 
     !     LITERATURE
     !        1) Press WH, Teukolsky SA, Vetterling WT, & Flannery BP - Numerical Recipes in Fortran 77 -

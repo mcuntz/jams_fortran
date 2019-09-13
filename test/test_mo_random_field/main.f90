@@ -7,8 +7,8 @@ program test_mo_random_field
 
   real(dp), dimension(:,:), allocatable  :: coord
   real(dp), dimension(2)                 :: corr_length
-  real(dp), dimension(:,:), allocatable  :: velocity, vet1
-  real(dp), dimension(:),   allocatable  :: potential, pot1
+  real(dp), dimension(:,:), allocatable  :: velocity
+  real(dp), dimension(:),   allocatable  :: potential
   real(dp), dimension(:,:), allocatable  :: cosine_mode
 
   integer(i4) :: i,n

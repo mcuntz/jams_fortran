@@ -13,8 +13,8 @@ PROGRAM main
 
   ! find_next_unit
   isgood = .true.
-  open(unit=20, file="../fortran/test/test_mo_file_utils/main.f90", action="read", status="old", form="formatted")
-  open(unit=21, file="../fortran/test/test_mo_file_utils/mo_file_utils.f90", action="read", status="old", form="formatted")
+  open(unit=20, file="main.f90", action="read", status="old", form="formatted")
+  open(unit=21, file="mo_file_utils.f90", action="read", status="old", form="formatted")
   inew = find_next_unit(20,30)
   if (inew /= 22) isgood =.false.
   inew = find_next_unit(20)
@@ -28,8 +28,8 @@ PROGRAM main
 
   ! next_unit
   isgood = .true.
-  open(unit=20, file="../fortran/test/test_mo_file_utils/main.f90", action="read", status="old", form="formatted")
-  open(unit=21, file="../fortran/test/test_mo_file_utils/mo_file_utils.f90", action="read", status="old", form="formatted")
+  open(unit=20, file="main.f90", action="read", status="old", form="formatted")
+  open(unit=21, file="mo_file_utils.f90", action="read", status="old", form="formatted")
   inew = next_unit(20,30)
   if (inew /= 22) isgood =.false.
   inew = next_unit(20)
@@ -43,21 +43,21 @@ PROGRAM main
 
   ! lines_in_file
   islines = 70
-  ilines = lines_in_file("../fortran/test/test_mo_file_utils/main.f90")
+  ilines = lines_in_file("main.f90")
   if (ilines /= islines) isgood =.false.
-  ilines = lines_in_file("../fortran/test/test_mo_file_utils/main.f90", comment='!')
+  ilines = lines_in_file("main.f90", comment='!')
   if (ilines /= islines-4) isgood =.false.
-  ilines = lines_in_file("../fortran/test/test_mo_file_utils/main.f90", comment='!', noblank=.true.)
+  ilines = lines_in_file("main.f90", comment='!', noblank=.true.)
   if (ilines /= islines-4-16) isgood =.false.
 
 
   ! lif
   islines = 70
-  ilines = lif("../fortran/test/test_mo_file_utils/main.f90")
+  ilines = lif("main.f90")
   if (ilines /= islines) isgood =.false.
-  ilines = lif("../fortran/test/test_mo_file_utils/main.f90", comment='!')
+  ilines = lif("main.f90", comment='!')
   if (ilines /= islines-4) isgood =.false.
-  ilines = lif("../fortran/test/test_mo_file_utils/main.f90", comment='!', noblank=.true.)
+  ilines = lif("main.f90", comment='!', noblank=.true.)
   if (ilines /= islines-4-16) isgood =.false.
 
 

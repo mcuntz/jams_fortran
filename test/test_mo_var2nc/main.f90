@@ -45,7 +45,7 @@ program main
   real(dp), dimension(:,:),   allocatable, target :: Lon
 
   isgood   = .true.
-  Filename = '../fortran/test/test_mo_var2nc/pr_1961-2000.nc'
+  Filename = 'pr_1961-2000.nc'
   oriFilename = trim(Filename)
 
 

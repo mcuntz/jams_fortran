@@ -4,7 +4,7 @@ program main
 
   implicit none
 
-  character(len=*), parameter :: nfile1 = '../fortran/test/test_mo_tee/messages.txt'
+  character(len=*), parameter :: nfile1 = 'messages.txt'
   character(len=*), parameter :: nfile2 = 'tee_make_check_test_file'
 
   character(len=100) :: iread1, iread2

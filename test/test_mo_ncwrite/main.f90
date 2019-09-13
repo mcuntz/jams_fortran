@@ -27,7 +27,7 @@ program main
   logical :: isgood
 
   isgood   = .true.
-  Filename = '../fortran/test/test_mo_ncwrite/pr_1961-2000.nc'
+  Filename = 'pr_1961-2000.nc'
 
   ! --------------------------------------------------------------------
   ! read all variables

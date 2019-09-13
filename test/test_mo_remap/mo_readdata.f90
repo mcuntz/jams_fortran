@@ -49,7 +49,7 @@ contains
 
     namelist /RemapNamelist/ InFile, WtsFile, OutFile, nodata
 
-    open(unit=nin, file="../fortran/test/test_mo_remap/namelist", status="old", action="read")
+    open(unit=nin, file="namelist", status="old", action="read")
     read(nin,RemapNamelist)
     close(nin)
 
