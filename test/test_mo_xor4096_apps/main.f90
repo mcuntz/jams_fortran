@@ -6,6 +6,7 @@
 program xor4096_apps
 
   use mo_kind,         only: i4, i8, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_xor4096,      only: xor4096,xor4096g, n_save_state
   use mo_xor4096_apps, only: xor4096_array, xor4096_range, xor4096g_mvn
 
@@ -136,9 +137,9 @@ program xor4096_apps
 
   write(*,*) ''
   if (isgood) then
-     write(*,*) 'mo_xor4096_apps o.k.'
+     write(*,*) 'mo_xor4096_apps ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_xor4096_apps failed'
+     write(*,*) 'mo_xor4096_apps ', color('failed', c_red)
   end if
 
 end program xor4096_apps

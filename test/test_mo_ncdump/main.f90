@@ -11,6 +11,7 @@
 program main
 
   use mo_kind,    only: i4, sp, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_NcRead,  only: Get_NcVar, Get_NcDim
   use mo_ncdump,  only: dump_netcdf
   use mo_utils,   only: notequal
@@ -248,9 +249,9 @@ program main
 
   
   if (isgood) then
-     write(*,*) 'mo_ncdump o.k.'
+     write(*,*) 'mo_ncdump ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_ncdump failed!'
+     write(*,*) 'mo_ncdump ', color('failed!', c_red)
   endif
   
 end program main

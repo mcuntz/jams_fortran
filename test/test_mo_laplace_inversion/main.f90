@@ -1,6 +1,7 @@
 program test
 
 use mo_kind,                only: i4, sp, dp
+use mo_ansi_colors, only: color, c_red, c_green
 use mo_laplace_inversion,   only: NLInvSteh
 use mo_utils,               only: eq
 
@@ -479,9 +480,9 @@ write (*,*) '-------------------------------------------------------------------
 write (*,*) '-------------------------------------------------------------------------'
 write (*,*) ' '
 if (isgood) then
-    write(*,*) 'mo_laplace_inversion o.k.'
+    write(*,*) 'mo_laplace_inversion ', color('o.k.', c_green)
 else
-    write(*,*) 'mo_laplace_inversion failed'
+    write(*,*) 'mo_laplace_inversion ', color('failed', c_red)
 endif
 
 end program test

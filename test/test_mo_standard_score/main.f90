@@ -11,6 +11,7 @@
 program test
 
   use mo_kind,           only: i4, sp, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_standard_score, only: standard_score, classified_standard_score
 
   implicit none
@@ -54,9 +55,9 @@ program test
   if (.not. isgood) write(*,*) 'mo_standard_score 5'
 
   if (isgood) then
-     write(*,*) 'mo_standard_score o.k.'
+     write(*,*) 'mo_standard_score ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_standard_score failed'
+     write(*,*) 'mo_standard_score ', color('failed', c_red)
   endif
   !  
 end program test

@@ -1,6 +1,7 @@
 PROGRAM inpoly_test
 
 use mo_kind,   only: dp, i4
+use mo_ansi_colors, only: color, c_red, c_green
 use mo_poly, only: inpoly, areapoly, center_of_mass
 
 implicit none
@@ -71,9 +72,9 @@ print*, 'CENTER OF MASS FOR POLYGON IS ', com
 
 
 if (isgood) then
-   write(*,*) 'mo_poly o.k.'
+   write(*,*) 'mo_poly ', color('o.k.', c_green)
 else
-   write(*,*) 'mo_poly failed!'
+   write(*,*) 'mo_poly ', color('failed!', c_red)
 endif
 
 END PROGRAM inpoly_test

@@ -11,6 +11,7 @@
 program test
   !
   use mo_kind,              only: sp, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_spatialsimilarity, only: PD, NNDV
   !
   implicit none
@@ -57,9 +58,9 @@ program test
   isgood  = isgood .and. ( .not. validity)
   
   if (isgood) then
-     write(*,*) 'mo_spatialsimilarity o.k.'
+     write(*,*) 'mo_spatialsimilarity ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_spatialsimilarity failed'
+     write(*,*) 'mo_spatialsimilarity ', color('failed', c_red)
   endif
   !  
 end program test

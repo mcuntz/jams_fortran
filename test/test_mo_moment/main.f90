@@ -1,6 +1,7 @@
 PROGRAM main
   
   USE mo_kind,   ONLY: dp, sp
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_moment, ONLY: absdev, average, central_moment, central_moment_var, correlation, &
        covariance, kurtosis, mean, mixed_central_moment, mixed_central_moment_var, &
        moment, skewness, stddev, variance
@@ -95,9 +96,9 @@ PROGRAM main
   if (.not. isgood) write(*,*) 'mo_moment covariance etc.'
 
   if (isgood) then
-     write(*,*) 'mo_moment double precision o.k.'
+     write(*,*) 'mo_moment double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_moment double precision failed!'
+     write(*,*) 'mo_moment double precision ', color('failed!', c_red)
   endif
 
   ! Single precision
@@ -173,9 +174,9 @@ PROGRAM main
   if (.not. isgood) write(*,*) 'mo_moment sp 4.12'
 
   if (isgood) then
-     write(*,*) 'mo_moment single precision o.k.'
+     write(*,*) 'mo_moment single precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_moment single precision failed!'
+     write(*,*) 'mo_moment single precision ', color('failed!', c_red)
   endif
 
 END PROGRAM main

@@ -3,6 +3,7 @@ program main
   use mo_kind, only: i4, i8, dp
   use mo_dds,  only: dds, mdds
   use mo_opt_functions, only: griewank
+  use mo_ansi_colors, only: color, c_red, c_green
 
   implicit none
 
@@ -84,9 +85,9 @@ program main
 
   write(*,*) ''
   if (isgood) then
-     write(*,*) 'mo_dds double precision o.k.'
+     write(*,*) 'mo_dds double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_dds double precision failed!'
+     write(*,*) 'mo_dds double precision ', color('failed!', c_red)
   endif
 
 end program main

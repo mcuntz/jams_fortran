@@ -1,6 +1,7 @@
 program main
 
   use mo_kind,  only: i4, dp
+  use mo_ansi_colors, only: color, c_green
   use mo_timer, only: max_timers, timers_init, timer_clear, timer_start, timer_stop, timer_get, &
        max_timers, cycles_max, clock_rate, cycles1, cycles2, cputime, status, timer_check, timer_print
 
@@ -56,6 +57,6 @@ program main
      call timer_print(i)
   end do
   !
-  write(*,*) 'mo_timer single precision o.k.'
+  write(*,*) 'mo_timer single precision ', color('o.k.', c_green)
   !
 end program main

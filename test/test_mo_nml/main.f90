@@ -1,6 +1,7 @@
 PROGRAM main
   
   USE mo_kind, ONLY: i4
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_nml,  ONLY: open_nml, close_nml, position_nml
 
   IMPLICIT NONE
@@ -26,9 +27,9 @@ PROGRAM main
   
   Write(*,*) ''
   if (isgood) then
-     write(*,*) 'mo_nml o.k.'
+     write(*,*) 'mo_nml ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_nml failed!'
+     write(*,*) 'mo_nml ', color('failed!', c_red)
   endif
 
 END PROGRAM main

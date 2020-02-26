@@ -47,6 +47,7 @@ program main
 !
 
   use mo_kind, only: i4, dp
+  use mo_ansi_colors, only: color, c_red, c_green
 
 #ifdef MPI
 #ifdef NAG
@@ -195,9 +196,9 @@ program main
          trial_total, hit_total, pdf_estimate, pi_estimate, pi_error
 
     if (pi_error < 0.1_dp) then
-       write(*,*) 'mo_mpi_stubs o.k.'
+       write(*,*) 'mo_mpi_stubs ', color('o.k.', c_green)
     else
-       write(*,*) 'mo_mpi_stubs failed!'
+       write(*,*) 'mo_mpi_stubs ', color('failed!', c_red)
     endif
  
   end if

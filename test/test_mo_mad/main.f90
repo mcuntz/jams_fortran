@@ -1,6 +1,7 @@
 PROGRAM main
   
   USE mo_kind, ONLY: dp, sp
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_mad,  ONLY: mad
   
   IMPLICIT NONE
@@ -43,9 +44,9 @@ PROGRAM main
   if (any(mask .neqv. sollmask)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_mad double precision o.k.'
+     write(*,*) 'mo_mad double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_mad double precision failed!'
+     write(*,*) 'mo_mad double precision ', color('failed!', c_red)
   endif
 
   ! Single precision
@@ -77,9 +78,9 @@ PROGRAM main
   if (.not. all(mask .eqv. sollmask)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_mad single precision o.k.'
+     write(*,*) 'mo_mad single precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_mad single precision failed!'
+     write(*,*) 'mo_mad single precision ', color('failed!', c_red)
   endif
 
 END PROGRAM main

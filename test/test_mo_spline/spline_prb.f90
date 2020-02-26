@@ -21,6 +21,7 @@ program main
   !    John Burkardt
   !
   use mo_kind
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_spline
 
   implicit none
@@ -127,9 +128,9 @@ program main
   close(31)
 
   if (isok) then
-     write(*,*) 'mo_spline o.k.'
+     write(*,*) 'mo_spline ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_spline failed!'
+     write(*,*) 'mo_spline ', color('failed!', c_red)
   endif
 
 end program main

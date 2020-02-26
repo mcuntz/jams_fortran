@@ -7,6 +7,7 @@
 PROGRAM sunspot_test
 
   USE mo_kind,   only: i4, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_specan, only: periodogram, linres
 
   IMPLICIT NONE
@@ -90,9 +91,9 @@ PROGRAM sunspot_test
 
   write(*,*) ''
   if (isgood) then
-     write(*,*) 'mo_specan: o.k.'
+     write(*,*) 'mo_specan: ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_specan: failed'
+     write(*,*) 'mo_specan: ', color('failed', c_red)
   end if
 
 END PROGRAM sunspot_test

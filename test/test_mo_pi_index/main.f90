@@ -1,6 +1,7 @@
 program pi_index_test
 
   use mo_kind,        only: dp,i4, i8
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_sobol,       only: sobol
   use mo_model,       only: getrange, model
   use mo_pi_index,    only: pi_index
@@ -87,9 +88,9 @@ program pi_index_test
   if (nint(bi(4)*10000._dp)        .ne. 6282_i4)  isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_pi_index o.k.'
+     write(*,*) 'mo_pi_index ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_pi_index failed'
+     write(*,*) 'mo_pi_index ', color('failed', c_red)
   end if
 
 END PROGRAM pi_index_test

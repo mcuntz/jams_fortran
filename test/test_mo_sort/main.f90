@@ -1,6 +1,7 @@
 PROGRAM main
   
   USE mo_kind, ONLY: i4, dp, sp
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_sort, ONLY: sort, sort_index
   
   IMPLICIT NONE
@@ -25,9 +26,9 @@ PROGRAM main
   if (any(abs(dat1-dat2(ii)) > 0._dp)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_sort double precision o.k.'
+     write(*,*) 'mo_sort double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_sort double precision failed!'
+     write(*,*) 'mo_sort double precision ', color('failed!', c_red)
   endif
 
   ! Single precision
@@ -41,9 +42,9 @@ PROGRAM main
   if (any(abs(sat1-sat2(ii)) > 0._sp)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_sort single precision o.k.'
+     write(*,*) 'mo_sort single precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_sort single precision failed!'
+     write(*,*) 'mo_sort single precision ', color('failed!', c_red)
   endif
 
 END PROGRAM main

@@ -2,6 +2,7 @@ program main
 
   use mo_kind,      only: i4, i8, sp, dp
   use mo_functions, only: factorial, factln, gamm, gammln
+  use mo_ansi_colors, only: color, c_red, c_green
 
   implicit none
 
@@ -29,9 +30,9 @@ program main
 
   write(*,*) ''
   if (isgood) then
-     write(*,*) 'mo_functions o.k.'
+     write(*,*) 'mo_functions ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_functions failed'
+     write(*,*) 'mo_functions ', color('failed', c_red)
   end if
 
 end program main

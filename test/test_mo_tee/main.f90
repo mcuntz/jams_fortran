@@ -1,6 +1,7 @@
 program main
 
   use mo_tee,  only: tee
+  use mo_ansi_colors, only: color, c_red, c_green
 
   implicit none
 
@@ -40,9 +41,9 @@ program main
 
   write(*,*) ''
   if (isgood) then
-     write(*,*) 'mo_tee filename o.k.'
+     write(*,*) 'mo_tee filename ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_nml filename failed!'
+     write(*,*) 'mo_tee filename ', color('failed!', c_red)
   endif
 
 
@@ -71,16 +72,16 @@ program main
 
   write(*,*) ''
   if (isgood) then
-     write(*,*) 'mo_tee unit o.k.'
+     write(*,*) 'mo_tee unit ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_nml unit failed!'
+     write(*,*) 'mo_tee unit ', color('failed!', c_red)
   endif
 
   write(*,*) ''
   if (allgood) then
-     write(*,*) 'mo_tee o.k.'
+     write(*,*) 'mo_tee ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_nml failed!'
+     write(*,*) 'mo_tee ', color('failed!', c_red)
   endif
 
 end program main

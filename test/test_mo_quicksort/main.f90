@@ -1,6 +1,7 @@
 PROGRAM main
   
   USE mo_kind,      ONLY: i4, sp, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_timer,     only: timers_init, timer_start, timer_stop, timer_print, timer_clear
 #ifndef pgiFortran
   ! PGI does not like the same name in two used modules such as 'sort' in all sorting modules
@@ -234,9 +235,9 @@ PROGRAM main
   if (any(ne(sat2(ii),sat))) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_quicksort single precision o.k.'
+     write(*,*) 'mo_quicksort single precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_quicksort single precision failed!'
+     write(*,*) 'mo_quicksort single precision ', color('failed!', c_red)
   endif
 
 
@@ -438,9 +439,9 @@ PROGRAM main
   if (any(iat2(ii) /= iat)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_quicksort integer o.k.'
+     write(*,*) 'mo_quicksort integer ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_quicksort integer failed!'
+     write(*,*) 'mo_quicksort integer ', color('failed!', c_red)
   endif
 
 
@@ -732,9 +733,9 @@ PROGRAM main
 
 
   if (isgood) then
-     write(*,*) 'mo_quicksort double precision o.k.'
+     write(*,*) 'mo_quicksort double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_quicksort double precision failed!'
+     write(*,*) 'mo_quicksort double precision ', color('failed!', c_red)
   endif
 
 contains

@@ -1,6 +1,7 @@
 PROGRAM main
 
   USE mo_kind,      ONLY: i4, dp, sp
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_utils,     ONLY: eq
   USE mo_orderpack, ONLY: refsor, mrgrnk, omedian, sort, sort_index
 
@@ -39,9 +40,9 @@ PROGRAM main
   isgood = isgood .and. eq(omedian(dat1),5.5_dp)
 
   if (isgood) then
-     write(*,*) 'mo_orderpack double precision o.k.'
+     write(*,*) 'mo_orderpack double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_orderpack double precision failed!'
+     write(*,*) 'mo_orderpack double precision ', color('failed!', c_red)
   endif
 
   ! Single precision
@@ -68,9 +69,9 @@ PROGRAM main
   isgood = isgood .and. eq(omedian(sat1),5.5_sp)
 
   if (isgood) then
-     write(*,*) 'mo_orderpack single precision o.k.'
+     write(*,*) 'mo_orderpack single precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_orderpack single precision failed!'
+     write(*,*) 'mo_orderpack single precision ', color('failed!', c_red)
   endif
 
 END PROGRAM main

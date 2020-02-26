@@ -2,6 +2,7 @@ PROGRAM main
   
   USE mo_kind,     ONLY: dp, sp
   USE mo_interpol, ONLY: interpol, spline_b
+  use mo_ansi_colors, only: color, c_red, c_green
   
   IMPLICIT NONE
   
@@ -30,9 +31,9 @@ PROGRAM main
   if ((nint(dsoll(5))-nint(dyout(5))) > 0) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_interpol double precision o.k.'
+     write(*,*) 'mo_interpol double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_interpol double precision failed.'
+     write(*,*) 'mo_interpol double precision ', color('failed.', c_red)
   endif
 
   ! Single precision
@@ -51,9 +52,9 @@ PROGRAM main
   if ((nint(ssoll(5))-nint(syout(5))) > 0) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_interpol single precision o.k.'
+     write(*,*) 'mo_interpol single precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_interpol single precision failed!'
+     write(*,*) 'mo_interpol single precision ', color('failed.', c_red)
   endif
 
 END PROGRAM main

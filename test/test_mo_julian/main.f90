@@ -1,6 +1,7 @@
 program main
 
   use mo_kind,   only: i4, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_julian, only: ndays, ndyin
   use mo_julian, only: caldat, julday, date2dec, dec2date
   use mo_utils,  only: ne
@@ -78,9 +79,9 @@ program main
   allgood = allgood .and. isgood
   
   if (isgood) then
-     write(*,*) 'mo_julian ndyin/ndays o.k.'
+     write(*,*) 'mo_julian ndyin/ndays ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_julian ndyin/ndays failed!'
+     write(*,*) 'mo_julian ndyin/ndays ', color('failed!', c_red)
   endif
 
   ! ----------------------
@@ -238,17 +239,17 @@ program main
      allgood = allgood .and. isgood
      
      if (isgood) then
-        write(*,*) 'mo_julian ', trim(iscal), ' o.k.'
+        write(*,*) 'mo_julian ', trim(iscal), ' ', color('o.k.', c_green)
      else
-        write(*,*) 'mo_julian ', trim(iscal), ' failed!'
+        write(*,*) 'mo_julian ', trim(iscal), ' ', color('failed!', c_red)
      endif
      
   end do
 
   if (allgood) then
-     write(*,*) 'mo_julian o.k.'
+     write(*,*) 'mo_julian ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_julian failed!'
+     write(*,*) 'mo_julian ', color('failed!', c_red)
   endif
 
   ! ! Check 59 minutes, 60 seconds problem if eps too small in dec2date

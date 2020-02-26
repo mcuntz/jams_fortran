@@ -1,6 +1,7 @@
 program test_mo_select_distant_entries
 
   use mo_kind,                   only: i4, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_select_distant_entries, only: select_distant_entries
 
   implicit none
@@ -43,9 +44,9 @@ program test_mo_select_distant_entries
   if ( .not. all(max_entries .eq. (/2,4,5/)) ) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_select_distant_entries: o.k.'
+     write(*,*) 'mo_select_distant_entries: ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_select_distant_entries: failed!'
+     write(*,*) 'mo_select_distant_entries: ', color('failed!', c_red)
   endif
 
 end program test_mo_select_distant_entries

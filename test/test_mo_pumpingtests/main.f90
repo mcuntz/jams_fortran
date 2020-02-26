@@ -6,6 +6,7 @@ program test
 
 
   USE mo_kind,            ONLY: sp, dp, i4
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_pumpingtests,    ONLY: thiem, theis, ext_thiem2d, ext_thiem3d, ext_theis2d, ext_theis3d
   use mo_utils,           ONLY: eq
 
@@ -477,9 +478,9 @@ program test
   write (*,*) '-------------------------------------------------------------------------'
   write (*,*) '-------------------------------------------------------------------------'
   if (isgood) then
-     write(*,*) 'mo_pumpingtests o.k.'
+     write(*,*) 'mo_pumpingtests ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_pumpingtests failed'
+     write(*,*) 'mo_pumpingtests ', color('failed', c_red)
   endif
 
 end program test

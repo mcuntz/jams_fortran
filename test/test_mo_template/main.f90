@@ -1,6 +1,7 @@
 PROGRAM main
   
   USE mo_kind,     ONLY: dp, sp, i8
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_template, ONLY: mean, PI_sp, PI_dp
   
   IMPLICIT NONE
@@ -23,9 +24,9 @@ PROGRAM main
   isgood = isgood .and. (nint(1e15_dp*PI_dp,i8) == 3141592653589793_i8)
 
   if (isgood) then
-     write(*,*) 'mo_template double precision o.k.'
+     write(*,*) 'mo_template double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_template double precision failed!'
+     write(*,*) 'mo_template double precision ', color('failed!', c_red)
   endif
 
   ! Double precision
@@ -38,9 +39,9 @@ PROGRAM main
   isgood = isgood .and. (nint(1e6_sp*PI_sp) == 3141593)
 
   if (isgood) then
-     write(*,*) 'mo_template single precision o.k.'
+     write(*,*) 'mo_template single precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_template single precision failed!'
+     write(*,*) 'mo_template single precision ', color('failed!', c_red)
   endif
 
 END PROGRAM main

@@ -3,6 +3,7 @@ PROGRAM elemeffects_test
   use mo_kind,        only: dp,i4
   use mo_elemeffects, only: elemeffects
   use mo_model,       only: GetRange, Model
+  use mo_ansi_colors, only: color, c_red, c_green
 
   IMPLICIT NONE
 
@@ -100,9 +101,9 @@ PROGRAM elemeffects_test
   if (nint(elemEffect(4)*1000._dp) .ne. 2000_i4)  isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_elemeffects o.k.'
+     write(*,*) 'mo_elemeffects ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_elemeffects failed'
+     write(*,*) 'mo_elemeffects ', color('failed', c_red)
   end if
 
 END PROGRAM elemeffects_test

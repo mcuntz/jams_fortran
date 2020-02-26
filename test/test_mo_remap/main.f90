@@ -11,6 +11,7 @@ program main
   ! ------------------------------------------------------------------------------
 
   use mo_kind,      only: i4, sp, dp
+  use mo_ansi_colors, only: color, c_green
   use mo_timer,     only: max_timers, timers_init, timer_clear, timer_start, timer_stop, timer_get
   use mo_readdata,  only: readdata
   use mo_mainvar,   only: src_data, dst_data, src_add, dst_add, wts, nodata
@@ -97,7 +98,7 @@ program main
   write(*,*) ''
   write(*,*) 'Done!'
 
-  write(*,*) 'mo_remap double precision o.k.'
+  write(*,*) 'mo_remap double precision ', color('o.k.', c_green)
 
 
 end program main

@@ -1,6 +1,7 @@
 PROGRAM main
 
   USE mo_kind,  ONLY: dp, i4
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_qhull, ONLY: qhull ! sums between two elements in first dimension (multiply with constant)
 
   IMPLICIT NONE
@@ -33,9 +34,9 @@ PROGRAM main
   end do
 
   if (isgood) then
-     write(*,*) 'mo_qhull o.k.'
+     write(*,*) 'mo_qhull ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_qhull failed!'
+     write(*,*) 'mo_qhull ', color('failed!', c_red)
   endif
 
 END PROGRAM main

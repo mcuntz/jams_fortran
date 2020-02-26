@@ -2,6 +2,7 @@ PROGRAM main
 
   use mo_kind,       only: i4
   use mo_file_utils, only: find_next_unit, lines_in_file, lif, next_unit
+  use mo_ansi_colors, only: color, c_red, c_green
 
   implicit none
 
@@ -42,7 +43,7 @@ PROGRAM main
 
 
   ! lines_in_file
-  islines = 70
+  islines = 71
   ilines = lines_in_file("main.f90")
   if (ilines /= islines) isgood =.false.
   ilines = lines_in_file("main.f90", comment='!')
@@ -52,7 +53,7 @@ PROGRAM main
 
 
   ! lif
-  islines = 70
+  islines = 71
   ilines = lif("main.f90")
   if (ilines /= islines) isgood =.false.
   ilines = lif("main.f90", comment='!')
@@ -62,9 +63,9 @@ PROGRAM main
 
 
   if (isgood) then
-     write(*,*) 'mo_file_utils o.k.'
+     write(*,*) 'mo_file_utils ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_file_utils failed!'
+     write(*,*) 'mo_file_utils ', color('failed!', c_red)
   endif
 
 end program main

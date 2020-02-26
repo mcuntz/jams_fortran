@@ -27,12 +27,13 @@ MODULE mo_fit
   !          Gregor Schuldt, Sep 2014  - polyval
   !          Matthias Cuntz, Jul 2015  - pgiFortran
   !          Matthias Cuntz, Mai 2016  - rm linfit -> use mo_linfit
+  !          Matthias Cuntz, Feb 2020  - make pgiFortran code for all compilers
 
   ! License
   ! -------
   ! This file is part of the JAMS Fortran package, distributed under the MIT License.
   !
-  ! Copyright (c) 2011-2016 Matthias Cuntz - mc (at) macu (dot) de
+  ! Copyright (c) 2011-2020 Matthias Cuntz - mc (at) macu (dot) de
   !
   ! Permission is hereby granted, free of charge, to any person obtaining a copy
   ! of this software and associated documentation files (the "Software"), to deal
@@ -1240,10 +1241,8 @@ CONTAINS
              h = f*g-s
              a(i,i) = f-g
              tempn(l:n) = matmul(a(i:m,i),a(i:m,l:n))/h
-#ifdef pgiFortran
              if (l <= n) & ! pgfortran out-of-bounds in debug mode
-#endif
-             a(i:m,l:n) = a(i:m,l:n)+outerprod(a(i:m,i),tempn(l:n))
+                  a(i:m,l:n) = a(i:m,l:n)+outerprod(a(i:m,i),tempn(l:n))
              a(i:m,i)   = scale*a(i:m,i)
           end if
        end if
@@ -1288,10 +1287,8 @@ CONTAINS
        if (abs(g) > 0.0_dp) then
           g = 1.0_dp/g
           tempn(l:n) = (matmul(a(l:m,i),a(l:m,l:n))/a(i,i))*g
-#ifdef pgiFortran
           if (l <= n) & ! pgfortran out-of-bounds in debug mode
-#endif
-          a(i:m,l:n) = a(i:m,l:n)+outerprod(a(i:m,i),tempn(l:n))
+               a(i:m,l:n) = a(i:m,l:n)+outerprod(a(i:m,i),tempn(l:n))
           a(i:m,i)   = a(i:m,i)*g
        else
           a(i:m,i) = 0.0_dp
@@ -1421,10 +1418,8 @@ CONTAINS
              h = f*g-s
              a(i,i) = f-g
              tempn(l:n) = matmul(a(i:m,i),a(i:m,l:n))/h
-#ifdef pgiFortran
              if (l <= n) & ! pgfortran out-of-bounds in debug mode
-#endif
-             a(i:m,l:n) = a(i:m,l:n)+outerprod(a(i:m,i),tempn(l:n))
+                  a(i:m,l:n) = a(i:m,l:n)+outerprod(a(i:m,i),tempn(l:n))
              a(i:m,i)   = scale*a(i:m,i)
           end if
        end if
@@ -1469,10 +1464,8 @@ CONTAINS
        if (abs(g) > 0.0_sp) then
           g = 1.0_sp/g
           tempn(l:n) = (matmul(a(l:m,i),a(l:m,l:n))/a(i,i))*g
-#ifdef pgiFortran
           if (l <= n) & ! pgfortran out-of-bounds in debug mode
-#endif
-          a(i:m,l:n) = a(i:m,l:n)+outerprod(a(i:m,i),tempn(l:n))
+               a(i:m,l:n) = a(i:m,l:n)+outerprod(a(i:m,i),tempn(l:n))
           a(i:m,i)   = a(i:m,i)*g
        else
           a(i:m,i) = 0.0_sp

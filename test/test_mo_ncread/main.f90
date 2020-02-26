@@ -11,6 +11,7 @@
 program ReadNc
 !
 use mo_kind,   only: i4, sp, dp
+use mo_ansi_colors, only: color, c_red, c_green
 use mo_NcRead, only: Get_NcVar, get_ncdim, NcOpen, NcClose
 #ifndef ABSOFT
 use mo_NcRead, only: Get_NcDimAtt, Get_NcVarAtt
@@ -104,9 +105,9 @@ isgood = isgood .and. (AttValues == '0.1000000E+31')
 #endif
 !
 if (isgood) then
-   write(*,*) 'mo_ncread o.k.'
+   write(*,*) 'mo_ncread ', color('o.k.', c_green)
 else
-   write(*,*) 'mo_ncread failed!'
+   write(*,*) 'mo_ncread ', color('failed!', c_red)
 endif
 !
 deallocate(data)

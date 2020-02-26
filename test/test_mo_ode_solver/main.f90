@@ -10,6 +10,7 @@
 program main_test_mo_ode_solver
 
     use mo_kind,        only    : i4, sp, dp
+    use mo_ansi_colors, only: color, c_red, c_green
     use mo_eq_lv,       only    : LV_eqn_sp, LV_eqn_dp, LV_eqn_para_sp, LV_eqn_para_dp,&
                                   deriv2_testRB_sp, jacobn2_testRB_sp,&
                                   deriv2_testRB_dp, jacobn2_testRB_dp,&
@@ -220,9 +221,9 @@ program main_test_mo_ode_solver
     write(*,*) ''
     write(*,*) '------------------------------------------'
     if (isgood) then
-        write(*,*) 'mo_ode_solver o.k.'
+        write(*,*) 'mo_ode_solver ', color('o.k.', c_green)
     else
-        write(*,*) 'mo_ode_solver failed!'
+        write(*,*) 'mo_ode_solver ', color('failed!', c_red)
     endif
     write(*,*) '-------------------END---------------------'
 

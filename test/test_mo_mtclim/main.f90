@@ -12,6 +12,7 @@
 program main
 !
 use mo_kind,      only: i4, dp
+use mo_ansi_colors, only: color, c_red, c_green
 use mo_mtclim
 !
 !----------------------------------------
@@ -226,9 +227,9 @@ isgood = .true.
 ! Finish
 allgood = allgood .and. isgood
   if (allgood) then
-     write(*,*) 'mo_mtclim o.k.'
+     write(*,*) 'mo_mtclim ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_mtclim failed!'
+     write(*,*) 'mo_mtclim ', color('failed!', c_red)
   endif
 !
 end program main

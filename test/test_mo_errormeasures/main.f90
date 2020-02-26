@@ -3,6 +3,7 @@ program test
   ! use mo_moment   
   USE mo_kind         , ONLY: i4, sp, dp
   USE mo_errorMeasures, ONLY: BIAS, KGE, LNNSE, MAE, MSE, NSE, RMSE, SAE, SSE
+  use mo_ansi_colors, only: color, c_red, c_green
   !
   IMPLICIT NONE
   !
@@ -120,9 +121,9 @@ program test
   isgood = isgood .and. (nint(10000._dp*LNNSE(arr1, arr2, mask=mask)) .EQ. 8915)
   !
   if (isgood) then
-     write(*,*) 'mo_errormeasures o.k.'
+     write(*,*) 'mo_errormeasures ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_errormeasures failed'
+     write(*,*) 'mo_errormeasures ', color('failed', c_red)
   endif
   !
 end program test

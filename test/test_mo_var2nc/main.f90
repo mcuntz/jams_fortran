@@ -11,6 +11,7 @@
 program main
 
   use mo_kind,   only: i4, sp, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_ncread, only: Get_NcVar, Get_NcDim, Get_ncVarAtt
   use mo_var2nc, only: var2nc
   use mo_utils,  only: notequal
@@ -307,9 +308,9 @@ program main
   deallocate(x1, y1, lon1, lat1, time1, data2)
 
   if (isgood) then
-     write(*,*) 'mo_var2nc o.k.'
+     write(*,*) 'mo_var2nc ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_var2nc failed!'
+     write(*,*) 'mo_var2nc ', color('failed!', c_red)
   endif
 
   ! ! --------------------------------------------------------------------

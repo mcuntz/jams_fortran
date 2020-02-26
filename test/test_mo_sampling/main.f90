@@ -12,6 +12,7 @@
 program main_mo_sampling
 
     use mo_kind,            only    :   i4, sp
+    use mo_ansi_colors, only: color, c_red, c_green
     use mo_sampling,        only    :   random, lhs, setupxor
     use mo_xor4096,         only    :   n_save_state
 
@@ -68,9 +69,9 @@ program main_mo_sampling
     write(*,*) ''
     write(*,*) '------------------------------------------'
     if (isgood) then
-        write(*,*) 'mo_sampling.f90 o.k.'
+        write(*,*) 'mo_sampling.f90 ', color('o.k.', c_green)
     else
-        write(*,*) 'mo_sampling.f90 failed!'
+        write(*,*) 'mo_sampling.f90 ', color('failed!', c_red)
     endif
     write(*,*) '-------------------END---------------------'
 

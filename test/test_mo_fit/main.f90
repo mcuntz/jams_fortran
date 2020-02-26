@@ -3,6 +3,7 @@ PROGRAM main
   USE mo_kind, ONLY: dp, sp
   USE mo_fit,  ONLY: fitfun, fpoly_dp, fpoly_sp, polyfit, svdfit
   USE mo_fit,  ONLY: polyval
+  use mo_ansi_colors, only: color, c_red, c_green
 
   IMPLICIT NONE
   
@@ -64,9 +65,9 @@ PROGRAM main
   isgood = isgood .and. all((nint(1000._dp*polyval( polydp, xdpvec))-(/1000, 4000, 9000, 16000/)) == 0)
 
   if (isgood) then
-     write(*,*) 'mo_fit double precision o.k.'
+     write(*,*) 'mo_fit double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_fit double precision failed!'
+     write(*,*) 'mo_fit double precision ', color('failed!', c_red)
   endif
 
   ! Single precision
@@ -95,9 +96,9 @@ PROGRAM main
   isgood = isgood .and. all((nint(1000._sp*polyval( polysp, xspvec))-(/1000, 4000, 9000, 16000/)) == 0)
 
   if (isgood) then
-     write(*,*) 'mo_fit single precision o.k.'
+     write(*,*) 'mo_fit single precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_fit single precision failed!'
+     write(*,*) 'mo_fit single precision ', color('failed!', c_red)
   endif
 
 END PROGRAM main

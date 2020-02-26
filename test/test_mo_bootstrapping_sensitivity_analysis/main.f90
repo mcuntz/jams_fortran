@@ -5,6 +5,7 @@ PROGRAM mo_bootstrapping_test
   USE mo_model,                               only: model, par_range
   USE mo_sobol,                               only: sobol_array
   USE mo_sobol_index,                         only: sobol_index
+  use mo_ansi_colors, only: color, c_red, c_green
 
   IMPLICIT NONE
 
@@ -91,9 +92,9 @@ PROGRAM mo_bootstrapping_test
  if (abs(sti(2,4,3) - 0.00392133) > 0.000001) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_bootstrapping_sensitivity_analysis o.k.'
+     write(*,*) 'mo_bootstrapping_sensitivity_analysis ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_bootstrapping_sensitivity_analysis failed'
+     write(*,*) 'mo_bootstrapping_sensitivity_analysis ', color('failed', c_red)
   end if
 
 !-----------------------------------------------------------

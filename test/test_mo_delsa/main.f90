@@ -5,6 +5,7 @@ PROGRAM main
 
   USE mo_kind,  ONLY: dp, i4
   USE mo_delsa, ONLY: delsa
+  use mo_ansi_colors, only: color, c_red, c_green
 
   IMPLICIT NONE
 
@@ -119,9 +120,9 @@ PROGRAM main
   end do
 
   if (isgood) then
-     write(*,*) 'mo_delsa o.k.'
+     write(*,*) 'mo_delsa ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_delsa failed'
+     write(*,*) 'mo_delsa ', color('failed', c_red)
   end if
 
 END PROGRAM main

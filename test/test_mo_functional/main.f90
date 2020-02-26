@@ -7,6 +7,7 @@ program main
   use mo_kind,       only: real128=>qp
 #endif
   use mo_testing,    only: assert, initialize_tests, report_tests
+  use mo_ansi_colors, only: color, c_red, c_green
 
   use mo_functional
 
@@ -1402,9 +1403,9 @@ program main
 
   write(*,*) ''
   if (isgood) then
-     write(*,*) 'mo_functional o.k.'
+     write(*,*) 'mo_functional ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_functional failed!'
+     write(*,*) 'mo_functional ', color('failed!', c_red)
   endif
 
 end program main

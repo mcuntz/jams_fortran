@@ -12,6 +12,7 @@ program combinatorics
   use mo_combinatorics, only: next_kofn,   all_kofn,   random_kofn
   use mo_combinatorics, only: next_index_permut, all_index_permut, random_index_permut, random_permut
   use mo_xor4096,       only: xor4096, n_save_state
+  use mo_ansi_colors, only: color, c_red, c_green
 
   implicit none
 
@@ -257,9 +258,9 @@ program combinatorics
 
   write(*,*) ''
   if (isgood) then
-     write(*,*) 'mo_combinatorics o.k.'
+     write(*,*) 'mo_combinatorics ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_combinatorics failed'
+     write(*,*) 'mo_combinatorics ', color('failed', c_red)
   end if
 
 end program combinatorics

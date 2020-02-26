@@ -11,6 +11,7 @@
 program test_mo_netcdf
 
   use mo_kind  , only: i4, sp, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_netcdf, only: NcDataset, NcDimension, NcVariable
   use mo_utils , only: equal
   
@@ -257,9 +258,9 @@ program test_mo_netcdf
   ! --------------------------------------------------------------------------------------
   ! The moment of truth ...
   if (correct) then
-     print*, "mo_netcdf is o.k."
+     print*, 'mo_netcdf ', color('o.k.', c_green)
   else
-     print*, "mo_netcdf failed."
+     print*, 'mo_netcdf ', color('failed.', c_red)
   endif
 
 end program test_mo_netcdf

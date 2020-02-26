@@ -1,6 +1,7 @@
 program test
  
   USE mo_kind , ONLY: i4, i8, sp, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_sobol, ONLY: sobol, sobol_array
   !
   IMPLICIT NONE
@@ -89,9 +90,9 @@ program test
   deallocate(sobol_database_dp)
 
   if (isgood) then
-     write(*,*) 'mo_sobol o.k.'
+     write(*,*) 'mo_sobol ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_sobol failed'
+     write(*,*) 'mo_sobol ', color('failed', c_red)
   endif
   
   !

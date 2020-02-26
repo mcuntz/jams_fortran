@@ -1,6 +1,7 @@
 program main
   
   use mo_kind,   only: i4, i8, dp, sp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_string_utils, only: tolower, toupper, separator, num2str, nonull, compress
   use mo_string_utils, only: startsWith, equalStrings, splitString, countsubstring
   use mo_string_utils, only: count_split, split
@@ -63,7 +64,7 @@ program main
   isgood = isgood .and. (strArr(4) .eq. 'test')
   isgood = isgood .and. (strArr(5) .eq. 'this')
   isgood = isgood .and. (strArr(6) .eq. 'routine!')
-  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 1 failed'
+  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 1 ', color('failed', c_red)
   if (allocated(strArr)) deallocate(strArr)
   allocate(strArr(countsubstring('I,want,to,test,this,routine! ', ',')))
   strArr = splitString('I,want,to,test,this,routine! ', ',')
@@ -73,10 +74,10 @@ program main
   isgood = isgood .and. (strArr(4) .EQ. 'test')
   isgood = isgood .and. (strArr(5) .EQ. 'this')
   isgood = isgood .and. (strArr(6) .EQ. 'routine! ')
-  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 2 failed'
+  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 2 ', color('failed', c_red)
   strArr = splitString('I,want,to,test,this,routine! ', ',')
   isgood = isgood .and. (strArr(6) .EQ. 'routine!')
-  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 2.1 failed'
+  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 2.1 ', color('failed', c_red)
   if (allocated(strArr)) deallocate(strArr)
   allocate(strArr(countsubstring('w!hat_s-a+bout=-sp.eci,al-chara<cte>rs?', '-')))
   strArr = splitString('w!hat_s-a+bout=-sp.eci,al-chara<cte>rs?', '-')
@@ -84,7 +85,7 @@ program main
   isgood = isgood .and. (strArr(2) .EQ. 'a+bout=')
   isgood = isgood .and. (strArr(3) .EQ. 'sp.eci,al')
   isgood = isgood .and. (strArr(4) .EQ. 'chara<cte>rs?')
-  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 3 failed'
+  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 3 ', color('failed', c_red)
   ! divide_string does not allow multi-character splits, so pgi does not work
   if (allocated(strArr)) deallocate(strArr)
   allocate(strArr(countsubstring('multi_+character_*splits_+should work_+', '_+')))
@@ -93,7 +94,7 @@ program main
   isgood = isgood .and. (strArr(2) .EQ. 'character_*splits')
   isgood = isgood .and. (strArr(3) .EQ. 'should work')
   isgood = isgood .and. (strArr(4) .EQ. '')
-  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 4 failed'
+  if (.not. isgood) write(*,*) 'mo_string_utils splitstring 4 ', color('failed', c_red)
   ! split
   if (allocated(strArr)) deallocate(strArr)
   allocate(strArr(count_split('I want to test this routine!', ' ')))
@@ -104,7 +105,7 @@ program main
   isgood = isgood .and. (strArr(4) .eq. 'test')
   isgood = isgood .and. (strArr(5) .eq. 'this')
   isgood = isgood .and. (strArr(6) .eq. 'routine!')
-  if (.not. isgood) write(*,*) 'mo_string_utils split 5 failed'
+  if (.not. isgood) write(*,*) 'mo_string_utils split 5 ', color('failed', c_red)
   if (allocated(strArr)) deallocate(strArr)
   allocate(strArr(count_split('I,want,to,test,this,routine! ', ',')))
   strArr = split('I,want,to,test,this,routine! ', ',')
@@ -114,10 +115,10 @@ program main
   isgood = isgood .and. (strArr(4) .EQ. 'test')
   isgood = isgood .and. (strArr(5) .EQ. 'this')
   isgood = isgood .and. (strArr(6) .EQ. 'routine! ')
-  if (.not. isgood) write(*,*) 'mo_string_utils split 6 failed'
+  if (.not. isgood) write(*,*) 'mo_string_utils split 6 ', color('failed', c_red)
   strArr = split('I,want,to,test,this,routine! ', ',')
   isgood = isgood .and. (strArr(6) .EQ. 'routine!')
-  if (.not. isgood) write(*,*) 'mo_string_utils split 6.1 failed'
+  if (.not. isgood) write(*,*) 'mo_string_utils split 6.1 ', color('failed', c_red)
   if (allocated(strArr)) deallocate(strArr)
   allocate(strArr(count_split('w!hat_s-a+bout=-sp.eci,al-chara<cte>rs?', '-')))
   strArr = split('w!hat_s-a+bout=-sp.eci,al-chara<cte>rs?', '-')
@@ -125,7 +126,7 @@ program main
   isgood = isgood .and. (strArr(2) .EQ. 'a+bout=')
   isgood = isgood .and. (strArr(3) .EQ. 'sp.eci,al')
   isgood = isgood .and. (strArr(4) .EQ. 'chara<cte>rs?')
-  if (.not. isgood) write(*,*) 'mo_string_utils split 7 failed'
+  if (.not. isgood) write(*,*) 'mo_string_utils split 7 ', color('failed', c_red)
   if (allocated(strArr)) deallocate(strArr)
   allocate(strArr(count_split('multi_+character_*splits_+should work_+', '_+')))
   strArr = split('multi_+character_*splits_+should work_+', '_+')
@@ -133,7 +134,7 @@ program main
   isgood = isgood .and. (strArr(2) .EQ. 'character_*splits')
   isgood = isgood .and. (strArr(3) .EQ. 'should work')
   isgood = isgood .and. (strArr(4) .EQ. '')
-  if (.not. isgood) write(*,*) 'mo_string_utils split 8 failed'
+  if (.not. isgood) write(*,*) 'mo_string_utils split 8 ', color('failed', c_red)
 
 #ifndef ABSOFT
   call DIVIDE_STRING('I want to test this routine!', ' ', strArr)
@@ -161,9 +162,9 @@ program main
 
   Write(*,*) ''
   if (isgood) then
-     write(*,*) 'mo_string_utils o.k.'
+     write(*,*) 'mo_string_utils ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_string_utils failed'
+     write(*,*) 'mo_string_utils ', color('failed', c_red)
   endif
 
 END PROGRAM main

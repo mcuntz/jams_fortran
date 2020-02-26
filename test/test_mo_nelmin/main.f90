@@ -17,6 +17,7 @@ program main
 !    John Burkardt
 !
   use mo_kind,   only: i4, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_nelmin, only: nelmin, nelminxy
 
   implicit none
@@ -132,9 +133,9 @@ program main
   isgood = isgood .and. (nint(100._dp*xmin(2)) == 100)
 
   if (isgood) then
-     write(*,*) 'mo_nelmin double precision o.k.'
+     write(*,*) 'mo_nelmin double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_nelmin double precision failed!'
+     write(*,*) 'mo_nelmin double precision ', color('failed!', c_red)
   endif
 
 

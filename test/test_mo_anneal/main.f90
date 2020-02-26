@@ -5,6 +5,7 @@ PROGRAM anneal_test
   use mo_anneal,  only: GetTemperature    !, GetTemperature_valid
   use mo_cost,    only: cost_dp, range_dp !, cost_valid_dp
   use mo_xor4096, only: get_timeseed
+  use mo_ansi_colors, only: color, c_red, c_green
 
   IMPLICIT NONE
 
@@ -109,9 +110,9 @@ PROGRAM anneal_test
   ! Is program running properly?   costbestAll = 1.5210594853672710E-002
   print*, '-----------------------------------'
   if ( nint(costbestAll*100000) .eq. 1521 ) then
-     print*, 'mo_anneal: o.k.'
+     print*, 'mo_anneal: ', color('o.k.', c_green)
   else
-     print*, 'mo_anneal: failed '
+     print*, 'mo_anneal: ', color('failed', c_red)
   end if
 
 END PROGRAM anneal_test

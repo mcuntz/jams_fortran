@@ -3,6 +3,7 @@ PROGRAM main
   USE mo_kind,     ONLY: dp, i4
   USE mo_utils,    ONLY: ne
   USE mo_cfortran, ONLY: fctest ! sums between two elements in first dimension (multiply with constant)
+  use mo_ansi_colors, only: color, c_red, c_green
 
   IMPLICIT NONE
 
@@ -36,9 +37,9 @@ PROGRAM main
   if (ne(fctest(A, n1, n2, c), 14.0_dp)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'cfortran o.k.'
+     write(*,*) 'cfortran ', color('o.k.', c_green)
   else
-     write(*,*) 'cfortran failed!'
+     write(*,*) 'cfortran ', color('failed!', c_red)
   endif
 
 

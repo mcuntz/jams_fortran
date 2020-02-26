@@ -1,6 +1,7 @@
 program test_kernel
 
   use mo_kind,   only: i4, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_kernel, only: kernel_regression_h, kernel_regression
   use mo_kernel, only: kernel_density_h, kernel_density
   use mo_kernel, only: kernel_cumdensity
@@ -125,9 +126,9 @@ program test_kernel
 
   ! ---------------------------------------------------------------------------------
   if (isgood) then
-     write(*,*) 'mo_kernel o.k.'
+     write(*,*) 'mo_kernel ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_kernel failed !'
+     write(*,*) 'mo_kernel ', color('failed!', c_red)
   end if
 
 end program test_kernel

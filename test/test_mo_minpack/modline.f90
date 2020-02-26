@@ -4,6 +4,7 @@ Module ModLine
   ! robust fit of the line
   !
   use mo_kind, only: dp
+  use mo_ansi_colors, only: color, c_red, c_green
 
   implicit none
 
@@ -207,9 +208,9 @@ contains
     if (debug) write(*,*) s0
 
     if (isgood) then
-       write(*,*) 'mo_minpack double precision o.k.'
+       write(*,*) 'mo_minpack double precision ', color('o.k.', c_green)
     else
-       write(*,*) 'mo_minpack double precision failed!'
+       write(*,*) 'mo_minpack double precision ', color('failed!', c_red)
     endif
 
   end subroutine line

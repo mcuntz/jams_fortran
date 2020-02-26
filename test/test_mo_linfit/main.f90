@@ -1,6 +1,7 @@
 PROGRAM main
   
   USE mo_kind,      ONLY: i4, dp, sp
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_linfit,    ONLY: linfit
   
   IMPLICIT NONE
@@ -74,9 +75,9 @@ PROGRAM main
   if (schi2 > epsilon(1.0_sp)) isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_linfit o.k.'
+     write(*,*) 'mo_linfit ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_linfit failed!'
+     write(*,*) 'mo_linfit ', color('failed!', c_red)
   endif
 
 END PROGRAM main

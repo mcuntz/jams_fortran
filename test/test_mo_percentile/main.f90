@@ -1,6 +1,7 @@
 PROGRAM main
 
   USE mo_kind,        ONLY: dp, sp, i4
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_percentile,  ONLY: median, percentile, qmedian, n_element
   USE mo_orderpack,   ONLY: sort
   USE mo_utils,       ONLY: eq, ne
@@ -46,9 +47,9 @@ PROGRAM main
   isgood = isgood .and. eq(dqua(2),7.5_dp)
 
   if (isgood) then
-     write(*,*) 'mo_percentile double precision o.k.'
+     write(*,*) 'mo_percentile double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_percentile double precision failed!'
+     write(*,*) 'mo_percentile double precision ', color('failed!', c_red)
   endif
 
   ! Single precision
@@ -66,9 +67,9 @@ PROGRAM main
   isgood = isgood .and. eq(squa(2),7.5_sp)
 
   if (isgood) then
-     write(*,*) 'mo_percentile single precision o.k.'
+     write(*,*) 'mo_percentile single precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_percentile single precision failed!'
+     write(*,*) 'mo_percentile single precision ', color('failed!', c_red)
   endif
 
 ! Absoft gives segmentation fault on all of the following test, do not know why

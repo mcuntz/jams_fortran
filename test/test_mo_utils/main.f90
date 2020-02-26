@@ -1,10 +1,11 @@
 program test_utils
 
-  use mo_kind,  only: sp, dp, i4
-  use mo_utils, only: eq, ge, le, ne
-  use mo_utils, only: swap, locate, cumsum, arange, linspace
-  use mo_utils, only: is_finite, is_nan, is_normal, special_value
-  use mo_utils, only: isin, isinloc
+  use mo_kind,        only: sp, dp, i4
+  use mo_ansi_colors, only: color, c_red, c_green
+  use mo_utils,       only: eq, ge, le, ne
+  use mo_utils,       only: swap, locate, cumsum, arange, linspace
+  use mo_utils,       only: is_finite, is_nan, is_normal, special_value
+  use mo_utils,       only: isin, isinloc
 
   implicit none
 
@@ -14,11 +15,11 @@ program test_utils
   real(sp) :: b_sp
 
   integer(i4), parameter :: nn = 100
-  real(dp), dimension(nn) :: dat1, dat2, dat3
-  real(sp), dimension(nn) :: sat1, sat2, sat3
+  real(dp),    dimension(nn) :: dat1, dat2, dat3
+  real(sp),    dimension(nn) :: sat1, sat2, sat3
   integer(i4), dimension(nn) :: iat1, iat2, iat3
   complex(dp), dimension(nn) :: cat1, cat2
-  real(dp), dimension(:), allocatable :: adat1
+  real(dp),    dimension(:), allocatable :: adat1
   character(len=10), dimension(nn) :: chat1
   
   real(dp) :: d1
@@ -403,9 +404,7 @@ program test_utils
   iat1    = arange(-1,nn-2)
   isgood  = isgood .and. all(iat1==iat2)
   ! allocatable out
-#ifdef pgiFortran
   allocate(adat1(nn))
-#endif
   adat1 = arange(real(nn,dp))
 
   ! -----------------------------------------------------
@@ -468,9 +467,9 @@ program test_utils
   
   write(*,*) ''
   if (isgood) then
-     write(*,*) 'mo_utils o.k.'
+     write(*,*) 'mo_utils ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_utils failed!'
+     write(*,*) 'mo_utils ', color('failed!', c_red)
   endif
 
 end program test_utils

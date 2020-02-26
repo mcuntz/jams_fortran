@@ -5,6 +5,7 @@ PROGRAM main
   USE mo_distributions, ONLY: laplace, laplace01, normal, normal01
   USE mo_distributions, ONLY: ep, ep01, sep, sep01
   USE mo_distributions, ONLY: st, st01, t, t01
+  use mo_ansi_colors, only: color, c_red, c_green
 
   IMPLICIT NONE
 
@@ -304,9 +305,9 @@ PROGRAM main
   ! Finish
   allgood = allgood .and. isgood
   if (allgood) then
-     write(*,*) 'mo_distributions o.k.'
+     write(*,*) 'mo_distributions ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_distributions failed!'
+     write(*,*) 'mo_distributions ', color('failed!', c_red)
   endif
 
 END PROGRAM main

@@ -18,6 +18,7 @@
 program main
 
     use mo_kind,                    only    :   i4, dp
+    use mo_ansi_colors, only: color, c_red, c_green
     use mo_ode_generator,           only    :   ode_generator
 
     implicit none
@@ -59,9 +60,9 @@ program main
                             (/500, 500, 449, 453, 551, 578, 500, 502, 557, 557, 500, 500, 601, 604, 546, 557/)) )
 
     if (isgood) then
-        write(*,*) 'mo_ode_generator o.k.'
+        write(*,*) 'mo_ode_generator ', color('o.k.', c_green)
     else
-        write(*,*) 'mo_ode_generator failed!'
+        write(*,*) 'mo_ode_generator ', color('failed!', c_red)
     endif
 
 

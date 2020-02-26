@@ -11,6 +11,7 @@
 program main
 
   use mo_kind,    only: i4, sp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_NcRead,  only: Get_NcVar, Get_NcDim
   use mo_setnc,   only: setnc
   use mo_NcWrite, only: create_netcdf, close_netcdf, write_static_netcdf, write_dynamic_netcdf, V
@@ -109,9 +110,9 @@ program main
 
   
   if (isgood) then
-     write(*,*) 'mo_ncwrite o.k.'
+     write(*,*) 'mo_ncwrite ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_ncwrite failed!'
+     write(*,*) 'mo_ncwrite ', color('failed!', c_red)
   endif
   
 end program main

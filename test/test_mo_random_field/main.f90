@@ -1,6 +1,7 @@
 program test_mo_random_field
 
   use mo_kind,         only: i4, i8, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_random_field, only: random_velocity_field_gauss
 
   implicit none
@@ -67,9 +68,9 @@ program test_mo_random_field
   write(*,*) ''
 
   if (isgood) then
-     write(*,*) 'mo_random_field o.k.'
+     write(*,*) 'mo_random_field ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_random_field failed!'
+     write(*,*) 'mo_random_field ', color('failed!', c_red)
   endif
 
 end program test_mo_random_field

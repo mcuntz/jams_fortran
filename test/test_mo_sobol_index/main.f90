@@ -1,6 +1,7 @@
 program sobol_index_test
 
   use mo_kind,        only: dp,i4, i8
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_sobol,       only: sobol
   use mo_model,       only: getrange, model
   use mo_sobol_index, only: sobol_index
@@ -132,9 +133,9 @@ program sobol_index_test
   if (nint(wmean(3,2)*10000._dp)     .ne.  3813_i4)  isgood = .false.
 
   if (isgood) then
-     write(*,*) 'mo_sobol_index o.k.'
+     write(*,*) 'mo_sobol_index ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_sobol_index failed'
+     write(*,*) 'mo_sobol_index ', color('failed', c_red)
   end if
 
 end program sobol_index_test

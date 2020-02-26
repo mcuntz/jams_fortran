@@ -1,6 +1,7 @@
 program test_sce
 
   use mo_kind,             only: i4, i8, dp
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_sce,              only: sce
   use mo_opt_functions,    only: ackley
 
@@ -104,9 +105,9 @@ program test_sce
   end if
 
   if (isgood) then
-     write(*,*) 'mo_sce o.k.'
+     write(*,*) 'mo_sce ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_sce 1 failed!'
+     write(*,*) 'mo_sce 1 ', color('failed!', c_red)
   endif
 
 
@@ -143,9 +144,9 @@ program test_sce
   end if
 
   if (isgood) then
-     write(*,*) 'mo_sce restart o.k.'
+     write(*,*) 'mo_sce restart ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_sce restart failed!'
+     write(*,*) 'mo_sce restart ', color('failed!', c_red)
   endif
 
 end program test_sce

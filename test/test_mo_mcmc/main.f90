@@ -1,6 +1,7 @@
 program test_mcmc
 
   use mo_kind,       only: dp,i4, i8
+  use mo_ansi_colors, only: color, c_red, c_green
   use mo_likelihood, only: setmeas, loglikelihood_dp, loglikelihood_stddev_dp
   use mo_mcmc,       only: mcmc, mcmc_stddev
   use mo_moment,     only: mean, stddev
@@ -78,9 +79,9 @@ program test_mcmc
   if ( (nint(stddev(mcmc_paras(:,1), ddof=1)*10000000,i4) .eq. 583_i4)   .and. &
        (nint(stddev(mcmc_paras(:,2), ddof=1)*10000000,i4) .eq. 60238_i4) .and. &
        (nint(stddev(mcmc_paras(:,3), ddof=1)*10000000,i4) .eq. 1384711_i4) ) then
-     write(*,*) 'mo_mcmc: mcmc o.k.'
+     write(*,*) 'mo_mcmc: mcmc ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_mcmc: mcmc failed '
+     write(*,*) 'mo_mcmc: mcmc ', color('failed', c_red)
   end if
 
     write(*,*) ''
@@ -122,9 +123,9 @@ program test_mcmc
   if ( (nint(stddev(mcmc_paras(:,1), ddof=1)*10000000,i4) .eq. 583_i4)   .and. &
        (nint(stddev(mcmc_paras(:,2), ddof=1)*10000000,i4) .eq. 60238_i4) .and. &
        (nint(stddev(mcmc_paras(:,3), ddof=1)*10000000,i4) .eq. 1384711_i4) ) then
-     write(*,*) 'mo_mcmc: mcmc with restart o.k.'
+     write(*,*) 'mo_mcmc: mcmc with restart ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_mcmc: mcmc with restart failed '
+     write(*,*) 'mo_mcmc: mcmc with restart ', color('failed', c_red)
   end if
 
   write(*,*) ''
@@ -185,9 +186,9 @@ program test_mcmc
   if ( (nint(stddev(mcmc_paras(:,1), ddof=1)*10000000,i4) .eq. 632_i4)   .and. &
        (nint(stddev(mcmc_paras(:,2), ddof=1)*10000000,i4) .eq. 66281_i4) .and. &
        (nint(stddev(mcmc_paras(:,3), ddof=1)*10000000,i4) .eq. 1498534_i4) ) then
-     write(*,*) 'mo_mcmc: mcmc_stddev o.k.'
+     write(*,*) 'mo_mcmc: mcmc_stddev ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_mcmc: mcmc_stddev failed '
+     write(*,*) 'mo_mcmc: mcmc_stddev ', color('failed', c_red)
   end if
 
   ! clean-up

@@ -2,6 +2,7 @@ PROGRAM main
 
   USE mo_kind,           ONLY: i4, i8, dp, sp
   USE mo_utils,          ONLY: ne
+  use mo_ansi_colors, only: color, c_red, c_green
   USE mo_linear_algebra, ONLY: diag, min_diag, banded, inverse, solve_linear_equations, solve_linear_equations_svd, &
                                solve_linear_equations_band
 
@@ -81,7 +82,7 @@ PROGRAM main
   end do
 
   allgood = allgood .and. isgood
-  if (.not. isgood) write(*,*) 'mo_linear_algebra diag failed!'
+  if (.not. isgood) write(*,*) 'mo_linear_algebra diag ', color('failed!', c_red)
 
   !min_diag
   isgood = .true.
@@ -114,7 +115,7 @@ PROGRAM main
   dsat = diag(sat)
 
   allgood = allgood .and. isgood
-  if (.not. isgood) write(*,*) 'mo_linear_algebra min_diag failed!'
+  if (.not. isgood) write(*,*) 'mo_linear_algebra min_diag ', color('failed!', c_red)
 
   !banded
   isgood = .true.
@@ -132,7 +133,7 @@ PROGRAM main
  end do
 
   allgood = allgood .and. isgood
-  if (.not. isgood) write(*,*) 'mo_linear_algebra banded failed!'
+  if (.not. isgood) write(*,*) 'mo_linear_algebra banded ', color('failed!', c_red)
 
   ! inverse
   isgood = .true.
@@ -156,7 +157,7 @@ PROGRAM main
   ! enddo
 
   allgood = allgood .and. isgood
-  if (.not. isgood) write(*,*) 'mo_linear_algebra inverse failed!'
+  if (.not. isgood) write(*,*) 'mo_linear_algebra inverse ', color('failed!', c_red)
 
   ! linear eq with LU decomposition
   isgood = .true.
@@ -177,7 +178,7 @@ PROGRAM main
   ! print*, tbsat
 
   allgood = allgood .and. isgood
-  if (.not. isgood) write(*,*) 'mo_linear_algebra solve_linear_equations failed!'
+  if (.not. isgood) write(*,*) 'mo_linear_algebra solve_linear_equations ', color('failed!', c_red)
 
   ! linear eq with SVD
   isgood = .true.
@@ -196,7 +197,7 @@ PROGRAM main
   ! print*, tbsat
 
   allgood = allgood .and. isgood
-  if (.not. isgood) write(*,*) 'mo_linear_algebra solve_linear_equations_svd failed!'
+  if (.not. isgood) write(*,*) 'mo_linear_algebra solve_linear_equations_svd ', color('failed!', c_red)
 
   ! linear eq with banded
   isgood = .true.
@@ -220,13 +221,13 @@ PROGRAM main
   if (sum(matmul(sat2,xsat)-bsat) > (real(size(sat2,1),sp)**2*epsilon(1.0_sp))*100._sp) isgood = .false.
 
   allgood = allgood .and. isgood
-  if (.not. isgood) write(*,*) 'mo_linear_algebra solve_linear_equations_band failed!'
+  if (.not. isgood) write(*,*) 'mo_linear_algebra solve_linear_equations_band ', color('failed!', c_red)
 
 
   if (allgood) then
-     write(*,*) 'mo_linear_algebra o.k.'
+     write(*,*) 'mo_linear_algebra ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_linear_algebra failed!'
+     write(*,*) 'mo_linear_algebra ', color('failed!', c_red)
   endif
 
 END PROGRAM main

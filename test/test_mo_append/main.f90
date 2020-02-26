@@ -1,6 +1,7 @@
 PROGRAM append_test
 
 use mo_kind,   only: i4
+use mo_ansi_colors, only: color, c_red, c_green
 #ifndef ABSOFT
 use mo_append, only: append, paste
 
@@ -221,9 +222,9 @@ deallocate(matrix1_c, matrix2_c, matrix3_c, matrix4_c)
 #endif
 
 if (isgood) then
-   write(*,*) 'mo_append o.k.'
+   write(*,*) 'mo_append ', color('o.k.', c_green)
 else
-   write(*,*) 'mo_append failed!'
+   write(*,*) 'mo_append ', color('failed!', c_red)
 endif
 
 END PROGRAM append_test

@@ -2,6 +2,7 @@ PROGRAM main
   
   USE mo_kind,    ONLY: dp
   USE mo_boxcox,  ONLY: boxcox, invboxcox, get_boxcox
+  use mo_ansi_colors, only: color, c_red, c_green
 
   IMPLICIT NONE
   
@@ -30,9 +31,9 @@ PROGRAM main
   if (any(abs(dx-dyx) > 1000._dp*epsilon(1.0_dp))) isgood = .False.
   
   if (isgood) then
-     write(*,*) 'mo_boxcox double precision o.k.'
+     write(*,*) 'mo_boxcox double precision ', color('o.k.', c_green)
   else
-     write(*,*) 'mo_boxcox double precision failed!'
+     write(*,*) 'mo_boxcox double precision ', color('failed!', c_red)
   endif
 
   ! Single precision

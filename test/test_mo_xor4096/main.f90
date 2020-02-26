@@ -7,6 +7,7 @@
 program RNG
 
     use mo_kind,  only: i4, i8, SP, DP
+    use mo_ansi_colors, only: color, c_red, c_green
     use mo_xor4096, only: xor4096, xor4096g, n_save_state
 
     implicit none
@@ -48,13 +49,13 @@ program RNG
     ISeedSP_D0 = 3_i4
     allocate (CheckISP_D0(5))
     CheckISP_D0 = (/-1381736336,1670483215,-70622511,1980498182,-909439004/)
-    CheckString = 'mo_xor4096: Uniform Single Integer (1 stream) o.k.'
+    CheckString = 'mo_xor4096: Uniform Single Integer (1 stream) '//color('o.k.', c_green)
     do i=1,5
         call xor4096(ISeedSP_D0, SingleIntegerRN_D0)
         if (SingleIntegerRN_D0 .eq. CheckISP_D0(i)) then
             CheckStringShort = 'ok'
         else
-            CheckString = 'mo_xor4096: Uniform Single Integer (1 stream) failed'
+            CheckString = 'mo_xor4096: Uniform Single Integer (1 stream)'//color('failed', c_red)
             CheckStringShort = 'fail'
         end if
         print '(A8,I6,A4,I12,A4,A10)', 'xor4096(',i,') = ',SingleIntegerRN_D0,'    ',CheckStringShort
@@ -74,7 +75,7 @@ program RNG
     CheckISP_D1(3,:) = (/-70622511,692184865,1023508511/)
     CheckISP_D1(4,:) = (/1980498182,-964703497,290140738/)
     CheckISP_D1(5,:) = (/-909439004,94001477,-1671307991/)
-    CheckString = 'mo_xor4096: Uniform Single Integer (3 streams) o.k.'
+    CheckString = 'mo_xor4096: Uniform Single Integer (3 streams)'//color('o.k.', c_green)
     CheckStringShort = 'ok'
     do i=1,5
         call xor4096(ISeedSP,SingleIntegerRN)
@@ -83,7 +84,7 @@ program RNG
             if (SingleIntegerRN(j) .eq. CheckISP_D1(i,j)) then
                 CheckStringShort = 'ok'
             else
-                CheckString = 'mo_xor4096: Uniform Single Integer (3 streams) failed'
+                CheckString = 'mo_xor4096: Uniform Single Integer (3 streams)'//color('failed', c_red)
                 CheckStringShort = 'fail'
             end if
             print '(A11,I4,A4,I12,A4,A10)', '   stream #',j,'  = ',SingleIntegerRN(j),'    ',CheckStringShort
@@ -100,14 +101,14 @@ program RNG
     ISeedSP_D0 = 3_i4
     allocate (CheckISP_D0(6))
     CheckISP_D0 = (/-1381736336,1670483215,-70622511,1980498182,-909439004,-1632616910/)
-    CheckString = 'mo_xor4096: Uniform Single Integer (with optional) o.k.'
+    CheckString = 'mo_xor4096: Uniform Single Integer (with optional)'//color('o.k.', c_green)
     CheckStringShort = 'ok'
     do i=1,3
         call xor4096(ISeedSP_D0,SingleIntegerRN_D0,save_state=save_state_d0)
         if (SingleIntegerRN_D0 .eq. CheckISP_D0(i)) then
             CheckStringShort = 'ok'
         else
-            CheckString = 'mo_xor4096: Uniform Single Integer (1st stream) failed'
+            CheckString = 'mo_xor4096: Uniform Single Integer (1st stream)'//color('failed', c_red)
             CheckStringShort = 'fail'
         end if
         print '(A8,I6,A4,I12,A4,A10)', 'xor4096(',i,') = ',SingleIntegerRN_D0,'    ',CheckStringShort
@@ -119,7 +120,7 @@ program RNG
     if (SingleIntegerRN_D0 .eq. CheckISP_D0(6)) then
         CheckStringShort = 'ok'
     else
-        CheckString = 'mo_xor4096: Uniform Single Integer (2nd stream) failed'
+        CheckString = 'mo_xor4096: Uniform Single Integer (2nd stream)'//color('failed', c_red)
         CheckStringShort = 'fail'
     end if
     print '(A8,I6,A4,I12,A4,A10)', 'xor4096(',1,') = ',SingleIntegerRN_D0,'    ',CheckStringShort
@@ -131,7 +132,7 @@ program RNG
         if (SingleIntegerRN_D0 .eq. CheckISP_D0(i)) then
             CheckStringShort = 'ok'
         else
-            CheckString = 'mo_xor4096: Uniform Single Integer (restart 1st stream) failed'
+            CheckString = 'mo_xor4096: Uniform Single Integer (restart 1st stream)'//color('failed', c_red)
             CheckStringShort = 'fail'
         end if
         print '(A8,I6,A4,I12,A4,A10)', 'xor4096(',i,') = ',SingleIntegerRN_D0,'    ',CheckStringShort

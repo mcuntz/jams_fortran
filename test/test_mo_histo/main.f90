@@ -1,6 +1,7 @@
 PROGRAM histo_test
 
 use mo_kind, only: dp, i4
+use mo_ansi_colors, only: color, c_red, c_green
 #ifndef ABSOFT
 use mo_histo, only: histo
 
@@ -45,9 +46,9 @@ Has2Be_binx_dp  = (/2.717_dp, 5.750_dp, 8.783_dp/)
 Has2Be_bincount = (/4, 5, 1/)
 if ( all(bincount .eq. Has2Be_bincount) .and. &
      all(nint(binx_dp*1000.0_dp) .eq. nint(Has2Be_binx_dp*1000.0_dp))) then
-   print*, 'mo_histo: default o.k.'
+   print*, 'mo_histo: default ', color('o.k.', c_green)
 else
-   print*, 'failed '
+   print*, 'mo_histo: default ', color('failed', c_red)
 end if
 deallocate(Has2Be_bincount, Has2Be_binx_dp)
 
@@ -70,9 +71,9 @@ Has2Be_binx_dp  = (/1.850_dp, 3.150_dp, 4.450_dp, 5.750_dp, 7.050_dp,9.650_dp/)
 Has2Be_bincount = (/3,1,1,3,1,1/)
 if ( all(bincount .eq. Has2Be_bincount) .and. &
      all(nint(binx_dp*1000.0_dp) .eq. nint(Has2Be_binx_dp*1000.0_dp))) then
-   print*, 'mo_histo: fixed number of bins o.k.'
+   print*, 'mo_histo: fixed number of bins ', color('o.k.', c_green)
 else
-   print*, 'mo_histo: fixed number of bins failed '
+   print*, 'mo_histo: fixed number of bins ', color('failed', c_red)
 end if
 deallocate(Has2Be_bincount, Has2Be_binx_dp)
 
@@ -95,9 +96,9 @@ Has2Be_binx_dp  = (/1.950_dp, 3.450_dp, 4.950_dp, 6.450_dp, 7.950_dp,10.950_dp/)
 Has2Be_bincount = (/3,1,3,1,1,1/)
 if ( all(bincount .eq. Has2Be_bincount) .and. &
      all(nint(binx_dp*1000.0_dp) .eq. nint(Has2Be_binx_dp*1000.0_dp))) then
-   print*, 'mo_histo: fixed width of bins o.k.'
+   print*, 'mo_histo: fixed width of bins ', color('o.k.', c_green)
 else
-   print*, 'mo_histo: fixed width of bins failed '
+   print*, 'mo_histo: fixed width of bins ', color('failed', c_red)
 end if
 deallocate(Has2Be_bincount, Has2Be_binx_dp)
 
@@ -125,9 +126,9 @@ Has2Be_binx_dp  = (/2.475_dp, 5.025_dp/)
 Has2Be_bincount = (/3,2/)
 if ( all(bincount .eq. Has2Be_bincount) .and. &
      all(nint(binx_dp*1000.0_dp) .eq. nint(Has2Be_binx_dp*1000.0_dp))) then
-   print*, 'mo_histo: with mask o.k.'
+   print*, 'mo_histo: with mask ', color('o.k.', c_green)
 else
-   print*, 'mo_histo: with mask failed '
+   print*, 'mo_histo: with mask ', color('failed', c_red)
 end if
 deallocate(Has2Be_bincount, Has2Be_binx_dp)
 
@@ -175,10 +176,10 @@ Has2Be_bincount = (/3,2/)
 if ( all(bincount .eq. Has2Be_bincount) .and. &
      all(nint(binx_dp_2d*1000.0_dp) .eq. nint(Has2Be_binx_dp_2d*1000.0_dp))) then
 #endif
-   print*, 'mo_histo: with averaging (default) o.k.'
+   print*, 'mo_histo: with averaging (default) ', color('o.k.', c_green)
 #ifndef ABSOFT
 else
-   print*, 'mo_histo: with averaging (default) failed '
+   print*, 'mo_histo: with averaging (default) ', color('failed', c_red)
 end if
 deallocate(Has2Be_bincount, Has2Be_binx_dp_2d)
 
