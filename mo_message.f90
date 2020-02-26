@@ -132,7 +132,7 @@ contains
     integer(i4)          :: iout
     character(len=32000) :: out
     character(len=3)     :: iadv
-#ifdef GFORTRAN
+#ifdef __GFORTRAN__
     character(len=32000) :: nold
 #endif
 
@@ -147,7 +147,7 @@ contains
 
     out = ''
     ! start from back so that trim does not remove user desired blanks
-#ifdef GFORTRAN
+#ifdef __GFORTRAN__
     ! GFORTRAN has problems with concatenation operator //
     ! It is also weird in write:
     !    write(out,'(A,A)') t10, trim(out)

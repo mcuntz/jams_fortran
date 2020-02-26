@@ -1557,7 +1557,7 @@ CONTAINS
 
   ELEMENTAL PURE FUNCTION is_finite_dp(a)
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
   use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
 #endif
 
@@ -1566,7 +1566,7 @@ CONTAINS
     REAL(dp), INTENT(IN) :: a
     LOGICAL              :: is_finite_dp
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
     is_finite_dp = ieee_is_finite(a)
 #else
     is_finite_dp = (.not. ((a > huge(a)) .or. (a < -huge(a)))) .and. (.not. is_nan(a))
@@ -1576,7 +1576,7 @@ CONTAINS
 
   ELEMENTAL PURE FUNCTION is_finite_sp(a)
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
   use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
 #endif
 
@@ -1585,7 +1585,7 @@ CONTAINS
     REAL(sp), INTENT(IN) :: a
     LOGICAL              :: is_finite_sp
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
     is_finite_sp = ieee_is_finite(a)
 #else
     is_finite_sp = (.not. ((a > huge(a)) .or. (a < -huge(a)))) .and. (.not. is_nan(a))
@@ -1596,7 +1596,7 @@ CONTAINS
 
   ELEMENTAL PURE FUNCTION is_nan_dp(a)
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
   use, intrinsic :: ieee_arithmetic, only: isnan => ieee_is_nan
 #endif
 
@@ -1606,7 +1606,7 @@ CONTAINS
     LOGICAL              :: is_nan_dp
 
     ! isnan introduced in gfortran rev 4.2
-#ifdef GFORTRAN41
+#ifdef __GFORTRAN41__
     is_nan_dp = a /= a
 #else
     is_nan_dp = isnan(a)
@@ -1616,7 +1616,7 @@ CONTAINS
 
   ELEMENTAL PURE FUNCTION is_nan_sp(a)
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
   use, intrinsic :: ieee_arithmetic, only: isnan => ieee_is_nan
 #endif
 
@@ -1626,7 +1626,7 @@ CONTAINS
     LOGICAL              :: is_nan_sp
 
     ! isnan introduced in gfortran rev 4.2
-#ifdef GFORTRAN41
+#ifdef __GFORTRAN41__
     is_nan_sp = a /= a
 #else
     is_nan_sp = isnan(a)
@@ -1637,7 +1637,7 @@ CONTAINS
 
   ELEMENTAL PURE FUNCTION is_normal_dp(a)
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
   use, intrinsic :: ieee_arithmetic, only: ieee_is_normal
 #endif
 
@@ -1646,7 +1646,7 @@ CONTAINS
     REAL(dp), INTENT(IN) :: a
     LOGICAL              :: is_normal_dp
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
     is_normal_dp = ieee_is_normal(a)
 #else
     is_normal_dp = is_finite(a)
@@ -1656,7 +1656,7 @@ CONTAINS
 
   ELEMENTAL PURE FUNCTION is_normal_sp(a)
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
   use, intrinsic :: ieee_arithmetic, only: ieee_is_normal
 #endif
 
@@ -1665,7 +1665,7 @@ CONTAINS
     REAL(sp), INTENT(IN) :: a
     LOGICAL              :: is_normal_sp
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
     is_normal_sp = ieee_is_normal(a)
 #else
     is_normal_sp = is_finite(a)
@@ -2173,7 +2173,7 @@ CONTAINS
 
   elemental pure function special_value_dp(x, ieee)
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
     use, intrinsic :: ieee_arithmetic, only: ieee_value, &
          IEEE_SIGNALING_NAN, &
          IEEE_QUIET_NAN, &
@@ -2195,12 +2195,12 @@ CONTAINS
 
     ! local
     character(len=len(ieee)) :: ieee_up
-#ifdef GFORTRAN
+#ifdef __GFORTRAN__
     real(dp) :: tmp
 #endif
 
     ieee_up = itoupper(ieee)
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
     select case(trim(ieee_up))
     case('IEEE_SIGNALING_NAN')
        special_value_dp = ieee_value(x, IEEE_SIGNALING_NAN)
@@ -2260,7 +2260,7 @@ CONTAINS
 
   elemental pure function special_value_sp(x, ieee)
 
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
     use, intrinsic :: ieee_arithmetic, only: ieee_value, &
          IEEE_SIGNALING_NAN, &
          IEEE_QUIET_NAN, &
@@ -2282,12 +2282,12 @@ CONTAINS
 
     ! local
     character(len=len(ieee)) :: ieee_up
-#ifdef GFORTRAN
+#ifdef __GFORTRAN__
     real(sp) :: tmp
 #endif
 
     ieee_up = itoupper(ieee)
-#ifndef GFORTRAN
+#ifndef __GFORTRAN__
     select case(trim(ieee_up))
     case('IEEE_SIGNALING_NAN')
        special_value_sp = ieee_value(x, IEEE_SIGNALING_NAN)

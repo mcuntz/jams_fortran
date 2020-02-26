@@ -356,13 +356,13 @@ CONTAINS
     real(dp)                                         :: alpha       ! parameter for reflection  of points in complex
     real(dp)                                         :: beta        ! parameter for contraction of points in complex
     logical                                          :: itmp_file   ! if temporal results wanted
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     character(len=299)                               :: istmp_file  ! local copy of file for temporal results output
 #else
     character(len=1024)                              :: istmp_file  ! local copy of file for temporal results output
 #endif
     logical                                          :: ipopul_file  ! if temporal population wanted
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     character(len=299)                               :: ispopul_file ! local copy of file for temporal population output
 #else
     character(len=1024)                              :: ispopul_file ! local copy of file for temporal population output

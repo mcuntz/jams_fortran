@@ -3,7 +3,7 @@ PROGRAM main
   USE mo_kind,      ONLY: i4, sp, dp
   use mo_ansi_colors, only: color, c_red, c_green
   use mo_timer,     only: timers_init, timer_start, timer_stop, timer_print, timer_clear
-#ifndef pgiFortran
+#ifndef __pgiFortran__
   ! PGI does not like the same name in two used modules such as 'sort' in all sorting modules
   USE mo_sort,      ONLY: sort, sort_index
   USE mo_orderpack, ONLY: mrgrnk, refsor
@@ -34,7 +34,7 @@ PROGRAM main
 
   isgood = .true.
   Write(*,*) ''
-#ifndef pgiFortran
+#ifndef __pgiFortran__
   Write(*,*) 'Numerical Recipes'
   call timer_start(1)
   do i=1, nloop
@@ -243,7 +243,7 @@ PROGRAM main
 
   isgood = .true.
   Write(*,*) ''
-#ifndef pgiFortran
+#ifndef __pgiFortran__
   Write(*,*) 'Numerical Recipes'
   call timer_start(1)
   do i=1, nloop
@@ -447,7 +447,7 @@ PROGRAM main
 
   isgood = .true.
   Write(*,*) ''
-#ifndef pgiFortran
+#ifndef __pgiFortran__
   Write(*,*) 'Numerical Recipes'
   call timer_start(1)
   do i=1, nloop

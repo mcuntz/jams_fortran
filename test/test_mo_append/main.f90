@@ -2,7 +2,7 @@ PROGRAM append_test
 
 use mo_kind,   only: i4
 use mo_ansi_colors, only: color, c_red, c_green
-#ifndef ABSOFT
+#ifndef __ABSOFT__
 use mo_append, only: append, paste
 
 implicit none
@@ -21,7 +21,7 @@ logical :: isgood
 
 isgood = .true.
 
-#ifndef ABSOFT
+#ifndef __ABSOFT__
 ! ---------------------------------------------------------------------------
 !                           TEST APPEND
 ! ---------------------------------------------------------------------------

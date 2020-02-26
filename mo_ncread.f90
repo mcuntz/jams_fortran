@@ -37,7 +37,7 @@ module mo_NcRead
   implicit none
 
   public :: Get_NcDim    ! get the dimensions of a Variable
-#ifndef ABSOFT
+#ifndef __ABSOFT__
   public :: Get_NcDimAtt ! get the attributes of the dimensions
   public :: Get_NcVarAtt ! get attributes of a variable
 #endif
@@ -187,7 +187,7 @@ contains
     !
   end function Get_NcDim
 
-#ifndef ABSOFT
+#ifndef __ABSOFT__
   ! ------------------------------------------------------------------
 
   !     NAME

@@ -2,7 +2,7 @@ PROGRAM histo_test
 
 use mo_kind, only: dp, i4
 use mo_ansi_colors, only: color, c_red, c_green
-#ifndef ABSOFT
+#ifndef __ABSOFT__
 use mo_histo, only: histo
 
 implicit none
@@ -177,7 +177,7 @@ if ( all(bincount .eq. Has2Be_bincount) .and. &
      all(nint(binx_dp_2d*1000.0_dp) .eq. nint(Has2Be_binx_dp_2d*1000.0_dp))) then
 #endif
    print*, 'mo_histo: with averaging (default) ', color('o.k.', c_green)
-#ifndef ABSOFT
+#ifndef __ABSOFT__
 else
    print*, 'mo_histo: with averaging (default) ', color('failed', c_red)
 end if

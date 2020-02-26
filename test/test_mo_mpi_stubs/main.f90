@@ -49,8 +49,8 @@ program main
   use mo_kind, only: i4, dp
   use mo_ansi_colors, only: color, c_red, c_green
 
-#ifdef MPI
-#ifdef NAG
+#ifdef __MPI__
+#ifdef __NAG__
   implicit none
 
   include "mpif.h"
@@ -114,7 +114,7 @@ program main
 !  and broadcasts them.
 !
   if ( process_rank == master ) then
-#ifdef MPI
+#ifdef __MPI__
      write ( *, '(a)' ) 'Using mpi'
 #else
      write ( *, '(a)' ) 'Using mo_mpi_stubs'

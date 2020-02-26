@@ -1,5 +1,5 @@
 #include "qhull_a.h"
-#ifdef CFORTRAN
+#ifdef __CFORTRAN__
 #include "cfortran.h"
 #endif
 
@@ -33,6 +33,6 @@ int qhull_c(char *flags, char *ofile, int dim, int numpoints, double *data) {
 
   return exitcode;
 }
-#ifdef CFORTRAN
+#ifdef __CFORTRAN__
 FCALLSCFUN5(INT, qhull_c, QHULL_F, qhull_f, STRING, STRING, INT, INT, PDOUBLE)
 #endif

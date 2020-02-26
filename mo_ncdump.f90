@@ -35,7 +35,7 @@ module mo_ncdump
        NF90_MAX_NAME, NF90_WRITE, nf90_inq_varid, nf90_inquire_variable, &
        nf90_inquire_dimension, nf90_open, NF90_64BIT_OFFSET, &
        nf90_inq_varid
-#ifndef NETCDF3
+#ifndef __NETCDF3__
   use netcdf, only: NF90_NETCDF4
 #endif
 
@@ -101,7 +101,7 @@ module mo_ncdump
 
   private
 
-#ifdef NETCDF3
+#ifdef __NETCDF3__
   INTEGER, PARAMETER :: NF90_NETCDF4 = NF90_64BIT_OFFSET ! to be available for compilation
 #endif
 
@@ -153,7 +153,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -233,7 +233,7 @@ contains
           chunksizes(1:ndim) = dims(1:ndim)
           chunksizes(ndim+1) = 1
           call check(nf90_def_var(ncid, 'var', NF90_FLOAT, dimid, varid(ndim+2) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -309,7 +309,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -389,7 +389,7 @@ contains
           chunksizes(1:ndim) = dims(1:ndim)
           chunksizes(ndim+1) = 1
           call check(nf90_def_var(ncid, 'var', NF90_FLOAT, dimid, varid(ndim+2) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -465,7 +465,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -544,7 +544,7 @@ contains
           chunksizes(1:ndim-1) = dims(1:ndim-1)
           chunksizes(ndim)     = 1
           call check(nf90_def_var(ncid, 'var', NF90_FLOAT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -620,7 +620,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -699,7 +699,7 @@ contains
           chunksizes(1:ndim-1) = dims(1:ndim-1)
           chunksizes(ndim)     = 1
           call check(nf90_def_var(ncid, 'var', NF90_FLOAT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -775,7 +775,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -854,7 +854,7 @@ contains
           chunksizes(1:ndim-1) = dims(1:ndim-1)
           chunksizes(ndim)     = 1
           call check(nf90_def_var(ncid, 'var', NF90_FLOAT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -930,7 +930,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -1010,7 +1010,7 @@ contains
           chunksizes(1:ndim) = dims(1:ndim)
           chunksizes(ndim+1) = 1
           call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+2) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -1086,7 +1086,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -1166,7 +1166,7 @@ contains
           chunksizes(1:ndim) = dims(1:ndim)
           chunksizes(ndim+1) = 1
           call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+2) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -1242,7 +1242,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -1322,7 +1322,7 @@ contains
           chunksizes(1:ndim-1) = dims(1:ndim-1)
           chunksizes(ndim)     = 1
           call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -1398,7 +1398,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -1477,7 +1477,7 @@ contains
           chunksizes(1:ndim-1) = dims(1:ndim-1)
           chunksizes(ndim)     = 1
           call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -1553,7 +1553,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -1632,7 +1632,7 @@ contains
           chunksizes(1:ndim-1) = dims(1:ndim-1)
           chunksizes(ndim)     = 1
           call check(nf90_def_var(ncid, 'var', NF90_DOUBLE, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -1708,7 +1708,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -1788,7 +1788,7 @@ contains
           chunksizes(1:ndim) = dims(1:ndim)
           chunksizes(ndim+1) = 1
           call check(nf90_def_var(ncid, 'var', NF90_INT, dimid, varid(ndim+2) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -1864,7 +1864,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -1944,7 +1944,7 @@ contains
           chunksizes(1:ndim) = dims(1:ndim)
           chunksizes(ndim+1) = 1
           call check(nf90_def_var(ncid, 'var', NF90_INT, dimid, varid(ndim+2) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -2020,7 +2020,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -2099,7 +2099,7 @@ contains
           chunksizes(1:ndim-1) = dims(1:ndim-1)
           chunksizes(ndim)     = 1
           call check(nf90_def_var(ncid, 'var', NF90_INT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -2175,7 +2175,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -2254,7 +2254,7 @@ contains
           chunksizes(1:ndim-1) = dims(1:ndim-1)
           chunksizes(ndim)     = 1
           call check(nf90_def_var(ncid, 'var', NF90_INT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -2330,7 +2330,7 @@ contains
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
     inetcdf4 = .false.
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     if (present(netcdf4)) inetcdf4 = netcdf4
 #endif
     deflate = 1
@@ -2409,7 +2409,7 @@ contains
           chunksizes(1:ndim-1) = dims(1:ndim-1)
           chunksizes(ndim)     = 1
           call check(nf90_def_var(ncid, 'var', NF90_INT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes, shuffle=.true., deflate_level=deflate))
 #else
           ))

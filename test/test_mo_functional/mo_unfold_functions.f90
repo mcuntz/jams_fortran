@@ -1,7 +1,7 @@
 module mo_unfold_functions
 
   use mo_kind, only: int8=>i1, int16=>i2, int32=>i4, int64=>i8, real32=>sp, real64=>dp
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
   use mo_kind, only: real128=>dp
 #else
   use mo_kind, only: real128=>qp
@@ -50,7 +50,7 @@ contains
   end function addone_r8
 
   pure real(kind=real128) function addone_r16(x) result(res)
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
     use mo_kind, only: real128=>dp
 #else
     use mo_kind, only: real128=>qp
@@ -72,7 +72,7 @@ contains
   end function addone_c8
 
   pure complex(kind=real128) function addone_c16(x) result(res)
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
     use mo_kind, only: real128=>dp
 #else
     use mo_kind, only: real128=>qp

@@ -46,7 +46,7 @@ MODULE mo_append
 
   IMPLICIT NONE
 
-#ifndef ABSOFT
+#ifndef __ABSOFT__
   PUBLIC :: append    ! Returns input1 appended (on rows) with input2.  (like Unix cat)
   PUBLIC :: paste     ! Returns input1 pasted (on columns) with input2. (like Unix paste)
 

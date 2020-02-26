@@ -63,7 +63,7 @@ module mo_netcdf
        NF90_BYTE, NF90_SHORT, NF90_INT, NF90_FLOAT, NF90_DOUBLE,      &
        NF90_FILL_BYTE, NF90_FILL_SHORT, NF90_FILL_INT, NF90_FILL_FLOAT, NF90_FILL_DOUBLE,  &
        NF90_NOERR, NF90_UNLIMITED, NF90_GLOBAL, nf90_redef, nf90_enddef
-#ifndef NETCDF3
+#ifndef __NETCDF3__
   use netcdf, only: NF90_NETCDF4, nf90_inq_varids, nf90_def_var_fill
 #else
   use netcdf, only: NF90_64BIT_OFFSET
@@ -1373,7 +1373,7 @@ contains
        if (present(cmode)) then
           status = nf90_create(trim(fname), cmode, self%id)
        else
-#ifndef NETCDF3
+#ifndef __NETCDF3__
           status = nf90_create(trim(fname), NF90_NETCDF4, self%id)
 #else
           status = nf90_create(trim(fname), NF90_64BIT_OFFSET, self%id)
@@ -1459,7 +1459,7 @@ contains
 
     allocate(getVariableIds(self%getNoVariables()))
 
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     call check(nf90_inq_varids(self%id, tmp, getVariableIds), "Failed to inquire variable ids")
 #else
     forall(tmp=1:self%getNoVariables()) getVariableIds(tmp) = tmp
@@ -1677,7 +1677,7 @@ contains
 
 
   function setVariableWithDimIds(self, name, dtype, dimensions &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
 ,        contiguous, &
        chunksizes, deflate_level, shuffle, fletcher32, endianness, &
        cache_size, cache_nelems, cache_preemption &
@@ -1687,7 +1687,7 @@ contains
     character(*),     intent(in)           :: name
     character(*),     intent(in)           :: dtype
     integer(i4),      intent(in)           :: dimensions(:)
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     logical,          intent(in), optional :: contiguous,shuffle, fletcher32
     integer(i4),      intent(in), optional :: endianness,deflate_level,cache_size, &
          cache_nelems, cache_preemption, chunksizes(:)
@@ -1696,7 +1696,7 @@ contains
     integer(i4)                            :: varid
 
     call check(nf90_def_var(self%id, name, getDtypeFromString(dtype), dimensions, varid &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
          , contiguous, &
          chunksizes, deflate_level, shuffle, fletcher32, endianness, &
          cache_size, cache_nelems, cache_preemption &
@@ -1708,7 +1708,7 @@ contains
 
 
   function setVariableWithDimNames(self, name, dtype, dimensions &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
        , contiguous, &
        chunksizes, deflate_level, shuffle, fletcher32, endianness, &
        cache_size, cache_nelems, cache_preemption &
@@ -1719,7 +1719,7 @@ contains
     character(*),     intent(in)              :: name
     character(*),     intent(in)              :: dtype
     character(*),     intent(in)              :: dimensions(:)
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     logical,          intent(in), optional    :: contiguous,shuffle, fletcher32
     integer(i4),      intent(in), optional    :: endianness,deflate_level,cache_size, &
          cache_nelems, cache_preemption, chunksizes(:)
@@ -1734,7 +1734,7 @@ contains
     end do
 
     setVariableWithDimNames = setVariableWithDimIds(self, name, dtype, dimids &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
          , contiguous, &
          chunksizes, deflate_level, shuffle, fletcher32, endianness, &
          cache_size, cache_nelems, cache_preemption &
@@ -1745,7 +1745,7 @@ contains
 
 
   function setVariableWithDimTypes(self, name, dtype, dimensions &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
        , contiguous, &
        chunksizes, deflate_level, shuffle, fletcher32, endianness, &
        cache_size, cache_nelems, cache_preemption &
@@ -1755,7 +1755,7 @@ contains
     character(*),      intent(in)              :: name
     character(*),      intent(in)              :: dtype
     type(NcDimension), intent(in)              :: dimensions(:)
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     logical,           intent(in), optional    :: contiguous,shuffle, fletcher32
     integer(i4),       intent(in), optional    :: endianness,deflate_level,cache_size, &
          cache_nelems, cache_preemption, chunksizes(:)
@@ -1770,7 +1770,7 @@ contains
     end do
 
     setVariableWithDimTypes = setVariableWithDimIds(self, name, dtype, dimids &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
          , contiguous, &
          chunksizes, deflate_level, shuffle, fletcher32, endianness, &
          cache_size, cache_nelems, cache_preemption &
@@ -2292,7 +2292,7 @@ contains
     integer(i1),       intent(in)  :: fvalue
 
     if (.not. self%hasAttribute("_FillValue")) then
-#ifndef NETCDF3
+#ifndef __NETCDF3__
        call check(nf90_def_var_fill(self%parent%id, self%id, 0, fvalue), &
             "Failed to set _FillValue on variable: " // trim(self%getName()))
 #else
@@ -2308,7 +2308,7 @@ contains
     integer(i2),       intent(in)  :: fvalue
 
     if (.not. self%hasAttribute("_FillValue")) then
-#ifndef NETCDF3
+#ifndef __NETCDF3__
        call check(nf90_def_var_fill(self%parent%id, self%id, 0, fvalue), &
             "Failed to set _FillValue on variable: " // trim(self%getName()))
 #else
@@ -2324,7 +2324,7 @@ contains
     integer(i4),       intent(in)  :: fvalue
 
     if (.not. self%hasAttribute("_FillValue")) then
-#ifndef NETCDF3
+#ifndef __NETCDF3__
        call check(nf90_def_var_fill(self%parent%id, self%id, 0, fvalue), &
             "Failed to set _FillValue on variable: " // trim(self%getName()))
 #else
@@ -2340,7 +2340,7 @@ contains
     real(sp),          intent(in)  :: fvalue
 
     if (.not. self%hasAttribute("_FillValue")) then
-#ifndef NETCDF3
+#ifndef __NETCDF3__
        call check(nf90_def_var_fill(self%parent%id, self%id, 0, fvalue), &
             "Failed to set _FillValue on variable: " // trim(self%getName()))
 #else
@@ -2356,7 +2356,7 @@ contains
     real(dp),          intent(in)  :: fvalue
 
     if (.not. self%hasAttribute("_FillValue")) then
-#ifndef NETCDF3
+#ifndef __NETCDF3__
        call check(nf90_def_var_fill(self%parent%id, self%id, 0, fvalue), &
             "Failed to set _FillValue on variable: " // trim(self%getName()))
 #else

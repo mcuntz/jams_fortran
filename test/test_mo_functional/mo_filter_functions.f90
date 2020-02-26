@@ -1,7 +1,7 @@
 module mo_filter_functions
 
   use mo_kind, only: int8=>i1, int16=>i2, int32=>i4, int64=>i8, real32=>sp, real64=>dp
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
   use mo_kind, only: real128=>dp
 #else
   use mo_kind, only: real128=>qp
@@ -50,7 +50,7 @@ contains
   end function gt3lt5_r8
 
   pure logical function gt3lt5_r16(x) result(res)
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
     use mo_kind, only: real128=>dp
 #else
     use mo_kind, only: real128=>qp
@@ -72,7 +72,7 @@ contains
   end function gt3lt5_c8
 
   pure logical function gt3lt5_c16(x) result(res)
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
     use mo_kind, only: real128=>dp
 #else
     use mo_kind, only: real128=>qp

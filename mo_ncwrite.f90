@@ -35,7 +35,7 @@ module mo_ncwrite
        nf90_enddef, nf90_put_var, NF90_FLOAT, NF90_DOUBLE, NF90_BYTE, &
        NF90_close, nf90_noerr, nf90_strerror, NF90_CLOBBER, &
        NF90_64BIT_OFFSET
-#ifndef NETCDF3
+#ifndef __NETCDF3__
   use netcdf, only: NF90_NETCDF4
 #endif
 
@@ -118,7 +118,7 @@ module mo_ncwrite
 
   private
 
-#ifdef NETCDF3
+#ifdef __NETCDF3__
   INTEGER, PARAMETER :: NF90_NETCDF4 = NF90_64BIT_OFFSET ! to be available for compilation
 #endif
 
@@ -235,7 +235,7 @@ contains
 
     LargeFile = .false.
     if (present(lfs)) LargeFile = lfs
-#ifndef NETCDF3
+#ifndef __NETCDF3__
     inetcdf4 = .true.
     if (present(netcdf4)) inetcdf4 = netcdf4
 #else
@@ -288,7 +288,7 @@ contains
           chunksizes(1:V(i)%nDims) = Dnc(V(i)%dimTypes(1:V(i)%nDims))%len
           chunksizes(V(i)%nDims)   = 1
           call check(nf90_def_var(ncId, V(i)%name, V(i)%xtype, V(i)%dimids(1:V(i)%nDims), V(i)%varId &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
                , chunksizes=chunksizes(1:V(i)%nDims), shuffle=.true., deflate_level=deflate))
 #else
           ))

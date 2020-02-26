@@ -5,14 +5,14 @@ program main
   use mo_string_utils, only: tolower, toupper, separator, num2str, nonull, compress
   use mo_string_utils, only: startsWith, equalStrings, splitString, countsubstring
   use mo_string_utils, only: count_split, split
-#ifndef ABSOFT
+#ifndef __ABSOFT__
   use mo_string_utils, only: divide_string
 #endif
 
   implicit none
   
   character(len=100)                        :: sout, sundef
-#ifndef ABSOFT
+#ifndef __ABSOFT__
   character(256), dimension(:), allocatable :: strArr
 #endif
 
@@ -136,7 +136,7 @@ program main
   isgood = isgood .and. (strArr(4) .EQ. '')
   if (.not. isgood) write(*,*) 'mo_string_utils split 8 ', color('failed', c_red)
 
-#ifndef ABSOFT
+#ifndef __ABSOFT__
   call DIVIDE_STRING('I want to test this routine!', ' ', strArr)
   isgood = isgood .and. (strArr(1) .EQ. 'I')
   isgood = isgood .and. (strArr(2) .EQ. 'want')

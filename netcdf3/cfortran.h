@@ -141,7 +141,7 @@ only C calling FORTRAN subroutines will work using K&R style.*/
 
 /* 11/29/2003 (KMCCARTY): add *INTEL_COMPILER symbols here */
 /* 04/05/2006 (KMCCARTY): add gFortran symbol here */
-#if defined(CLIPPERFortran) || defined(pgiFortran) || defined(__INTEL_COMPILER) || defined(INTEL_COMPILER) || defined(gFortran)
+#if defined(CLIPPERFortran) || defined(pgiFortran) || defined(__INTEL_COMPILER) || defined(INTEL_COMPILER) || defined(gFortran) || defined(__gFortran__) || defined(__GFORTRAN__) || defined(__pgiFortran__) || defined(__PGIFORTAN__) || defined(__INTEL__)
 #define f2cFortran
 #endif
 

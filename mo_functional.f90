@@ -24,7 +24,7 @@
 module mo_functional
 
   use mo_kind, only: i1, i2, i4, i8, r4=>sp, r8=>dp
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
   use mo_kind, only: r16=>dp
 #else
   use mo_kind, only: r16=>qp
@@ -316,12 +316,12 @@ module mo_functional
 
   interface arange
      module procedure arange_i1, arange_i2, arange_i4, arange_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           arange_r4, arange_r8, &
 #else
           arange_r4, arange_r8, arange_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           arange_c4, arange_c8
 #else
           arange_c4, arange_c8, arange_c16
@@ -330,12 +330,12 @@ module mo_functional
 
   interface complement
      module procedure complement_i1, complement_i2, complement_i4, complement_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           complement_r4, complement_r8, &
 #else
           complement_r4, complement_r8, complement_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           complement_c4, complement_c8
 #else
           complement_c4, complement_c8, complement_c16
@@ -344,12 +344,12 @@ module mo_functional
 
   interface operator(.complement.)
      module procedure complement_i1, complement_i2, complement_i4, complement_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           complement_r4, complement_r8, &
 #else
           complement_r4, complement_r8, complement_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           complement_c4, complement_c8
 #else
           complement_c4, complement_c8, complement_c16
@@ -358,12 +358,12 @@ module mo_functional
 
   interface empty
      module procedure empty_i1, empty_i2, empty_i4, empty_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           empty_r4, empty_r8, &
 #else
           empty_r4, empty_r8, empty_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           empty_c4, empty_c8
 #else
           empty_c4, empty_c8, empty_c16
@@ -372,12 +372,12 @@ module mo_functional
 
   interface filter
      module procedure filter_i1, filter_i2, filter_i4, filter_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           filter_r4, filter_r8, &
 #else
           filter_r4, filter_r8, filter_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           filter_c4, filter_c8
 #else
           filter_c4, filter_c8, filter_c16
@@ -386,12 +386,12 @@ module mo_functional
 
   interface foldl
      module procedure foldl_i1, foldl_i2, foldl_i4, foldl_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           foldl_r4, foldl_r8, &
 #else
           foldl_r4, foldl_r8, foldl_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           foldl_c4, foldl_c8
 #else
           foldl_c4, foldl_c8, foldl_c16
@@ -400,12 +400,12 @@ module mo_functional
 
   interface foldr
      module procedure foldr_i1, foldr_i2, foldr_i4, foldr_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           foldr_r4, foldr_r8, &
 #else
           foldr_r4, foldr_r8, foldr_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           foldr_c4, foldr_c8
 #else
           foldr_c4, foldr_c8, foldr_c16
@@ -414,12 +414,12 @@ module mo_functional
 
   interface foldt
      module procedure foldt_i1, foldt_i2, foldt_i4, foldt_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           foldt_r4, foldt_r8, &
 #else
           foldt_r4, foldt_r8, foldt_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           foldt_c4, foldt_c8
 #else
           foldt_c4, foldt_c8, foldt_c16
@@ -428,12 +428,12 @@ module mo_functional
 
   interface head
      module procedure head_i1, head_i2, head_i4, head_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           head_r4, head_r8, &
 #else
           head_r4, head_r8, head_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           head_c4, head_c8
 #else
           head_c4, head_c8, head_c16
@@ -442,12 +442,12 @@ module mo_functional
 
   interface operator(.head.)
      module procedure head_i1, head_i2, head_i4, head_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           head_r4, head_r8, &
 #else
           head_r4, head_r8, head_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           head_c4, head_c8
 #else
           head_c4, head_c8, head_c16
@@ -456,12 +456,12 @@ module mo_functional
 
   interface init
      module procedure init_i1, init_i2, init_i4, init_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           init_r4, init_r8, &
 #else
           init_r4, init_r8, init_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           init_c4, init_c8
 #else
           init_c4, init_c8, init_c16
@@ -470,12 +470,12 @@ module mo_functional
 
   interface operator(.init.)
      module procedure init_i1, init_i2, init_i4, init_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           init_r4, init_r8, &
 #else
           init_r4, init_r8, init_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           init_c4, init_c8
 #else
           init_c4, init_c8, init_c16
@@ -484,12 +484,12 @@ module mo_functional
 
   interface insert
      module procedure insert_i1, insert_i2, insert_i4, insert_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           insert_r4, insert_r8, &
 #else
           insert_r4, insert_r8, insert_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           insert_c4, insert_c8
 #else
           insert_c4, insert_c8, insert_c16
@@ -498,12 +498,12 @@ module mo_functional
 
   interface intersection
      module procedure intersection_i1, intersection_i2, intersection_i4, intersection_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           intersection_r4, intersection_r8, &
 #else
           intersection_r4, intersection_r8, intersection_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           intersection_c4, intersection_c8
 #else
           intersection_c4, intersection_c8, intersection_c16
@@ -512,12 +512,12 @@ module mo_functional
 
   interface operator(.intersection.)
      module procedure intersection_i1, intersection_i2, intersection_i4, intersection_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           intersection_r4, intersection_r8, &
 #else
           intersection_r4, intersection_r8, intersection_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           intersection_c4, intersection_c8
 #else
           intersection_c4, intersection_c8, intersection_c16
@@ -526,12 +526,12 @@ module mo_functional
 
   interface iterfold
      module procedure iterfold_i1, iterfold_i2, iterfold_i4, iterfold_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           iterfold_r4, iterfold_r8, &
 #else
           iterfold_r4, iterfold_r8, iterfold_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           iterfold_c4, iterfold_c8
 #else
           iterfold_c4, iterfold_c8, iterfold_c16
@@ -540,12 +540,12 @@ module mo_functional
 
   interface last
      module procedure last_i1, last_i2, last_i4, last_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           last_r4, last_r8, &
 #else
           last_r4, last_r8, last_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           last_c4, last_c8
 #else
           last_c4, last_c8, last_c16
@@ -554,12 +554,12 @@ module mo_functional
 
   interface operator(.last.)
      module procedure last_i1, last_i2, last_i4, last_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           last_r4, last_r8, &
 #else
           last_r4, last_r8, last_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           last_c4, last_c8
 #else
           last_c4, last_c8, last_c16
@@ -568,12 +568,12 @@ module mo_functional
 
   interface limit
      module procedure limit_i1, limit_i2, limit_i4, limit_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           limit_r4, limit_r8, &
 #else
           limit_r4, limit_r8, limit_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           limit_c4, limit_c8
 #else
           limit_c4, limit_c8, limit_c16
@@ -582,12 +582,12 @@ module mo_functional
 
   interface map
      module procedure map_i1, map_i2, map_i4, map_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           map_r4, map_r8, &
 #else
           map_r4, map_r8, map_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           map_c4, map_c8
 #else
           map_c4, map_c8, map_c16
@@ -596,12 +596,12 @@ module mo_functional
 
   interface reverse
      module procedure reverse_i1, reverse_i2, reverse_i4, reverse_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           reverse_r4, reverse_r8, &
 #else
           reverse_r4, reverse_r8, reverse_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           reverse_c4, reverse_c8
 #else
           reverse_c4, reverse_c8, reverse_c16
@@ -610,12 +610,12 @@ module mo_functional
 
   interface operator(.reverse.)
      module procedure reverse_i1, reverse_i2, reverse_i4, reverse_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           reverse_r4, reverse_r8, &
 #else
           reverse_r4, reverse_r8, reverse_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           reverse_c4, reverse_c8
 #else
           reverse_c4, reverse_c8, reverse_c16
@@ -624,12 +624,12 @@ module mo_functional
 
   interface set
      module procedure set_i1, set_i2, set_i4, set_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           set_r4, set_r8, &
 #else
           set_r4, set_r8, set_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           set_c4, set_c8
 #else
           set_c4, set_c8, set_c16
@@ -638,12 +638,12 @@ module mo_functional
 
   interface operator(.set.)
      module procedure set_i1, set_i2, set_i4, set_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           set_r4, set_r8, &
 #else
           set_r4, set_r8, set_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           set_c4, set_c8
 #else
           set_c4, set_c8, set_c16
@@ -652,12 +652,12 @@ module mo_functional
 
   interface sort
      module procedure sort_i1, sort_i2, sort_i4, sort_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           sort_r4, sort_r8, &
 #else
           sort_r4, sort_r8, sort_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           sort_c4, sort_c8
 #else
           sort_c4, sort_c8, sort_c16
@@ -666,12 +666,12 @@ module mo_functional
 
   interface operator(.sort.)
      module procedure sort_i1, sort_i2, sort_i4, sort_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           sort_r4, sort_r8, &
 #else
           sort_r4, sort_r8, sort_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           sort_c4, sort_c8
 #else
           sort_c4, sort_c8, sort_c16
@@ -680,12 +680,12 @@ module mo_functional
 
   interface split
      module procedure split_i1, split_i2, split_i4, split_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           split_r4, split_r8, &
 #else
           split_r4, split_r8, split_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           split_c4, split_c8
 #else
           split_c4, split_c8, split_c16
@@ -694,12 +694,12 @@ module mo_functional
 
   interface subscript
      module procedure subscript_i1, subscript_i2, subscript_i4, subscript_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           subscript_r4, subscript_r8, &
 #else
           subscript_r4, subscript_r8, subscript_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           subscript_c4, subscript_c8
 #else
           subscript_c4, subscript_c8, subscript_c16
@@ -708,12 +708,12 @@ module mo_functional
 
   interface tail
      module procedure tail_i1, tail_i2, tail_i4, tail_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           tail_r4, tail_r8, &
 #else
           tail_r4, tail_r8, tail_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           tail_c4, tail_c8
 #else
           tail_c4, tail_c8, tail_c16
@@ -722,12 +722,12 @@ module mo_functional
 
   interface operator(.tail.)
      module procedure tail_i1, tail_i2, tail_i4, tail_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           tail_r4, tail_r8, &
 #else
           tail_r4, tail_r8, tail_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           tail_c4, tail_c8
 #else
           tail_c4, tail_c8, tail_c16
@@ -736,12 +736,12 @@ module mo_functional
 
   interface unfold
      module procedure unfold_i1, unfold_i2, unfold_i4, unfold_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           unfold_r4, unfold_r8, &
 #else
           unfold_r4, unfold_r8, unfold_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           unfold_c4, unfold_c8
 #else
           unfold_c4, unfold_c8, unfold_c16
@@ -750,12 +750,12 @@ module mo_functional
 
   interface union
      module procedure union_i1, union_i2, union_i4, union_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           union_r4, union_r8, &
 #else
           union_r4, union_r8, union_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           union_c4, union_c8
 #else
           union_c4, union_c8, union_c16
@@ -764,12 +764,12 @@ module mo_functional
 
   interface operator(.union.)
      module procedure union_i1, union_i2, union_i4, union_i8, &
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           union_r4, union_r8, &
 #else
           union_r4, union_r8, union_r16, &
 #endif
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
           union_c4, union_c8
 #else
           union_c4, union_c8, union_c16
@@ -777,7 +777,7 @@ module mo_functional
   end interface operator(.union.)
 
   interface operator(<)
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
      module procedure lt_c4, lt_c8
 #else
      module procedure lt_c4, lt_c8, lt_c16
@@ -785,7 +785,7 @@ module mo_functional
   end interface operator(<)
 
   interface operator(>=)
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
      module procedure ge_c4, ge_c8
 #else
      module procedure ge_c4, ge_c8, ge_c16
@@ -851,7 +851,7 @@ contains
     endif
     length = (end-start)/incr+1
     allocate(arange(length))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, length
 #else
     do concurrent(i=1:length)
@@ -880,7 +880,7 @@ contains
     endif
     length = (end-start)/incr+1
     allocate(arange(length))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, length
 #else
     do concurrent(i=1:length)
@@ -909,7 +909,7 @@ contains
     endif
     length = (end-start)/incr+1
     allocate(arange(length))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, length
 #else
     do concurrent(i=1:length)
@@ -938,7 +938,7 @@ contains
     endif
     length = (end-start)/incr+1
     allocate(arange(length))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, length
 #else
     do concurrent(i=1:length)
@@ -967,7 +967,7 @@ contains
     endif
     length = (end-start+0.5*incr)/incr+1
     allocate(arange(length))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, length
 #else
     do concurrent(i=1:length)
@@ -996,7 +996,7 @@ contains
     endif
     length = (end-start+0.5*incr)/incr+1
     allocate(arange(length))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, length
 #else
     do concurrent(i=1:length)
@@ -1025,7 +1025,7 @@ contains
     endif
     length = (end-start+0.5*incr)/incr+1
     allocate(arange(length))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, length
 #else
     do concurrent(i=1:length)
@@ -1061,7 +1061,7 @@ contains
        length = (aimag(end)-aimag(start)+0.5*aimag(incr))/aimag(incr)+1
     endif
     allocate(arange(length))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, length
 #else
     do concurrent(i=1:length)
@@ -1098,7 +1098,7 @@ contains
        length = (aimag(end)-aimag(start)+0.5*aimag(incr))/aimag(incr)+1
     endif
     allocate(arange(length))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, length
 #else
     do concurrent(i=1:length)
@@ -1135,7 +1135,7 @@ contains
        length = (aimag(end)-aimag(start)+0.5*aimag(incr))/aimag(incr)+1
     endif
     allocate(arange(length))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, length
 #else
     do concurrent(i=1:length)
@@ -1158,7 +1158,7 @@ contains
     a = set(x)
     b = set(y)
     complement = arange(1_i1,0_i1)
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do n=1, size(a)
 #else
     do concurrent(n=1:size(a))
@@ -1180,7 +1180,7 @@ contains
     a = set(x)
     b = set(y)
     complement = arange(1_i2,0_i2)
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do n=1, size(a)
 #else
     do concurrent(n=1:size(a))
@@ -1202,7 +1202,7 @@ contains
     a = set(x)
     b = set(y)
     complement = arange(1_i4,0_i4)
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do n=1, size(a)
 #else
     do concurrent(n=1:size(a))
@@ -1224,7 +1224,7 @@ contains
     a = set(x)
     b = set(y)
     complement = arange(1_i8,0_i8)
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do n=1, size(a)
 #else
     do concurrent(n=1:size(a))
@@ -1246,7 +1246,7 @@ contains
     a = set(x)
     b = set(y)
     complement = arange(1._r4,0._r4)
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do n=1, size(a)
 #else
     do concurrent(n=1:size(a))
@@ -1268,7 +1268,7 @@ contains
     a = set(x)
     b = set(y)
     complement = arange(1._r4,0._r4)
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do n=1, size(a)
 #else
     do concurrent(n=1:size(a))
@@ -1290,7 +1290,7 @@ contains
     a = set(x)
     b = set(y)
     complement = arange(1._r16,0._r16)
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do n=1, size(a)
 #else
     do concurrent(n=1:size(a))
@@ -1312,7 +1312,7 @@ contains
     a = set(x)
     b = set(y)
     complement = arange(cmplx(1._r4,0._r4, kind=r4),cmplx(0._r4,0._r4, kind=r4))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do n=1, size(a)
 #else
     do concurrent(n=1:size(a))
@@ -1334,7 +1334,7 @@ contains
     a = set(x)
     b = set(y)
     complement = arange(cmplx(1._r8,0._r8, kind=r8),cmplx(0._r8,0._r8, kind=r8))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do n=1, size(a)
 #else
     do concurrent(n=1:size(a))
@@ -1356,7 +1356,7 @@ contains
     a = set(x)
     b = set(y)
     complement = arange(cmplx(1._r16,0._r16, kind=r16),cmplx(0._r16,0._r16, kind=r16))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do n=1, size(a)
 #else
     do concurrent(n=1:size(a))
@@ -1486,7 +1486,7 @@ contains
     logical,dimension(:),allocatable :: f_x
     integer :: i
     allocate(f_x(size(x)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -1507,7 +1507,7 @@ contains
     logical,dimension(:),allocatable :: f_x
     integer :: i
     allocate(f_x(size(x)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -1528,7 +1528,7 @@ contains
     logical,dimension(:),allocatable :: f_x
     integer :: i
     allocate(f_x(size(x)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -1549,7 +1549,7 @@ contains
     logical,dimension(:),allocatable :: f_x
     integer :: i
     allocate(f_x(size(x)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -1570,7 +1570,7 @@ contains
     logical,dimension(:),allocatable :: f_x
     integer :: i
     allocate(f_x(size(x)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -1591,7 +1591,7 @@ contains
     logical,dimension(:),allocatable :: f_x
     integer :: i
     allocate(f_x(size(x)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -1612,7 +1612,7 @@ contains
     logical,dimension(:),allocatable :: f_x
     integer :: i
     allocate(f_x(size(x)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -1633,7 +1633,7 @@ contains
     logical,dimension(:),allocatable :: f_x
     integer :: i
     allocate(f_x(size(x)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -1654,7 +1654,7 @@ contains
     logical,dimension(:),allocatable :: f_x
     integer :: i
     allocate(f_x(size(x)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -1675,7 +1675,7 @@ contains
     logical,dimension(:),allocatable :: f_x
     integer :: i
     allocate(f_x(size(x)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -2569,7 +2569,7 @@ contains
     b = set(y)
     res = empty(1_i1)
     if(size(a) > size(b))then
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(b)
 #else
        do concurrent(n=1:size(b))
@@ -2577,7 +2577,7 @@ contains
           if(any(a == b(n)))res = [res,b(n)]
        enddo
     else
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(a)
 #else
        do concurrent(n=1:size(a))
@@ -2601,7 +2601,7 @@ contains
     b = set(y)
     res = empty(1_i2)
     if(size(a) > size(b))then
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(b)
 #else
        do concurrent(n=1:size(b))
@@ -2609,7 +2609,7 @@ contains
           if(any(a == b(n)))res = [res,b(n)]
        enddo
     else
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(a)
 #else
        do concurrent(n=1:size(a))
@@ -2633,7 +2633,7 @@ contains
     b = set(y)
     res = empty(1_i4)
     if(size(a) > size(b))then
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(b)
 #else
        do concurrent(n=1:size(b))
@@ -2641,7 +2641,7 @@ contains
           if(any(a == b(n)))res = [res,b(n)]
        enddo
     else
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(a)
 #else
        do concurrent(n=1:size(a))
@@ -2665,7 +2665,7 @@ contains
     b = set(y)
     res = empty(1_i8)
     if(size(a) > size(b))then
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(b)
 #else
        do concurrent(n=1:size(b))
@@ -2673,7 +2673,7 @@ contains
           if(any(a == b(n)))res = [res,b(n)]
        enddo
     else
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(a)
 #else
        do concurrent(n=1:size(a))
@@ -2697,7 +2697,7 @@ contains
     b = set(y)
     res = empty(1._r4)
     if(size(a) > size(b))then
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(b)
 #else
        do concurrent(n=1:size(b))
@@ -2705,7 +2705,7 @@ contains
           if(any(a == b(n)))res = [res,b(n)]
        enddo
     else
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(a)
 #else
        do concurrent(n=1:size(a))
@@ -2729,7 +2729,7 @@ contains
     b = set(y)
     res = empty(1._r8)
     if(size(a) > size(b))then
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(b)
 #else
        do concurrent(n=1:size(b))
@@ -2737,7 +2737,7 @@ contains
           if(any(a == b(n)))res = [res,b(n)]
        enddo
     else
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(a)
 #else
        do concurrent(n=1:size(a))
@@ -2761,7 +2761,7 @@ contains
     b = set(y)
     res = empty(1._r16)
     if(size(a) > size(b))then
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(b)
 #else
        do concurrent(n=1:size(b))
@@ -2769,7 +2769,7 @@ contains
           if(any(a == b(n)))res = [res,b(n)]
        enddo
     else
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(a)
 #else
        do concurrent(n=1:size(a))
@@ -2793,7 +2793,7 @@ contains
     b = set(y)
     res = empty(cmplx(1._r4,0._r4, kind=r4))
     if(size(a) > size(b))then
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(b)
 #else
        do concurrent(n=1:size(b))
@@ -2801,7 +2801,7 @@ contains
           if(any(a == b(n)))res = [res,b(n)]
        enddo
     else
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(a)
 #else
        do concurrent(n=1:size(a))
@@ -2825,7 +2825,7 @@ contains
     b = set(y)
     res = empty(cmplx(1._r8,0._r8, kind=r8))
     if(size(a) > size(b))then
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(b)
 #else
        do concurrent(n=1:size(b))
@@ -2833,7 +2833,7 @@ contains
           if(any(a == b(n)))res = [res,b(n)]
        enddo
     else
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(a)
 #else
        do concurrent(n=1:size(a))
@@ -2857,7 +2857,7 @@ contains
     b = set(y)
     res = empty(cmplx(1._r16,0._r16, kind=r16))
     if(size(a) > size(b))then
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(b)
 #else
        do concurrent(n=1:size(b))
@@ -2865,7 +2865,7 @@ contains
           if(any(a == b(n)))res = [res,b(n)]
        enddo
     else
-#ifdef pgiFortran
+#ifdef __pgiFortran__
        do n=1, size(a)
 #else
        do concurrent(n=1:size(a))
@@ -3260,7 +3260,7 @@ contains
     integer(kind=i1),dimension(:),intent(in) :: x !! Input array
     integer(kind=i1),dimension(size(x)) :: map
     integer(kind=i4) :: i
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -3278,7 +3278,7 @@ contains
     integer(kind=i2),dimension(:),intent(in) :: x !! Input array
     integer(kind=i2),dimension(size(x)) :: map
     integer(kind=i4) :: i
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -3296,7 +3296,7 @@ contains
     integer(kind=i4),dimension(:),intent(in) :: x !! Input array
     integer(kind=i4),dimension(size(x)) :: map
     integer(kind=i4) :: i
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -3314,7 +3314,7 @@ contains
     integer(kind=i8),dimension(:),intent(in) :: x
     integer(kind=i8),dimension(size(x)) :: map
     integer(kind=i4) :: i
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -3332,7 +3332,7 @@ contains
     real(kind=r4),dimension(:),intent(in) :: x !! Input array
     real(kind=r4),dimension(size(x)) :: map
     integer(kind=i4) :: i
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -3350,7 +3350,7 @@ contains
     real(kind=r8),dimension(:),intent(in) :: x !! Input array
     real(kind=r8),dimension(size(x)) :: map
     integer(kind=i4) :: i
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -3368,7 +3368,7 @@ contains
     real(kind=r16),dimension(:),intent(in) :: x !! Input array
     real(kind=r16),dimension(size(x)) :: map
     integer(kind=i4) :: i
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -3386,7 +3386,7 @@ contains
     complex(kind=r4),dimension(:),intent(in) :: x !! Input array
     complex(kind=r4),dimension(size(x)) :: map
     integer(kind=i4) :: i
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -3404,7 +3404,7 @@ contains
     complex(kind=r8),dimension(:),intent(in) :: x !! Input array
     complex(kind=r8),dimension(size(x)) :: map
     integer(kind=i4) :: i
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -3422,7 +3422,7 @@ contains
     complex(kind=r16),dimension(:),intent(in) :: x !! Input array
     complex(kind=r16),dimension(size(x)) :: map
     integer(kind=i4) :: i
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(x)
 #else
     do concurrent(i=1:size(x))
@@ -4054,7 +4054,7 @@ contains
     integer :: i
     indices = pack(ind,ind > 0 .and. ind < size(x))
     allocate(subscript(size(indices)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(indices)
 #else
     do concurrent(i=1:size(indices))
@@ -4075,7 +4075,7 @@ contains
     integer :: i
     indices = pack(ind,ind > 0 .and. ind < size(x))
     allocate(subscript(size(indices)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(indices)
 #else
     do concurrent(i=1:size(indices))
@@ -4096,7 +4096,7 @@ contains
     integer :: i
     indices = pack(ind,ind > 0 .and. ind < size(x))
     allocate(subscript(size(indices)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(indices)
 #else
     do concurrent(i=1:size(indices))
@@ -4117,7 +4117,7 @@ contains
     integer :: i
     indices = pack(ind,ind > 0 .and. ind < size(x))
     allocate(subscript(size(indices)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(indices)
 #else
     do concurrent(i=1:size(indices))
@@ -4138,7 +4138,7 @@ contains
     integer :: i
     indices = pack(ind,ind > 0 .and. ind < size(x))
     allocate(subscript(size(indices)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(indices)
 #else
     do concurrent(i=1:size(indices))
@@ -4159,7 +4159,7 @@ contains
     integer :: i
     indices = pack(ind,ind > 0 .and. ind < size(x))
     allocate(subscript(size(indices)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(indices)
 #else
     do concurrent(i=1:size(indices))
@@ -4180,7 +4180,7 @@ contains
     integer :: i
     indices = pack(ind,ind > 0 .and. ind < size(x))
     allocate(subscript(size(indices)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(indices)
 #else
     do concurrent(i=1:size(indices))
@@ -4201,7 +4201,7 @@ contains
     integer :: i
     indices = pack(ind,ind > 0 .and. ind < size(x))
     allocate(subscript(size(indices)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(indices)
 #else
     do concurrent(i=1:size(indices))
@@ -4222,7 +4222,7 @@ contains
     integer :: i
     indices = pack(ind,ind > 0 .and. ind < size(x))
     allocate(subscript(size(indices)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(indices)
 #else
     do concurrent(i=1:size(indices))
@@ -4243,7 +4243,7 @@ contains
     integer :: i
     indices = pack(ind,ind > 0 .and. ind < size(x))
     allocate(subscript(size(indices)))
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     do i=1, size(indices)
 #else
     do concurrent(i=1:size(indices))

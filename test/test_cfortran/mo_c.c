@@ -5,7 +5,7 @@
 *************************************************************************/
 
 #include "mo_c.h"
-#ifdef CFORTRAN
+#ifdef __CFORTRAN__
 #include "cfortran.h"
 #endif
 
@@ -22,7 +22,7 @@ double testc(double *data, int d, int n, const double ref)
   
   return out;
 }
-#ifdef CFORTRAN
+#ifdef __CFORTRAN__
 /* Called as ctest in fortran; has 4 inputs.
    Put P in front of variable definition for pointers, i.e. INT -> int d, and PINT -> int *d
 */

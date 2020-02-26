@@ -1,7 +1,7 @@
 module mo_map_functions
 
   use mo_kind, only: int8=>i1, int16=>i2, int32=>i4, int64=>i8, real32=>sp, real64=>dp
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
   use mo_kind, only: real128=>dp
 #else
   use mo_kind, only: real128=>qp

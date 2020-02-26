@@ -13,7 +13,7 @@ PROGRAM main
   REAL(sp), DIMENSION(10) :: sat
   REAL(sp), DIMENSION(2)  :: squa
 
-#ifndef ABSOFT
+#ifndef __ABSOFT__
   integer,  parameter :: nele = 10000000
   real(dp), dimension(nele) :: big, buf
   real(dp) :: med
@@ -73,7 +73,7 @@ PROGRAM main
   endif
 
 ! Absoft gives segmentation fault on all of the following test, do not know why
-#ifndef ABSOFT
+#ifndef __ABSOFT__
   ! Test speed
   do i = 1, nele
      call random_number(big(i))

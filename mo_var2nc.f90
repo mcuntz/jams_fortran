@@ -37,7 +37,7 @@ module mo_var2nc
        nf90_inq_varid, nf90_inquire_variable, nf90_inquire_dimension, nf90_open, &
        nf90_inq_varid, nf90_inq_dimid, nf90_inquire, nf90_get_var, nf90_fill_float, &
        nf90_fill_double, nf90_fill_int, nf90_redef
-#ifndef NETCDF3
+#ifndef __NETCDF3__
   use netcdf, only: NF90_NETCDF4
 #else
   use netcdf, only: NF90_64BIT_OFFSET
@@ -193,7 +193,7 @@ module mo_var2nc
 
   private
 
-#ifdef NETCDF3
+#ifdef __NETCDF3__
   INTEGER, PARAMETER :: NF90_NETCDF4 = NF90_64BIT_OFFSET ! to be available for compilation
 #endif
 
@@ -339,7 +339,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
        ))
@@ -518,7 +518,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -696,7 +696,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -883,7 +883,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -1071,7 +1071,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -1259,7 +1259,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -1447,7 +1447,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -1636,7 +1636,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
             ))
@@ -1824,7 +1824,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -2014,7 +2014,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -2204,7 +2204,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -2394,7 +2394,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -2574,7 +2574,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_INT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -2754,7 +2754,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_FLOAT, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -2934,7 +2934,7 @@ contains
        end do
        ! define variable
        call check(nf90_def_var(f_handle, v_name, NF90_DOUBLE, dimid, varid(ndim+1) &
-#ifndef NETCDF3
+#ifndef __NETCDF3__
             , chunksizes=chunksizes(:), shuffle=.true., deflate_level=deflate))
 #else
           ))
@@ -3038,7 +3038,7 @@ contains
     !
     if ( create ) then
        ! create file
-#ifndef NETCDF3
+#ifndef __NETCDF3__
        call check( nf90_create( trim(f_name), NF90_NETCDF4, open_netcdf ) )
 #else
        call check( nf90_create( trim(f_name), NF90_64BIT_OFFSET, open_netcdf ) )

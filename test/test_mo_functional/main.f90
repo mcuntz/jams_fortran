@@ -1,7 +1,7 @@
 program main
 
   use mo_kind,       only: int8=>i1, int16=>i2, int32=>i4, int64=>i8, real32=>sp, real64=>dp
-#if defined (pgiFortran) || defined (NAGf90Fortran) || defined (NAG)
+#if defined (__pgiFortran__) || defined (__NAGf90Fortran__) || defined (__NAG__)
   use mo_kind,       only: real128=>dp
 #else
   use mo_kind,       only: real128=>qp
@@ -470,7 +470,7 @@ program main
   tests(n) = assert(head(c_r16) == c_r16(1),'head, complex real128')
   n = n + 1
 
-#ifdef pgiFortran
+#ifdef __pgiFortran__
   tests(n) = assert(.true.,'skip head operator, .head.x')
 #else
   tests(n) = assert(head([1,2]) == .head.[1,2],'head operator, .head.x')
@@ -526,7 +526,7 @@ program main
   tests(n) = assert(size(init(init([1]))) == 0,'size(init(init([1]))) == 0')
   n = n + 1
 
-#ifdef pgiFortran
+#ifdef __pgiFortran__
   tests(n) = assert(.true.,'skip init operator, .init.x')
 #else
   tests(n) = assert(all(init([1,2]) == .init.[1,2]),'init operator, .init.x')
@@ -754,7 +754,7 @@ program main
   tests(n) = assert(last(c_r16) == c_r16(2),'last, complex real128')
   n = n + 1
 
-#ifdef pgiFortran
+#ifdef __pgiFortran__
   tests(n) = assert(.true.,'skip last operator, .last.x')
 #else
   tests(n) = assert(last([1,2]) == .last.[1,2],'last operator, .last.x')
@@ -931,7 +931,7 @@ program main
        'reverse, complex real128')
   n = n + 1
 
-#ifdef pgiFortran
+#ifdef __pgiFortran__
   tests(n) = assert(.true.,'skip reverse operator, .reverse.x')
 #else
   tests(n) = assert(all(reverse([1,2,3]) == .reverse.[1,2,3]),&
@@ -995,7 +995,7 @@ program main
        'set of empty array is an empty array')
   n = n + 1
 
-#ifdef pgiFortran
+#ifdef __pgiFortran__
   tests(n) = assert(.true.,'skip set operator, .set.x')
 #else
   tests(n) = assert(all(set([1,2,2,3]) == .set.[1,2,2,3]),&
@@ -1069,7 +1069,7 @@ program main
        'all(tail(sort(x)) >= init(sort(x))')
   n = n + 1
 
-#ifdef pgiFortran
+#ifdef __pgiFortran__
   tests(n) = assert(.true.,'skip sort operator, .sort.x')
 #else
   tests(n) = assert(all(sort(x) == .sort.x),&
@@ -1256,7 +1256,7 @@ program main
   tests(n) = assert(size(tail(tail([1._real32]))) == 0,'size(tail(tail([1]))) == 0')
   n = n + 1
 
-#ifdef pgiFortran
+#ifdef __pgiFortran__
   tests(n) = assert(.true.,'skip tail operator, .tail.x')
 #else
   tests(n) = assert(all(tail([1,2]) == .tail.[1,2]),'tail operator, .tail.x')

@@ -13,7 +13,7 @@ program ReadNc
 use mo_kind,   only: i4, sp, dp
 use mo_ansi_colors, only: color, c_red, c_green
 use mo_NcRead, only: Get_NcVar, get_ncdim, NcOpen, NcClose
-#ifndef ABSOFT
+#ifndef __ABSOFT__
 use mo_NcRead, only: Get_NcDimAtt, Get_NcVarAtt
 #endif
 !
@@ -24,7 +24,7 @@ integer(i4)   , dimension(:)    , allocatable :: DimLen
 real(dp)      , dimension(:)    , allocatable :: DimData
 character(256)                                :: Filename
 character(256)                                :: Varname
-#ifndef ABSOFT
+#ifndef __ABSOFT__
 character(256)                                :: Attname
 character(256)                                :: AttValues
 #endif
@@ -45,7 +45,7 @@ dl = get_ncdim(Filename, Varname, ndims=NoDims)
 !
 allocate(data(dl(1),dl(2),dl(3)))
 
-#ifndef ABSOFT
+#ifndef __ABSOFT__
 ! get Dimesnion information - name & lenght (size)
 call Get_NcDimAtt(Filename, Varname, DimNames, DimLen)
 !
@@ -94,7 +94,7 @@ call NcClose(ncid)            ! close file
 !
 isgood = isgood .and. (nint(1e6_sp*sum(data)) == 117431_i4)
 !
-#ifndef ABSOFT
+#ifndef __ABSOFT__
 ! retrieving variables attributes
 AttName='units'
 call Get_NcVarAtt(FileName, trim(DimNames(3)), AttName, AttValues)

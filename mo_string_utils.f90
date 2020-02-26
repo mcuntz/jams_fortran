@@ -42,7 +42,7 @@ MODULE mo_string_utils
   PUBLIC :: compress       ! Conversion   : 'A b C x Y z' -> 'AbCxYz'
   PUBLIC :: count_split    ! count the numbers of fragments if string is split at delimiter
   PUBLIC :: countsubstring ! Count number of occurences of substring
-#ifndef ABSOFT
+#ifndef __ABSOFT__
   PUBLIC :: divide_string  ! subroutine to split string at delimiter
 #endif
   PUBLIC :: equalStrings   ! compares two strings
@@ -411,7 +411,7 @@ CONTAINS
 
   end function countsubstring
 
-#ifndef ABSOFT
+#ifndef __ABSOFT__
   ! ------------------------------------------------------------------
 
   !     NAME

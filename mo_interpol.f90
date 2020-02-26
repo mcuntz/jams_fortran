@@ -298,13 +298,13 @@ CONTAINS
     REAL(dp),    DIMENSION(size(u))       :: interpol_dp
 
     INTEGER(i4), DIMENSION(size(u)) :: s
-#ifdef ABSOFT
+#ifdef __ABSOFT__
     REAL(dp)                        :: ums
 #else
     REAL(dp),    DIMENSION(size(u)) :: ums
 #endif
     INTEGER(i4) :: m
-#ifdef ABSOFT
+#ifdef __ABSOFT__
     INTEGER(i4) :: n
     INTEGER(i4) :: i
 #endif
@@ -314,7 +314,7 @@ CONTAINS
 
     s = min(max(locate(x, u), 1_i4), m-1_i4)  ! Subscript intervals
 
-#ifdef ABSOFT
+#ifdef __ABSOFT__
     n = size(u)
     do i=1, n
        ums = u(i) - x(s(i))
@@ -340,13 +340,13 @@ CONTAINS
     REAL(sp),    DIMENSION(size(u))       :: interpol_sp
 
     INTEGER(i4), DIMENSION(size(u)) :: s
-#ifdef ABSOFT
+#ifdef __ABSOFT__
     REAL(sp)                        :: ums
 #else
     REAL(sp),    DIMENSION(size(u)) :: ums
 #endif
     INTEGER(i4) :: m
-#ifdef ABSOFT
+#ifdef __ABSOFT__
     INTEGER(i4) :: n
     INTEGER(i4) :: i
 #endif
@@ -356,7 +356,7 @@ CONTAINS
 
     s = min(max(locate(x, u), 1_i4), m-1_i4)  ! Subscript intervals
 
-#ifdef ABSOFT
+#ifdef __ABSOFT__
     n = size(u)
     do i=1, n
        ums = u(i) - x(s(i))

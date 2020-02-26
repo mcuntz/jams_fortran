@@ -33,7 +33,7 @@ MODULE mo_histo
 
   IMPLICIT NONE
 
-#ifndef ABSOFT
+#ifndef __ABSOFT__
   PUBLIC :: histo           ! Histogram of 1D data
   PUBLIC :: histo2d         ! Histogram of 2D data
 

@@ -44,7 +44,7 @@ contains
     integer(i4)                          :: qhull
 
     character(len=250) :: iflags
-#ifdef pgiFortran
+#ifdef __pgiFortran__
     character(len=299)  :: ioutfile
 #else
     character(len=1024) :: ioutfile
