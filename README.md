@@ -1,17 +1,22 @@
+# This is the JAMS Fortran library.
 
-# This is the Fortran library of JAMS.
-
-JAMS is a collection of general Fortran modules offering miscellaneous functions in
-different categories, such as reading different file formats, julian
-date routines, or parameter optimisation.
+The JAMS Fortran library is a collection of general Fortran modules
+offering miscellaneous functions in the categories
+[Computational](#comp), [Date and Time](#date), [Input / Output](#io),
+[Math / Numerics](#math), [Miscellaneous](#misc), and
+[Screening, Sensitivity Analysis and Optimising / Fitting](#opti).
 
 Created November 2011 by Matthias Cuntz and Juliane Mai  
 while at the Department Computational Hydrosystems, Helmholtz Centre
-for Environmental Research - UFZ, Permoserstr. 15, 04318 Leipzig, Germany
+for Environmental Research - UFZ, Permoserstr. 15, 04318 Leipzig,
+Germany, and continued while M Cuntz is at the Institut National de
+Recherche pour l’Agriculture, l’Alimentation et l’Environnement
+(INRAE), Nancy, France, and J Mai is at the Department of Civil and
+Environmental Engineering of the University of Waterloo, ON, Canada.
 
 It is distributed under the MIT License (see LICENSE file and below).
 
-Copyright (c) 2011-2019 Matthias Cuntz and Juliane Mai
+Copyright (c) 2011-2020 Matthias Cuntz and Juliane Mai
 
 Contact Matthias Cuntz - mc (at) macu (dot) de
 
@@ -28,10 +33,10 @@ To use it, checkout the git repository
 
     git clone https://github.com/mcuntz/jams_fortran.git
 
-Copy the mo\_\*.f90 file of the chosen utility to your Fortran project. Grep 'use'
-mo\_\*.f90 to check for dependencies. All Fortran modules use at least
-the kind definitions of mo_kind.f90; quite a few use also the general
-utilities in mo\_utils.f90.
+Copy the mo\_\*.f90 file of the chosen utility to your Fortran
+project. _grep -i 'use' mo\_\*.f90_ to check for dependencies. All
+Fortran modules use at least the kind definitions of _mo\_kind.f90_;
+quite a few use also the general utilities in _mo\_utils.f90_.
 
 
 ---------------------------------------------------------------
@@ -47,7 +52,7 @@ formatted with the appropriate tools, e.g. using the
 [JAMS Makefile project](https://github.com/mcuntz/jams_makefile).
 
 Each module has a test program in the directory
-test/test\_mo\_\*/. These test programs try to test all
+_test/test\_mo\_\*/_. These test programs try to test all
 functionalities of the modules and provide hence examples of code
 usage of (almost) all subroutines.
 
@@ -61,28 +66,27 @@ tested with the GNU gfortran, Intel ifort, NAG nagfor, and
 PGI pgfortran compilers in various revisions.
 
 Interoperability with C is assured by the use of the intrinsic module
-iso\_c\_binding  in mo_kind. The use of C functions were tested using
-the C-header file cfortran.h, for example with the qhull library. See
-the use of cfortran.h in qhull/qhull\_c.c and the corresponding
-Fortran call in  mo\_qhull.f90.
+_iso\_c\_binding_ in _mo\_kind.f90_. The use of C functions were tested using
+the C-header file _cfortran.h_, for example with the `qhull` library. See
+the use of _cfortran.h_ in _qhull/qhull\_c.c_ and the corresponding
+Fortran call in _mo\_qhull.f90_.
 
 The library uses C preprocessor flags to deal with special compiler
 behaviours, i.e. one has to compile with the -cpp or -fpp compiler
 flag. For example, gfortran (revisions < 5) did not include an
-intrinsic ieee\_arithmetic module so that mo\_utils has convenience
-funtions such as is\_nan(x), which uses either the gfortran extension
-isnan(x) or the Fortran standard ieee\_is\_nan(x). The decision is
-made during compile time, checking if the variable GFORTRAN is
-defined. The following preprocessor variables are checked:  
-ABSOFT, GFORTRAN, GFORTRAN41, NETCDF3, pgiFortran.
+intrinsic _ieee\_arithmetic_ module so that _mo\_utils_ has convenience
+funtions such as _is\_nan(x)_, which uses either the gfortran extension
+_isnan(x)_ or the Fortran standard _ieee\_is\_nan(x)_. The decision is
+made during compile time, checking if the variable `__GFORTRAN__` is
+defined. The following preprocessor variables are currently checked:  
+`__ABSOFT__`, `__GFORTRAN__`, `__GFORTRAN41__`, `__NETCDF3__`,
+`__pgiFortran__`, `__NAG__`, `__NAGf90Fortran__`.
 
-Some modules use third-party packages such as LAPack or
-netCDF. [BLAS](https://www.netlib.org/blas/),
-[LAPack](http://www.netlib.org/lapack/),
-[MinPack](https://www.netlib.org/minpack/),
+Some modules use third-party packages such as LAPack or netCDF.  
+The libraries [MinPack](https://www.netlib.org/minpack/),
 [QHull](http://www.qhull.org), and
 [netCDF3](https://www.unidata.ucar.edu/software/netcdf/release-notes-3.6.3.html)
-are given as convenience with the JAMS library. It is always
+are given for convenience with the JAMS library. It is always
 recommended to use specific installations for the computer system, for
 example for blas and lapack, which are highly optimised. The netcdf3
 directory includes only the parts of the netCDF 3.6.3 version that are
@@ -91,10 +95,11 @@ directory for two system-specific configuration files. The
 [JAMS Makefile project](https://github.com/mcuntz/jams_makefile)
 handles these kind of special configuration files.
 
-The only other third-party software is
-[netCDF 4](https://www.unidata.ucar.edu/software/netcdf/), which has
-to be installed independently, e.g. by using the installation script
-install_netcdf of
+The only other third-party softwares are
+[LAPack](http://www.netlib.org/lapack/) and
+[netCDF 4](https://www.unidata.ucar.edu/software/netcdf/), which have
+to be installed independently. The latter can be installed by using,
+for example the installation script _install\_netcdf_ of
 [https://github.com/mcuntz/install_netcdf](https://github.com/mcuntz/install_netcdf).
 
 
@@ -107,8 +112,8 @@ Modules are provided in the following categories:
  * [Date and Time](#date)  
  * [Input / Output](#io)  
  * [Math /  Numerics](#math)  
- * [Miscellaneous](#misc)  
  * [Screening, Sensitivity Analysis and Optimising / Fitting](#opti)  
+ * [Miscellaneous](#misc)  
 
 
 ---------------------------------------------------------------
@@ -118,6 +123,7 @@ Modules are provided in the following categories:
 | | | |
 | --- | --- | ------------------------------------------------------------------------------------------------------------- |
 | | mo\_anneal | Simulated Annealing with estimation of initial temperature |
+| | mo\_ansi\_colors | Provide colouriser to output coloured text on terminal |
 | | mo\_append | Appends vectors and/or matrixes like \*nix *cat* and *paste* |
 | | mo\_bootstrapping\_sensitivity\_analysis.f90 | Bootstrapping for sensitivity analysis |
 | | mo\_boxcox | Box-Cox transformation, inverse transformation & estimating best exponent for transformation |
@@ -134,7 +140,6 @@ Modules are provided in the following categories:
 | | mo\_fit | Linear & polynomial fitting, and general fit with singular value decomposition |
 | | mo\_functional.f90 | Functional programming for modern Fortran |
 | | mo\_functions | Special functions such as the Gamma function |
-| | mo\_groundwater | Different solutions of groundwater-flow equation such as (extended) Thiem's and (extended) Theis' solutions |
 | | mo\_histo | Histogram of data (useable also for variogram) |
 | | mo\_integrate | Integration routines |
 | | mo\_interpol | Linear interpolation for irregular grids |
@@ -154,7 +159,8 @@ Modules are provided in the following categories:
 | | mo\_ncdump.f90 | Quick dumping of variables into netcdf files |
 | | mo\_ncread | Reading nc files using the netcdf4 library |
 | | mo\_ncwrite | Writing nc files using the netcdf4 library |
-| | mo\_nelmin | Minimizes a function using the Nelder-Mead algorithm with the Applied Statistics algorithms No. 047. |
+| | mo\_nelmin | Minimizes a function using the Nelder-Mead algorithm with the Applied Statistics algorithms No. 047 |
+| | mo\_netcdf | David Schaefer's NetCDF Fortran 90 interface wrapper, with NETCDF3 support |
 | | mo\_nml | Routines to handle namelist files |
 | | mo\_nr | Main numerical recipes module containing the interfaces |
 | | mo\_nrutil | Numerical recipes utilities module |
@@ -163,7 +169,7 @@ Modules are provided in the following categories:
 | | mo\_opt\_functions | Test functions for optimization routines |
 | | mo\_orderpack | Orderpack 2.0 from Michel Olagnon provides order and unconditional, unique, and partial ranking, sorting, and permutation. Provides also convenience routines sort and sort\_index |
 | | mo\_percentile | Median, Percentiles |
-| | mo\_pi\_index | Parameter importance index PI or alternatively B index calculation. |
+| | mo\_pi\_index | Parameter importance index PI or alternatively B index calculation |
 | | mo\_poly | Tests if a given 2D point lies inside, outside, or on edge/vertex of a 2D polygon, compute area and center of mass |
 | | mo\_pumpingtests.f90 | Thiem and Theis solutions for groundwater-flow equation, and effektive well-flow solution for the effective coarse-graining conductivity |
 | | mo\_qhull.f90 | Wrapper of C program for convex hull calculation from number of points |
@@ -175,8 +181,8 @@ Modules are provided in the following categories:
 | | mo\_select\_distant\_entries.f90 | Select elements of matrix with largest distance to each other |
 | | mo\_sobol | Sampling of parameters using Sobol sequences |
 | | mo\_sobol\_index | Sobol indexes (main and total effects) |
-| | mo\_spatialsimilarity.f90 | Routines for bias insensitive comparison of spatial patterns |
 | | mo\_sort | Quicksort arrays or indices |
+| | mo\_spatialsimilarity.f90 | Routines for bias insensitive comparison of spatial patterns |
 | | mo\_specan | Spectral analysis using FFT |
 | | mo\_spline | Spline functions to approximate or interpolate data |
 | | mo\_standard_score.f90 | Normalized (anomaly)/standard score/z score and deseasonalized (standard score on monthly basis) values of a time series |
@@ -229,10 +235,12 @@ Modules are provided in the following categories:
 
 | | | |
 | --- | --- | ------------------------------------------------------------------------------------------------------------- |
+| | mo\_ansi\_colors | Provide colouriser to output coloured text on terminal |
 | | mo\_file\_utils | Utilities for file handling, e.g. search free unit |
 | | mo\_ncdump.f90 | Quick dumping of variables into netcdf files |
 | | mo\_ncread | Reading nc files using the netcdf4 library |
 | | mo\_ncwrite | Writing nc files using the netcdf4 library |
+| | mo\_netcdf | David Schaefer's NetCDF Fortran 90 interface wrapper, with NETCDF3 support |
 | | mo\_tee.f90 | Write out concatenated strings on standard out and to a given file or unit |
 | | mo\_var2nc.f90 | Writing variables to netcdf files |
 
@@ -270,18 +278,6 @@ Modules are provided in the following categories:
 | | mo\_xor4096\_apps | Wrapper functions for random number generator xor4096 (Arrays of RNs, ranged RNs, Multivariate Normal Distribution) |
 
 
-<a name="misc"></a>**Miscellaneous**
-
-| | | |
-| --- | --- | ------------------------------------------------------------------------------------------------------------- |
-| | mo\_groundwater | Different solutions of groundwater-flow equation such as (extended) Thiem's and (extended) Theis' solutions |
-| | mo\_mtclim.f90 | Peter E Thornton's climate generator |
-| | mo\_ode\_generator | Given N reactants, generates and solves all corresponding ODE systems |
-| | mo\_pumpingtests.f90 | Thiem and Theis solutions for groundwater-flow equation, and effektive well-flow solution for the effective coarse-graining conductivity |
-| | mo\_random\_field.f90 | Generation of random fields with certain statistical properties, e.g. a given correlation length |
-| | mo\_specan | Spectral analysis using FFT |
-
-
 <a name="opti"></a>**Screening, Sensitivity Analysis and Optimising / Fitting**
 
 | | | |
@@ -294,20 +290,31 @@ Modules are provided in the following categories:
 | | mo\_fit | Linear & polynomial fitting, and general fit with singular value decomposition |
 | | mo\_mcmc | Monte Carlo Markov Chain sampling of parameter distribution around optimum |
 | | mo\_minpack | Optimization package minpack (F90 interfaces) |
-| | mo\_nelmin | Minimizes a function using the Nelder-Mead algorithm with the Applied Statistics algorithms No. 047. |
+| | mo\_nelmin | Minimizes a function using the Nelder-Mead algorithm with the Applied Statistics algorithms No. 047 |
 | | mo\_opt\_functions | Test functions for optimization routines |
-| | mo\_pi\_index | Parameter importance index PI or alternatively B index calculation. |
+| | mo\_pi\_index | Parameter importance index PI or alternatively B index calculation |
 | | mo\_sce | Shuffled Complex Evolution optimisation |
 | | mo\_sobol\_index | Sobol indexes (main and total effects) |
+
+
+<a name="misc"></a>**Miscellaneous**
+
+| | | |
+| --- | --- | ------------------------------------------------------------------------------------------------------------- |
+| | mo\_mtclim.f90 | Peter E Thornton's climate generator |
+| | mo\_ode\_generator | Given N reactants, generates and solves all corresponding ODE systems |
+| | mo\_pumpingtests.f90 | Thiem and Theis solutions for groundwater-flow equation, and effektive well-flow solution for the effective coarse-graining conductivity |
+| | mo\_random\_field.f90 | Generation of random fields with certain statistical properties, e.g. a given correlation length |
+| | mo\_specan | Spectral analysis using FFT |
 
 
 ---------------------------------------------------------------
 
 ###  License
 
-This file is part of the JAMS Python package, distributed under the MIT License.
+This file is part of the JAMS Fortran library, distributed under the MIT License.
 
-Copyright (c) 2012-2019 Matthias Cuntz, Juliane Mai, Stephan Thober, Arndt Piayda
+Copyright (c) 2011-2020 Matthias Cuntz, Juliane Mai, Stephan Thober - mc (at) macu (dot) de
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
