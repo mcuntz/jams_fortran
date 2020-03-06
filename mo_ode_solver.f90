@@ -170,9 +170,10 @@ module mo_ode_solver
     !>        \date Jul 2012
     !         Modified, Giovanni Dalmasso, Mar 2013
     !         Modified, Sebastian Mueller, Jan 2015
-        interface Euler
+    interface Euler
         module procedure Euler_sp, Euler_dp, Euler_para_sp, Euler_para_dp
-    end interface Euler
+     end interface Euler
+     public :: Euler_sp, Euler_dp, Euler_para_sp, Euler_para_dp
 
     ! ------------------------------------------------------------------
 
@@ -267,8 +268,9 @@ module mo_ode_solver
     !         Modified, Giovanni Dalmasso, Mar 2013
     !         Modified, Sebastian Mueller, Jan 2015
     interface RK4
-        module procedure RK4_sp, RK4_dp, RK4_para_sp, RK4_para_dp
+       module procedure RK4_sp, RK4_dp, RK4_para_sp, RK4_para_dp
     end interface RK4
+    public :: RK4_sp, RK4_dp, RK4_para_sp, RK4_para_dp
 
     ! ------------------------------------------------------------------
 
@@ -370,7 +372,7 @@ module mo_ode_solver
     interface RK4as
         module procedure RK4as_sp, RK4as_dp, RK4as_para_sp, RK4as_para_dp
     end interface RK4as
-
+    public :: RK4as_sp, RK4as_dp, RK4as_para_sp, RK4as_para_dp
 
     ! ------------------------------------------------------------------
 
@@ -485,10 +487,10 @@ module mo_ode_solver
     !     HISTORY
     !>        \author Sebastian Mueller
     !>        \date Mar 2015
-
     interface RBstiff
-        module procedure RBstiff_sp, RBstiff_dp, RBstiff_para_sp, RBstiff_para_dp
+       module procedure RBstiff_sp, RBstiff_dp, RBstiff_para_sp, RBstiff_para_dp
     end interface RBstiff
+    public :: RBstiff_sp, RBstiff_dp, RBstiff_para_sp, RBstiff_para_dp
 
     private
 

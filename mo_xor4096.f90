@@ -106,9 +106,11 @@ module mo_xor4096
   !         Written,  Juliane Mai, Aug 2012
 
   INTERFACE get_timeseed
-     MODULE PROCEDURE   get_timeseed_i4_0d, get_timeseed_i4_1d, &
+     MODULE PROCEDURE get_timeseed_i4_0d, get_timeseed_i4_1d, &
           get_timeseed_i8_0d, get_timeseed_i8_1d
   END INTERFACE get_timeseed
+  PUBLIC :: get_timeseed_i4_0d, get_timeseed_i4_1d, &
+       get_timeseed_i8_0d, get_timeseed_i8_1d
 
   ! ------------------------------------------------------------------
 
@@ -234,9 +236,11 @@ module mo_xor4096
   !         Written,  Juliane Mai, Nov 2011
 
   INTERFACE xor4096
-     MODULE PROCEDURE   xor4096s_0d, xor4096s_1d, xor4096f_0d, xor4096f_1d, &
+     MODULE PROCEDURE xor4096s_0d, xor4096s_1d, xor4096f_0d, xor4096f_1d, &
           xor4096l_0d, xor4096l_1d, xor4096d_0d, xor4096d_1d
   END INTERFACE xor4096
+  PUBLIC :: xor4096s_0d, xor4096s_1d, xor4096f_0d, xor4096f_1d, &
+       xor4096l_0d, xor4096l_1d, xor4096d_0d, xor4096d_1d
 
   ! ------------------------------------------------------------------
 
@@ -350,6 +354,7 @@ module mo_xor4096
   INTERFACE xor4096g
      MODULE PROCEDURE xor4096gf_0d, xor4096gf_1d, xor4096gd_0d, xor4096gd_1d
   END INTERFACE xor4096g
+  PUBLIC :: xor4096gf_0d, xor4096gf_1d, xor4096gd_0d, xor4096gd_1d
 
   ! ------------------------------------------------------------------
 

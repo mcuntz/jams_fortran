@@ -89,6 +89,15 @@ MODULE mo_julian
   PUBLIC :: ndays        ! IMSL Julian day from day, month and year
   PUBLIC :: ndyin        ! Day, month and year from IMSL Julian day
 
+  public :: caldat360day, caldat365day, caldat366day, caldat360_day, &
+       caldat365_day, caldat366_day, caldatJulian, caldatLilian
+  public :: date2dec360day, date2dec365day, date2dec366day, date2dec360_day, &
+       date2dec365_day, date2dec366_day, date2decJulian, date2decLilian
+  public :: dec2date360day, dec2date365day, dec2date366day, dec2date360_day, &
+       dec2date365_day, dec2date366_day, dec2dateJulian, dec2dateLilian
+  public :: julday360day, julday365day, julday366day, julday360_day, &
+       julday365_day, julday366_day, juldayJulian, juldayLilian
+
 CONTAINS
 
   ! ------------------------------------------------------------------

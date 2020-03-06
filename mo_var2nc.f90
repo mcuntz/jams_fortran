@@ -188,6 +188,11 @@ module mo_var2nc
           var2nc_4d_i4, var2nc_4d_sp, var2nc_4d_dp, &
           var2nc_5d_i4, var2nc_5d_sp, var2nc_5d_dp
   end interface var2nc
+  public :: var2nc_1d_i4, var2nc_1d_sp, var2nc_1d_dp, &
+       var2nc_2d_i4, var2nc_2d_sp, var2nc_2d_dp, &
+       var2nc_3d_i4, var2nc_3d_sp, var2nc_3d_dp, &
+       var2nc_4d_i4, var2nc_4d_sp, var2nc_4d_dp, &
+       var2nc_5d_i4, var2nc_5d_sp, var2nc_5d_dp
 
   ! ----------------------------------------------------------------------------
 

@@ -28,11 +28,11 @@ MODULE mo_laplace_inversion
   ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   ! SOFTWARE.
 
-  use mo_kind, only: i4, i8, SP, DP
-  use mo_combinatorics,   only: binomcoeffi
-  use mo_functions,       only: factorial
+  use mo_kind,          only: i4, i8, SP, DP
+  use mo_combinatorics, only: binomcoeffi
+  use mo_functions,     only: factorial
 
-  Implicit NONE
+  implicit none
 
   PUBLIC :: NLInvSteh            ! Laplace back-transformed function by Stehfest algorithm
 
@@ -89,9 +89,11 @@ MODULE mo_laplace_inversion
   !         Written, Sebastian Mueller, June 2014
 
   INTERFACE NLInvSteh
-     MODULE PROCEDURE NLInvSteh_dp,     NLInvSteh_sp,       NLInvStehspace_dp,      NLInvStehspace_sp,&
-          NLInvStehvec_dp,  NLInvStehvec_sp,    NLInvStehvecspace_dp,   NLInvStehvecspace_sp
+     MODULE PROCEDURE NLInvSteh_dp, NLInvSteh_sp, NLInvStehspace_dp, NLInvStehspace_sp, &
+          NLInvStehvec_dp, NLInvStehvec_sp, NLInvStehvecspace_dp, NLInvStehvecspace_sp
   END INTERFACE NLInvSteh
+  PUBLIC :: NLInvSteh_dp, NLInvSteh_sp, NLInvStehspace_dp, NLInvStehspace_sp, &
+          NLInvStehvec_dp, NLInvStehvec_sp, NLInvStehvecspace_dp, NLInvStehvecspace_sp
 
   ! ------------------------------------------------------------------
 

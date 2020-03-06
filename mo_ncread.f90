@@ -26,7 +26,7 @@ module mo_NcRead
   ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   ! SOFTWARE.
 
-  use mo_kind, only: i4, i8, sp, dp
+  use mo_kind, only: i1, i4, i8, sp, dp
 
   ! functions and constants of netcdf4 library
   use netcdf,  only: nf90_open, nf90_get_var, nf90_close, NF90_MAX_NAME , &
@@ -74,10 +74,10 @@ module mo_NcRead
   !        integer(i4), dimension(:) :: jdate ! starting indeces of first value to read
   !                                           ! len is the number of dimensions of
   !                                           ! array, default is 1, see example
-  !        integer(i4), dimension(:) :: a_count ! same size as jdate, specifies how
+  !        integer, dimension(:) :: a_count ! same size as jdate, specifies how
   !                                           ! many values in each dimension
   !                                           ! is going to be read
-  !        integer(i4)               :: fid   ! file handle of opened netcdf file
+  !        integer               :: fid   ! file handle of opened netcdf file
   !
   !    RESTRICTIONS
   !        Output array is a floating point of 2-5 dimensions.
@@ -100,7 +100,7 @@ module mo_NcRead
   !        Modified, Stephan Thober, Nov 2012 - write out Varname, when vartype is incorrect
   !        Modified, Stephan Thober, Feb 2013 - added 1 byte integer version
   !        Modified, Stephan Thober, Mar 2014 - added subroutines for allocatable arrays
-
+  !        Modified, Matthias Cuntz, Mar 2020 - integer(1) -> integer(i1)
   interface Get_NcVar
      module procedure Get_NcVar_0d_sp, Get_NcVar_0d_dp, Get_NcVar_1d_sp, &
           Get_NcVar_1d_dp, Get_NcVar_2d_sp, Get_NcVar_2d_dp, &
@@ -111,6 +111,14 @@ module mo_NcRead
           Get_NcVar_0d_i1, Get_NcVar_1d_i1, Get_NcVar_2d_i1, &
           Get_NcVar_3d_i1, Get_NcVar_4d_i1, Get_NcVar_5d_i1
   end interface Get_NcVar
+  public :: Get_NcVar_0d_sp, Get_NcVar_0d_dp, Get_NcVar_1d_sp, &
+       Get_NcVar_1d_dp, Get_NcVar_2d_sp, Get_NcVar_2d_dp, &
+       Get_NcVar_3d_sp, Get_NcVar_3d_dp, Get_NcVar_4d_sp, &
+       Get_NcVar_4d_dp, Get_NcVar_5d_sp, Get_NcVar_5d_dp, &
+       Get_NcVar_0d_i4, Get_NcVar_1d_i4, Get_NcVar_2d_i4, &
+       Get_NcVar_3d_i4, Get_NcVar_4d_i4, Get_NcVar_5d_i4, &
+       Get_NcVar_0d_i1, Get_NcVar_1d_i1, Get_NcVar_2d_i1, &
+       Get_NcVar_3d_i1, Get_NcVar_4d_i1, Get_NcVar_5d_i1
 
   ! ------------------------------------------------------------------------------
 
@@ -142,10 +150,10 @@ contains
   !                                  and their lengths will be printed to standard output
   !
   ! INTENT(OUT)
-  !     integer(i4), dimension(5) :: Get_NcDim - dimension length, -1 if dimension does not exist
+  !     integer, dimension(5) :: Get_NcDim - dimension length, -1 if dimension does not exist
   !
   ! INTENT(OUT), OPTIONAL
-  !     integer(i4) :: ndims - # of dimensions
+  !     integer :: ndims - # of dimensions
   !
   ! LITERATURE
   !     http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
@@ -161,14 +169,14 @@ contains
     character(len=*),      intent(in)  :: Filename
     character(len=*),      intent(in)  :: Variable
     logical,     optional, intent(in)  :: PrintInfo
-    integer(i4), optional, intent(out) :: ndims
-    integer(i4), dimension(5)          :: Get_NcDim
+    integer, optional, intent(out) :: ndims
+    integer, dimension(5)          :: Get_NcDim
     !
     logical     :: PrintFlag
-    integer(i4) :: ncid    ! id of input stream
-    integer(i4) :: varid   ! id of variable to be read
-    integer(i4) :: vartype ! type of variable
-    integer(i4) :: NumDims ! # of dimensions
+    integer :: ncid    ! id of input stream
+    integer :: varid   ! id of variable to be read
+    integer :: vartype ! type of variable
+    integer :: NumDims ! # of dimensions
     !
     ! Open NetCDF filename
     call check(nf90_open(Filename, NF90_NOWRITE, ncid))
@@ -217,7 +225,7 @@ contains
   !         None
 
   !     INTENT(OUT), OPTIONAL
-  !         integer(i4), dimension(:), allocatable, optional, intent(out) :: DimLen   - allocatable array with the size
+  !         integer, dimension(:), allocatable, optional, intent(out) :: DimLen   - allocatable array with the size
   !                                                                                     of the dimensions
 
   !     RESTRICTIONS
@@ -244,17 +252,17 @@ contains
     character(len=*),                  intent(in)  :: Variable
     character(len=*), dimension(:), allocatable, &
          intent(out) :: DimName
-    integer(i4)     , dimension(:), allocatable, &
+    integer     , dimension(:), allocatable, &
          optional, intent(out) :: DimLen
     !
-    integer(i4), dimension(5)                      :: Get_NcDim
+    integer, dimension(5)                      :: Get_NcDim
     !
-    integer(i4)                                    :: ncid    ! id of input stream
-    integer(i4)                                    :: varid   ! id of variable to be read
-    integer(i4)                                    :: vartype ! type of variable
-    integer(i4)                                    :: NumDims ! # of dimensions
-    integer(i4)                                    :: dimid
-    integer(i4)                                    :: len
+    integer                                    :: ncid    ! id of input stream
+    integer                                    :: varid   ! id of variable to be read
+    integer                                    :: vartype ! type of variable
+    integer                                    :: NumDims ! # of dimensions
+    integer                                    :: dimid
+    integer                                    :: len
     !
     ! Open NetCDF filename
     call check(nf90_open(Filename, NF90_NOWRITE, ncid))
@@ -299,8 +307,8 @@ contains
   !         character(len=*), intent(out)     :: AttValues - values of the Attribute
 
   !     INTENT(IN), OPTIONAL
-  !         integer(i4), optional, intent(in) :: fid   ! file handle of opened netcdf file
-  !         integer(i4), optional, intent(in) :: dtype ! datatype (ineteger,float) see NetCDF convention (unidata.ucar)
+  !         integer, optional, intent(in) :: fid   ! file handle of opened netcdf file
+  !         integer, optional, intent(in) :: dtype ! datatype (ineteger,float) see NetCDF convention (unidata.ucar)
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -335,13 +343,13 @@ contains
     character(len=*),                        intent(in)    :: VarName
     character(len=*),                        intent(in)    :: AttName
     character(len=*),                        intent(out)   :: AttValues
-    integer(i4),                   optional, intent(in)    :: fid
-    integer(i4),                   optional, intent(out)   :: dtype
+    integer,                   optional, intent(in)    :: fid
+    integer,                   optional, intent(out)   :: dtype
     !
-    integer(i4)                                            :: ncid
-    integer(i4)                                            :: varid
+    integer                                            :: ncid
+    integer                                            :: varid
     !
-    integer(i4)                                            :: type
+    integer                                            :: type
     integer(i8)                                            :: avint
     real(dp)                                               :: avfloat
     character(256)                                         :: avchar
@@ -408,11 +416,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(sp),                                intent(inout) :: Dat    ! array where values should be stored
-    integer(i4),                   optional, intent(in)    :: fid
+    integer,                   optional, intent(in)    :: fid
     !
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
     !
     ! Open NetCDF filename
     if (present(fid)) then
@@ -447,11 +455,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(dp),                                intent(inout) :: Dat    ! array where values should be stored
-    integer(i4),               optional, intent(in)    :: fid
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
     !
     ! Open NetCDF filename
     if (present(fid)) then
@@ -487,16 +495,16 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(sp),    dimension(:), allocatable,  intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -565,16 +573,16 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     real(dp),    dimension(:), allocatable,  intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -644,16 +652,16 @@ contains
     character(len=*),                         intent(in)    :: VarName ! Variable name
     !real(sp),    dimension(:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
     real(sp),    dimension(:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5)     :: Rstart
-    integer(i4), dimension(5)     :: Rcount
-    integer(i4)                   :: ncid    ! id of input stream
-    integer(i4)                   :: varid   ! id of variable to be read
-    integer(i4)                   :: vartype ! type of variable
-    integer(i4)                   :: i
+    integer, dimension(5)     :: Rstart
+    integer, dimension(5)     :: Rcount
+    integer                   :: ncid    ! id of input stream
+    integer                   :: varid   ! id of variable to be read
+    integer                   :: vartype ! type of variable
+    integer                   :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -722,16 +730,16 @@ contains
     character(len=*),                         intent(in)    :: Filename
     character(len=*),                         intent(in)    :: VarName ! Variable name
     real(dp),    dimension(:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -800,16 +808,16 @@ contains
     character(len=*),                           intent(in)    :: Filename
     character(len=*),                           intent(in)    :: VarName ! Variable name
     real(sp),    dimension(:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)                   :: ncid    ! id of input stream
-    integer(i4)                   :: varid   ! id of variable to be read
-    integer(i4)                   :: vartype ! type of variable
-    integer(i4)                   :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer                   :: ncid    ! id of input stream
+    integer                   :: varid   ! id of variable to be read
+    integer                   :: vartype ! type of variable
+    integer                   :: i
 
     !
     ! Defaults for Options Start and Count
@@ -880,16 +888,16 @@ contains
     character(len=*),                           intent(in)    :: Filename
     character(len=*),                           intent(in)    :: VarName ! Variable name
     real(dp),    dimension(:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -958,16 +966,16 @@ contains
     character(len=*),                             intent(in)    :: Filename
     character(len=*),                             intent(in)    :: VarName ! Variable name
     real(sp),    dimension(:,:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1036,16 +1044,16 @@ contains
     character(len=*),                             intent(in)    :: Filename
     character(len=*),                             intent(in)    :: VarName ! Variable name
     real(dp),    dimension(:,:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)                   :: ncid    ! id of input stream
-    integer(i4)                   :: varid   ! id of variable to be read
-    integer(i4)                   :: vartype ! type of variable
-    integer(i4)                   :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer                   :: ncid    ! id of input stream
+    integer                   :: varid   ! id of variable to be read
+    integer                   :: vartype ! type of variable
+    integer                   :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1114,16 +1122,16 @@ contains
     character(len=*),                               intent(in)    :: Filename
     character(len=*),                               intent(in)    :: VarName ! Variable name
     real(sp),    dimension(:,:,:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)                   :: ncid    ! id of input stream
-    integer(i4)                   :: varid   ! id of variable to be read
-    integer(i4)                   :: vartype ! type of variable
-    integer(i4)                   :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer                   :: ncid    ! id of input stream
+    integer                   :: varid   ! id of variable to be read
+    integer                   :: vartype ! type of variable
+    integer                   :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1192,16 +1200,16 @@ contains
     character(len=*),                               intent(in)    :: Filename
     character(len=*),                               intent(in)    :: VarName ! Variable name
     real(dp),    dimension(:,:,:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)                   :: ncid    ! id of input stream
-    integer(i4)                   :: varid   ! id of variable to be read
-    integer(i4)                   :: vartype ! type of variable
-    integer(i4)                   :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer                   :: ncid    ! id of input stream
+    integer                   :: varid   ! id of variable to be read
+    integer                   :: vartype ! type of variable
+    integer                   :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1269,11 +1277,11 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     integer(i4),                             intent(inout) :: Dat    ! array where values should be stored
-    integer(i4),               optional, intent(in)    :: fid
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
     !
     ! Open NetCDF filename
     if (present(fid)) then
@@ -1310,16 +1318,16 @@ contains
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
     integer(i4), dimension(:), allocatable,  intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1386,16 +1394,16 @@ contains
     character(len=*),                         intent(in)    :: Filename
     character(len=*),                         intent(in)    :: VarName ! Variable name
     integer(i4), dimension(:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)                   :: ncid    ! id of input stream
-    integer(i4)                   :: varid   ! id of variable to be read
-    integer(i4)                   :: vartype ! type of variable
-    integer(i4)                   :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer                   :: ncid    ! id of input stream
+    integer                   :: varid   ! id of variable to be read
+    integer                   :: vartype ! type of variable
+    integer                   :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1462,16 +1470,16 @@ contains
     character(len=*),                           intent(in)    :: Filename
     character(len=*),                           intent(in)    :: VarName ! Variable name
     integer(i4), dimension(:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)                   :: ncid    ! id of input stream
-    integer(i4)                   :: varid   ! id of variable to be read
-    integer(i4)                   :: vartype ! type of variable
-    integer(i4)                   :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer                   :: ncid    ! id of input stream
+    integer                   :: varid   ! id of variable to be read
+    integer                   :: vartype ! type of variable
+    integer                   :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1538,16 +1546,16 @@ contains
     character(len=*),                             intent(in)    :: Filename
     character(len=*),                             intent(in)    :: VarName ! Variable name
     integer(i4), dimension(:,:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)                   :: ncid    ! id of input stream
-    integer(i4)                   :: varid   ! id of variable to be read
-    integer(i4)                   :: vartype ! type of variable
-    integer(i4)                   :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer                   :: ncid    ! id of input stream
+    integer                   :: varid   ! id of variable to be read
+    integer                   :: vartype ! type of variable
+    integer                   :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1614,16 +1622,16 @@ contains
     character(len=*),                               intent(in)    :: Filename
     character(len=*),                               intent(in)    :: VarName ! Variable name
     integer(i4), dimension(:,:,:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1687,12 +1695,12 @@ contains
     !
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
-    integer(1),                              intent(inout) :: Dat    ! array where values should be stored
-    integer(i4),               optional, intent(in)    :: fid
+    integer(i1),                             intent(inout) :: Dat    ! array where values should be stored
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
     !
     ! Open NetCDF filename
     if (present(fid)) then
@@ -1728,17 +1736,17 @@ contains
     !
     character(len=*),                        intent(in)    :: Filename
     character(len=*),                        intent(in)    :: VarName ! Variable name
-    integer(1),  dimension(:), allocatable,  intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer(i1), dimension(:), allocatable,  intent(inout) :: Dat    ! array where values should be stored
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1804,17 +1812,17 @@ contains
     !
     character(len=*),                         intent(in)    :: Filename
     character(len=*),                         intent(in)    :: VarName ! Variable name
-    integer(1),  dimension(:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer(i1), dimension(:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1880,17 +1888,17 @@ contains
     !
     character(len=*),                           intent(in)    :: Filename
     character(len=*),                           intent(in)    :: VarName ! Variable name
-    integer(1),  dimension(:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer(i1), dimension(:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -1956,17 +1964,17 @@ contains
     !
     character(len=*),                             intent(in)    :: Filename
     character(len=*),                             intent(in)    :: VarName ! Variable name
-    integer(1),  dimension(:,:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer(i1), dimension(:,:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -2032,17 +2040,17 @@ contains
     !
     character(len=*),                               intent(in)    :: Filename
     character(len=*),                               intent(in)    :: VarName ! Variable name
-    integer(1),  dimension(:,:,:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
-    integer(i4), dimension(:), optional, intent(in)    :: start
-    integer(i4), dimension(:), optional, intent(in)    :: a_count
-    integer(i4),               optional, intent(in)    :: fid
+    integer(i1), dimension(:,:,:,:,:), allocatable, intent(inout) :: Dat    ! array where values should be stored
+    integer, dimension(:), optional, intent(in)    :: start
+    integer, dimension(:), optional, intent(in)    :: a_count
+    integer,               optional, intent(in)    :: fid
     !
-    integer(i4), dimension(5) :: Rstart
-    integer(i4), dimension(5) :: Rcount
-    integer(i4)               :: ncid    ! id of input stream
-    integer(i4)               :: varid   ! id of variable to be read
-    integer(i4)               :: vartype ! type of variable
-    integer(i4)               :: i
+    integer, dimension(5) :: Rstart
+    integer, dimension(5) :: Rcount
+    integer               :: ncid    ! id of input stream
+    integer               :: varid   ! id of variable to be read
+    integer               :: vartype ! type of variable
+    integer               :: i
     !
     ! Defaults for Options Start and Count
     Rstart = 1
@@ -2112,7 +2120,7 @@ contains
   !     character(len=*) :: Fname - Filename of file to open
   !
   ! INTENT(OUT)
-  !     integer(i4)      :: NcOpen - id of opened stream
+  !     integer      :: NcOpen - id of opened stream
   !
   ! LITERATURE
   !     http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-f90.html
@@ -2125,7 +2133,7 @@ contains
     implicit none
     !
     character(len=*), intent(in) :: Fname
-    integer(i4)                  :: NcOpen
+    integer                  :: NcOpen
     !
     call check(nf90_open(trim(Fname),NF90_NOWRITE, NcOpen))
     !
@@ -2155,7 +2163,7 @@ contains
     !
     implicit none
     !
-    integer(i4), intent(in) :: ncid
+    integer, intent(in) :: ncid
     !
     call check(nf90_close(ncid))
     !
@@ -2181,19 +2189,19 @@ contains
     implicit none
     !
     character(len=*),                    intent(in)     :: Varname
-    integer(i4),                         intent(in)     :: ncid
-    integer(i4),                         intent(out)    :: varid    ! variable id of data to be read
-    integer(i4),                         intent(out)    :: xtype    ! type of the variable
-    integer(i4), dimension(:), optional, intent(inout)  :: dl
+    integer,                         intent(in)     :: ncid
+    integer,                         intent(out)    :: varid    ! variable id of data to be read
+    integer,                         intent(out)    :: xtype    ! type of the variable
+    integer, dimension(:), optional, intent(inout)  :: dl
     logical,                   optional, intent(in)     :: Info
-    integer(i4),               optional, intent(out)    :: ndims    ! Number of Dimensions for specific variable
+    integer,               optional, intent(out)    :: ndims    ! Number of Dimensions for specific variable
     !
-    integer(i4), dimension(:), allocatable :: DimID   ! Id of dimension
+    integer, dimension(:), allocatable :: DimID   ! Id of dimension
     character(NF90_MAX_NAME)               :: name    ! name of Variables in the file
-    integer(i4)                            :: NumDims ! Number of Dimensions for specific variable
-    integer(i4)                            :: n       ! loop index
+    integer                            :: NumDims ! Number of Dimensions for specific variable
+    integer                            :: n       ! loop index
     character(256)                         :: form    ! output format
-    integer(i4)                            :: itmp
+    integer                            :: itmp
     !
     call check(nf90_inq_varid(ncid, Varname, varid))
     call check(nf90_inquire_variable(ncid, varid, ndims=NumDims))
@@ -2231,7 +2239,7 @@ contains
     !
     implicit none
     !
-    integer(i4), intent(in) :: status
+    integer, intent(in) :: status
     !
     if (status /= nf90_noerr) then
        write(*,*) trim(nf90_strerror(status))

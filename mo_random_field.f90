@@ -123,6 +123,7 @@ module mo_random_field
   interface random_velocity_field_gauss
      module procedure random_velocity_field_gauss_dp !, random_velocity_field_gauss_sp
   end interface random_velocity_field_gauss
+  public :: random_velocity_field_gauss_dp
 
   ! ------------------------------------------------------------------
 

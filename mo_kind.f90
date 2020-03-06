@@ -53,8 +53,8 @@ MODULE mo_kind
   use, intrinsic :: iso_c_binding,   only: &
        c_short, c_int, c_long_long, &
        c_float, c_double, c_long_double, &
-       c_float_complex, c_double_complex, c_long_double_complex, &
-       c_bool
+       c_float_complex, c_double_complex, c_long_double_complex !, &
+       ! c_bool
 
   IMPLICIT NONE
 
@@ -105,17 +105,17 @@ MODULE mo_kind
   ! Types have to be in a public section for doxygen
   !> Single Precision Numerical Recipes types for sparse arrays
   TYPE sprs2_sp
-     INTEGER(I4) :: n, len
-     REAL(SP),    DIMENSION(:), POINTER :: val
-     INTEGER(I4), DIMENSION(:), POINTER :: irow
-     INTEGER(I4), DIMENSION(:), POINTER :: jcol
+     INTEGER(i4) :: n, len
+     REAL(sp),    DIMENSION(:), POINTER :: val
+     INTEGER(i4), DIMENSION(:), POINTER :: irow
+     INTEGER(i4), DIMENSION(:), POINTER :: jcol
   END TYPE sprs2_sp
   !> Double Precision Numerical Recipes types for sparse arrays
   TYPE sprs2_dp
-     INTEGER(I4) :: n, len
-     REAL(DP),    DIMENSION(:), POINTER :: val
-     INTEGER(I4), DIMENSION(:), POINTER :: irow
-     INTEGER(I4), DIMENSION(:), POINTER :: jcol
+     INTEGER(i4) :: n, len
+     REAL(dp),    DIMENSION(:), POINTER :: val
+     INTEGER(i4), DIMENSION(:), POINTER :: irow
+     INTEGER(i4), DIMENSION(:), POINTER :: jcol
   END TYPE sprs2_dp
 
 END MODULE mo_kind

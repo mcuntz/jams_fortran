@@ -93,6 +93,7 @@ MODULE mo_integrate
   INTERFACE int_regular
      MODULE PROCEDURE int_regular_sp, int_regular_dp
   END INTERFACE int_regular
+  PUBLIC :: int_regular_sp, int_regular_dp
 
   ! ------------------------------------------------------------------
 

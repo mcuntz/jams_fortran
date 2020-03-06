@@ -3,8 +3,9 @@
 The JAMS Fortran library is a collection of general Fortran modules
 offering miscellaneous functions in the categories
 [Computational](#comp), [Date and Time](#date), [Input / Output](#io),
-[Math / Numerics](#math), [Miscellaneous](#misc), and
-[Screening, Sensitivity Analysis and Optimising / Fitting](#opti).
+[Math / Numerics](#math),
+[Screening, Sensitivity Analysis and Optimising / Fitting](#opti), and
+[Miscellaneous](#misc).
 
 Created November 2011 by Matthias Cuntz and Juliane Mai  
 while at the Department Computational Hydrosystems, Helmholtz Centre

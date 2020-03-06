@@ -126,7 +126,7 @@ MODULE mo_string_utils
   INTERFACE num2str
      MODULE PROCEDURE i42str, i82str, sp2str, dp2str, log2str
   END INTERFACE num2str
-
+  PUBLIC :: i42str, i82str, sp2str, dp2str, log2str
 
   ! ------------------------------------------------------------------
 
@@ -179,6 +179,7 @@ MODULE mo_string_utils
   INTERFACE numarray2str
      MODULE PROCEDURE i4array2str
   END INTERFACE numarray2str
+  PUBLIC :: i4array2str
 
   ! ------------------------------------------------------------------
 

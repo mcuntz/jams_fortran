@@ -87,12 +87,12 @@ MODULE mo_fit
 
   Implicit NONE
 
-  PUBLIC :: fitfun                        ! Wrapper of svdfit and svdvar
-  PUBLIC :: fpoly, fpoly_dp, fpoly_sp     ! Routine to fit polynomial with fitfun or svdfit
-  PUBLIC :: polyfit                       ! Fit a polynomial (with Lapack)
-  PUBLIC :: polyval                       ! Calculates polynomial-values for an vectorial input
-  PUBLIC :: svdfit                        ! Parameter fitting with singular value decomposition
-  PUBLIC :: svdvar                        ! Variance of fitted parameters with svdfit
+  PUBLIC :: fitfun  ! Wrapper of svdfit and svdvar
+  PUBLIC :: fpoly   ! Routine to fit polynomial with fitfun or svdfit
+  PUBLIC :: polyfit ! Fit a polynomial (with Lapack)
+  PUBLIC :: polyval ! Calculates polynomial-values for an vectorial input
+  PUBLIC :: svdfit  ! Parameter fitting with singular value decomposition
+  PUBLIC :: svdvar  ! Variance of fitted parameters with svdfit
 
   ! Public interfaces
   ! ------------------------------------------------------------------
@@ -173,6 +173,7 @@ MODULE mo_fit
   INTERFACE fitfun
      MODULE PROCEDURE fitfun_sp, fitfun_dp
   END INTERFACE fitfun
+  PUBLIC :: fitfun_sp, fitfun_dp
 
   ! ------------------------------------------------------------------
 
@@ -222,6 +223,7 @@ MODULE mo_fit
   INTERFACE fpoly
      MODULE PROCEDURE fpoly_sp, fpoly_dp
   END INTERFACE fpoly
+  PUBLIC :: fpoly_sp, fpoly_dp
 
   ! ------------------------------------------------------------------
 
@@ -285,6 +287,7 @@ MODULE mo_fit
   INTERFACE polyfit
      MODULE PROCEDURE polyfit_sp, polyfit_dp
   END INTERFACE polyfit
+  PUBLIC :: polyfit_sp, polyfit_dp
 
   ! ------------------------------------------------------------------
 
@@ -342,6 +345,7 @@ MODULE mo_fit
   INTERFACE polyval
      MODULE PROCEDURE polyval_0d_sp, polyval_1d_sp, polyval_0d_dp, polyval_1d_dp
   END INTERFACE polyval
+  PUBLIC :: polyval_0d_sp, polyval_1d_sp, polyval_0d_dp, polyval_1d_dp
 
   ! ------------------------------------------------------------------
 
@@ -420,6 +424,7 @@ MODULE mo_fit
   INTERFACE svdfit
      MODULE PROCEDURE svdfit_sp, svdfit_dp
   END INTERFACE svdfit
+  PUBLIC :: svdfit_sp, svdfit_dp
 
   ! ------------------------------------------------------------------
 
@@ -483,6 +488,7 @@ MODULE mo_fit
   INTERFACE svdvar
      MODULE PROCEDURE svdvar_sp, svdvar_dp
   END INTERFACE svdvar
+  PUBLIC :: svdvar_sp, svdvar_dp
 
   ! ------------------------------------------------------------------
 

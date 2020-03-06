@@ -230,6 +230,7 @@ MODULE mo_anneal
   INTERFACE anneal
      MODULE PROCEDURE anneal_dp
   END INTERFACE anneal
+  PUBLIC :: anneal_dp
 
   ! ------------------------------------------------------------------
 
@@ -348,6 +349,7 @@ MODULE mo_anneal
   INTERFACE GetTemperature
      MODULE PROCEDURE GetTemperature_dp
   END INTERFACE GetTemperature
+  PUBLIC :: GetTemperature_dp
 
   PRIVATE
 

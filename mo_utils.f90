@@ -119,7 +119,7 @@ MODULE mo_utils
   INTERFACE cumsum
      MODULE PROCEDURE cumsum_i4, cumsum_i8, cumsum_dp, cumsum_sp, cumsum_dpc, cumsum_spc
   END INTERFACE cumsum
-
+  PUBLIC :: cumsum_i4, cumsum_i8, cumsum_dp, cumsum_sp, cumsum_dpc, cumsum_spc
 
   ! ------------------------------------------------------------------
   !
@@ -175,18 +175,22 @@ MODULE mo_utils
   INTERFACE equal
      MODULE PROCEDURE equal_sp, equal_dp
   END INTERFACE equal
-
+  PUBLIC :: equal_sp, equal_dp
+  
   INTERFACE notequal
      MODULE PROCEDURE notequal_sp, notequal_dp
   END INTERFACE notequal
+  PUBLIC :: notequal_sp, notequal_dp
 
   INTERFACE greaterequal
      MODULE PROCEDURE greaterequal_sp, greaterequal_dp
   END INTERFACE greaterequal
+  PUBLIC :: greaterequal_sp, greaterequal_dp
 
   INTERFACE lesserequal
      MODULE PROCEDURE lesserequal_sp, lesserequal_dp
   END INTERFACE lesserequal
+  PUBLIC :: lesserequal_sp, lesserequal_dp
 
   INTERFACE eq
      MODULE PROCEDURE equal_sp, equal_dp
@@ -259,11 +263,12 @@ MODULE mo_utils
   INTERFACE imaxloc
      MODULE PROCEDURE imaxloc_i4, imaxloc_i8, imaxloc_sp, imaxloc_dp
   END INTERFACE imaxloc
+  PUBLIC :: imaxloc_i4, imaxloc_i8, imaxloc_sp, imaxloc_dp
 
   INTERFACE iminloc
      MODULE PROCEDURE iminloc_i4, iminloc_i8, iminloc_sp, iminloc_dp
   END INTERFACE iminloc
-
+  PUBLIC :: iminloc_i4, iminloc_i8, iminloc_sp, iminloc_dp
 
   ! ------------------------------------------------------------------
   !
@@ -327,7 +332,7 @@ MODULE mo_utils
   INTERFACE isin
      MODULE PROCEDURE isin_i4, isin_i8, isin_sp, isin_dp, isin_char
   END INTERFACE isin
-
+  PUBLIC :: isin_i4, isin_i8, isin_sp, isin_dp, isin_char
 
   ! ------------------------------------------------------------------
   !
@@ -388,7 +393,7 @@ MODULE mo_utils
   INTERFACE isinloc
      MODULE PROCEDURE isinloc_i4, isinloc_i8, isinloc_sp, isinloc_dp, isinloc_char
   END INTERFACE isinloc
-
+  PUBLIC :: isinloc_i4, isinloc_i8, isinloc_sp, isinloc_dp, isinloc_char
 
   ! ------------------------------------------------------------------
   !
@@ -446,15 +451,17 @@ MODULE mo_utils
   INTERFACE is_finite
      MODULE PROCEDURE is_finite_sp, is_finite_dp
   END INTERFACE is_finite
+  PUBLIC :: is_finite_sp, is_finite_dp
 
   INTERFACE is_nan
      MODULE PROCEDURE is_nan_sp, is_nan_dp
   END INTERFACE is_nan
+  PUBLIC :: is_nan_sp, is_nan_dp
 
   INTERFACE is_normal
      MODULE PROCEDURE is_normal_sp, is_normal_dp
   END INTERFACE is_normal
-
+  PUBLIC :: is_normal_sp, is_normal_dp
 
   ! ------------------------------------------------------------------
   !
@@ -510,7 +517,7 @@ MODULE mo_utils
   INTERFACE linspace
      MODULE PROCEDURE linspace_i4, linspace_i8, linspace_dp, linspace_sp
   END INTERFACE linspace
-
+  PUBLIC :: linspace_i4, linspace_i8, linspace_dp, linspace_sp
 
   ! ------------------------------------------------------------------
   !
@@ -573,7 +580,7 @@ MODULE mo_utils
   INTERFACE locate
      MODULE PROCEDURE locate_0d_dp, locate_0d_sp, locate_1d_dp, locate_1d_sp
   END INTERFACE locate
-
+  PUBLIC :: locate_0d_dp, locate_0d_sp, locate_1d_dp, locate_1d_sp
 
   ! ------------------------------------------------------------------
   !
@@ -633,7 +640,7 @@ MODULE mo_utils
   INTERFACE arange
      MODULE PROCEDURE arange_i4, arange_i8, arange_dp, arange_sp
   END INTERFACE arange
-
+  PUBLIC :: arange_i4, arange_i8, arange_dp, arange_sp
 
   ! ------------------------------------------------------------------
   !
@@ -703,7 +710,10 @@ MODULE mo_utils
           swap_vec_dp,      swap_vec_sp,      swap_vec_i4,      swap_vec_dpc,      swap_vec_spc,&
           swap_vec_mask_dp, swap_vec_mask_sp, swap_vec_mask_i4, swap_vec_mask_dpc, swap_vec_mask_spc
   END INTERFACE swap
-
+  PUBLIC :: swap_xy_dp,       swap_xy_sp,       swap_xy_i4,       swap_xy_dpc,       swap_xy_spc, &
+            swap_xy_mask_dp,  swap_xy_mask_sp,  swap_xy_mask_i4,  swap_xy_mask_dpc,  swap_xy_mask_spc, &
+            swap_vec_dp,      swap_vec_sp,      swap_vec_i4,      swap_vec_dpc,      swap_vec_spc,&
+            swap_vec_mask_dp, swap_vec_mask_sp, swap_vec_mask_i4, swap_vec_mask_dpc, swap_vec_mask_spc
 
   ! ------------------------------------------------------------------
   !
@@ -781,6 +791,7 @@ MODULE mo_utils
   INTERFACE special_value
      MODULE PROCEDURE special_value_sp, special_value_dp
   END INTERFACE special_value
+  PUBLIC :: special_value_sp, special_value_dp
 
   ! ------------------------------------------------------------------
 

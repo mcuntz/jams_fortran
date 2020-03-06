@@ -139,6 +139,7 @@ MODULE mo_sort
   INTERFACE sort
      MODULE PROCEDURE sort_i4, sort_sp, sort_dp
   END INTERFACE sort
+  PUBLIC :: sort_i4, sort_sp, sort_dp
 
   ! ------------------------------------------------------------------
 
@@ -192,6 +193,7 @@ MODULE mo_sort
   INTERFACE sort_index
      MODULE PROCEDURE sort_index_i4, sort_index_sp, sort_index_dp
   END INTERFACE sort_index
+  PUBLIC :: sort_index_i4, sort_index_sp, sort_index_dp
 
   PRIVATE
 

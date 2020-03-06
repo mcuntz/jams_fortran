@@ -250,6 +250,7 @@ MODULE mo_mcmc
   INTERFACE mcmc
      MODULE PROCEDURE mcmc_dp
   END INTERFACE mcmc
+  PUBLIC :: mcmc_dp
 
   !-----------------------------------------------------------------------------------------------
   !
@@ -472,6 +473,7 @@ MODULE mo_mcmc
   INTERFACE mcmc_stddev
      MODULE PROCEDURE mcmc_stddev_dp
   END INTERFACE mcmc_stddev
+  PUBLIC :: mcmc_stddev_dp
 
   !-----------------------------------------------------------------------------------------------
 

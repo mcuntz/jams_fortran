@@ -143,6 +143,7 @@ MODULE mo_sobol
   INTERFACE sobol
      MODULE PROCEDURE i4_sobol, i8_sobol
   END INTERFACE sobol
+  PUBLIC :: i4_sobol, i8_sobol
 
   ! ------------------------------------------------------------------
 
@@ -211,6 +212,7 @@ MODULE mo_sobol
   INTERFACE sobol_array
      MODULE PROCEDURE i4_sobol_generate, i8_sobol_generate
   END INTERFACE sobol_array
+  PUBLIC :: i4_sobol_generate, i8_sobol_generate
 
   ! ------------------------------------------------------------------
 

@@ -115,6 +115,7 @@ module mo_select_distant_entries
   interface select_distant_entries
      module procedure select_distant_entries_dp, select_distant_entries_sp
   end interface select_distant_entries
+  public :: select_distant_entries_dp, select_distant_entries_sp
 
   private
 

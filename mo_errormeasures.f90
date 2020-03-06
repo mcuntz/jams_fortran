@@ -110,6 +110,7 @@ MODULE mo_errormeasures
   INTERFACE BIAS
      MODULE PROCEDURE BIAS_1d_sp, BIAS_1d_dp, BIAS_2d_sp, BIAS_2d_dp, BIAS_3d_sp, BIAS_3d_dp
   END INTERFACE BIAS
+  PUBLIC :: BIAS_1d_sp, BIAS_1d_dp, BIAS_2d_sp, BIAS_2d_dp, BIAS_3d_sp, BIAS_3d_dp
 
   ! ------------------------------------------------------------------
 
@@ -192,6 +193,7 @@ MODULE mo_errormeasures
   INTERFACE KGE
      MODULE PROCEDURE KGE_1d_dp, KGE_2d_dp, KGE_3d_dp, KGE_1d_sp, KGE_2d_sp, KGE_3d_sp
   END INTERFACE KGE
+  PUBLIC :: KGE_1d_dp, KGE_2d_dp, KGE_3d_dp, KGE_1d_sp, KGE_2d_sp, KGE_3d_sp
 
   ! ------------------------------------------------------------------
 
@@ -257,6 +259,7 @@ MODULE mo_errormeasures
   INTERFACE LNNSE
      MODULE PROCEDURE LNNSE_1d_sp, LNNSE_1d_dp, LNNSE_2d_dp, LNNSE_2d_sp, LNNSE_3d_sp, LNNSE_3d_dp
   END INTERFACE LNNSE
+  PUBLIC :: LNNSE_1d_sp, LNNSE_1d_dp, LNNSE_2d_dp, LNNSE_2d_sp, LNNSE_3d_sp, LNNSE_3d_dp
 
   ! ------------------------------------------------------------------
 
@@ -318,6 +321,7 @@ MODULE mo_errormeasures
   INTERFACE MAE
      MODULE PROCEDURE MAE_1d_sp, MAE_1d_dp, MAE_2d_sp, MAE_2d_dp, MAE_3d_sp, MAE_3d_dp
   END INTERFACE MAE
+  PUBLIC :: MAE_1d_sp, MAE_1d_dp, MAE_2d_sp, MAE_2d_dp, MAE_3d_sp, MAE_3d_dp
 
   ! ! ------------------------------------------------------------------
 
@@ -431,6 +435,7 @@ MODULE mo_errormeasures
   INTERFACE MAE_PROB_ONE
      MODULE PROCEDURE MAE_PROB_ONE_1D_DP
   END INTERFACE MAE_PROB_ONE
+  PUBLIC :: MAE_PROB_ONE_1D_DP
 
   ! ------------------------------------------------------------------
 
@@ -492,6 +497,7 @@ MODULE mo_errormeasures
   INTERFACE MSE
      MODULE PROCEDURE MSE_1d_sp, MSE_1d_dp, MSE_2d_sp, MSE_2d_dp, MSE_3d_sp, MSE_3d_dp
   END INTERFACE MSE
+  PUBLIC :: MSE_1d_sp, MSE_1d_dp, MSE_2d_sp, MSE_2d_dp, MSE_3d_sp, MSE_3d_dp
 
   ! ------------------------------------------------------------------
 
@@ -555,6 +561,7 @@ MODULE mo_errormeasures
   INTERFACE NSE
      MODULE PROCEDURE NSE_1d_sp, NSE_1d_dp, NSE_2d_dp, NSE_2d_sp, NSE_3d_sp, NSE_3d_dp
   END INTERFACE NSE
+  PUBLIC :: NSE_1d_sp, NSE_1d_dp, NSE_2d_dp, NSE_2d_sp, NSE_3d_sp, NSE_3d_dp
 
   ! ------------------------------------------------------------------
 
@@ -616,6 +623,7 @@ MODULE mo_errormeasures
   INTERFACE SAE
      MODULE PROCEDURE SAE_1d_sp, SAE_1d_dp, SAE_2d_sp, SAE_2d_dp, SAE_3d_sp, SAE_3d_dp
   END INTERFACE SAE
+  PUBLIC :: SAE_1d_sp, SAE_1d_dp, SAE_2d_sp, SAE_2d_dp, SAE_3d_sp, SAE_3d_dp
 
   ! ------------------------------------------------------------------
 
@@ -677,6 +685,7 @@ MODULE mo_errormeasures
   INTERFACE SSE
      MODULE PROCEDURE SSE_1d_sp, SSE_1d_dp, SSE_2d_sp, SSE_2d_dp, SSE_3d_sp, SSE_3d_dp
   END INTERFACE SSE
+  PUBLIC :: SSE_1d_sp, SSE_1d_dp, SSE_2d_sp, SSE_2d_dp, SSE_3d_sp, SSE_3d_dp
 
   ! ------------------------------------------------------------------
 
@@ -738,6 +747,7 @@ MODULE mo_errormeasures
   INTERFACE RMSE
      MODULE PROCEDURE RMSE_1d_sp, RMSE_1d_dp, RMSE_2d_sp, RMSE_2d_dp, RMSE_3d_sp, RMSE_3d_dp
   END INTERFACE RMSE
+  PUBLIC :: RMSE_1d_sp, RMSE_1d_dp, RMSE_2d_sp, RMSE_2d_dp, RMSE_3d_sp, RMSE_3d_dp
 
   ! ------------------------------------------------------------------
 

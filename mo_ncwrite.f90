@@ -110,7 +110,7 @@ module mo_ncwrite
   ! public variables -----------------------------------------------------------------
   integer(i4),     public                            :: nVars   ! nr. variables
   integer(i4),     public                            :: nDims   ! nr. dimensions
-  type (dims),     public, dimension(:), allocatable :: Dnc     ! dimensions list
+  type(dims),      public, dimension(:), allocatable :: Dnc     ! dimensions list
   type(variable),  public, dimension(:), allocatable :: V       ! variable list, THIS STRUCTURE WILL BE WRITTEN IN THE FILE
   type(attribute), public, dimension(nGAtt)          :: gatt    ! global attributes for netcdf
 

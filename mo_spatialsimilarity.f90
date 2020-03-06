@@ -85,7 +85,7 @@ MODULE mo_spatialsimilarity
   !>                                                | 4-1, 5-3, 2-2 |   | 3, 2, 0 |
   !>                                                | 0-3, 5-0, 0-3 |   | 3, 5, 3 |
   !>
-   !>                                    DISSIMILAR / VALID NEIGH CELLS
+  !>                                    DISSIMILAR / VALID NEIGH CELLS
   !>           NNDVMatrix / VALID NEIGH CELLS = | 2, 4, 3 | / | 3, 5, 3 |
   !>                                            | 3, 2, 0 |   | 5, 8, 5 |   
   !>                                            | 3, 5, 3 |   | 3, 5, 3 |   
@@ -147,6 +147,7 @@ MODULE mo_spatialsimilarity
   INTERFACE NNDV                  
      MODULE PROCEDURE NNDV_sp, NNDV_dp
   END INTERFACE NNDV
+  PUBLIC :: NNDV_sp, NNDV_dp
 
   ! ------------------------------------------------------------------
 
@@ -168,7 +169,7 @@ MODULE mo_spatialsimilarity
   !>            the values for PD is [0..1]. In which 1 indicates full agreement and 0 full dismatching.
   !>
   !>             <pre>
- !>            EXAMPLE:\n
+  !>            EXAMPLE:\n
   !>            mat1 =  | 12 17  1 | , mat2 = |  7  9 12 | 
   !>                    |  4 10 11 |          | 12 11 11 | 
   !>                    | 15  2 20 |          |  5 13  7 |
@@ -246,6 +247,7 @@ MODULE mo_spatialsimilarity
   INTERFACE PD                  
      MODULE PROCEDURE PD_sp, PD_dp
   END INTERFACE PD
+  PUBLIC :: PD_sp, PD_dp
 
   ! ------------------------------------------------------------------
 

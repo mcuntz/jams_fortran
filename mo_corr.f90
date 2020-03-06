@@ -139,7 +139,9 @@ MODULE mo_corr
      MODULE PROCEDURE autocoeffk_sp, autocoeffk_dp, &
           autocoeffk_1d_dp, autocoeffk_1d_sp
   END INTERFACE autocoeffk
-
+  PUBLIC :: autocoeffk_sp, autocoeffk_dp, &
+       autocoeffk_1d_dp, autocoeffk_1d_sp
+  
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -196,7 +198,9 @@ MODULE mo_corr
      MODULE PROCEDURE autocorr_sp, autocorr_dp, &
           autocorr_1d_sp, autocorr_1d_dp
   END INTERFACE autocorr
-
+  PUBLIC :: autocorr_sp, autocorr_dp, &
+       autocorr_1d_sp, autocorr_1d_dp
+  
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -264,7 +268,8 @@ MODULE mo_corr
   INTERFACE corr
      MODULE PROCEDURE corr_sp, corr_dp
   END INTERFACE corr
-
+  PUBLIC :: corr_sp, corr_dp
+  
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -323,7 +328,8 @@ MODULE mo_corr
   INTERFACE crosscoeffk
      MODULE PROCEDURE crosscoeffk_sp, crosscoeffk_dp
   END INTERFACE crosscoeffk
-
+  PUBLIC :: crosscoeffk_sp, crosscoeffk_dp
+  
   ! ------------------------------------------------------------------
 
   !     NAME
@@ -379,6 +385,7 @@ MODULE mo_corr
   INTERFACE crosscorr
      MODULE PROCEDURE crosscorr_sp, crosscorr_dp
   END INTERFACE crosscorr
+  PUBLIC :: crosscorr_sp, crosscorr_dp
 
   ! ------------------------------------------------------------------
 

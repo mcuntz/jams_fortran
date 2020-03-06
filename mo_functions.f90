@@ -99,6 +99,7 @@ MODULE mo_functions
   INTERFACE factln
      MODULE PROCEDURE factln_i4, factln_i8
   END INTERFACE factln
+  PUBLIC :: factln_i4, factln_i8
 
   ! ------------------------------------------------------------------
   !
@@ -151,6 +152,7 @@ MODULE mo_functions
   INTERFACE factorial
      MODULE PROCEDURE factorial_i4, factorial_i8
   END INTERFACE factorial
+  PUBLIC :: factorial_i4, factorial_i8
 
   ! ------------------------------------------------------------------
   !
@@ -209,6 +211,7 @@ MODULE mo_functions
   INTERFACE gamm
      MODULE PROCEDURE gamm_sp, gamm_dp
   END INTERFACE gamm
+  PUBLIC :: gamm_sp, gamm_dp
 
   ! ------------------------------------------------------------------
   !
@@ -267,6 +270,7 @@ MODULE mo_functions
   INTERFACE gammln
      MODULE PROCEDURE gammln_sp, gammln_dp
   END INTERFACE gammln
+  PUBLIC :: gammln_sp, gammln_dp
 
   ! ------------------------------------------------------------------
   !
@@ -320,6 +324,8 @@ MODULE mo_functions
      MODULE PROCEDURE morris_0d_dp, morris_1d_dp, &
           morris_0d_sp, morris_1d_sp
   END INTERFACE morris
+  PUBLIC :: morris_0d_dp, morris_1d_dp, &
+       morris_0d_sp, morris_1d_sp
 
   ! ------------------------------------------------------------------
 

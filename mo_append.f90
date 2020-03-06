@@ -123,6 +123,12 @@ MODULE mo_append
           append_char_v_s, append_char_v_v, append_char_m_m, append_char_3d_3d, &
           append_lgt_v_s, append_lgt_v_v, append_lgt_m_m, append_lgt_3d_3d
   END INTERFACE append
+  PUBLIC :: append_i4_v_s, append_i4_v_v, append_i4_m_m, append_i4_3d_3d, &
+       append_i8_v_s, append_i8_v_v, append_i8_m_m, append_i8_3d_3d, &
+       append_sp_v_s, append_sp_v_v, append_sp_m_m, append_sp_3d_3d, &
+       append_dp_v_s, append_dp_v_v, append_dp_m_m, append_dp_3d_3d, &
+       append_char_v_s, append_char_v_v, append_char_m_m, append_char_3d_3d, &
+       append_lgt_v_s, append_lgt_v_v, append_lgt_m_m, append_lgt_3d_3d
 
   ! ------------------------------------------------------------------
 
@@ -194,8 +200,13 @@ MODULE mo_append
           paste_dp_m_s, paste_dp_m_v, paste_dp_m_m, &
           paste_char_m_s, paste_char_m_v, paste_char_m_m, &
           paste_lgt_m_s, paste_lgt_m_v, paste_lgt_m_m
-
   END INTERFACE paste
+  PUBLIC :: paste_i4_m_s, paste_i4_m_v, paste_i4_m_m, &
+       paste_i8_m_s, paste_i8_m_v, paste_i8_m_m, &
+       paste_sp_m_s, paste_sp_m_v, paste_sp_m_m, &
+       paste_dp_m_s, paste_dp_m_v, paste_dp_m_m, &
+       paste_char_m_s, paste_char_m_v, paste_char_m_m, &
+       paste_lgt_m_s, paste_lgt_m_v, paste_lgt_m_m
 
   ! ------------------------------------------------------------------
 

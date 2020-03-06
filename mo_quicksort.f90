@@ -118,6 +118,7 @@ MODULE mo_quicksort
   INTERFACE qsort
      MODULE PROCEDURE qsort_dp, qsort_sp, qsort_i4
   END INTERFACE qsort
+  PUBLIC :: qsort_dp, qsort_sp, qsort_i4
 
   ! ------------------------------------------------------------------
 
@@ -182,7 +183,7 @@ MODULE mo_quicksort
   INTERFACE qsort_index
      MODULE PROCEDURE qsort_index_dp, qsort_index_sp, qsort_index_i4
   END INTERFACE qsort_index
-
+  PUBLIC :: qsort_index_dp, qsort_index_sp, qsort_index_i4
 
   ! ------------------------------------------------------------------
 
@@ -243,7 +244,7 @@ MODULE mo_quicksort
   INTERFACE qsortmp
      MODULE PROCEDURE qsortmp_dp, qsortmp_sp, qsortmp_i4
   END INTERFACE qsortmp
-
+  PUBLIC :: qsortmp_dp, qsortmp_sp, qsortmp_i4
 
   ! ------------------------------------------------------------------
 
@@ -299,7 +300,8 @@ MODULE mo_quicksort
   INTERFACE sortmp_index
      MODULE PROCEDURE sortmp_index_i4, sortmp_index_sp, sortmp_index_dp
   END INTERFACE sortmp_index
-
+  PUBLIC :: sortmp_index_i4, sortmp_index_sp, sortmp_index_dp
+  
   ! aliases
   INTERFACE sort
      MODULE PROCEDURE qsort_dp, qsort_sp, qsort_i4

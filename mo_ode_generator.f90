@@ -114,29 +114,35 @@ module mo_ode_generator
     !                  Matthias Cuntz, Jan 2015    - removed nodata_value
     ! ------------------------------------------------------------------
     interface ode_generator
-        module procedure ode_generator_dp
-    end interface
+       module procedure ode_generator_dp
+    end interface ode_generator
+    public :: ode_generator_dp
 
     ! Private method
     interface get_odes
-        module procedure get_odes_dp
-    end interface
+       module procedure get_odes_dp
+    end interface get_odes
+    public :: get_odes_dp
 
     interface set_alpha
-        module procedure set_alpha_dp
-    end interface
+       module procedure set_alpha_dp
+    end interface set_alpha
+    public :: set_alpha_dp
 
     interface set_beta
-        module procedure set_beta_dp
-    end interface
+       module procedure set_beta_dp
+    end interface set_beta
+    public :: set_beta_dp
 
     interface get_binary
-        module procedure get_binary_i4, get_binary_i8
-    end interface
+       module procedure get_binary_i4, get_binary_i8
+    end interface get_binary
+    public :: get_binary_i4, get_binary_i8
 
     interface get_binaryPer
-        module procedure get_binaryPer_dp
-    end interface
+       module procedure get_binaryPer_dp
+    end interface get_binaryPer
+    public :: get_binaryPer_dp
 
     private
 

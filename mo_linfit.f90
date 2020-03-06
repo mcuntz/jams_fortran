@@ -110,6 +110,7 @@ MODULE mo_linfit
   INTERFACE linfit
      MODULE PROCEDURE linfit_sp, linfit_dp
   END INTERFACE linfit
+  PUBLIC :: linfit_sp, linfit_dp
 
   ! ------------------------------------------------------------------
 

@@ -288,100 +288,145 @@ MODULE mo_orderpack
   interface sort
      module procedure d_refsor, r_refsor, i_refsor
   end interface sort
+  public :: d_refsor, r_refsor, i_refsor
+  
   interface sort_index
      module procedure sort_index_dp, sort_index_sp, sort_index_i4
   end interface sort_index
+  public :: sort_index_dp, sort_index_sp, sort_index_i4
 
   interface ctrper
      module procedure d_ctrper, r_ctrper, i_ctrper
   end interface ctrper
+  public :: d_ctrper, r_ctrper, i_ctrper
+  
   interface fndnth
      module procedure d_fndnth, r_fndnth, i_fndnth
   end interface fndnth
+  public :: d_fndnth, r_fndnth, i_fndnth
+  
   interface indmed
      module procedure d_indmed, r_indmed, i_indmed
   end interface indmed
+  public :: d_indmed, r_indmed, i_indmed
+  
   interface indnth
      module procedure d_indnth, r_indnth, i_indnth
   end interface indnth
+  public :: d_indnth, r_indnth, i_indnth
+  
   interface inspar
      module procedure d_inspar, r_inspar, i_inspar
   end interface inspar
+  public :: d_inspar, r_inspar, i_inspar
+  
   interface inssor
      module procedure d_inssor, r_inssor, i_inssor
   end interface inssor
+  public :: d_inssor, r_inssor, i_inssor
+  
   interface omedian
      module procedure d_median, r_median, i_median
   end interface omedian
+  public :: d_median, r_median, i_median
+  
   interface mrgref
      module procedure d_mrgref, r_mrgref, i_mrgref
   end interface mrgref
+  public :: d_mrgref, r_mrgref, i_mrgref
+  
   interface mrgrnk
      module procedure D_mrgrnk, R_mrgrnk, I_mrgrnk
   end interface mrgrnk
+  public :: D_mrgrnk, R_mrgrnk, I_mrgrnk
+  
   interface mulcnt
      module procedure d_mulcnt, r_mulcnt, i_mulcnt
   end interface mulcnt
+  public :: d_mulcnt, r_mulcnt, i_mulcnt
+  
   interface rapknr
      module procedure d_rapknr, r_rapknr, i_rapknr
   end interface rapknr
+  public :: d_rapknr, r_rapknr, i_rapknr
+  
   interface refpar
      module procedure d_refpar, r_refpar, i_refpar
   end interface refpar
+  public :: d_refpar, r_refpar, i_refpar
+  
   interface refsor
      module procedure d_refsor, r_refsor, i_refsor
   end interface refsor
+  
   interface rinpar
      module procedure d_rinpar, r_rinpar, i_rinpar
   end interface rinpar
+  public :: d_rinpar, r_rinpar, i_rinpar
+  
   interface rnkpar
      module procedure d_rnkpar, r_rnkpar, i_rnkpar
   end interface rnkpar
+  public :: d_rnkpar, r_rnkpar, i_rnkpar
+  
   interface uniinv
      module procedure d_uniinv, r_uniinv, i_uniinv
   end interface uniinv
+  public :: d_uniinv, r_uniinv, i_uniinv
+  
   interface nearless
      module procedure D_nearless, R_nearless, I_nearless
   end interface nearless
+  public :: D_nearless, R_nearless, I_nearless
+  
   interface unipar
      module procedure d_unipar, r_unipar, i_unipar
   end interface unipar
+  public :: d_unipar, r_unipar, i_unipar
+  
   interface unirnk
      module procedure D_unirnk, R_unirnk, I_unirnk
   end interface unirnk
+  public :: D_unirnk, R_unirnk, I_unirnk
+  
   interface unista
      module procedure d_unista, r_unista, i_unista
   end interface unista
+  public :: d_unista, r_unista, i_unista
+  
   interface valmed
      module procedure d_valmed, r_valmed, i_valmed
   end interface valmed
+  public :: d_valmed, r_valmed, i_valmed
+  
   interface valnth
      module procedure d_valnth, r_valnth, i_valnth
   end interface valnth
+  public :: d_valnth, r_valnth, i_valnth
 
-  private :: R_ctrper, I_ctrper, D_ctrper
-  private :: R_fndnth, I_fndnth, D_fndnth
-  private :: R_indmed, I_indmed, D_indmed
-  private :: R_indnth, I_indnth, D_indnth
-  private :: R_inspar, I_inspar, D_inspar
-  private :: R_inssor, I_inssor, D_inssor
-  private :: R_median, I_median, D_median
-  private :: R_mrgref, I_mrgref, D_mrgref
-  private :: R_mrgrnk, I_mrgrnk, D_mrgrnk
-  private :: R_mulcnt, I_mulcnt, D_mulcnt
-  private :: R_nearless, I_nearless, D_nearless, nearless
-  private :: R_rapknr, I_rapknr, D_rapknr
-  private :: R_refpar, I_refpar, D_refpar
-  private :: R_refsor, I_refsor, D_refsor
-  private :: R_rinpar, I_rinpar, D_rinpar
-  private :: R_rnkpar, I_rnkpar, D_rnkpar
-  private :: R_subsor, I_subsor, D_subsor
-  private :: R_uniinv, I_uniinv, D_uniinv
-  private :: R_unipar, I_unipar, D_unipar
-  private :: R_unirnk, I_unirnk, D_unirnk
-  private :: R_unista, I_unista, D_unista
-  private :: R_valmed, I_valmed, D_valmed
-  private :: R_valnth, I_valnth, D_valnth
+  ! private :: R_ctrper, I_ctrper, D_ctrper
+  ! private :: R_fndnth, I_fndnth, D_fndnth
+  ! private :: R_indmed, I_indmed, D_indmed
+  ! private :: R_indnth, I_indnth, D_indnth
+  ! private :: R_inspar, I_inspar, D_inspar
+  ! private :: R_inssor, I_inssor, D_inssor
+  ! private :: R_median, I_median, D_median
+  ! private :: R_mrgref, I_mrgref, D_mrgref
+  ! private :: R_mrgrnk, I_mrgrnk, D_mrgrnk
+  ! private :: R_mulcnt, I_mulcnt, D_mulcnt
+  ! private :: R_nearless, I_nearless, D_nearless, nearless
+  ! private :: R_rapknr, I_rapknr, D_rapknr
+  ! private :: R_refpar, I_refpar, D_refpar
+  ! private :: R_refsor, I_refsor, D_refsor
+  ! private :: R_rinpar, I_rinpar, D_rinpar
+  ! private :: R_rnkpar, I_rnkpar, D_rnkpar
+  ! private :: R_subsor, I_subsor, D_subsor
+  ! private :: R_uniinv, I_uniinv, D_uniinv
+  ! private :: R_unipar, I_unipar, D_unipar
+  ! private :: R_unirnk, I_unirnk, D_unirnk
+  ! private :: R_unista, I_unista, D_unista
+  ! private :: R_valmed, I_valmed, D_valmed
+  ! private :: R_valnth, I_valnth, D_valnth
   private :: r_med, i_med, d_med
 
   PRIVATE

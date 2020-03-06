@@ -154,6 +154,7 @@ MODULE mo_nelmin
   INTERFACE nelminrange
      MODULE PROCEDURE nelminrange_dp, nelminrange_sp
   END INTERFACE nelminrange
+  PUBLIC :: nelminrange_dp, nelminrange_sp
 
   ! ------------------------------------------------------------------
 

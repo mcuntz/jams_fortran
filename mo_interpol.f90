@@ -115,6 +115,7 @@ MODULE mo_interpol
   INTERFACE interpol
      MODULE PROCEDURE interpol_sp, interpol_dp
   END INTERFACE interpol
+  PUBLIC :: interpol_sp, interpol_dp
 
   ! ------------------------------------------------------------------
 
@@ -173,6 +174,7 @@ MODULE mo_interpol
   INTERFACE spline_b
      MODULE PROCEDURE spline_b_dp, spline_b_sp
   END INTERFACE spline_b
+  PUBLIC :: spline_b_dp, spline_b_sp
 
   ! ------------------------------------------------------------------
 

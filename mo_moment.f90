@@ -119,6 +119,7 @@ MODULE mo_moment
   INTERFACE absdev
      MODULE PROCEDURE absdev_sp, absdev_dp
   END INTERFACE absdev
+  PUBLIC :: absdev_sp, absdev_dp
 
   ! ------------------------------------------------------------------
 
@@ -172,6 +173,7 @@ MODULE mo_moment
   INTERFACE average
      MODULE PROCEDURE average_sp, average_dp
   END INTERFACE average
+  PUBLIC :: average_sp, average_dp
 
   ! ------------------------------------------------------------------
 
@@ -228,6 +230,7 @@ MODULE mo_moment
   INTERFACE central_moment
      MODULE PROCEDURE central_moment_sp, central_moment_dp
   END INTERFACE central_moment
+  PUBLIC :: central_moment_sp, central_moment_dp
 
   ! ------------------------------------------------------------------
 
@@ -284,6 +287,7 @@ MODULE mo_moment
   INTERFACE central_moment_var
      MODULE PROCEDURE central_moment_var_sp, central_moment_var_dp
   END INTERFACE central_moment_var
+  PUBLIC :: central_moment_var_sp, central_moment_var_dp
 
   ! ------------------------------------------------------------------
 
@@ -342,6 +346,7 @@ MODULE mo_moment
   INTERFACE correlation
      MODULE PROCEDURE correlation_sp, correlation_dp
   END INTERFACE correlation
+  PUBLIC :: correlation_sp, correlation_dp
 
   ! ------------------------------------------------------------------
 
@@ -398,6 +403,7 @@ MODULE mo_moment
   INTERFACE covariance
      MODULE PROCEDURE covariance_sp, covariance_dp
   END INTERFACE covariance
+  PUBLIC :: covariance_sp, covariance_dp
 
   ! ------------------------------------------------------------------
 
@@ -452,6 +458,7 @@ MODULE mo_moment
   INTERFACE kurtosis
      MODULE PROCEDURE kurtosis_sp, kurtosis_dp
   END INTERFACE kurtosis
+  PUBLIC :: kurtosis_sp, kurtosis_dp
 
   ! ------------------------------------------------------------------
 
@@ -505,6 +512,7 @@ MODULE mo_moment
   INTERFACE mean
      MODULE PROCEDURE mean_sp, mean_dp
   END INTERFACE mean
+  PUBLIC :: mean_sp, mean_dp
 
   ! ------------------------------------------------------------------
 
@@ -564,6 +572,7 @@ MODULE mo_moment
   INTERFACE mixed_central_moment
      MODULE PROCEDURE mixed_central_moment_sp, mixed_central_moment_dp
   END INTERFACE mixed_central_moment
+  PUBLIC :: mixed_central_moment_sp, mixed_central_moment_dp
 
   ! ------------------------------------------------------------------
 
@@ -624,6 +633,7 @@ MODULE mo_moment
   INTERFACE mixed_central_moment_var
      MODULE PROCEDURE mixed_central_moment_var_sp, mixed_central_moment_var_dp
   END INTERFACE mixed_central_moment_var
+  PUBLIC :: mixed_central_moment_var_sp, mixed_central_moment_var_dp
 
   ! ------------------------------------------------------------------
 
@@ -693,6 +703,7 @@ MODULE mo_moment
   INTERFACE moment
      MODULE PROCEDURE moment_sp, moment_dp
   END INTERFACE moment
+  PUBLIC :: moment_sp, moment_dp
 
   ! ------------------------------------------------------------------
 
@@ -746,6 +757,7 @@ MODULE mo_moment
   INTERFACE skewness
      MODULE PROCEDURE skewness_sp, skewness_dp
   END INTERFACE skewness
+  PUBLIC :: skewness_sp, skewness_dp
 
   ! ------------------------------------------------------------------
 
@@ -801,6 +813,7 @@ MODULE mo_moment
   INTERFACE stddev
      MODULE PROCEDURE stddev_sp, stddev_dp
   END INTERFACE stddev
+  PUBLIC :: stddev_sp, stddev_dp
 
   ! ------------------------------------------------------------------
 
@@ -856,6 +869,7 @@ MODULE mo_moment
   INTERFACE variance
      MODULE PROCEDURE variance_sp, variance_dp
   END INTERFACE variance
+  PUBLIC :: variance_sp, variance_dp
 
   ! ------------------------------------------------------------------
 
