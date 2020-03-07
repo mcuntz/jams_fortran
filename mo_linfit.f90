@@ -129,7 +129,11 @@ CONTAINS
     REAL(dp), DIMENSION(:), INTENT(IN)  :: x, y
     REAL(dp), OPTIONAL,     INTENT(OUT) :: a, b, siga, sigb, chi2
     LOGICAL , OPTIONAL,     INTENT(IN)  :: model2
+#ifndef __PYTHON__
     REAL(dp), DIMENSION(:), allocatable :: linfit_dp
+#else
+    REAL(dp), DIMENSION(size(x))        :: linfit_dp
+#endif
 
     REAL(dp) :: sigdat, nx, sx, sxoss, sy, st2
     REAL(dp), DIMENSION(size(x)), TARGET :: t
@@ -139,7 +143,9 @@ CONTAINS
     !REAL(dp) :: r
 
     if (size(x) /= size(y))   stop 'linfit_dp: size(x) /= size(y)'
+#ifndef __PYTHON__
     if (.not. allocated(linfit_dp)) allocate(linfit_dp(size(x)))
+#endif
     if (present(model2)) then
        mod2 = model2
     else
@@ -220,8 +226,11 @@ CONTAINS
     REAL(sp), DIMENSION(:), INTENT(IN)  :: x, y
     REAL(sp), OPTIONAL,     INTENT(OUT) :: a, b, siga, sigb, chi2
     LOGICAL , OPTIONAL,     INTENT(IN)  :: model2
+#ifndef __PYTHON__
     REAL(sp), DIMENSION(:), allocatable :: linfit_sp
-
+#else
+    REAL(sp), DIMENSION(size(x))        :: linfit_sp
+#endif
     REAL(sp) :: sigdat, nx, sx, sxoss, sy, st2
     REAL(sp), DIMENSION(size(x)), TARGET :: t
     REAL(sp) :: aa, bb, cchi2
@@ -230,7 +239,9 @@ CONTAINS
     !REAL(sp) :: r
 
     if (size(x) /= size(y))   stop 'linfit_sp: size(x) /= size(y)'
+#ifndef __PYTHON__
     if (.not. allocated(linfit_sp)) allocate(linfit_sp(size(x)))
+#endif
     if (present(model2)) then
        mod2 = model2
     else
