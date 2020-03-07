@@ -44,20 +44,23 @@ MODULE mo_quicksort
   IMPLICIT NONE
 
   ! Aliases/wrapper
-  PUBLIC :: sort         ! qsort
-  PUBLIC :: sort_index   ! qsort_index
-  PUBLIC :: sortmp       ! qsortmp
-  PUBLIC :: sortmp_index ! wrapper for qsortmp
+#ifndef __PYTHON__
+  PUBLIC :: sort          ! qsort
+  PUBLIC :: sort_index    ! qsort_index
+  PUBLIC :: sortmp        ! qsortmp
+  PUBLIC :: sortmp_index  ! wrapper for qsortmp
+#endif
 
   ! Standard
-  PUBLIC :: qsort        ! Non-recursive quicksort from Wikibooks
-  PUBLIC :: qsort_index  ! Same but returning indexes
-  PUBLIC :: qsortmp      ! Recursive algorithm with OpenMP support of David Bal
-  !
+  PUBLIC :: qsort         ! Non-recursive quicksort from Wikibooks
+  PUBLIC :: qsort_index   ! Same but returning indexes
+  PUBLIC :: qsortmp       ! Recursive algorithm with OpenMP support of David Bal
+  PUBLIC :: qsortmp_index ! wrapper for qsortmp
+
   ! For comparison
-  PUBLIC :: qsortc       ! Juli Rew's implementation of the recursive algorithm of Cormen et al. (1997)
-  PUBLIC :: quick_sort   ! Alan Miller's implementation of the recursive algorithm of Brainerd et al. (1990)
-  PUBLIC :: qsortb       ! Recursive algorithm of David Bal
+  PUBLIC :: qsortc        ! Juli Rew's implementation of the recursive algorithm of Cormen et al. (1997)
+  PUBLIC :: quick_sort    ! Alan Miller's implementation of the recursive algorithm of Brainerd et al. (1990)
+  PUBLIC :: qsortb        ! Recursive algorithm of David Bal
 
   ! ------------------------------------------------------------------
 
@@ -297,12 +300,13 @@ MODULE mo_quicksort
   !     HISTORY
   !>        \author Matthias Cuntz
   !>        \date May 2014
-  INTERFACE sortmp_index
+  INTERFACE qsortmp_index
      MODULE PROCEDURE sortmp_index_i4, sortmp_index_sp, sortmp_index_dp
-  END INTERFACE sortmp_index
+  END INTERFACE qsortmp_index
   PUBLIC :: sortmp_index_i4, sortmp_index_sp, sortmp_index_dp
   
   ! aliases
+#ifndef __PYTHON__
   INTERFACE sort
      MODULE PROCEDURE qsort_dp, qsort_sp, qsort_i4
   END INTERFACE sort
@@ -312,6 +316,10 @@ MODULE mo_quicksort
   INTERFACE sortmp
      MODULE PROCEDURE qsortmp_dp, qsortmp_sp, qsortmp_i4
   END INTERFACE sortmp
+  INTERFACE sortmp_index
+     MODULE PROCEDURE sortmp_index_i4, sortmp_index_sp, sortmp_index_dp
+  END INTERFACE sortmp_index
+#endif
 
   PRIVATE
 

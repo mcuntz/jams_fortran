@@ -21,12 +21,13 @@
 !                                   - documentation
 !          Matthias Cuntz, May 2014 - iso_fortran_env and iso_c_binding
 !          Matthias Cuntz, Dec 2017 - quadruple precision
+!          Matthias Cuntz, Mar 2020 - i1 = int8_t, which is guaranteed to be 8 bit
 
 ! License
 ! -------
 ! This file is part of the JAMS Fortran package, distributed under the MIT License.
 !
-! Copyright (c) 2011-2017 Matthias Cuntz, Juliane Mai - mc (at) macu (dot) de
+! Copyright (c) 2011-2020 Matthias Cuntz, Juliane Mai - mc (at) macu (dot) de
 !
 ! Permission is hereby granted, free of charge, to any person obtaining a copy
 ! of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +52,7 @@ MODULE mo_kind
   ! iso_fortran_env does not work with compilers intel v11 and sun v12.2
   ! use, intrinsic :: iso_fortran_env, only: int8, int16, int32, int64, real32, real64, real128
   use, intrinsic :: iso_c_binding,   only: &
-       c_short, c_int, c_long_long, &
+       c_int8_t, c_short, c_int, c_long_long, &
        c_float, c_double, c_long_double, &
        c_float_complex, c_double_complex, c_long_double_complex !, &
        ! c_bool
@@ -59,7 +60,7 @@ MODULE mo_kind
   IMPLICIT NONE
 
   !> 1 Byte Integer Kind
-  INTEGER, PARAMETER :: i1  = SELECTED_INT_KIND(2)
+  INTEGER, PARAMETER :: i1  = c_int8_t ! SELECTED_INT_KIND(2)
   ! INTEGER, PARAMETER :: i1  = int8 ! c_word does not exist; should be c_bool, probably; but see above
   !> 2 Byte Integer Kind
   ! INTEGER, PARAMETER :: i2  = SELECTED_INT_KIND(4)

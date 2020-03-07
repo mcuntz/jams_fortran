@@ -37,7 +37,7 @@ module mo_select_distant_entries
   ! SOFTWARE.
 
   use mo_kind,         only: i4, sp, dp
-  use mo_sort,         only: sort
+  use mo_orderpack,    only: sort
   use mo_xor4096,      only: get_timeseed, n_save_state, xor4096
   use mo_xor4096_apps, only: xor4096_range
 

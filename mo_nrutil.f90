@@ -317,7 +317,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_is(a,b,mask)
     INTEGER(I4), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), INTENT(IN) :: mask
+    LOGICAL, INTENT(IN) :: mask
     INTEGER(I4) :: swp
     if (mask) then
        swp=a
@@ -328,7 +328,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_iv(a,b,mask)
     INTEGER(I4), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     INTEGER(I4), DIMENSION(size(a)) :: swp
     where (mask)
        swp=a
@@ -339,7 +339,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_im(a,b,mask)
     INTEGER(I4), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
     INTEGER(I4), DIMENSION(size(a,1),size(a,2)) :: swp
     where (mask)
        swp=a
@@ -350,7 +350,7 @@ CONTAINS
   !BL
   SUBROUTINE masked_swap_rs(a,b,mask)
     REAL(SP), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), INTENT(IN) :: mask
+    LOGICAL, INTENT(IN) :: mask
     REAL(SP) :: swp
     if (mask) then
        swp=a
@@ -361,7 +361,7 @@ CONTAINS
   !BL
   SUBROUTINE masked_swap_rv(a,b,mask)
     REAL(SP), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     REAL(SP), DIMENSION(size(a)) :: swp
     where (mask)
        swp=a
@@ -372,7 +372,7 @@ CONTAINS
   !BL
   SUBROUTINE masked_swap_rm(a,b,mask)
     REAL(SP), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
     REAL(SP), DIMENSION(size(a,1),size(a,2)) :: swp
     where (mask)
        swp=a
@@ -383,7 +383,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_ds(a,b,mask)
     REAL(DP), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), INTENT(IN) :: mask
+    LOGICAL, INTENT(IN) :: mask
     REAL(DP) :: swp
     if (mask) then
        swp=a
@@ -394,7 +394,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_dv(a,b,mask)
     REAL(DP), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     REAL(DP), DIMENSION(size(a)) :: swp
     where (mask)
        swp=a
@@ -405,7 +405,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_dm(a,b,mask)
     REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
     REAL(DP), DIMENSION(size(a,1),size(a,2)) :: swp
     where (mask)
        swp=a
@@ -416,7 +416,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_cs(a,b,mask)
     COMPLEX(SPC), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), INTENT(IN) :: mask
+    LOGICAL, INTENT(IN) :: mask
     COMPLEX(SPC) :: swp
     if (mask) then
        swp=a
@@ -427,7 +427,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_cv(a,b,mask)
     COMPLEX(SPC), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     COMPLEX(SPC), DIMENSION(size(a)) :: swp
     where (mask)
        swp=a
@@ -438,7 +438,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_cm(a,b,mask)
     COMPLEX(SPC), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
     COMPLEX(SPC), DIMENSION(size(a,1),size(a,2)) :: swp
     where (mask)
        swp=a
@@ -449,7 +449,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_zs(a,b,mask)
     COMPLEX(DPC), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), INTENT(IN) :: mask
+    LOGICAL, INTENT(IN) :: mask
     COMPLEX(DPC) :: swp
     if (mask) then
        swp=a
@@ -460,7 +460,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_zv(a,b,mask)
     COMPLEX(DPC), DIMENSION(:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     COMPLEX(DPC), DIMENSION(size(a)) :: swp
     where (mask)
        swp=a
@@ -471,7 +471,7 @@ CONTAINS
   !MC
   SUBROUTINE masked_swap_zm(a,b,mask)
     COMPLEX(DPC), DIMENSION(:,:), INTENT(INOUT) :: a,b
-    LOGICAL(LGT), DIMENSION(:,:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:,:), INTENT(IN) :: mask
     COMPLEX(DPC), DIMENSION(size(a,1),size(a,2)) :: swp
     where (mask)
        swp=a
@@ -580,7 +580,7 @@ CONTAINS
   END FUNCTION reallocate_im
   !BL
   FUNCTION ifirstloc(mask)
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     INTEGER(I4) :: ifirstloc
     INTEGER(I4), DIMENSION(1) :: loc
     loc=maxloc(merge(1,0,mask))
@@ -622,7 +622,7 @@ CONTAINS
   !BL
   SUBROUTINE assert1(n1,string)
     CHARACTER(LEN=*), INTENT(IN) :: string
-    LOGICAL(lgt), INTENT(IN) :: n1
+    LOGICAL, INTENT(IN) :: n1
     if (.not. n1) then
        write (*,*) 'nrerror: an assertion failed with this tag:', &
             string
@@ -632,7 +632,7 @@ CONTAINS
   !BL
   SUBROUTINE assert2(n1,n2,string)
     CHARACTER(LEN=*), INTENT(IN) :: string
-    LOGICAL(lgt), INTENT(IN) :: n1,n2
+    LOGICAL, INTENT(IN) :: n1,n2
     if (.not. (n1 .and. n2)) then
        write (*,*) 'nrerror: an assertion failed with this tag:', &
             string
@@ -642,7 +642,7 @@ CONTAINS
   !BL
   SUBROUTINE assert3(n1,n2,n3,string)
     CHARACTER(LEN=*), INTENT(IN) :: string
-    LOGICAL(lgt), INTENT(IN) :: n1,n2,n3
+    LOGICAL, INTENT(IN) :: n1,n2,n3
     if (.not. (n1 .and. n2 .and. n3)) then
        write (*,*) 'nrerror: an assertion failed with this tag:', &
             string
@@ -652,7 +652,7 @@ CONTAINS
   !BL
   SUBROUTINE assert4(n1,n2,n3,n4,string)
     CHARACTER(LEN=*), INTENT(IN) :: string
-    LOGICAL(lgt), INTENT(IN) :: n1,n2,n3,n4
+    LOGICAL, INTENT(IN) :: n1,n2,n3,n4
     if (.not. (n1 .and. n2 .and. n3 .and. n4)) then
        write (*,*) 'nrerror: an assertion failed with this tag:', &
             string
@@ -662,7 +662,7 @@ CONTAINS
   !BL
   SUBROUTINE assert_v(n,string)
     CHARACTER(LEN=*), INTENT(IN) :: string
-    LOGICAL(lgt), DIMENSION(:), INTENT(IN) :: n
+    LOGICAL, DIMENSION(:), INTENT(IN) :: n
     if (.not. all(n)) then
        write (*,*) 'nrerror: an assertion failed with this tag:', &
             string
@@ -1241,14 +1241,14 @@ CONTAINS
   !BL
   FUNCTION poly_msk_rrv(x,coeffs,mask)
     REAL(SP), DIMENSION(:), INTENT(IN) :: coeffs,x
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     REAL(SP), DIMENSION(size(x)) :: poly_msk_rrv
     poly_msk_rrv=unpack(poly_rrv(pack(x,mask),coeffs),mask,0.0_sp)
   END FUNCTION poly_msk_rrv
   !BL
   FUNCTION poly_msk_ddv(x,coeffs,mask)
     REAL(DP), DIMENSION(:), INTENT(IN) :: coeffs,x
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: mask
+    LOGICAL, DIMENSION(:), INTENT(IN) :: mask
     REAL(DP), DIMENSION(size(x)) :: poly_msk_ddv
     poly_msk_ddv=unpack(poly_ddv(pack(x,mask),coeffs),mask,0.0_dp)
   END FUNCTION poly_msk_ddv
@@ -1395,8 +1395,8 @@ CONTAINS
   END FUNCTION outerdiff_i
   !BL
   FUNCTION outerand(a,b)
-    LOGICAL(LGT), DIMENSION(:), INTENT(IN) :: a,b
-    LOGICAL(LGT), DIMENSION(size(a),size(b)) :: outerand
+    LOGICAL, DIMENSION(:), INTENT(IN) :: a,b
+    LOGICAL, DIMENSION(size(a),size(b)) :: outerand
     outerand = spread(a,dim=2,ncopies=size(b)) .and. &
          spread(b,dim=1,ncopies=size(a))
   END FUNCTION outerand
@@ -1595,7 +1595,7 @@ CONTAINS
   FUNCTION upper_triangle(j,k,extra)
     INTEGER(I4), INTENT(IN) :: j,k
     INTEGER(I4), OPTIONAL, INTENT(IN) :: extra
-    LOGICAL(LGT), DIMENSION(j,k) :: upper_triangle
+    LOGICAL, DIMENSION(j,k) :: upper_triangle
     INTEGER(I4) :: n
     n=0
     if (present(extra)) n=extra
@@ -1605,7 +1605,7 @@ CONTAINS
   FUNCTION lower_triangle(j,k,extra)
     INTEGER(I4), INTENT(IN) :: j,k
     INTEGER(I4), OPTIONAL, INTENT(IN) :: extra
-    LOGICAL(LGT), DIMENSION(j,k) :: lower_triangle
+    LOGICAL, DIMENSION(j,k) :: lower_triangle
     INTEGER(I4) :: n
     n=0
     if (present(extra)) n=extra

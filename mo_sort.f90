@@ -87,8 +87,13 @@ MODULE mo_sort
 
   IMPLICIT NONE
 
+#ifndef __PYTHON__
   PUBLIC :: sort       ! Quicksorts one array
   PUBLIC :: sort_index ! Returns indeces that sort the input array
+#else
+  PUBLIC :: nrsort       ! Quicksorts one array
+  PUBLIC :: nrsort_index ! Returns indeces that sort the input array
+#endif
 
   ! ------------------------------------------------------------------
 
@@ -136,10 +141,16 @@ MODULE mo_sort
   !     HISTORY
   !>        \author Matthias Cuntz - adapted routine sort from numerical recipes
   !>        \date Nov 2011
+#ifndef __PYTHON__
   INTERFACE sort
-     MODULE PROCEDURE sort_i4, sort_sp, sort_dp
+     MODULE PROCEDURE isort_i4, isort_sp, isort_dp
   END INTERFACE sort
-  PUBLIC :: sort_i4, sort_sp, sort_dp
+#else
+  INTERFACE nrsort
+     MODULE PROCEDURE isort_i4, isort_sp, isort_dp
+  END INTERFACE nrsort
+#endif
+  PUBLIC :: isort_i4, isort_sp, isort_dp
 
   ! ------------------------------------------------------------------
 
@@ -190,10 +201,16 @@ MODULE mo_sort
   !     HISTORY
   !>        \author Matthias Cuntz - adapted routine indexx from numerical recipes
   !>        \date Nov 2011
+#ifndef __PYTHON__
   INTERFACE sort_index
-     MODULE PROCEDURE sort_index_i4, sort_index_sp, sort_index_dp
+     MODULE PROCEDURE isort_index_i4, isort_index_sp, isort_index_dp
   END INTERFACE sort_index
-  PUBLIC :: sort_index_i4, sort_index_sp, sort_index_dp
+#else
+  INTERFACE nrsort_index
+     MODULE PROCEDURE isort_index_i4, isort_index_sp, isort_index_dp
+  END INTERFACE nrsort_index
+#endif
+  PUBLIC :: isort_index_i4, isort_index_sp, isort_index_dp
 
   PRIVATE
 
@@ -205,7 +222,7 @@ MODULE mo_sort
      MODULE PROCEDURE icomp_xchg_i4, icomp_xchg_sp, icomp_xchg_dp
   END INTERFACE icomp_xchg
 
-  INTEGER(I4), PARAMETER :: NPAR_ARTH=16,NPAR2_ARTH=8
+  INTEGER(I4), PARAMETER :: NPAR_ARTH=16, NPAR2_ARTH=8
 
   ! ------------------------------------------------------------------
 
@@ -353,7 +370,7 @@ CONTAINS
 
 ! ------------------------------------------------------------------
 
-  SUBROUTINE sort_i4(arr)
+  SUBROUTINE isort_i4(arr)
 
     IMPLICIT NONE
 
@@ -407,7 +424,7 @@ CONTAINS
           arr(l+1) = arr(j)
           arr(j) = a
           jstack = jstack+2
-          if (jstack > NSTACK) stop 'sort_sp: NSTACK too small'
+          if (jstack > NSTACK) stop 'isort_sp: NSTACK too small'
           if (r-i+1 >= j-l) then
              istack(jstack)   = r
              istack(jstack-1) = i
@@ -420,12 +437,12 @@ CONTAINS
        end if
     end do
 
-  END SUBROUTINE sort_i4
+  END SUBROUTINE isort_i4
 
   ! ------------------------------------------------------------------
 
   ! quicksort
-  SUBROUTINE sort_sp(arr)
+  SUBROUTINE isort_sp(arr)
 
     IMPLICIT NONE
 
@@ -479,7 +496,7 @@ CONTAINS
           arr(l+1) = arr(j)
           arr(j) = a
           jstack = jstack+2
-          if (jstack > NSTACK) stop 'sort_sp: NSTACK too small'
+          if (jstack > NSTACK) stop 'isort_sp: NSTACK too small'
           if (r-i+1 >= j-l) then
              istack(jstack)   = r
              istack(jstack-1) = i
@@ -492,10 +509,10 @@ CONTAINS
        end if
     end do
 
-  END SUBROUTINE sort_sp
+  END SUBROUTINE isort_sp
 
 
-  SUBROUTINE sort_dp(arr)
+  SUBROUTINE isort_dp(arr)
 
     IMPLICIT NONE
 
@@ -549,7 +566,7 @@ CONTAINS
           arr(l+1) = arr(j)
           arr(j) = a
           jstack = jstack+2
-          if (jstack > NSTACK) stop 'sort_dp: NSTACK too small'
+          if (jstack > NSTACK) stop 'isort_dp: NSTACK too small'
           if (r-i+1 >= j-l) then
              istack(jstack)   = r
              istack(jstack-1) = i
@@ -562,18 +579,18 @@ CONTAINS
        end if
     end do
 
-  END SUBROUTINE sort_dp
+  END SUBROUTINE isort_dp
 
 
   ! ------------------------------------------------------------------
 
   ! quicksort but return indices
-  FUNCTION sort_index_sp(arr)
+  FUNCTION isort_index_sp(arr)
 
     IMPLICIT NONE
 
     REAL(sp),    DIMENSION(:), INTENT(IN) :: arr
-    INTEGER(i4), DIMENSION(size(arr))     :: sort_index_sp
+    INTEGER(i4), DIMENSION(size(arr))     :: isort_index_sp
 
     INTEGER(i4), PARAMETER :: NN=15
     INTEGER(i4), PARAMETER :: NSTACK=50
@@ -582,20 +599,20 @@ CONTAINS
     INTEGER(i4), DIMENSION(NSTACK) :: istack
 
     n = size(arr)
-    sort_index_sp = arth(1,1,n)
+    isort_index_sp = arth(1,1,n)
     jstack = 0
     l = 1
     r = n
     do
        if (r-l < NN) then
           do j=l+1, r
-             indext = sort_index_sp(j)
+             indext = isort_index_sp(j)
              a = arr(indext)
              do i=j-1, l, -1
-                if (arr(sort_index_sp(i)) <= a) exit
-                sort_index_sp(i+1) = sort_index_sp(i)
+                if (arr(isort_index_sp(i)) <= a) exit
+                isort_index_sp(i+1) = isort_index_sp(i)
              end do
-             sort_index_sp(i+1) = indext
+             isort_index_sp(i+1) = indext
           end do
           if (jstack == 0) return
           r = istack(jstack)
@@ -603,30 +620,30 @@ CONTAINS
           jstack = jstack-2
        else
           k = (l+r)/2
-          call swap(sort_index_sp(k), sort_index_sp(l+1))
-          call icomp_xchg(arr, sort_index_sp(l),   sort_index_sp(r))
-          call icomp_xchg(arr, sort_index_sp(l+1), sort_index_sp(r))
-          call icomp_xchg(arr, sort_index_sp(l),   sort_index_sp(l+1))
+          call swap(isort_index_sp(k), isort_index_sp(l+1))
+          call icomp_xchg(arr, isort_index_sp(l),   isort_index_sp(r))
+          call icomp_xchg(arr, isort_index_sp(l+1), isort_index_sp(r))
+          call icomp_xchg(arr, isort_index_sp(l),   isort_index_sp(l+1))
           i = l+1
           j = r
-          indext = sort_index_sp(l+1)
+          indext = isort_index_sp(l+1)
           a = arr(indext)
           do
              do
                 i = i+1
-                if (arr(sort_index_sp(i)) >= a) exit
+                if (arr(isort_index_sp(i)) >= a) exit
              end do
              do
                 j = j-1
-                if (arr(sort_index_sp(j)) <= a) exit
+                if (arr(isort_index_sp(j)) <= a) exit
              end do
              if (j < i) exit
-             call swap(sort_index_sp(i), sort_index_sp(j))
+             call swap(isort_index_sp(i), isort_index_sp(j))
           end do
-          sort_index_sp(l+1) = sort_index_sp(j)
-          sort_index_sp(j)   = indext
+          isort_index_sp(l+1) = isort_index_sp(j)
+          isort_index_sp(j)   = indext
           jstack = jstack+2
-          if (jstack > NSTACK) stop 'sort_index_sp: NSTACK too small'
+          if (jstack > NSTACK) stop 'isort_index_sp: NSTACK too small'
           if (r-i+1 >= j-l) then
              istack(jstack)   = r
              istack(jstack-1) = i
@@ -639,15 +656,15 @@ CONTAINS
        end if
     end do
 
-  END FUNCTION sort_index_sp
+  END FUNCTION isort_index_sp
 
 
-  FUNCTION sort_index_dp(arr)
+  FUNCTION isort_index_dp(arr)
 
     IMPLICIT NONE
 
     REAL(dp),    DIMENSION(:), INTENT(IN) :: arr
-    INTEGER(i4), DIMENSION(size(arr))     :: sort_index_dp
+    INTEGER(i4), DIMENSION(size(arr))     :: isort_index_dp
 
     INTEGER(i4), PARAMETER :: NN=15
     INTEGER(i4), PARAMETER :: NSTACK=50
@@ -656,20 +673,20 @@ CONTAINS
     INTEGER(i4), DIMENSION(NSTACK) :: istack
 
     n = size(arr)
-    sort_index_dp = arth(1,1,n)
+    isort_index_dp = arth(1,1,n)
     jstack = 0
     l = 1
     r = n
     do
        if (r-l < NN) then
           do j=l+1, r
-             indext = sort_index_dp(j)
+             indext = isort_index_dp(j)
              a = arr(indext)
              do i=j-1, l, -1
-                if (arr(sort_index_dp(i)) <= a) exit
-                sort_index_dp(i+1) = sort_index_dp(i)
+                if (arr(isort_index_dp(i)) <= a) exit
+                isort_index_dp(i+1) = isort_index_dp(i)
              end do
-             sort_index_dp(i+1) = indext
+             isort_index_dp(i+1) = indext
           end do
           if (jstack == 0) return
           r = istack(jstack)
@@ -677,30 +694,30 @@ CONTAINS
           jstack = jstack-2
        else
           k = (l+r)/2
-          call swap(sort_index_dp(k), sort_index_dp(l+1))
-          call icomp_xchg(arr, sort_index_dp(l),   sort_index_dp(r))
-          call icomp_xchg(arr, sort_index_dp(l+1), sort_index_dp(r))
-          call icomp_xchg(arr, sort_index_dp(l),   sort_index_dp(l+1))
+          call swap(isort_index_dp(k), isort_index_dp(l+1))
+          call icomp_xchg(arr, isort_index_dp(l),   isort_index_dp(r))
+          call icomp_xchg(arr, isort_index_dp(l+1), isort_index_dp(r))
+          call icomp_xchg(arr, isort_index_dp(l),   isort_index_dp(l+1))
           i = l+1
           j = r
-          indext = sort_index_dp(l+1)
+          indext = isort_index_dp(l+1)
           a = arr(indext)
           do
              do
                 i = i+1
-                if (arr(sort_index_dp(i)) >= a) exit
+                if (arr(isort_index_dp(i)) >= a) exit
              end do
              do
                 j = j-1
-                if (arr(sort_index_dp(j)) <= a) exit
+                if (arr(isort_index_dp(j)) <= a) exit
              end do
              if (j < i) exit
-             call swap(sort_index_dp(i), sort_index_dp(j))
+             call swap(isort_index_dp(i), isort_index_dp(j))
           end do
-          sort_index_dp(l+1) = sort_index_dp(j)
-          sort_index_dp(j)   = indext
+          isort_index_dp(l+1) = isort_index_dp(j)
+          isort_index_dp(j)   = indext
           jstack = jstack+2
-          if (jstack > NSTACK) stop 'sort_index_dp: NSTACK too small'
+          if (jstack > NSTACK) stop 'isort_index_dp: NSTACK too small'
           if (r-i+1 >= j-l) then
              istack(jstack)   = r
              istack(jstack-1) = i
@@ -713,15 +730,15 @@ CONTAINS
        end if
     end do
 
-  END FUNCTION sort_index_dp
+  END FUNCTION isort_index_dp
 
 
-  FUNCTION sort_index_i4(iarr)
+  FUNCTION isort_index_i4(iarr)
 
     IMPLICIT NONE
 
     INTEGER(i4), DIMENSION(:), INTENT(IN) :: iarr
-    INTEGER(i4), DIMENSION(size(iarr))    :: sort_index_i4
+    INTEGER(i4), DIMENSION(size(iarr))    :: isort_index_i4
 
     INTEGER(i4), PARAMETER :: NN=15
     INTEGER(i4), PARAMETER :: NSTACK=50
@@ -730,22 +747,22 @@ CONTAINS
     INTEGER(i4), DIMENSION(NSTACK) :: istack
 
     n = size(iarr)
-    sort_index_i4 = arth(1,1,n)
+    isort_index_i4 = arth(1,1,n)
     jstack = 0
     l = 1
     r = n
     do
        if (r-l < NN) then
           do j=l+1, r
-             indext = sort_index_i4(j)
+             indext = isort_index_i4(j)
              a = iarr(indext)
              ! Corrected from Numerical Recipes Forum
              ! do i=j-1, 1, -1
              do i=j-1, l, -1
-                if (iarr(sort_index_i4(i)) <= a) exit
-                sort_index_i4(i+1) = sort_index_i4(i)
+                if (iarr(isort_index_i4(i)) <= a) exit
+                isort_index_i4(i+1) = isort_index_i4(i)
              end do
-             sort_index_i4(i+1) = indext
+             isort_index_i4(i+1) = indext
           end do
           if (jstack == 0) return
           r = istack(jstack)
@@ -753,30 +770,30 @@ CONTAINS
           jstack = jstack-2
        else
           k = (l+r)/2
-          call swap(sort_index_i4(k), sort_index_i4(l+1))
-          call icomp_xchg(iarr, sort_index_i4(l),   sort_index_i4(r))
-          call icomp_xchg(iarr, sort_index_i4(l+1), sort_index_i4(r))
-          call icomp_xchg(iarr, sort_index_i4(l),   sort_index_i4(l+1))
+          call swap(isort_index_i4(k), isort_index_i4(l+1))
+          call icomp_xchg(iarr, isort_index_i4(l),   isort_index_i4(r))
+          call icomp_xchg(iarr, isort_index_i4(l+1), isort_index_i4(r))
+          call icomp_xchg(iarr, isort_index_i4(l),   isort_index_i4(l+1))
           i = l+1
           j = r
-          indext = sort_index_i4(l+1)
+          indext = isort_index_i4(l+1)
           a = iarr(indext)
           do
              do
                 i = i+1
-                if (iarr(sort_index_i4(i)) >= a) exit
+                if (iarr(isort_index_i4(i)) >= a) exit
              end do
              do
                 j = j-1
-                if (iarr(sort_index_i4(j)) <= a) exit
+                if (iarr(isort_index_i4(j)) <= a) exit
              end do
              if (j < i) exit
-             call swap(sort_index_i4(i), sort_index_i4(j))
+             call swap(isort_index_i4(i), isort_index_i4(j))
           end do
-          sort_index_i4(l+1) = sort_index_i4(j)
-          sort_index_i4(j)   = indext
+          isort_index_i4(l+1) = isort_index_i4(j)
+          isort_index_i4(j)   = indext
           jstack = jstack+2
-          if (jstack > NSTACK) stop 'sort_index_i4: NSTACK too small'
+          if (jstack > NSTACK) stop 'isort_index_i4: NSTACK too small'
           if (r-i+1 >= j-l) then
              istack(jstack)   = r
              istack(jstack-1) = i
@@ -789,7 +806,7 @@ CONTAINS
        end if
     end do
 
-  END FUNCTION sort_index_i4
+  END FUNCTION isort_index_i4
 
   ! ------------------------------------------------------------------
 

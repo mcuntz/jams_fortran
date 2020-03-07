@@ -38,8 +38,6 @@ module mo_file_utils
   ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   ! SOFTWARE.
 
-  use mo_kind, only: i4
-
   implicit none
 
   private
@@ -86,8 +84,8 @@ contains
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !>        \param[in] "integer(i4) :: istart"     Starting unit (default: 20)
-  !>        \param[in] "integer(i4) :: istop"      Last checked unit (default: 1000)
+  !>        \param[in] "integer :: istart"     Starting unit (default: 20)
+  !>        \param[in] "integer :: istop"      Last checked unit (default: 1000)
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -96,7 +94,7 @@ contains
   !         None
 
   !     RETURN
-  !>        \return integer(i4) :: find_next_unit ! Free unit in interval [istart,istop], returns -1 if no free unit.
+  !>        \return integer :: find_next_unit ! Free unit in interval [istart,istop], returns -1 if no free unit.
 
   !     RESTRICTIONS
   !         None
@@ -118,11 +116,11 @@ contains
 
     implicit none
 
-    integer(i4), intent(in), optional :: istart, istop
-    integer(i4)                       :: find_next_unit
+    integer, intent(in), optional :: istart, istop
+    integer                       :: find_next_unit
 
-    logical     :: opened
-    integer(i4) :: i, ifirst, ilast
+    logical :: opened
+    integer :: i, ifirst, ilast
 
     ifirst = 20
     if (present(istart)) ifirst = istart
@@ -179,7 +177,7 @@ contains
   !         None
 
   !     RETURN
-  !>        \return integer(i4) :: lines_in_file    ! number of lines, without commented or blank lines (optional)
+  !>        \return integer :: lines_in_file    ! number of lines, without commented or blank lines (optional)
 
   !     RESTRICTIONS
   !         None
@@ -206,9 +204,9 @@ contains
 
     ! ToDo
 
-    integer(i4), parameter :: maxlen = 8192
-    logical     :: iexist, inoblank
-    integer(i4) :: nun, ierr
+    integer, parameter :: maxlen = 8192
+    logical :: iexist, inoblank
+    integer :: nun, ierr
     character(len=maxlen) :: iread, icomment
 
     ! options

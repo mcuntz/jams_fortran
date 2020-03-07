@@ -61,7 +61,9 @@ MODULE mo_orderpack
   public :: mulcnt
   public :: rapknr
   public :: refpar
+#ifndef __PYTHON__
   public :: refsor
+#endif
   public :: rinpar
   public :: rnkpar
   public :: uniinv
@@ -355,9 +357,11 @@ MODULE mo_orderpack
   end interface refpar
   public :: d_refpar, r_refpar, i_refpar
   
+#ifndef __PYTHON__
   interface refsor
      module procedure d_refsor, r_refsor, i_refsor
   end interface refsor
+#endif
   
   interface rinpar
      module procedure d_rinpar, r_rinpar, i_rinpar
