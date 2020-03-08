@@ -92,8 +92,6 @@ MODULE mo_laplace_inversion
      MODULE PROCEDURE NLInvSteh_dp, NLInvSteh_sp, NLInvStehspace_dp, NLInvStehspace_sp, &
           NLInvStehvec_dp, NLInvStehvec_sp, NLInvStehvecspace_dp, NLInvStehvecspace_sp
   END INTERFACE NLInvSteh
-  PUBLIC :: NLInvSteh_dp, NLInvSteh_sp, NLInvStehspace_dp, NLInvStehspace_sp, &
-          NLInvStehvec_dp, NLInvStehvec_sp, NLInvStehvecspace_dp, NLInvStehvecspace_sp
 
   ! ------------------------------------------------------------------
 

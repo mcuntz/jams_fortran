@@ -129,7 +129,6 @@ module mo_distributions
   interface ep
      module procedure ep_sp, ep_dp
   end interface ep
-  public :: ep_sp, ep_dp
 
   ! ------------------------------------------------------------------
 
@@ -190,7 +189,6 @@ module mo_distributions
   interface ep01
      module procedure ep01_sp, ep01_dp
   end interface ep01
-  public :: ep01_sp, ep01_dp
 
   ! ------------------------------------------------------------------
 
@@ -245,7 +243,6 @@ module mo_distributions
   interface laplace
      module procedure laplace_sp, laplace_dp
   end interface laplace
-  public :: laplace_sp, laplace_dp
 
   ! ------------------------------------------------------------------
 
@@ -297,7 +294,6 @@ module mo_distributions
   interface laplace01
      module procedure laplace01_sp, laplace01_dp
   end interface laplace01
-  public :: laplace01_sp, laplace01_dp
 
   ! ------------------------------------------------------------------
 
@@ -352,7 +348,6 @@ module mo_distributions
   interface normal
      module procedure normal_sp, normal_dp
   end interface normal
-  public :: normal_sp, normal_dp
 
   ! ------------------------------------------------------------------
 
@@ -404,7 +399,6 @@ module mo_distributions
   interface normal01
      module procedure normal01_sp, normal01_dp
   end interface normal01
-  public :: normal01_sp, normal01_dp
 
   ! ------------------------------------------------------------------
 
@@ -467,7 +461,6 @@ module mo_distributions
   interface sep
      module procedure sep_sp, sep_dp
   end interface sep
-  public :: sep_sp, sep_dp
 
   ! ------------------------------------------------------------------
 
@@ -536,7 +529,6 @@ module mo_distributions
   interface sep01
      module procedure sep01_sp, sep01_dp
   end interface sep01
-  public :: sep01_sp, sep01_dp
 
   ! ------------------------------------------------------------------
 
@@ -599,7 +591,6 @@ module mo_distributions
   interface sep_fs
      module procedure sep_fs_sp, sep_fs_dp
   end interface sep_fs
-  public :: sep_fs_sp, sep_fs_dp
 
   ! ------------------------------------------------------------------
 
@@ -661,7 +652,6 @@ module mo_distributions
   interface sep01_fs
      module procedure sep01_fs_sp, sep01_fs_dp
   end interface sep01_fs
-  public :: sep01_fs_sp, sep01_fs_dp
 
   ! ------------------------------------------------------------------
 
@@ -973,7 +963,6 @@ module mo_distributions
   interface st
      module procedure st_sp, st_dp
   end interface st
-  public :: st_sp, st_dp
 
   ! ------------------------------------------------------------------
 
@@ -1036,7 +1025,6 @@ module mo_distributions
   interface st01
      module procedure st01_sp, st01_dp
   end interface st01
-  public :: st01_sp, st01_dp
 
   ! ------------------------------------------------------------------
 
@@ -1095,7 +1083,6 @@ module mo_distributions
   interface st_fs
      module procedure st_fs_sp, st_fs_dp
   end interface st_fs
-  public :: st_fs_sp, st_fs_dp
 
   ! ------------------------------------------------------------------
 
@@ -1151,7 +1138,6 @@ module mo_distributions
   interface st01_fs
      module procedure st01_fs_sp, st01_fs_dp
   end interface st01_fs
-  public :: st01_fs_sp, st01_fs_dp
   
   ! ------------------------------------------------------------------
 
@@ -1207,7 +1193,6 @@ module mo_distributions
   interface st_fs_mean
      module procedure st_fs_mean_sp, st_fs_mean_dp
   end interface st_fs_mean
-  public :: st_fs_mean_sp, st_fs_mean_dp
 
   ! ------------------------------------------------------------------
 
@@ -1261,7 +1246,6 @@ module mo_distributions
   interface st01_fs_mean
      module procedure st01_fs_mean_sp, st01_fs_mean_dp
   end interface st01_fs_mean
-  public :: st01_fs_mean_sp, st01_fs_mean_dp
   
   ! ------------------------------------------------------------------
 
@@ -1316,7 +1300,6 @@ module mo_distributions
   interface st_fs_std
      module procedure st_fs_std_sp, st_fs_std_dp
   end interface st_fs_std
-  public :: st_fs_std_sp, st_fs_std_dp
 
   ! ------------------------------------------------------------------
 
@@ -1370,7 +1353,6 @@ module mo_distributions
   interface st01_fs_std
      module procedure st01_fs_std_sp, st01_fs_std_dp
   end interface st01_fs_std
-  public :: st01_fs_std_sp, st01_fs_std_dp
 
   ! ------------------------------------------------------------------
 
@@ -1428,7 +1410,6 @@ module mo_distributions
   interface t
      module procedure t_sp, t_dp
   end interface t
-  public :: t_sp, t_dp
 
   ! ------------------------------------------------------------------
 
@@ -1482,7 +1463,6 @@ module mo_distributions
   interface t01
      module procedure t01_sp, t01_dp
   end interface t01
-  public :: t01_sp, t01_dp
 
 CONTAINS
 

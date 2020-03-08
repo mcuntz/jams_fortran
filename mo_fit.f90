@@ -173,7 +173,6 @@ MODULE mo_fit
   INTERFACE fitfun
      MODULE PROCEDURE fitfun_sp, fitfun_dp
   END INTERFACE fitfun
-  PUBLIC :: fitfun_sp, fitfun_dp
 
   ! ------------------------------------------------------------------
 
@@ -223,7 +222,6 @@ MODULE mo_fit
   INTERFACE fpoly
      MODULE PROCEDURE fpoly_sp, fpoly_dp
   END INTERFACE fpoly
-  PUBLIC :: fpoly_sp, fpoly_dp
 
   ! ------------------------------------------------------------------
 
@@ -287,7 +285,6 @@ MODULE mo_fit
   INTERFACE polyfit
      MODULE PROCEDURE polyfit_sp, polyfit_dp
   END INTERFACE polyfit
-  PUBLIC :: polyfit_sp, polyfit_dp
 
   ! ------------------------------------------------------------------
 
@@ -345,7 +342,6 @@ MODULE mo_fit
   INTERFACE polyval
      MODULE PROCEDURE polyval_0d_sp, polyval_1d_sp, polyval_0d_dp, polyval_1d_dp
   END INTERFACE polyval
-  PUBLIC :: polyval_0d_sp, polyval_1d_sp, polyval_0d_dp, polyval_1d_dp
 
   ! ------------------------------------------------------------------
 
@@ -424,7 +420,6 @@ MODULE mo_fit
   INTERFACE svdfit
      MODULE PROCEDURE svdfit_sp, svdfit_dp
   END INTERFACE svdfit
-  PUBLIC :: svdfit_sp, svdfit_dp
 
   ! ------------------------------------------------------------------
 
@@ -488,7 +483,6 @@ MODULE mo_fit
   INTERFACE svdvar
      MODULE PROCEDURE svdvar_sp, svdvar_dp
   END INTERFACE svdvar
-  PUBLIC :: svdvar_sp, svdvar_dp
 
   ! ------------------------------------------------------------------
 

@@ -147,7 +147,6 @@ MODULE mo_spatialsimilarity
   INTERFACE NNDV                  
      MODULE PROCEDURE NNDV_sp, NNDV_dp
   END INTERFACE NNDV
-  PUBLIC :: NNDV_sp, NNDV_dp
 
   ! ------------------------------------------------------------------
 
@@ -247,7 +246,6 @@ MODULE mo_spatialsimilarity
   INTERFACE PD                  
      MODULE PROCEDURE PD_sp, PD_dp
   END INTERFACE PD
-  PUBLIC :: PD_sp, PD_dp
 
   ! ------------------------------------------------------------------
 

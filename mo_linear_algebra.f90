@@ -105,7 +105,6 @@ MODULE mo_linear_algebra
   INTERFACE banded
      MODULE PROCEDURE banded_dp, banded_sp
   END INTERFACE banded
-  PUBLIC :: banded_dp, banded_sp
 
   ! ------------------------------------------------------------------
   !
@@ -156,7 +155,6 @@ MODULE mo_linear_algebra
   INTERFACE diag
      MODULE PROCEDURE diag_sp, diag_dp, diag_i4, diag_i8, diag_lgt
   END INTERFACE diag
-  PUBLIC :: diag_sp, diag_dp, diag_i4, diag_i8, diag_lgt
 
   ! ------------------------------------------------------------------
   !
@@ -210,7 +208,6 @@ MODULE mo_linear_algebra
   INTERFACE inverse
      MODULE PROCEDURE inverse_dp, inverse_sp
   END INTERFACE inverse
-  PUBLIC :: inverse_dp, inverse_sp
 
   ! ------------------------------------------------------------------
   !
@@ -263,7 +260,6 @@ MODULE mo_linear_algebra
   INTERFACE min_diag
      MODULE PROCEDURE min_diag_sp, min_diag_dp, min_diag_i4, min_diag_i8, min_diag_lgt
   END INTERFACE min_diag
-  PUBLIC :: min_diag_sp, min_diag_dp, min_diag_i4, min_diag_i8, min_diag_lgt
 
   ! ------------------------------------------------------------------
   !
@@ -320,7 +316,6 @@ MODULE mo_linear_algebra
   INTERFACE solve_linear_equations
      MODULE PROCEDURE solve_linear_equations_1_dp, solve_linear_equations_1_sp
   END INTERFACE solve_linear_equations
-  PUBLIC :: solve_linear_equations_1_dp, solve_linear_equations_1_sp
 
   ! ------------------------------------------------------------------
   !
@@ -380,7 +375,6 @@ MODULE mo_linear_algebra
   INTERFACE solve_linear_equations_svd
      MODULE PROCEDURE solve_linear_equations_svd_1_dp, solve_linear_equations_svd_1_sp
   END INTERFACE solve_linear_equations_svd
-  PUBLIC :: solve_linear_equations_svd_1_dp, solve_linear_equations_svd_1_sp
 
   ! ------------------------------------------------------------------
   !
@@ -451,7 +445,6 @@ MODULE mo_linear_algebra
   INTERFACE solve_linear_equations_band
      MODULE PROCEDURE solve_linear_equations_band_1_dp, solve_linear_equations_band_1_sp
   END INTERFACE solve_linear_equations_band
-  PUBLIC :: solve_linear_equations_band_1_dp, solve_linear_equations_band_1_sp
 
   PRIVATE
 

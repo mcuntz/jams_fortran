@@ -123,7 +123,6 @@ MODULE mo_delsa
   INTERFACE delsa
      MODULE PROCEDURE delsa_sp, delsa_dp
   END INTERFACE delsa
-  PUBLIC :: delsa_sp, delsa_dp
 
   ! ------------------------------------------------------------------
 

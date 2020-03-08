@@ -177,7 +177,6 @@ MODULE mo_template
   INTERFACE mean
      MODULE PROCEDURE mean_sp, mean_dp
   END INTERFACE mean
-  PUBLIC :: mean_sp, mean_dp
 
   ! ------------------------------------------------------------------
 

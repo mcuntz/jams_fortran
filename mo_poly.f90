@@ -97,7 +97,6 @@ MODULE mo_poly
   INTERFACE areapoly
      MODULE PROCEDURE areapoly_sp, areapoly_dp
   END INTERFACE areapoly
-  PUBLIC :: areapoly_sp, areapoly_dp
 
   ! ------------------------------------------------------------------
 
@@ -159,7 +158,6 @@ MODULE mo_poly
   INTERFACE center_of_mass
      MODULE PROCEDURE center_of_mass_sp,center_of_mass_dp
   END INTERFACE center_of_mass
-  PUBLIC :: center_of_mass_sp,center_of_mass_dp
 
   ! ------------------------------------------------------------------
 
@@ -223,7 +221,6 @@ MODULE mo_poly
   INTERFACE inpoly
      MODULE PROCEDURE inpoly_dp, inpoly_sp
   END INTERFACE inpoly
-  PUBLIC :: inpoly_dp, inpoly_sp
 
   ! ------------------------------------------------------------------
 

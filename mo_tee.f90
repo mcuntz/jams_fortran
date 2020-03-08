@@ -92,7 +92,6 @@ module mo_tee
   interface tee
      module procedure tee_unit, tee_filename
   end interface tee
-  public :: tee_unit, tee_filename
 
   private
 

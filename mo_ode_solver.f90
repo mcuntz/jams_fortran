@@ -173,7 +173,6 @@ module mo_ode_solver
     interface Euler
         module procedure Euler_sp, Euler_dp, Euler_para_sp, Euler_para_dp
      end interface Euler
-     public :: Euler_sp, Euler_dp, Euler_para_sp, Euler_para_dp
 
     ! ------------------------------------------------------------------
 
@@ -270,7 +269,6 @@ module mo_ode_solver
     interface RK4
        module procedure RK4_sp, RK4_dp, RK4_para_sp, RK4_para_dp
     end interface RK4
-    public :: RK4_sp, RK4_dp, RK4_para_sp, RK4_para_dp
 
     ! ------------------------------------------------------------------
 
@@ -372,7 +370,6 @@ module mo_ode_solver
     interface RK4as
         module procedure RK4as_sp, RK4as_dp, RK4as_para_sp, RK4as_para_dp
     end interface RK4as
-    public :: RK4as_sp, RK4as_dp, RK4as_para_sp, RK4as_para_dp
 
     ! ------------------------------------------------------------------
 
@@ -490,7 +487,6 @@ module mo_ode_solver
     interface RBstiff
        module procedure RBstiff_sp, RBstiff_dp, RBstiff_para_sp, RBstiff_para_dp
     end interface RBstiff
-    public :: RBstiff_sp, RBstiff_dp, RBstiff_para_sp, RBstiff_para_dp
 
     private
 

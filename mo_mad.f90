@@ -97,7 +97,6 @@ MODULE mo_mad
   INTERFACE mad
      MODULE PROCEDURE mad_sp, mad_dp
   END INTERFACE mad
-  PUBLIC :: mad_sp, mad_dp
 
   ! ------------------------------------------------------------------
 

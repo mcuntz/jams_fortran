@@ -87,6 +87,8 @@ MODULE mo_sort
 
   IMPLICIT NONE
 
+  PRIVATE
+
 #ifndef __PYTHON__
   PUBLIC :: sort       ! Quicksorts one array
   PUBLIC :: sort_index ! Returns indeces that sort the input array
@@ -150,7 +152,6 @@ MODULE mo_sort
      MODULE PROCEDURE isort_i4, isort_sp, isort_dp
   END INTERFACE nrsort
 #endif
-  PUBLIC :: isort_i4, isort_sp, isort_dp
 
   ! ------------------------------------------------------------------
 
@@ -210,9 +211,6 @@ MODULE mo_sort
      MODULE PROCEDURE isort_index_i4, isort_index_sp, isort_index_dp
   END INTERFACE nrsort_index
 #endif
-  PUBLIC :: isort_index_i4, isort_index_sp, isort_index_dp
-
-  PRIVATE
 
   ! Local routine for indeces exchange, from numerical recipes
   INTERFACE arth

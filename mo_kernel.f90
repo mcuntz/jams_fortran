@@ -172,7 +172,6 @@ MODULE mo_kernel
   INTERFACE kernel_cumdensity
      MODULE PROCEDURE kernel_cumdensity_1d_dp, kernel_cumdensity_1d_sp
   END INTERFACE kernel_cumdensity
-  PUBLIC :: kernel_cumdensity_1d_dp, kernel_cumdensity_1d_sp
   
   ! ------------------------------------------------------------------
 
@@ -274,7 +273,6 @@ MODULE mo_kernel
   INTERFACE kernel_density
      MODULE PROCEDURE kernel_density_1d_dp,  kernel_density_1d_sp
   END INTERFACE kernel_density
-  PUBLIC :: kernel_density_1d_dp,  kernel_density_1d_sp
   
   ! ------------------------------------------------------------------
 
@@ -357,7 +355,6 @@ MODULE mo_kernel
   INTERFACE kernel_density_h
      MODULE PROCEDURE kernel_density_h_1d_dp, kernel_density_h_1d_sp
   END INTERFACE kernel_density_h
-  PUBLIC :: kernel_density_h_1d_dp, kernel_density_h_1d_sp
   
   ! ------------------------------------------------------------------
 
@@ -463,8 +460,6 @@ MODULE mo_kernel
      MODULE PROCEDURE kernel_regression_2d_dp, kernel_regression_2d_sp, &
           kernel_regression_1d_dp, kernel_regression_1d_sp
   END INTERFACE kernel_regression
-  PUBLIC :: kernel_regression_2d_dp, kernel_regression_2d_sp, &
-       kernel_regression_1d_dp, kernel_regression_1d_sp
   
   ! ------------------------------------------------------------------
 
@@ -553,8 +548,6 @@ MODULE mo_kernel
      MODULE PROCEDURE kernel_regression_h_2d_dp, kernel_regression_h_2d_sp, &
           kernel_regression_h_1d_dp, kernel_regression_h_1d_sp
   END INTERFACE kernel_regression_h
-  PUBLIC :: kernel_regression_h_2d_dp, kernel_regression_h_2d_sp, &
-       kernel_regression_h_1d_dp, kernel_regression_h_1d_sp
   
   ! ------------------------------------------------------------------
 

@@ -98,7 +98,6 @@ module mo_sampling
   interface random
      module procedure random_sp, random_dp
   end interface random
-  public :: random_sp, random_dp
 
   ! ------------------------------------------------------------------
 
@@ -158,7 +157,6 @@ module mo_sampling
   interface lhs
      module procedure lhs_sp, lhs_dp
   end interface lhs
-  public :: lhs_sp, lhs_dp
 
   ! ------------------------------------------------------------------
 
@@ -215,9 +213,6 @@ module mo_sampling
           setupxor4096_sp_1d, setupxor4096_dp_1d, &
           setupxor4096_sp_1d_dist, setupxor4096_dp_1d_dist
   end interface setupxor
-  public :: setupxor4096_i4_0d, &
-       setupxor4096_sp_1d, setupxor4096_dp_1d, &
-       setupxor4096_sp_1d_dist, setupxor4096_dp_1d_dist
 
   ! ------------------------------------------------------------------
 
@@ -272,7 +267,6 @@ module mo_sampling
   interface setupxor_g
      module procedure setupxor4096g_sp_1d, setupxor4096g_dp_1d
   end interface setupxor_g
-  public :: setupxor4096g_sp_1d, setupxor4096g_dp_1d
 
   private
 

@@ -111,14 +111,6 @@ module mo_NcRead
           Get_NcVar_0d_i1, Get_NcVar_1d_i1, Get_NcVar_2d_i1, &
           Get_NcVar_3d_i1, Get_NcVar_4d_i1, Get_NcVar_5d_i1
   end interface Get_NcVar
-  public :: Get_NcVar_0d_sp, Get_NcVar_0d_dp, Get_NcVar_1d_sp, &
-       Get_NcVar_1d_dp, Get_NcVar_2d_sp, Get_NcVar_2d_dp, &
-       Get_NcVar_3d_sp, Get_NcVar_3d_dp, Get_NcVar_4d_sp, &
-       Get_NcVar_4d_dp, Get_NcVar_5d_sp, Get_NcVar_5d_dp, &
-       Get_NcVar_0d_i4, Get_NcVar_1d_i4, Get_NcVar_2d_i4, &
-       Get_NcVar_3d_i4, Get_NcVar_4d_i4, Get_NcVar_5d_i4, &
-       Get_NcVar_0d_i1, Get_NcVar_1d_i1, Get_NcVar_2d_i1, &
-       Get_NcVar_3d_i1, Get_NcVar_4d_i1, Get_NcVar_5d_i1
 
   ! ------------------------------------------------------------------------------
 

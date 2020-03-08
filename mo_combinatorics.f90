@@ -113,9 +113,6 @@ MODULE mo_combinatorics
                       binomcoeffi_sp_d0, binomcoeffi_dp_d0, binomcoeffi_sp_d1, binomcoeffi_dp_d1,&
                       binomcoeffi_dpi4_d0, binomcoeffi_dpi4_d1
   END INTERFACE binomcoeffi
-  PUBLIC :: binomcoeffi_i4_d0, binomcoeffi_i8_d0, binomcoeffi_i4_d1, binomcoeffi_i8_d1,&
-       binomcoeffi_sp_d0, binomcoeffi_dp_d0, binomcoeffi_sp_d1, binomcoeffi_dp_d1,&
-       binomcoeffi_dpi4_d0, binomcoeffi_dpi4_d1
   
   ! ------------------------------------------------------------------
 
@@ -171,7 +168,6 @@ MODULE mo_combinatorics
   INTERFACE all_kofn
      MODULE PROCEDURE all_kofn_i4, all_kofn_i8
   END INTERFACE all_kofn
-  PUBLIC :: all_kofn_i4, all_kofn_i8
   
   ! ------------------------------------------------------------------
 
@@ -231,7 +227,6 @@ MODULE mo_combinatorics
   INTERFACE next_kofn
      MODULE PROCEDURE next_kofn_i4, next_kofn_i8
   END INTERFACE next_kofn
-  PUBLIC :: next_kofn_i4, next_kofn_i8
 
   ! ------------------------------------------------------------------
 
@@ -290,7 +285,6 @@ MODULE mo_combinatorics
   INTERFACE random_kofn
      MODULE PROCEDURE random_kofn_i4 , random_kofn_i8
   END INTERFACE random_kofn
-  PUBLIC :: random_kofn_i4 , random_kofn_i8
 
   ! ------------------------------------------------------------------
 
@@ -349,7 +343,6 @@ MODULE mo_combinatorics
   INTERFACE all_index_permut
      MODULE PROCEDURE all_index_permut_i4, all_index_permut_i8
   END INTERFACE all_index_permut
-  PUBLIC :: all_index_permut_i4, all_index_permut_i8
 
   ! ------------------------------------------------------------------
 
@@ -408,7 +401,6 @@ MODULE mo_combinatorics
   INTERFACE next_index_permut
      MODULE PROCEDURE next_index_permut_i4, next_index_permut_i8
   END INTERFACE next_index_permut
-  PUBLIC :: next_index_permut_i4, next_index_permut_i8
 
   ! ------------------------------------------------------------------
 
@@ -466,7 +458,6 @@ MODULE mo_combinatorics
   INTERFACE random_index_permut
      MODULE PROCEDURE random_index_permut_i4, random_index_permut_i8
   END INTERFACE random_index_permut
-  PUBLIC :: random_index_permut_i4, random_index_permut_i8
 
   ! ------------------------------------------------------------------
 
@@ -524,7 +515,6 @@ MODULE mo_combinatorics
   INTERFACE random_permut
      MODULE PROCEDURE random_permut_i4, random_permut_i8, random_permut_sp, random_permut_dp
   END INTERFACE random_permut
-  PUBLIC :: random_permut_i4, random_permut_i8, random_permut_sp, random_permut_dp
 
   ! ------------------------------------------------------------------
 
@@ -577,7 +567,6 @@ MODULE mo_combinatorics
   INTERFACE nextpart
      MODULE PROCEDURE nextpart_i4, nextpart_i8
   END INTERFACE nextpart
-  PUBLIC :: nextpart_i4, nextpart_i8
 
   ! ------------------------------------------------------------------
 
@@ -630,7 +619,6 @@ MODULE mo_combinatorics
   INTERFACE prevpart
      MODULE PROCEDURE prevpart_i4, prevpart_i8
   END INTERFACE prevpart
-  PUBLIC :: prevpart_i4, prevpart_i8
 
   ! ------------------------------------------------------------------
 
@@ -684,7 +672,6 @@ MODULE mo_combinatorics
   INTERFACE isgoodpart
      MODULE PROCEDURE isgoodpart_i4, isgoodpart_i8
   END INTERFACE isgoodpart
-  PUBLIC :: isgoodpart_i4, isgoodpart_i8
 
   ! ------------------------------------------------------------------
 

@@ -92,7 +92,6 @@ MODULE mo_percentile
   INTERFACE median
      MODULE PROCEDURE median_sp, median_dp
   END INTERFACE median
-  PUBLIC :: median_sp, median_dp
 
   ! ------------------------------------------------------------------
 
@@ -148,7 +147,6 @@ MODULE mo_percentile
   INTERFACE n_element
      MODULE PROCEDURE n_element_dp, n_element_sp
   END INTERFACE n_element
-  PUBLIC :: n_element_dp, n_element_sp
 
   ! ------------------------------------------------------------------
 
@@ -223,7 +221,6 @@ MODULE mo_percentile
   INTERFACE percentile
      MODULE PROCEDURE percentile_0d_sp, percentile_0d_dp, percentile_1d_sp, percentile_1d_dp
   END INTERFACE percentile
-  PUBLIC :: percentile_0d_sp, percentile_0d_dp, percentile_1d_sp, percentile_1d_dp
 
   ! ------------------------------------------------------------------
 
@@ -274,7 +271,6 @@ MODULE mo_percentile
   INTERFACE qmedian
      MODULE PROCEDURE qmedian_sp, qmedian_dp
   END INTERFACE qmedian
-  PUBLIC :: qmedian_sp, qmedian_dp
 
   ! ------------------------------------------------------------------
 

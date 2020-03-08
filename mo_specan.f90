@@ -84,7 +84,6 @@ MODULE mo_specan
   INTERFACE cost
      MODULE PROCEDURE cost_sp, cost_dp
   END INTERFACE cost
-  PUBLIC :: cost_sp, cost_dp
 
   ! ------------------------------------------------------------------
 
@@ -148,7 +147,6 @@ MODULE mo_specan
   INTERFACE linres
      MODULE PROCEDURE linres_sp, linres_dp
   END INTERFACE linres
-  PUBLIC :: linres_sp, linres_dp
 
   ! ------------------------------------------------------------------
 
@@ -200,7 +198,6 @@ MODULE mo_specan
   INTERFACE periodogram
      MODULE PROCEDURE periodogram_sp, periodogram_dp
   END INTERFACE periodogram
-  PUBLIC :: periodogram_sp, periodogram_dp
 
   ! ------------------------------------------------------------------
 
@@ -250,7 +247,6 @@ MODULE mo_specan
   INTERFACE setmeas
      MODULE PROCEDURE setmeas_dp, setmeas_sp
   END INTERFACE setmeas
-  PUBLIC :: setmeas_dp, setmeas_sp
 
   ! ------------------------------------------------------------------
 

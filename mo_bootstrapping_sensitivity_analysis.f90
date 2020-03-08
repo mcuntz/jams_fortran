@@ -126,7 +126,6 @@ MODULE mo_bootstrapping_sensitivity_analysis
   INTERFACE bootstrap_si
      MODULE PROCEDURE bootstrap_si_0d_dp, bootstrap_si_0d_sp, bootstrap_si_1d_dp, bootstrap_si_1d_sp
   END INTERFACE bootstrap_si
-  PUBLIC :: bootstrap_si_0d_dp, bootstrap_si_0d_sp, bootstrap_si_1d_dp, bootstrap_si_1d_sp
   
   ! ------------------------------------------------------------------
 

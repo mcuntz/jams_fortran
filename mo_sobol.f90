@@ -143,7 +143,6 @@ MODULE mo_sobol
   INTERFACE sobol
      MODULE PROCEDURE i4_sobol, i8_sobol
   END INTERFACE sobol
-  PUBLIC :: i4_sobol, i8_sobol
 
   ! ------------------------------------------------------------------
 
@@ -212,7 +211,6 @@ MODULE mo_sobol
   INTERFACE sobol_array
      MODULE PROCEDURE i4_sobol_generate, i8_sobol_generate
   END INTERFACE sobol_array
-  PUBLIC :: i4_sobol_generate, i8_sobol_generate
 
   ! ------------------------------------------------------------------
 
@@ -2357,17 +2355,17 @@ CONTAINS
     return
   end subroutine i8_sobol
 
-  subroutine i4_sobol_generate ( m, n, skip, r )
+  subroutine i4_sobol_generate( m, n, skip, r )
 
     implicit none
 
-    integer(i4)                  :: m
-    integer(i4)                  :: n
+    integer(i4)                :: m
+    integer(i4)                :: n
+    integer(i4)                :: skip
+    real(sp),   dimension(n,m) :: r
 
-    integer(i4)                  :: j
-    real(sp), dimension ( n, m ) :: r
-    integer(i4)                  :: seed
-    integer(i4)                  :: skip
+    integer(i4)                :: j
+    integer(i4)                :: seed
 
     seed = 0
     call i4_sobol( m, seed, r(1,1:m) ) ! initialise sobol routine
@@ -2380,18 +2378,18 @@ CONTAINS
     return
   end subroutine i4_sobol_generate
 
-  subroutine i8_sobol_generate ( m, n, skip, r )
+  subroutine i8_sobol_generate( m, n, skip, r )
 
     implicit none
 
-    integer(i4)                  :: m
-    integer(i4)                  :: n
+    integer(i4)                :: m
+    integer(i4)                :: n
+    integer(i4)                :: skip
+    real(dp),   dimension(n,m) :: r
 
-    integer(i8)                  :: j
-    real(dp), dimension ( n, m ) :: r
-    integer(i8)                  :: seed
-    integer(i4)                  :: skip
-    integer(i8)                  :: m8, skip8
+    integer(i8)                :: j
+    integer(i8)                :: seed
+    integer(i8)                :: m8, skip8
 
     m8    = int(m,i8)
     skip8 = int(skip,i8)

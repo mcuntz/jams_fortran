@@ -116,7 +116,6 @@ MODULE mo_standard_score
   INTERFACE standard_score
      MODULE PROCEDURE standard_score_sp, standard_score_dp
   END INTERFACE standard_score
-  PUBLIC :: standard_score_sp, standard_score_dp
 
   ! ------------------------------------------------------------------
 
@@ -193,7 +192,6 @@ MODULE mo_standard_score
   INTERFACE classified_standard_score
      MODULE PROCEDURE classified_standard_score_sp, classified_standard_score_dp
   END INTERFACE classified_standard_score
-  PUBLIC :: classified_standard_score_sp, classified_standard_score_dp
   
   ! ------------------------------------------------------------------
 

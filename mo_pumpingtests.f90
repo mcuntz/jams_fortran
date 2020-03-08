@@ -155,7 +155,6 @@ MODULE mo_pumpingtests
   INTERFACE thiem
      MODULE PROCEDURE thiem_sp, thiem_dp, thiem_d1_sp, thiem_d1_dp
   END INTERFACE thiem
-  PUBLIC :: thiem_sp, thiem_dp, thiem_d1_sp, thiem_d1_dp
 
   ! ------------------------------------------------------------------
 
@@ -226,7 +225,6 @@ MODULE mo_pumpingtests
   INTERFACE theis
      MODULE PROCEDURE theis_sp, theis_dp, theis_d1_sp, theis_d1_dp, theis_grid_sp, theis_grid_dp
   END INTERFACE theis
-  PUBLIC :: theis_sp, theis_dp, theis_d1_sp, theis_d1_dp, theis_grid_sp, theis_grid_dp
 
   ! ------------------------------------------------------------------
 
@@ -297,7 +295,6 @@ MODULE mo_pumpingtests
   INTERFACE ext_thiem2d
      MODULE PROCEDURE ext_thiem2d_sp, ext_thiem2d_dp, ext_thiem2d_d1_sp, ext_thiem2d_d1_dp
   END INTERFACE ext_thiem2d
-  PUBLIC :: ext_thiem2d_sp, ext_thiem2d_dp, ext_thiem2d_d1_sp, ext_thiem2d_d1_dp
 
   ! ------------------------------------------------------------------
 
@@ -375,7 +372,6 @@ MODULE mo_pumpingtests
   INTERFACE ext_thiem3d
      MODULE PROCEDURE ext_thiem3d_sp, ext_thiem3d_dp, ext_thiem3d_d1_sp, ext_thiem3d_d1_dp
   END INTERFACE ext_thiem3d
-  PUBLIC :: ext_thiem3d_sp, ext_thiem3d_dp, ext_thiem3d_d1_sp, ext_thiem3d_d1_dp
 
   ! ------------------------------------------------------------------
 
@@ -465,7 +461,6 @@ MODULE mo_pumpingtests
   INTERFACE ext_theis3d
      MODULE PROCEDURE ext_theis3d_sp, ext_theis3d_dp, ext_theis3d_sp_d1, ext_theis3d_dp_d1, ext_theis3d_grid_sp, ext_theis3d_grid_dp
   END INTERFACE ext_theis3d
-  PUBLIC :: ext_theis3d_sp, ext_theis3d_dp, ext_theis3d_sp_d1, ext_theis3d_dp_d1, ext_theis3d_grid_sp, ext_theis3d_grid_dp
 
   ! ------------------------------------------------------------------
 
@@ -546,7 +541,6 @@ MODULE mo_pumpingtests
   INTERFACE ext_theis2d
      MODULE PROCEDURE ext_theis2d_sp, ext_theis2d_dp, ext_theis2d_sp_d1, ext_theis2d_dp_d1, ext_theis2d_grid_sp, ext_theis2d_grid_dp
   END INTERFACE ext_theis2d
-  PUBLIC :: ext_theis2d_sp, ext_theis2d_dp, ext_theis2d_sp_d1, ext_theis2d_dp_d1, ext_theis2d_grid_sp, ext_theis2d_grid_dp
 
   ! ------------------------------------------------------------------
 

@@ -96,12 +96,6 @@ module mo_ncdump
           dump_netcdf_1d_i4, dump_netcdf_2d_i4, dump_netcdf_3d_i4, &
           dump_netcdf_4d_i4, dump_netcdf_5d_i4
   end interface dump_netcdf
-  public :: dump_netcdf_1d_sp, dump_netcdf_2d_sp, dump_netcdf_3d_sp, &
-       dump_netcdf_4d_sp, dump_netcdf_5d_sp, &
-       dump_netcdf_1d_dp, dump_netcdf_2d_dp, dump_netcdf_3d_dp, &
-       dump_netcdf_4d_dp, dump_netcdf_5d_dp, &
-       dump_netcdf_1d_i4, dump_netcdf_2d_i4, dump_netcdf_3d_i4, &
-       dump_netcdf_4d_i4, dump_netcdf_5d_i4
 
   ! ----------------------------------------------------------------------------
 

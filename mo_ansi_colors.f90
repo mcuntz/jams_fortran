@@ -60,7 +60,7 @@ module mo_ansi_colors
   character(len=1), parameter :: c_esc   = achar(27)
   character(len=2), parameter :: c_start = c_esc // '['
   character(len=1), parameter :: c_end   = 'm'
-  character(len=*), parameter :: c_clear = c_start // '0' // c_end
+  character(len=4), parameter :: c_clear = c_start // '0' // c_end
 
 contains
 
@@ -85,7 +85,7 @@ contains
   !>                                               c_black, c_red, c_green, c_yellow, c_blue, c_magenta c_cyan, and c_white
   !
   !     RETURN
-  !>       \return     character(len=len(str)+9) :: clor &mdash; str surrounded by color codes.
+  !>       \return     character(len=len(str)+9) :: color &mdash; str surrounded by color codes.
   !
   !     EXAMPLE
   !         write(*,*) color('o.k.', c_green)
@@ -100,7 +100,7 @@ contains
 
     character(len=*), intent(in)  :: str
     character(len=*), intent(in)  :: code
-    character(len=:), allocatable :: out
+    character(len=2+len(code)+1+len(str)+4) :: out
 
     out = c_start // code // c_end // str // c_clear
 

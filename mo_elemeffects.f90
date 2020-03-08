@@ -127,8 +127,6 @@ MODULE mo_elemeffects
      MODULE PROCEDURE elemeffects_0d_dp, elemeffects_0d_sp, &
           elemeffects_1d_dp, elemeffects_1d_sp
   END INTERFACE elemeffects
-  PUBLIC :: elemeffects_0d_dp, elemeffects_0d_sp, &
-       elemeffects_1d_dp, elemeffects_1d_sp
 
   ! ------------------------------------------------------------------
 

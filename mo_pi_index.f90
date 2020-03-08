@@ -139,7 +139,6 @@ MODULE mo_pi_index
   INTERFACE pi_index
      MODULE PROCEDURE pi_index_dp, pi_index_sp
   END INTERFACE pi_index
-  PUBLIC :: pi_index_dp, pi_index_sp
 
   ! ------------------------------------------------------------------
 

@@ -134,7 +134,6 @@ MODULE mo_histo
   INTERFACE histo
      MODULE PROCEDURE histo_sp_1d, histo_dp_1d, histo_sp_2d, histo_dp_2d
   END INTERFACE histo
-  PUBLIC :: histo_sp_1d, histo_dp_1d, histo_sp_2d, histo_dp_2d
 
   ! ------------------------------------------------------------------
 
@@ -249,7 +248,6 @@ MODULE mo_histo
   INTERFACE histo2d
      MODULE PROCEDURE histo2d_sp, histo2d_dp
   END INTERFACE histo2d
-  PUBLIC :: histo2d_sp, histo2d_dp
 
   ! ------------------------------------------------------------------
 

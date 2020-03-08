@@ -129,7 +129,6 @@ MODULE mo_boxcox
   INTERFACE boxcox
      MODULE PROCEDURE boxcox_sp, boxcox_dp
   END INTERFACE boxcox
-  PUBLIC :: boxcox_sp, boxcox_dp
 
   ! ------------------------------------------------------------------
 
@@ -185,7 +184,6 @@ MODULE mo_boxcox
   INTERFACE get_boxcox
      MODULE PROCEDURE get_boxcox_sp, get_boxcox_dp
   END INTERFACE get_boxcox
-  PUBLIC :: get_boxcox_sp, get_boxcox_dp
   
   ! ------------------------------------------------------------------
 
@@ -246,7 +244,6 @@ MODULE mo_boxcox
   INTERFACE invboxcox
      MODULE PROCEDURE invboxcox_0d_sp, invboxcox_0d_dp, invboxcox_1d_sp, invboxcox_1d_dp
   END INTERFACE invboxcox
-  PUBLIC :: invboxcox_0d_sp, invboxcox_0d_dp, invboxcox_1d_sp, invboxcox_1d_dp
   
   ! ------------------------------------------------------------------
 

@@ -133,9 +133,6 @@ MODULE mo_xor4096_apps
           xor4096_array_i4_1d, xor4096_array_i4_2d, xor4096_array_i8_1d, xor4096_array_i8_2d, &
           xor4096_array_sp_1d, xor4096_array_sp_2d, xor4096_array_dp_1d, xor4096_array_dp_2d
   END INTERFACE xor4096_array
-  PUBLIC :: xor4096_array_i4_1d, xor4096_array_i4_2d, xor4096_array_i8_1d, xor4096_array_i8_2d, &
-       xor4096_array_sp_1d, xor4096_array_sp_2d, xor4096_array_dp_1d, xor4096_array_dp_2d
-
 
   ! ------------------------------------------------------------------
 
@@ -214,7 +211,6 @@ MODULE mo_xor4096_apps
      MODULE PROCEDURE &
           xor4096g_array_sp_1d, xor4096g_array_sp_2d, xor4096g_array_dp_1d, xor4096g_array_dp_2d
   END INTERFACE xor4096g_array
-  PUBLIC :: xor4096g_array_sp_1d, xor4096g_array_sp_2d, xor4096g_array_dp_1d, xor4096g_array_dp_2d
 
   ! ------------------------------------------------------------------
 
@@ -303,7 +299,6 @@ MODULE mo_xor4096_apps
   interface xor4096g_mvn
      module procedure mvn_sp_1d, mvn_dp_1d, mvn_sp_2d, mvn_dp_2d
   end interface xor4096g_mvn
-  public :: mvn_sp_1d, mvn_dp_1d, mvn_sp_2d, mvn_dp_2d
   
   ! ------------------------------------------------------------------
 
@@ -389,10 +384,6 @@ MODULE mo_xor4096_apps
           xor4096_range_sp_0d, xor4096_range_sp_1d, xor4096_range_sp_2d, &
           xor4096_range_dp_0d, xor4096_range_dp_1d, xor4096_range_dp_2d
   END INTERFACE xor4096_range
-  PUBLIC :: xor4096_range_i4_0d, xor4096_range_i4_1d, xor4096_range_i4_2d, &
-       xor4096_range_i8_0d, xor4096_range_i8_1d, xor4096_range_i8_2d, &
-       xor4096_range_sp_0d, xor4096_range_sp_1d, xor4096_range_sp_2d, &
-       xor4096_range_dp_0d, xor4096_range_dp_1d, xor4096_range_dp_2d
 
   ! ------------------------------------------------------------------
 

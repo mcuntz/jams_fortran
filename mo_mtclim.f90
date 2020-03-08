@@ -3,7 +3,7 @@ module mo_mtclim
   use mo_kind,      only: i4, dp
   use mo_constants, only: lr_std_dp, T_std_dp, gravity_dp, R_dp, Ma_dp, deg2rad_dp, secperrad_dp, &
        mindecl_dp, daysoff_dp, radperday_dp, pi_dp, sigma_dp, p0_dp, cp0_dp, epsair_dp
-  use mo_utils,     only: equal, lesserequal
+  use mo_utils,     only: eq, le
 
   implicit none
   !
@@ -309,7 +309,7 @@ contains
     end do
     ann_prcp = (sum_prcp / ndays) *365.25
     !
-    if (equal(ann_prcp,0.0_dp)) ann_prcp = 1.0_dp
+    if (eq(ann_prcp,0.0_dp)) ann_prcp = 1.0_dp
     !
     ! generate the effective annual precip, based on a 3-month moving-window.
     ! requires some special case handling for the beginning of the record and for short records.
@@ -840,14 +840,17 @@ contains
   !    HISTORY
   !        Written,  Johannes Brenner, Sept 2016
 
-  function pulled_boxcar (dtr, n, w, w_flag)
+  function pulled_boxcar(dtr, n, w, w_flag)
     !
     real(dp),     dimension(:), allocatable, intent(in)   :: dtr
-    real(dp),     dimension(:), allocatable               :: pulled_boxcar
-    !
     integer(i4)                            , intent(in)   :: n
     integer(i4)                            , intent(in)   :: w
     integer(i4)                            , intent(in)   :: w_flag
+#ifndef __PYTHON__
+    real(dp),     dimension(:), allocatable               :: pulled_boxcar
+#else
+    real(dp),     dimension(n)                            :: pulled_boxcar
+#endif
     !
     integer(i4)                                           :: ok =1
     integer(i4)                                           :: i, j
@@ -855,7 +858,9 @@ contains
     real(dp)                                              :: total, sum_wt
     !
     ! allocate
-    allocate(pulled_boxcar(n))
+#ifndef __PYTHON__
+    if (.not. allocated(pulled_boxcar)) allocate(pulled_boxcar(n))
+#endif
     allocate(wt(w))
     !
     if (w .gt. n) then
@@ -986,21 +991,41 @@ contains
   !    HISTORY
   !        Written,  Johannes Brenner, Sept 2016
 
-  function snowpack(tmin, prcp, yday, ndays, SNOW_TCRIT, SNOW_TRATE)
+  function snowpack( &
+#ifdef __PYTHON__
+       ndays, &
+#endif
+       tmin, prcp, yday, &
+#ifndef __PYTHON__
+       ndays, &
+#endif
+       SNOW_TCRIT, SNOW_TRATE)
     !
+    integer(i4),                            intent(in) :: ndays
+#ifndef __PYTHON__
     real(dp),    dimension(:), allocatable, intent(in) :: tmin
     real(dp),    dimension(:), allocatable, intent(in) :: prcp
+#else
+    real(dp),    dimension(ndays), intent(in) :: tmin
+    real(dp),    dimension(ndays), intent(in) :: prcp
+#endif
     integer(i4), dimension(:), allocatable, intent(in) :: yday
     real(dp)                              , intent(in) :: SNOW_TCRIT
     real(dp)                              , intent(in) :: SNOW_TRATE
+#ifndef __PYTHON__
     real(dp), dimension(:), allocatable                :: snowpack
+#else
+    real(dp), dimension(ndays)                         :: snowpack
+#endif
     !
     real(dp)                    :: snowpack_,newsnow,snowmelt,sum_
     !
-    integer(i4)                 :: i, ndays, counter
+    integer(i4)                 :: i, counter
     integer(i4)                 :: start_yday, prev_yday
     !
-    allocate(snowpack(ndays))
+#ifndef __PYTHON__
+    if (.not. allocated(snowpack)) allocate(snowpack(ndays))
+#endif
     !
     ! first pass to initialize SWE array
     snowpack_ = 0.0
@@ -1008,7 +1033,7 @@ contains
     do i=1, ndays
        newsnow  = 0.0
        snowmelt = 0.0
-       if (lesserequal(tmin(i),SNOW_TCRIT)) then
+       if (le(tmin(i),SNOW_TCRIT)) then
           newsnow = prcp(i)
        else
           snowmelt = SNOW_TRATE * (tmin(i) - SNOW_TCRIT)
@@ -1203,18 +1228,26 @@ contains
     real(dp),                               intent(in)   :: tmax_lr
     integer(i4),                            intent(in)   :: ndays
     !
+#ifndef __PYTHON__
     real(dp),    dimension(:), allocatable, intent(out)  :: s_tmin
     real(dp),    dimension(:), allocatable, intent(out)  :: s_tmax
     real(dp),    dimension(:), allocatable, intent(out)  :: s_tday
+#else
+    real(dp),    dimension(ndays),          intent(out)  :: s_tmin
+    real(dp),    dimension(ndays),          intent(out)  :: s_tmax
+    real(dp),    dimension(ndays),          intent(out)  :: s_tday
+#endif
     !
     real(dp)                                             :: dz
     real(dp)                                             :: tmean
     integer(i4)                                          :: i
     !
     ! allocate
-    allocate(s_tday(ndays))
-    allocate(s_tmax(ndays))
-    allocate(s_tmin(ndays))
+#ifndef __PYTHON__
+    if (.not. allocated(s_tday)) allocate(s_tday(ndays))
+    if (.not. allocated(s_tmax)) allocate(s_tmax(ndays))
+    if (.not. allocated(s_tmin)) allocate(s_tmin(ndays))
+#endif
     ! calculate elevation difference in kilometers
     dz = (site_elev - base_elev) / 1000.0
     ! apply lapse rate corrections to tmax and tmin
@@ -1273,12 +1306,18 @@ contains
     real(dp),                               intent(in)   :: site_isoh
     real(dp),                               intent(in)   :: base_isoh
     !
+#ifndef __PYTHON__
     real(dp),    dimension(:), allocatable               :: calc_prcp
+#else
+    real(dp),    dimension(ndays)                        :: calc_prcp
+#endif
     !
     real(dp)                                             :: ratio
     integer(i4)                                          :: i
     !
-    allocate(calc_prcp(ndays))
+#ifndef __PYTHON__
+    if (.not. allocated(calc_prcp)) allocate(calc_prcp(ndays))
+#endif
     !
     ratio = site_isoh / base_isoh
     !
@@ -1302,6 +1341,7 @@ contains
     !select cases
     integer(i4),                             intent(in)   :: outhum, lwrad, netlwrad
     !
+#ifndef __PYTHON__
     real(dp),     dimension(:), allocatable, intent(out) :: s_tmax_out  !/* array of site tmax values */
     real(dp),     dimension(:), allocatable, intent(out) :: s_tmin_out  !/* array of site tmin values */
     real(dp),     dimension(:), allocatable, intent(out) :: s_tday_out  !/* array of site daylight temperature values */
@@ -1312,25 +1352,46 @@ contains
     real(dp),     dimension(:), allocatable, intent(out) :: s_lrad_out  !/* array of site longwave radiation values */
     real(dp),     dimension(:), allocatable, intent(out) :: s_lradnet_out  !/* array of site net longwave radiation values */
     real(dp),     dimension(:), allocatable, intent(out) :: s_dayl_out  !/* array of site daylength values */
+#else
+    real(dp),     dimension(ndays), intent(out) :: s_tmax_out  !/* array of site tmax values */
+    real(dp),     dimension(ndays), intent(out) :: s_tmin_out  !/* array of site tmin values */
+    real(dp),     dimension(ndays), intent(out) :: s_tday_out  !/* array of site daylight temperature values */
+    real(dp),     dimension(ndays), intent(out) :: s_prcp_out  !/* array of site prcp values */
+    real(dp),     dimension(ndays), intent(out) :: s_hum_out   !/* array of site humidity values (VPD or VP, Pa) */
+    real(dp),     dimension(ndays), intent(out) :: s_srad_out  !/* array of site shortwave radiation values */
+    real(dp),     dimension(ndays), intent(out) :: s_srad_dif_out  !/* array of site shortwave diffuse radiation values */
+    real(dp),     dimension(ndays), intent(out) :: s_lrad_out  !/* array of site longwave radiation values */
+    real(dp),     dimension(ndays), intent(out) :: s_lradnet_out  !/* array of site net longwave radiation values */
+    real(dp),     dimension(ndays), intent(out) :: s_dayl_out  !/* array of site daylength values */
+#endif
 
+#ifndef __PYTHON__
     real(dp),     dimension(:), allocatable :: s_swe   !/* array of site snow water equivalent values (cm) */
+#else
+    real(dp),     dimension(ndays) :: s_swe   !/* array of site snow water equivalent values (cm) */
+#endif
     real(dp)     :: site_elev, base_elev, tmin_lr, tmax_lr, site_isoh, base_isoh, &
          site_lat, site_asp, site_slp, site_ehoriz, site_whoriz
     !
     ! allocate space in the data arrays for input and output data
     !
+#ifndef __PYTHON__
     allocate(s_swe(ndays))
+#endif
     !
-    allocate(s_tmin_out(ndays))
-    allocate(s_tmax_out(ndays))
-    allocate(s_tday_out(ndays))
+#ifndef __PYTHON__
+    if (.not. allocated(s_tmin_out))     allocate(s_tmin_out(ndays))
+    if (.not. allocated(s_tmax_out))     allocate(s_tmax_out(ndays))
+    if (.not. allocated(s_tday_out))     allocate(s_tday_out(ndays))
     !
-    allocate(s_hum_out(ndays))
-    allocate(s_srad_out(ndays))
-    allocate(s_srad_dif_out(ndays))
-    allocate(s_lrad_out(ndays))
-    allocate(s_lradnet_out(ndays))
-    allocate(s_dayl_out(ndays))
+    if (.not. allocated(s_prcp_out))     allocate(s_prcp_out(ndays))
+    if (.not. allocated(s_hum_out))      allocate(s_hum_out(ndays))
+    if (.not. allocated(s_srad_out))     allocate(s_srad_out(ndays))
+    if (.not. allocated(s_srad_dif_out)) allocate(s_srad_dif_out(ndays))
+    if (.not. allocated(s_lrad_out))     allocate(s_lrad_out(ndays))
+    if (.not. allocated(s_lradnet_out))  allocate(s_lradnet_out(ndays))
+    if (.not. allocated(s_dayl_out))     allocate(s_dayl_out(ndays))
+#endif
     !
     !----------------------------------------
     ! inital progress indicator
@@ -1348,7 +1409,14 @@ contains
     print *, "Completed calc_prcp()"
     !----------------------------------------
     ! estimate daily snowpack
-    s_swe = snowpack(s_tmin_out, s_prcp_out, yday, ndays, &
+    s_swe = snowpack( &
+#ifdef __PYTHON__
+         ndays, &
+#endif
+         s_tmin_out, s_prcp_out, yday, &
+#ifndef __PYTHON__
+         ndays, &
+#endif
          parameterset(11), parameterset(12))
     print *, "Completed snowpack()"
     !

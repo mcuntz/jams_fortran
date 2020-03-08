@@ -162,10 +162,6 @@ MODULE mo_sobol_index
           sobol_index_2d_dp, sobol_index_2d_sp, &
           sobol_index_3d_dp, sobol_index_3d_sp
   END INTERFACE sobol_index
-  PUBLIC :: sobol_index_0d_dp, sobol_index_0d_sp, &
-       sobol_index_1d_dp, sobol_index_1d_sp, &
-       sobol_index_2d_dp, sobol_index_2d_sp, &
-       sobol_index_3d_dp, sobol_index_3d_sp
 
   ! ------------------------------------------------------------------
 
