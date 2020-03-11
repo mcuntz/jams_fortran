@@ -6,7 +6,7 @@ module mo_mtclim
   use mo_utils,     only: eq, le
 
   implicit none
-  !
+
   public :: pulled_boxcar                 ! calculates a moving average of antecedent values in an array
   public :: atm_pres                      ! calculates the atmospheric pressure as a function of elevation
   public :: snowpack                      ! estimates the accumulation and melt of snow
@@ -17,8 +17,7 @@ module mo_mtclim
   public :: calc_srad_humidity_iterative  ! estimate srad and humidity with iterative algorithm
   public :: eval_mtclim                   ! mtclim model evaluation
 
-  !
-  !
+
   ! ------------------------------------------------------------------------------
   !    Name
   !        mtclim
@@ -842,14 +841,14 @@ contains
 
   function pulled_boxcar(dtr, n, w, w_flag)
     !
-    real(dp),     dimension(:), allocatable, intent(in)   :: dtr
-    integer(i4)                            , intent(in)   :: n
-    integer(i4)                            , intent(in)   :: w
-    integer(i4)                            , intent(in)   :: w_flag
+    real(dp),     dimension(:),  intent(in) :: dtr
+    integer(i4),                 intent(in) :: n
+    integer(i4),                 intent(in) :: w
+    integer(i4),                 intent(in) :: w_flag
 #ifndef __PYTHON__
-    real(dp),     dimension(:), allocatable               :: pulled_boxcar
+    real(dp),     dimension(:), allocatable :: pulled_boxcar
 #else
-    real(dp),     dimension(n)                            :: pulled_boxcar
+    real(dp),     dimension(n)              :: pulled_boxcar
 #endif
     !
     integer(i4)                                           :: ok =1
@@ -991,34 +990,21 @@ contains
   !    HISTORY
   !        Written,  Johannes Brenner, Sept 2016
 
-  function snowpack( &
-#ifdef __PYTHON__
-       ndays, &
-#endif
-       tmin, prcp, yday, &
-#ifndef __PYTHON__
-       ndays, &
-#endif
-       SNOW_TCRIT, SNOW_TRATE)
+  function snowpack(tmin, prcp, yday, ndays, SNOW_TCRIT, SNOW_TRATE)
     !
-    integer(i4),                            intent(in) :: ndays
+    real(dp),    dimension(:), intent(in) :: tmin
+    real(dp),    dimension(:), intent(in) :: prcp
+    integer(i4), dimension(:), intent(in) :: yday
+    integer(i4),               intent(in) :: ndays
+    real(dp),                  intent(in) :: SNOW_TCRIT
+    real(dp),                  intent(in) :: SNOW_TRATE
 #ifndef __PYTHON__
-    real(dp),    dimension(:), allocatable, intent(in) :: tmin
-    real(dp),    dimension(:), allocatable, intent(in) :: prcp
+    real(dp), dimension(:), allocatable :: snowpack
 #else
-    real(dp),    dimension(ndays), intent(in) :: tmin
-    real(dp),    dimension(ndays), intent(in) :: prcp
-#endif
-    integer(i4), dimension(:), allocatable, intent(in) :: yday
-    real(dp)                              , intent(in) :: SNOW_TCRIT
-    real(dp)                              , intent(in) :: SNOW_TRATE
-#ifndef __PYTHON__
-    real(dp), dimension(:), allocatable                :: snowpack
-#else
-    real(dp), dimension(ndays)                         :: snowpack
+    real(dp), dimension(ndays)          :: snowpack
 #endif
     !
-    real(dp)                    :: snowpack_,newsnow,snowmelt,sum_
+    real(dp)                    :: isnopack, newsnow, snowmelt, sum_
     !
     integer(i4)                 :: i, counter
     integer(i4)                 :: start_yday, prev_yday
@@ -1028,7 +1014,7 @@ contains
 #endif
     !
     ! first pass to initialize SWE array
-    snowpack_ = 0.0
+    isnopack = 0.0
     !
     do i=1, ndays
        newsnow  = 0.0
@@ -1038,10 +1024,10 @@ contains
        else
           snowmelt = SNOW_TRATE * (tmin(i) - SNOW_TCRIT)
        end if
-       snowpack_ = snowpack_ + newsnow - snowmelt
-       if (snowpack_ .lt. 0.0) snowpack_ = 0.0
-       snowpack(i) = snowpack_
-       !print *, snowpack_
+       isnopack = isnopack + newsnow - snowmelt
+       if (isnopack .lt. 0.0) isnopack = 0.0
+       snowpack(i) = isnopack
+       !print *, isnopack
     end do
     ! use the first pass to set the initial snowpack conditions for the
     ! first day of data
@@ -1062,7 +1048,7 @@ contains
     ! Proceed with correction if there are valid days to reinitialize
     ! the snowpack estiamtes. Otherwise use the first-pass estimate.
     if (counter .gt. 0) then
-       snowpack_ = sum_ / real(counter)
+       isnopack = sum_ / real(counter)
        do i=1, ndays
           newsnow  = 0.0
           snowmelt = 0.0
@@ -1071,10 +1057,10 @@ contains
           else
              snowmelt = SNOW_TRATE * (tmin(i) - SNOW_TCRIT)
           end if
-          snowpack_ = snowpack_ + newsnow - snowmelt
-          !print *, snowpack_
-          if (snowpack_ .lt. 0.0) snowpack_ = 0.0
-          snowpack(i) = snowpack_
+          isnopack = isnopack + newsnow - snowmelt
+          !print *, isnopack
+          if (isnopack .lt. 0.0) isnopack = 0.0
+          snowpack(i) = isnopack
        end do
     end if
   end function snowpack
@@ -1215,18 +1201,18 @@ contains
   !    HISTORY
   !        Written,  Johannes Brenner, Sept 2016
 
-  subroutine calc_tair(tmin, tmax, ndays, site_elev, base_elev, TDAYCOEF, tmin_lr, tmax_lr,&
+  subroutine calc_tair(tmin, tmax, ndays, site_elev, base_elev, TDAYCOEF, tmin_lr, tmax_lr, &
        s_tmax, s_tmin, s_tday)
     !
-    real(dp),    dimension(:), allocatable, intent(in)   :: tmin
-    real(dp),    dimension(:), allocatable, intent(in)   :: tmax
+    real(dp),    dimension(:), intent(in)   :: tmin
+    real(dp),    dimension(:), intent(in)   :: tmax
     !
-    real(dp),                               intent(in)   :: site_elev
-    real(dp),                               intent(in)   :: base_elev
-    real(dp),                               intent(in)   :: TDAYCOEF
-    real(dp),                               intent(in)   :: tmin_lr
-    real(dp),                               intent(in)   :: tmax_lr
-    integer(i4),                            intent(in)   :: ndays
+    real(dp),                  intent(in)   :: site_elev
+    real(dp),                  intent(in)   :: base_elev
+    real(dp),                  intent(in)   :: TDAYCOEF
+    real(dp),                  intent(in)   :: tmin_lr
+    real(dp),                  intent(in)   :: tmax_lr
+    integer(i4),               intent(in)   :: ndays
     !
 #ifndef __PYTHON__
     real(dp),    dimension(:), allocatable, intent(out)  :: s_tmin
@@ -1300,20 +1286,20 @@ contains
 
   function calc_prcp(prcp, ndays, site_isoh, base_isoh)
     !
-    real(dp),    dimension(:), allocatable, intent(in)   :: prcp
+    real(dp),    dimension(:), intent(in)  :: prcp
     !
-    integer(i4),                            intent(in)   :: ndays
-    real(dp),                               intent(in)   :: site_isoh
-    real(dp),                               intent(in)   :: base_isoh
+    integer(i4),               intent(in)  :: ndays
+    real(dp),                  intent(in)  :: site_isoh
+    real(dp),                  intent(in)  :: base_isoh
     !
 #ifndef __PYTHON__
-    real(dp),    dimension(:), allocatable               :: calc_prcp
+    real(dp),    dimension(:), allocatable :: calc_prcp
 #else
-    real(dp),    dimension(ndays)                        :: calc_prcp
+    real(dp),    dimension(ndays)          :: calc_prcp
 #endif
     !
-    real(dp)                                             :: ratio
-    integer(i4)                                          :: i
+    real(dp)    :: ratio
+    integer(i4) :: i
     !
 #ifndef __PYTHON__
     if (.not. allocated(calc_prcp)) allocate(calc_prcp(ndays))
@@ -1333,13 +1319,13 @@ contains
        site_elev, base_elev, tmin_lr, tmax_lr, site_isoh, base_isoh, &
        site_lat, site_asp, site_slp, site_ehoriz, site_whoriz)
     !
-    real(dp),     dimension(14), intent(in)               :: parameterset
-    real(dp),     dimension(:), allocatable, intent(in)   :: tmin, tmax, prcp
-    integer(i4),  dimension(:), allocatable, intent(in)   :: yday
-    integer(i4),                             intent(in)   :: ndays
+    real(dp),     dimension(14),             intent(in)  :: parameterset
+    real(dp),     dimension(:),              intent(in)  :: tmin, tmax, prcp
+    integer(i4),  dimension(:),              intent(in)  :: yday
+    integer(i4),                             intent(in)  :: ndays
     !
     !select cases
-    integer(i4),                             intent(in)   :: outhum, lwrad, netlwrad
+    integer(i4),                             intent(in)  :: outhum, lwrad, netlwrad
     !
 #ifndef __PYTHON__
     real(dp),     dimension(:), allocatable, intent(out) :: s_tmax_out  !/* array of site tmax values */
@@ -1409,15 +1395,7 @@ contains
     print *, "Completed calc_prcp()"
     !----------------------------------------
     ! estimate daily snowpack
-    s_swe = snowpack( &
-#ifdef __PYTHON__
-         ndays, &
-#endif
-         s_tmin_out, s_prcp_out, yday, &
-#ifndef __PYTHON__
-         ndays, &
-#endif
-         parameterset(11), parameterset(12))
+    s_swe = snowpack(s_tmin_out, s_prcp_out, yday, ndays, parameterset(11), parameterset(12))
     print *, "Completed snowpack()"
     !
     !----------------------------------------

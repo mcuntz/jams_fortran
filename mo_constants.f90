@@ -46,13 +46,15 @@ module mo_constants
 
   implicit none
 
+  public
+
   ! Computational
   !> epsilon(1.0) in double precision
   real(dp), parameter :: eps_dp = epsilon(1.0_dp)
   !> epsilon(1.0) in single precision
   real(sp), parameter :: eps_sp = epsilon(1.0_sp)
 
-  
+
   ! Mathematical
   !> pi in double precision
   real(dp), parameter :: pi_dp        = 3.141592653589793238462643383279502884197_dp    ! pi
@@ -94,7 +96,7 @@ module mo_constants
   real(dp), parameter :: secperrad_dp = 13750.9871_dp            ! secperrad
   ! seconds per radian of hour angle in single precision
   real(sp), parameter :: secperrad_sp = 13750.9871_sp
-  
+
 
   ! Physical
   !> seconds per day [s] in double precision
@@ -180,7 +182,7 @@ module mo_constants
   !> standard temp at 0.0 m elevation (K)
   real(sp), parameter :: T_std_sp = 288.15_sp
 
-  
+
   ! Numerical Recipes
   !> pi in double precision
   real(dp), parameter :: pi_d    = 3.141592653589793238462643383279502884197_dp      ! pi

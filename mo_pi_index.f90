@@ -148,9 +148,13 @@ MODULE mo_pi_index
 
 CONTAINS
 
-  subroutine pi_index_dp(pi_index, s, m, norm, domad, counter, evalues, evectors, b_index)
+#ifndef __PYTHON__
+  subroutine pi_index_dp(pi_index_out, s, m, norm, domad, counter, evalues, evectors, b_index)
+#else
+  subroutine pi_index_dp(pi_index_out, s, m, norm, domad)
+#endif
 
-    real(dp), dimension(:),                   intent(out)           :: pi_index     ! Parameter importance index
+    real(dp), dimension(:),                   intent(out)           :: pi_index_out     ! Parameter importance index
     !                                         ! either S or M has to be given
     real(dp), dimension(:,:),                 intent(in),  optional :: s            ! sensitivity matrix S
     real(dp), dimension(:,:),                 intent(in),  optional :: m            ! M = S^T.S
@@ -163,12 +167,14 @@ CONTAINS
     logical,                                  intent(in),  optional :: domad        ! .true. : prior mad oulier test on S matrix
     !                                                                               ! restriction: S matrix must to be given
     !                                                                               ! DEFAULT: .false.
+#ifndef __PYTHON__
     integer(i4), dimension(:),   allocatable, intent(out), optional :: counter      ! number of valid entries in column of S matrix
     real(dp),    dimension(:),   allocatable, intent(out), optional :: evalues      ! eigenvalues of M
     real(dp),    dimension(:,:), allocatable, intent(out), optional :: evectors     ! eigenvectors of M
     real(dp),    dimension(:),   allocatable, intent(out), optional :: b_index      ! B index = sensitivity index neglecting 
     !                                                                               ! covariations, i.e. diagonal elements of 
     !                                                                               ! matrix M normalized using norm
+#endif
 
     ! local variables
     integer(i4)                              :: ii, jj, ii_count, jj_count
@@ -188,6 +194,8 @@ CONTAINS
     integer(i4)                              :: lwork, info
     real(dp),    dimension(:),   allocatable :: work
 
+    external :: dsyev
+
     if ( (.not. present(s) .and. .not. present(m)) .or.  (present(s) .and. present(m)) ) then
        stop 'pi_index_dp: either s or m has to be given'
     end if
@@ -198,7 +206,7 @@ CONTAINS
        my_mad = .false.
     end if
 
-    npar = size(pi_index)
+    npar = size(pi_index_out)
     allocate( maskpara(npar) )
     maskpara = .true.
 
@@ -273,7 +281,9 @@ CONTAINS
        end if
     else
        if ( (npar .ne. size(m,1)) .or. (npar .ne. size(m,2)) ) stop 'pi_index_dp: size of m is not matching'
+#ifndef __PYTHON__
        if ( present(counter) ) stop 'pi_index_dp: argument counter only applicable if matrix S is given'
+#endif
        allocate( my_evalues(count(maskpara)) )
        allocate( my_evectors(count(maskpara),count(maskpara)) )
        my_evectors = m
@@ -285,6 +295,7 @@ CONTAINS
        my_norm =  0
     end if
 
+#ifndef __PYTHON__
     if (present(b_index)) then
        allocate(b_index(npar))
        forall(ii=1:npar) b_index(ii) = my_evectors(ii,ii)
@@ -303,6 +314,7 @@ CONTAINS
           stop 'pi_index_dp: This normalization method is not implemented.'
        end select
     end if
+#endif
 
     ! Eigenvalues of Covariance Matrix
     ! (1) Query for optimal workspace: lwork=-1
@@ -332,27 +344,28 @@ CONTAINS
     do ipar=1, npar
        if (maskpara(ipar)) then
           ii_count = ii_count + 1
-          pi_index(ipar) = dot_product(abs(my_evectors(ii_count,:)), my_evalues)
+          pi_index_out(ipar) = dot_product(abs(my_evectors(ii_count,:)), my_evalues)
        else
-          pi_index(ipar) = 0.0_dp
+          pi_index_out(ipar) = 0.0_dp
        end if
     end do
 
     ! Normalize PI index
     select case(my_norm)
     case(0_i4)  ! No normalization
-       pi_index = pi_index
+       pi_index_out = pi_index_out
     case(1_i4)  ! Normalized such that PI sum up to one
-       pi_index = pi_index / sum(pi_index)
+       pi_index_out = pi_index_out / sum(pi_index_out)
     case(2_i4)  ! Normalized by sum of eigenvalues
-       pi_index = pi_index / sum(my_evalues)
+       pi_index_out = pi_index_out / sum(my_evalues)
     case(3_i4)  ! Normalized by sum of eigenvalues and subsequent by sum of PI
-       pi_index = pi_index / sum(my_evalues)
-       pi_index = pi_index / sum(pi_index)
+       pi_index_out = pi_index_out / sum(my_evalues)
+       pi_index_out = pi_index_out / sum(pi_index_out)
     case default
        stop 'pi_index_dp: This normalization method is not implemented.'
     end select
 
+#ifndef __PYTHON__
     if (present(counter)) then
        allocate(counter(npar))
        counter = my_counter
@@ -367,6 +380,7 @@ CONTAINS
        allocate(evectors(npar,npar))
        evectors = my_evectors
     end if
+#endif
 
     deallocate(my_counter)   
     deallocate(my_evalues)   
@@ -374,9 +388,13 @@ CONTAINS
 
   end subroutine pi_index_dp
 
-  subroutine pi_index_sp(pi_index, s, m, norm, domad, counter, evalues, evectors)
+#ifndef __PYTHON__
+  subroutine pi_index_sp(pi_index_out, s, m, norm, domad, counter, evalues, evectors)
+#else
+  subroutine pi_index_sp(pi_index_out, s, m, norm, domad)
+#endif
 
-    real(sp), dimension(:),                   intent(out)           :: pi_index     ! Parameter importance index
+    real(sp), dimension(:),                   intent(out)           :: pi_index_out     ! Parameter importance index
     ! either S or M has to be given
     real(sp), dimension(:,:),                 intent(in),  optional :: s            ! sensitivity matrix S
     real(sp), dimension(:,:),                 intent(in),  optional :: m            ! M = S^T.S
@@ -389,9 +407,11 @@ CONTAINS
     logical,                                  intent(in),  optional :: domad        ! .true. : prior mad oulier test on S matrix
     !                                                                               ! restriction: S matrix must to be given
     !                                                                               ! DEFAULT: .false.
+#ifndef __PYTHON__
     integer(i4), dimension(:),   allocatable, intent(out), optional :: counter      ! number of valid entries in column of S matrix
     real(sp),    dimension(:),   allocatable, intent(out), optional :: evalues      ! eigenvalues of M
     real(sp),    dimension(:,:), allocatable, intent(out), optional :: evectors     ! eigenvectors of M
+#endif
 
     ! local variables
     integer(i4)                              :: ii, jj, ii_count, jj_count
@@ -411,6 +431,8 @@ CONTAINS
     integer(i4)                              :: lwork, info
     real(sp),    dimension(:),   allocatable :: work
 
+    external :: ssyev
+
     if ( (.not. present(s) .and. .not. present(m)) .or.  (present(s) .and. present(m)) ) then
        stop 'pi_index_sp: either s or m has to be given'
     end if
@@ -421,7 +443,7 @@ CONTAINS
        my_mad = .false.
     end if
 
-    npar = size(pi_index)
+    npar = size(pi_index_out)
     allocate( maskpara(npar) )
     maskpara = .true.
 
@@ -496,7 +518,9 @@ CONTAINS
        end if
     else
        if ( (npar .ne. size(m,1)) .or. (npar .ne. size(m,2)) ) stop 'pi_index_sp: size of m is not matching'
+#ifndef __PYTHON__
        if ( present(counter) ) stop 'pi_index_sp: argument counter only applicable if matrix S is given'
+#endif
        allocate( my_evalues(count(maskpara)) )
        allocate( my_evectors(count(maskpara),count(maskpara)) )
        my_evectors = m
@@ -536,27 +560,28 @@ CONTAINS
     do ipar=1, npar
        if (maskpara(ipar)) then
           ii_count = ii_count + 1
-          pi_index(ipar) = dot_product(abs(my_evectors(ii_count,:)), my_evalues)
+          pi_index_out(ipar) = dot_product(abs(my_evectors(ii_count,:)), my_evalues)
        else
-          pi_index(ipar) = 0.0_sp
+          pi_index_out(ipar) = 0.0_sp
        end if
     end do
 
     ! Normalize PI index
     select case(my_norm)
     case(0_i4)  ! No normalization
-       pi_index = pi_index
+       pi_index_out = pi_index_out
     case(1_i4)  ! Normalized such that PI sum up to one
-       pi_index = pi_index / sum(pi_index)
+       pi_index_out = pi_index_out / sum(pi_index_out)
     case(2_i4)  ! Normalized by sum of eigenvalues
-       pi_index = pi_index / sum(my_evalues)
+       pi_index_out = pi_index_out / sum(my_evalues)
     case(3_i4)  ! Normalized by sum of eigenvalues and subsequent by sum of PI
-       pi_index = pi_index / sum(my_evalues)
-       pi_index = pi_index / sum(pi_index)
+       pi_index_out = pi_index_out / sum(my_evalues)
+       pi_index_out = pi_index_out / sum(pi_index_out)
     case default
        stop 'pi_index_sp: This normalization method is not implemented.'
     end select
 
+#ifndef __PYTHON__
     if (present(counter)) then
        allocate(counter(npar))
        counter = my_counter
@@ -571,6 +596,7 @@ CONTAINS
        allocate(evectors(npar,npar))
        evectors = my_evectors
     end if
+#endif
 
     deallocate(my_counter)   
     deallocate(my_evalues)   
