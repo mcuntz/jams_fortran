@@ -3,6 +3,7 @@ program test_utils
   use mo_kind,        only: sp, dp, i4
   use mo_ansi_colors, only: color, c_red, c_green
   use mo_utils,       only: eq, ge, le, ne
+  use mo_utils,       only: equal, greaterequal, lesserequal, notequal
   use mo_utils,       only: swap, locate, cumsum, arange, linspace
   use mo_utils,       only: is_finite, is_nan, is_normal, special_value
   use mo_utils,       only: isin, isinloc
@@ -21,7 +22,7 @@ program test_utils
   complex(dp), dimension(nn) :: cat1, cat2
   real(dp),    dimension(:), allocatable :: adat1
   character(len=10), dimension(nn) :: chat1
-  
+
   real(dp) :: d1
   real(dp), dimension(5) :: d5
   real(sp) :: s1
@@ -40,7 +41,7 @@ program test_utils
   ! -----------------------------------------------------
 
   write(*,*) ''
-  write(*,*) 'Test: eq/ equal: dp'
+  write(*,*) 'Test: eq/equal: dp'
   ! 0.1 == 0.1+eps --> .False.
   a_dp = 0.1_dp
   b_dp = a_dp + epsilon(1.0_dp)
@@ -55,54 +56,22 @@ program test_utils
   write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' == ',b_dp,' --> ',compare
   isgood = isgood .and. (compare)
 
-  write(*,*) ''
-  write(*,*) 'Test: ne/ notequal: dp'
-  ! 0.1 /= 0.1+eps --> .True.
+  ! 0.1 == 0.1+eps --> .False.
   a_dp = 0.1_dp
   b_dp = a_dp + epsilon(1.0_dp)
-  compare = ne(a_dp, b_dp)
-  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' /= ',b_dp,' --> ',compare
-  isgood = isgood .and. (compare)
-
-  ! 1.0 /= 1.0+eps --> .False.
-  a_dp = 1.0_dp
-  b_dp = a_dp + epsilon(1.0_dp)
-  compare = ne(a_dp, b_dp)
-  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' /= ',b_dp,' --> ',compare
+  compare = equal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' == ',b_dp,' --> ',compare
   isgood = isgood .and. (.not. compare)
 
-  write(*,*) ''
-  write(*,*) 'Test: le/ lesserequal: dp'
-  ! 0.1 <= 0.1+eps  --> .True.
-  a_dp = 0.1_dp
-  b_dp = a_dp + epsilon(1.0_dp)
-  compare = le(a_dp, b_dp)
-  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
-  isgood = isgood .and. (compare)
-
-  ! 1.0 <= 1.0+eps  --> .True.
+  ! 1.0 == 1.0+eps --> .True.
   a_dp = 1.0_dp
   b_dp = a_dp + epsilon(1.0_dp)
-  compare = le(a_dp, b_dp)
-  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
-  isgood = isgood .and. (compare)
-
-  ! 0.1 <= 0.2  --> .True.
-  a_dp = 0.1_dp
-  b_dp = 0.2_dp
-  compare = le(a_dp, b_dp)
-  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
-  isgood = isgood .and. (compare)
-
-  ! tiny <= 2*tiny  --> .True.
-  a_dp = tiny(1.0_dp)
-  b_dp = 2.0_dp*a_dp
-  compare = le(a_dp, b_dp)
-  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
+  compare = equal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' == ',b_dp,' --> ',compare
   isgood = isgood .and. (compare)
 
   write(*,*) ''
-  write(*,*) 'Test: ge/ greaterequal: dp'
+  write(*,*) 'Test: ge/greaterequal: dp'
   ! 0.1 >= 0.1+eps  --> .False.
   a_dp = 0.1_dp
   b_dp = a_dp + epsilon(1.0_dp)
@@ -131,6 +100,122 @@ program test_utils
   write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' >= ',b_dp,' --> ',compare
   isgood = isgood .and. (.not. compare)
 
+  ! 0.1 >= 0.1+eps  --> .False.
+  a_dp = 0.1_dp
+  b_dp = a_dp + epsilon(1.0_dp)
+  compare = greaterequal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' >= ',b_dp,' --> ',compare
+  isgood = isgood .and. (.not. compare)
+
+  ! 1.0 >= 1.0+eps  --> .True.
+  a_dp = 1.0_dp
+  b_dp = a_dp + epsilon(1.0_dp)
+  compare = greaterequal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' >= ',b_dp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 0.1 >= 0.2  --> .False.
+  a_dp = 0.1_dp
+  b_dp = 0.2_dp
+  compare = greaterequal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' >= ',b_dp,' --> ',compare
+  isgood = isgood .and. (.not. compare)
+
+  ! tiny >= 2*tiny  --> .False.
+  a_dp = tiny(1.0_dp)
+  b_dp = 2.0_dp*a_dp
+  compare = greaterequal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' >= ',b_dp,' --> ',compare
+  isgood = isgood .and. (.not. compare)
+
+  write(*,*) ''
+  write(*,*) 'Test: le/lesserequal: dp'
+  ! 0.1 <= 0.1+eps  --> .True.
+  a_dp = 0.1_dp
+  b_dp = a_dp + epsilon(1.0_dp)
+  compare = le(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 1.0 <= 1.0+eps  --> .True.
+  a_dp = 1.0_dp
+  b_dp = a_dp + epsilon(1.0_dp)
+  compare = le(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 0.1 <= 0.2  --> .True.
+  a_dp = 0.1_dp
+  b_dp = 0.2_dp
+  compare = le(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! tiny <= 2*tiny  --> .True.
+  a_dp = tiny(1.0_dp)
+  b_dp = 2.0_dp*a_dp
+  compare = le(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 0.1 <= 0.1+eps  --> .True.
+  a_dp = 0.1_dp
+  b_dp = a_dp + epsilon(1.0_dp)
+  compare = lesserequal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 1.0 <= 1.0+eps  --> .True.
+  a_dp = 1.0_dp
+  b_dp = a_dp + epsilon(1.0_dp)
+  compare = lesserequal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 0.1 <= 0.2  --> .True.
+  a_dp = 0.1_dp
+  b_dp = 0.2_dp
+  compare = lesserequal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! tiny <= 2*tiny  --> .True.
+  a_dp = tiny(1.0_dp)
+  b_dp = 2.0_dp*a_dp
+  compare = lesserequal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' <= ',b_dp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  write(*,*) ''
+  write(*,*) 'Test: ne/notequal: dp'
+  ! 0.1 /= 0.1+eps --> .True.
+  a_dp = 0.1_dp
+  b_dp = a_dp + epsilon(1.0_dp)
+  compare = ne(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' /= ',b_dp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 1.0 /= 1.0+eps --> .False.
+  a_dp = 1.0_dp
+  b_dp = a_dp + epsilon(1.0_dp)
+  compare = ne(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' /= ',b_dp,' --> ',compare
+  isgood = isgood .and. (.not. compare)
+
+  ! 0.1 /= 0.1+eps --> .True.
+  a_dp = 0.1_dp
+  b_dp = a_dp + epsilon(1.0_dp)
+  compare = notequal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' /= ',b_dp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 1.0 /= 1.0+eps --> .False.
+  a_dp = 1.0_dp
+  b_dp = a_dp + epsilon(1.0_dp)
+  compare = notequal(a_dp, b_dp)
+  write(*,'(E24.17,A4,E24.17,A5,L2)') a_dp,' /= ',b_dp,' --> ',compare
+  isgood = isgood .and. (.not. compare)
+
   ! -----------------------------------------------------
   ! SINGLE PRECISON
   ! -----------------------------------------------------
@@ -151,20 +236,76 @@ program test_utils
   write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' == ',b_sp,' --> ',compare
   isgood = isgood .and. (compare)
 
-  write(*,*) ''
-  write(*,*) 'Test: ne/ notequal: sp'
-  ! 0.1 /= 0.1+eps --> .True.
+  ! 0.1 == 0.1+eps --> .False.
   a_sp = 0.1_sp
   b_sp = a_sp + epsilon(1.0_sp)
-  compare = ne(a_sp, b_sp)
-  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' /= ',b_sp,' --> ',compare
-  isgood = isgood .and. (compare)
+  compare = equal(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' == ',b_sp,' --> ',compare
+  isgood = isgood .and. (.not. compare)
 
-  ! 1.0 /= 1.0+eps --> .False.
+  ! 1.0 == 1.0+eps --> .True.
   a_sp = 1.0_sp
   b_sp = a_sp + epsilon(1.0_sp)
-  compare = ne(a_sp, b_sp)
-  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' /= ',b_sp,' --> ',compare
+  compare = equal(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' == ',b_sp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  write(*,*) ''
+  write(*,*) 'Test: ge/ greaterequal: sp'
+  ! 0.1 >= 0.1+eps  --> .False.
+  a_sp = 0.1_sp
+  b_sp = a_sp + epsilon(1.0_sp)
+  compare = ge(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
+  isgood = isgood .and. (.not. compare)
+
+  ! 1.0 >= 1.0+eps  --> .True.
+  a_sp = 1.0_sp
+  b_sp = a_sp + epsilon(1.0_sp)
+  compare = ge(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 0.1 >= 0.2  --> .False.
+  a_sp = 0.1_sp
+  b_sp = 0.2_sp
+  compare = ge(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
+  isgood = isgood .and. (.not. compare)
+
+  ! tiny >= 2*tiny  --> .False.
+  a_sp = tiny(1.0_sp)
+  b_sp = 2.0_sp*a_sp
+  compare = ge(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
+  isgood = isgood .and. (.not. compare)
+
+  ! 0.1 >= 0.1+eps  --> .False.
+  a_sp = 0.1_sp
+  b_sp = a_sp + epsilon(1.0_sp)
+  compare = greaterequal(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
+  isgood = isgood .and. (.not. compare)
+
+  ! 1.0 >= 1.0+eps  --> .True.
+  a_sp = 1.0_sp
+  b_sp = a_sp + epsilon(1.0_sp)
+  compare = greaterequal(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 0.1 >= 0.2  --> .False.
+  a_sp = 0.1_sp
+  b_sp = 0.2_sp
+  compare = greaterequal(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
+  isgood = isgood .and. (.not. compare)
+
+  ! tiny >= 2*tiny  --> .False.
+  a_sp = tiny(1.0_sp)
+  b_sp = 2.0_sp*a_sp
+  compare = greaterequal(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
   isgood = isgood .and. (.not. compare)
 
   write(*,*) ''
@@ -197,34 +338,48 @@ program test_utils
   write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' <= ',b_sp,' --> ',compare
   isgood = isgood .and. (compare)
 
-  write(*,*) ''
-  write(*,*) 'Test: ge/ greaterequal: sp'
-  ! 0.1 >= 0.1+eps  --> .False.
+  ! 0.1 <= 0.1+eps  --> .True.
   a_sp = 0.1_sp
   b_sp = a_sp + epsilon(1.0_sp)
-  compare = ge(a_sp, b_sp)
-  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
-  isgood = isgood .and. (.not. compare)
-
-  ! 1.0 >= 1.0+eps  --> .True.
-  a_sp = 1.0_sp
-  b_sp = a_sp + epsilon(1.0_sp)
-  compare = ge(a_sp, b_sp)
-  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
+  compare = lesserequal(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' <= ',b_sp,' --> ',compare
   isgood = isgood .and. (compare)
 
-  ! 0.1 >= 0.2  --> .False.
+  ! 1.0 <= 1.0+eps  --> .True.
+  a_sp = 1.0_sp
+  b_sp = a_sp + epsilon(1.0_sp)
+  compare = lesserequal(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' <= ',b_sp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 0.1 <= 0.2  --> .True.
   a_sp = 0.1_sp
   b_sp = 0.2_sp
-  compare = ge(a_sp, b_sp)
-  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
-  isgood = isgood .and. (.not. compare)
+  compare = lesserequal(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' <= ',b_sp,' --> ',compare
+  isgood = isgood .and. (compare)
 
-  ! tiny >= 2*tiny  --> .False.
+  ! tiny <= 2*tiny  --> .True.
   a_sp = tiny(1.0_sp)
   b_sp = 2.0_sp*a_sp
-  compare = ge(a_sp, b_sp)
-  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' >= ',b_sp,' --> ',compare
+  compare = lesserequal(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' <= ',b_sp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  write(*,*) ''
+  write(*,*) 'Test: ne/ notequal: sp'
+  ! 0.1 /= 0.1+eps --> .True.
+  a_sp = 0.1_sp
+  b_sp = a_sp + epsilon(1.0_sp)
+  compare = ne(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' /= ',b_sp,' --> ',compare
+  isgood = isgood .and. (compare)
+
+  ! 1.0 /= 1.0+eps --> .False.
+  a_sp = 1.0_sp
+  b_sp = a_sp + epsilon(1.0_sp)
+  compare = ne(a_sp, b_sp)
+  write(*,'(E15.8,A4,E15.8,A5,L2)') a_sp,' /= ',b_sp,' --> ',compare
   isgood = isgood .and. (.not. compare)
 
   ! -----------------------------------------------------
@@ -464,7 +619,7 @@ program test_utils
   isgood = isgood .and. (isinloc('one', chat1) == 1)
   isgood = isgood .and. (isinloc(' two ', chat1) == 2)
   isgood = isgood .and. (isinloc('100', chat1) == 0)
-  
+
   write(*,*) ''
   if (isgood) then
      write(*,*) 'mo_utils ', color('o.k.', c_green)

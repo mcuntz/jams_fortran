@@ -179,31 +179,9 @@ MODULE mo_utils
   !>        \authors Matthias Cuntz, Juliane Mai
   !>        \date Feb 2014
   !         Modified, Matthias Cuntz, Juliane Mai, Feb 2014 - sp, dp
-#ifndef __PYTHON__
-  INTERFACE equal
-     MODULE PROCEDURE equal_sp, equal_dp
-  END INTERFACE equal
-  
-  INTERFACE notequal
-     MODULE PROCEDURE notequal_sp, notequal_dp
-  END INTERFACE notequal
-
-  INTERFACE greaterequal
-     MODULE PROCEDURE greaterequal_sp, greaterequal_dp
-  END INTERFACE greaterequal
-
-  INTERFACE lesserequal
-     MODULE PROCEDURE lesserequal_sp, lesserequal_dp
-  END INTERFACE lesserequal
-#endif
-
   INTERFACE eq
      MODULE PROCEDURE equal_sp, equal_dp
   END INTERFACE eq
-
-  INTERFACE ne
-     MODULE PROCEDURE notequal_sp, notequal_dp
-  END INTERFACE ne
 
   INTERFACE ge
      MODULE PROCEDURE greaterequal_sp, greaterequal_dp
@@ -212,6 +190,28 @@ MODULE mo_utils
   INTERFACE le
      MODULE PROCEDURE lesserequal_sp, lesserequal_dp
   END INTERFACE le
+
+  INTERFACE ne
+     MODULE PROCEDURE notequal_sp, notequal_dp
+  END INTERFACE ne
+
+#ifndef __PYTHON__
+  INTERFACE equal
+     MODULE PROCEDURE equal_sp, equal_dp
+  END INTERFACE equal
+
+  INTERFACE greaterequal
+     MODULE PROCEDURE greaterequal_sp, greaterequal_dp
+  END INTERFACE greaterequal
+
+  INTERFACE lesserequal
+     MODULE PROCEDURE lesserequal_sp, lesserequal_dp
+  END INTERFACE lesserequal
+
+  INTERFACE notequal
+     MODULE PROCEDURE notequal_sp, notequal_dp
+  END INTERFACE notequal
+#endif
 
 
   ! ------------------------------------------------------------------
@@ -1128,6 +1128,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+
   function imaxloc_i4(arr, mask)
 
     implicit none
@@ -1207,6 +1208,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+
   function iminloc_i4(arr, mask)
 
     implicit none
@@ -1285,6 +1287,7 @@ CONTAINS
 
 
   ! ------------------------------------------------------------------
+
 
   function isin_i4(sca, arr, mask)
 
@@ -1392,6 +1395,7 @@ CONTAINS
 
 
   ! ------------------------------------------------------------------
+
 
   function isinloc_i4(sca, arr, mask)
 
@@ -1556,6 +1560,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+
   ELEMENTAL PURE FUNCTION is_finite_dp(a)
 
 #ifndef __GFORTRAN__
@@ -1677,6 +1682,7 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+
   function linspace_i4(lower, upper, nstep)
 
     implicit none
@@ -1731,6 +1737,7 @@ CONTAINS
 
 
   ! ------------------------------------------------------------------
+
 
   ! Given an array x(1:N), and given a value y, returns a value j such that y is between
   !  x(j) and x(j+1). x must be monotonically increasing.
@@ -1828,6 +1835,7 @@ CONTAINS
 
 
   ! ------------------------------------------------------------------
+
 
   elemental pure subroutine swap_xy_dp(x,y)
 
@@ -2170,7 +2178,9 @@ CONTAINS
 
   end subroutine swap_vec_mask_spc
 
+
   ! ------------------------------------------------------------------
+
 
   elemental pure function special_value_dp(x, ieee)
 
@@ -2346,9 +2356,11 @@ CONTAINS
 
   end function special_value_sp
 
+
   ! -----------------------------------------------------------
   ! PRIVATE ROUTINES
   ! -----------------------------------------------------------
+
 
   ! ------------------------------------------------------------------
   !
