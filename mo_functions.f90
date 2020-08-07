@@ -12,6 +12,7 @@ MODULE mo_functions
 
   ! Written  Matthias Cuntz, May 2014
   ! Modified Matthias Cuntz, Dec 2017 - morris
+  !          Stephan Thober, Aug 2020 - added beta function
 
   ! License
   ! -------
@@ -46,6 +47,7 @@ MODULE mo_functions
   PUBLIC :: gammln    ! ln(gamma)
   PUBLIC :: gamm      ! gamm
   PUBLIC :: morris    ! elementary effects test function after Morris (1991)
+  PUBLIC :: beta      ! beta function
 
   ! ------------------------------------------------------------------
   !
@@ -320,6 +322,53 @@ MODULE mo_functions
      MODULE PROCEDURE morris_0d_dp, morris_1d_dp, &
           morris_0d_sp, morris_1d_sp
   END INTERFACE morris
+
+  ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         beta
+  !
+  !     PURPOSE
+  !>        \details calculates beta function
+  !
+  !     INTENT(IN)
+  !>        \param[in] "real(sp/dp)                          :: alpha"    parameters
+  !>        \param[in] "real(sp/dp), dimension(20)           :: beta"     parameters
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURNS
+  !>       \return     real(sp/dp)[, dimension(npoints)] :: beta &mdash; result of beta function
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         -> see example in test directory
+  !
+  !     LITERATURE
+  !         https://en.wikipedia.org/wiki/Beta_function
+  !
+  !     HISTORY
+  !>        \author Stephan Thober
+  !>        \date Aug 2020
+  !         Modified
+  INTERFACE beta
+     MODULE PROCEDURE beta_sp, beta_dp
+  END INTERFACE beta
 
   ! ------------------------------------------------------------------
 
@@ -659,5 +708,29 @@ CONTAINS
   END FUNCTION morris_1d_sp
 
   ! ------------------------------------------------------------------
+
+  elemental pure function beta_sp(alpha, beta)
+
+    use mo_kind, only: sp
+
+    real(sp), intent(in) :: alpha
+    real(sp), intent(in) :: beta
+    real(sp)             :: beta_sp
+
+    beta_sp = (gamm(alpha) * gamm(beta)) / gamm(alpha + beta)
+
+  end function beta_sp
+
+  elemental pure function beta_dp(alpha, beta)
+
+    use mo_kind, only: dp
+
+    real(dp), intent(in) :: alpha
+    real(dp), intent(in) :: beta
+    real(dp)             :: beta_dp
+
+    beta_dp = (gamm(alpha) * gamm(beta)) / gamm(alpha + beta)
+
+  end function beta_dp
 
 END MODULE mo_functions
