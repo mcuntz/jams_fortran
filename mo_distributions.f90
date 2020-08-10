@@ -65,6 +65,7 @@ module mo_distributions
   public :: st01_fs_std   ! Standard dev of skew Student t after Fernandez and Steel (1998) with location=0, scale=1
   public :: t             ! Student t
   public :: t01           ! Student t with location=0, scale=1
+  public :: beta_den      ! beta probability density function
 
   ! ------------------------------------------------------------------
 
@@ -1464,6 +1465,55 @@ module mo_distributions
      module procedure t01_sp, t01_dp
   end interface t01
 
+  ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         beta_den
+  !
+  !     PURPOSE
+  !>        \details calculates beta probability density function. Division by zero occurs
+  !>                 in this function if called with x=0 and nu < 1 and x=1 and xi < 1.
+  !
+  !     INTENT(IN)
+  !>        \param[in] "real(sp/dp)                          :: x"    evaluation points
+  !>        \param[in] "real(sp/dp)                          :: nu"   parameters
+  !>        \param[in] "real(sp/dp)                          :: xi"   parameters
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURNS
+  !>       \return     real(sp/dp)[, dimension(npoints)] :: beta_den &mdash; result of beta function
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         -> see example in test directory
+  !
+  !     LITERATURE
+  !         https://en.wikipedia.org/wiki/Beta_distribution
+  !
+  !     HISTORY
+  !>        \author Stephan Thober
+  !>        \date Aug 2020
+  !         Modified
+  interface beta_den
+     module procedure beta_den_sp, beta_den_dp
+  end interface beta_den
+
 CONTAINS
 
   ! ------------------------------------------------------------------
@@ -2716,4 +2766,27 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
+  elemental pure function beta_den_sp(x, nu, xi)
+
+    use mo_kind, only: sp
+    use mo_functions, only: beta
+
+    real(sp), intent(in) :: x, nu, xi
+    real(sp)             :: beta_den_sp
+
+    beta_den_sp = 1._sp / beta(nu, xi) * x**(nu - 1._sp) * (1._sp - x)**(xi - 1._sp)
+
+  end function beta_den_sp
+
+  elemental pure function beta_den_dp(x, nu, xi)
+
+    use mo_kind, only: dp
+    use mo_functions, only: beta
+
+    real(dp), intent(in) :: x, nu, xi
+    real(dp)             :: beta_den_dp
+
+    beta_den_dp = (1._dp / beta(nu, xi)) * x**(nu - 1._dp) * (1._dp - x)**(xi - 1._dp)
+
+  end function beta_den_dp
 end module mo_distributions

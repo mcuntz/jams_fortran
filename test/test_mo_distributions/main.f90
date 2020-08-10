@@ -5,6 +5,7 @@ PROGRAM main
   USE mo_distributions, ONLY: laplace, laplace01, normal, normal01
   USE mo_distributions, ONLY: ep, ep01, sep, sep01
   USE mo_distributions, ONLY: st, st01, t, t01
+  USE mo_distributions, ONLY: beta_den
   use mo_ansi_colors, only: color, c_red, c_green
 
   IMPLICIT NONE
@@ -12,13 +13,13 @@ PROGRAM main
   ! data
   INTEGER(i4), PARAMETER  :: nn = 10000
 
-  REAL(dp)                :: out0, iloc, isig, ddat
-  REAL(dp), DIMENSION(nn) :: dat, out
+  REAL(dp)                :: out0, iloc, isig, ddat, ddat_beta
+  REAL(dp), DIMENSION(nn) :: dat, dat_beta, out
   REAL(dp)                :: loc, sca, sig, xi, beta, nu
   REAL(dp)                :: dmean, dvar, dstd
 
-  REAL(sp)                :: isloc, issig, dsat
-  REAL(sp), DIMENSION(nn) :: sat, sout
+  REAL(sp)                :: isloc, issig, dsat, dsat_beta
+  REAL(sp), DIMENSION(nn) :: sat, sat_beta, sout
   REAL(sp)                :: sloc, ssca, ssig, sxi, sbeta, snu
   REAL(dp)                :: smean, svar, sstd
 
@@ -33,7 +34,9 @@ PROGRAM main
   ! DP
   forall(i=1:nn) dat(i) = real(i,dp)/real(nn,dp)*300.0_dp - 150.0_dp
   ddat = dat(2)-dat(1)
-  
+  forall(i=1:nn) dat_beta(i) = real(i,dp)/real(nn,dp)
+  ddat_beta = dat_beta(2)-dat_beta(1)
+
   loc  = 1.1_dp
   sca  = 2.2_dp
   sig  = 2.2_dp
@@ -42,7 +45,7 @@ PROGRAM main
   nu   = 4.4_dp
 
   ! integral
-  do i=1, 12
+  do i=1, 13
      isgood = .true.
      select case(i)
      case(1) ! Exponential Power
@@ -93,11 +96,20 @@ PROGRAM main
         iloc = 0.0_dp
         isig = sqrt(nu/(nu-2.0_dp))
         out = t01(dat, nu)
+     case(13) ! beta distribution
+        iloc = 0.5_dp
+        isig = 0.1507556722888821_dp
+        out = beta_den(dat_beta, nu=5._dp, xi=5._dp)
      case default
         continue
      end select
-     dmean = sum(dat * out * ddat)
-     dvar  = sum((dat-dmean)**2 * out * ddat)
+     if (i .eq. 13) then
+        dmean = sum(dat_beta * out * ddat_beta)
+        dvar  = sum((dat_beta-dmean)**2 * out * ddat_beta)
+     else
+        dmean = sum(dat * out * ddat)
+        dvar  = sum((dat-dmean)**2 * out * ddat)
+     end if
      dstd  = sqrt(dvar)
      if (abs(dmean-iloc) > 1.0e-2_dp) isgood = .false.
      if (abs(dstd-isig) > 1.0e-2_dp) isgood = .false.
@@ -229,6 +241,8 @@ PROGRAM main
   ! SP
   forall(i=1:nn) sat(i) = real(i,sp)/real(nn,sp)*300.0_sp - 150.0_sp
   dsat = sat(2)-sat(1)
+  forall(i=1:nn) sat_beta(i) = real(i,sp)/real(nn,sp)
+  dsat_beta = sat_beta(2)-sat_beta(1)
   
   sloc  = 1.1_sp
   ssca  = 2.2_sp
@@ -238,7 +252,7 @@ PROGRAM main
   snu   = 4.4_sp
 
   ! integral
-  do i=1, 12
+  do i=1, 13
      isgood = .true.
      select case(i)
      case(1) ! Exponential Power
@@ -289,16 +303,25 @@ PROGRAM main
         isloc = 0.0_sp
         issig = sqrt(snu/(snu-2.0_sp))
         sout = t01(sat, snu)
+     case(13) ! beta distribution
+        isloc = 0.5_sp
+        issig = 0.1507556722888821_sp
+        sout = beta_den(sat_beta, nu=5._sp, xi=5._sp)
      case default
         continue
      end select
-     smean = sum(sat * sout * dsat)
-     svar  = sum((sat-smean)**2 * sout * dsat)
+     if (i .eq. 13) then
+        smean = sum(sat_beta * sout * dsat_beta)
+        svar  = sum((sat_beta-dmean)**2 * sout * dsat_beta)
+     else
+        smean = sum(sat * sout * dsat)
+        svar  = sum((sat-smean)**2 * sout * dsat)
+     end if
      sstd  = sqrt(svar)
      if (abs(smean-isloc) > 1.0e-2_sp) isgood = .false.
      if (abs(sstd-issig) > 1.0e-2_sp) isgood = .false.
      allgood = allgood .and. isgood
-     if (.not. isgood) write(*,*) 'mo_distributions integral SP failed: ', i, isloc, dmean, issig, dstd
+     if (.not. isgood) write(*,*) 'mo_distributions integral SP failed: ', i, isloc, smean, issig, sstd
   enddo
 
 
