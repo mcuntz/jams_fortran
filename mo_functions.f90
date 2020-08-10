@@ -333,7 +333,7 @@ MODULE mo_functions
   !
   !     INTENT(IN)
   !>        \param[in] "real(sp/dp)                          :: alpha"    parameters
-  !>        \param[in] "real(sp/dp), dimension(20)           :: beta"     parameters
+  !>        \param[in] "real(sp/dp)                          :: beta"     parameters
   !
   !     INTENT(INOUT)
   !         None
