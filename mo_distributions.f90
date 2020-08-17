@@ -66,6 +66,7 @@ module mo_distributions
   public :: t             ! Student t
   public :: t01           ! Student t with location=0, scale=1
   public :: beta_den      ! beta probability density function
+  public :: weibull_pdf   ! weibull
 
   ! ------------------------------------------------------------------
 
@@ -1514,6 +1515,14 @@ module mo_distributions
      module procedure beta_den_sp, beta_den_dp
   end interface beta_den
 
+  interface weibull_pdf
+     module procedure weibull_pdf_sp, weibull_pdf_sp
+  end interface weibull_pdf
+
+  interface weibull_cdf
+     module procedure weibull_cdf_sp, weibull_cdf_sp
+  end interface weibull_cdf
+
 CONTAINS
 
   ! ------------------------------------------------------------------
@@ -2789,4 +2798,69 @@ CONTAINS
     beta_den_dp = (1._dp / beta(nu, xi)) * x**(nu - 1._dp) * (1._dp - x)**(xi - 1._dp)
 
   end function beta_den_dp
+
+  ! ------------------------------------------------------------------
+
+  elemental pure function weibull_pdf_sp(x, nu, xi)
+
+    use mo_kind, only: sp
+
+    real(sp), intent(in) :: x, nu, xi
+    real(sp)             :: weibull_pdf_sp
+
+    if (x .lt. 0._sp) then
+       weibull_pdf_sp = 0._sp
+    else
+       weibull_pdf_sp = xi / nu (x / nu)**(xi - 1._sp) exp(-((x / nu)**k))
+    end if
+
+  end function weibull_sp
+
+  elemental pure function weibull_pdf_dp(x, nu, xi)
+
+    use mo_kind, only: dp
+
+    real(dp), intent(in) :: x, nu, xi
+    real(dp)             :: weibull_pdf_dp
+
+    if (x .lt. 0._dp) then
+       weibull_pdf_dp = 0._dp
+    else
+       weibull_pdf_dp = xi / nu (x / nu)**(xi - 1._dp) exp(-((x / nu)**k))
+    end if
+
+  end function weibull_pdf_dp
+
+  ! ------------------------------------------------------------------
+
+  elemental pure function weibull_cdf_sp(x, nu, xi)
+
+    use mo_kind, only: sp
+
+    real(sp), intent(in) :: x, nu, xi
+    real(sp)             :: weibull_cdf_sp
+
+    if (x .lt. 0._sp) then
+       weibull_cdf_sp = 0._sp
+    else
+       weibull_cdf_sp = 1._sp - exp(-((x / nu)**xi)
+    end if
+
+  end function weibull_cdf_sp
+
+  elemental pure function weibull_cdf_dp(x, nu, xi)
+
+    use mo_kind, only: dp
+
+    real(dp), intent(in) :: x, nu, xi
+    real(dp)             :: weibull_cdf_dp
+
+    if (x .lt. 0._dp) then
+       weibull_cdf_dp = 0._dp
+    else
+       weibull_cdf_dp = 1._dp - exp(-((x / nu)**xi)
+    end if
+
+  end function weibull_cdf_dp
+
 end module mo_distributions
