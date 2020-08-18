@@ -66,7 +66,9 @@ module mo_distributions
   public :: t             ! Student t
   public :: t01           ! Student t with location=0, scale=1
   public :: beta_den      ! beta probability density function
-  public :: weibull_pdf   ! weibull
+  public :: weibull_pdf   ! weibull density function
+  public :: weibull_cdf   ! weibull cumulative distribution function
+  public :: gamma_pdf     ! gamma distribution
 
   ! ------------------------------------------------------------------
 
@@ -1515,14 +1517,170 @@ module mo_distributions
      module procedure beta_den_sp, beta_den_dp
   end interface beta_den
 
+  ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         weibull_pdf
+  !
+  !     PURPOSE
+  !>        \details calculates weibull probability density function. Division by zero occurs
+  !>                 if scale parameter s = 0.
+  !>                 \f[ weibull_pdf = c y^c exp(-y^c) \f]
+  !>                 where
+  !>                 \f[ y = (x - l) / s]
+  !
+  !     INTENT(IN)
+  !>        \param[in] "real(sp/dp)                          :: x"    evaluation points
+  !>        \param[in] "real(sp/dp)                          :: c"    shape parameters
+  !>        \param[in] "real(sp/dp)                          :: l"    location parameter
+  !>        \param[in] "real(sp/dp)                          :: s"    scale parameters
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURNS
+  !>       \return     real(sp/dp)[, dimension(npoints)] :: weibull_pdf &mdash; result of weibull function
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         -> see example in test directory
+  !
+  !     LITERATURE
+  !         https://en.wikipedia.org/wiki/Weibull_distribution
+  !         standardized form used here is also used in Scipy
+  !         https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.weibull_min.html
+  !
+  !     HISTORY
+  !>        \author Stephan Thober
+  !>        \date Aug 2020
+  !         Modified
   interface weibull_pdf
-     module procedure weibull_pdf_sp, weibull_pdf_sp
+     module procedure weibull_pdf_sp, weibull_pdf_dp
   end interface weibull_pdf
 
+  ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         weibull_cdf
+  !
+  !     PURPOSE
+  !>        \details calculates weibull cumulative density function. Division by zero occurs
+  !>                 if scale parameter s = 0.
+  !>                 \f[ weibull_cdf = 1 - exp(-y^c) \f]
+  !>                 where
+  !>                 \f[ y = (x - l) / s]
+  !
+  !     INTENT(IN)
+  !>        \param[in] "real(sp/dp)                          :: x"    evaluation points
+  !>        \param[in] "real(sp/dp)                          :: c"    shape parameters
+  !>        \param[in] "real(sp/dp)                          :: l"    location parameter
+  !>        \param[in] "real(sp/dp)                          :: s"    scale parameters
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURNS
+  !>       \return     real(sp/dp)[, dimension(npoints)] :: weibull_cdf &mdash; result of weibull cum density function
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         -> There is no TEST for this one.
+  !
+  !     LITERATURE
+  !         https://en.wikipedia.org/wiki/Weibull_distribution
+  !         standardized form used here is also used in Scipy
+  !         https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.weibull_min.html
+  !
+  !     HISTORY
+  !>        \author Stephan Thober
+  !>        \date Aug 2020
+  !         Modified
   interface weibull_cdf
-     module procedure weibull_cdf_sp, weibull_cdf_sp
+     module procedure weibull_cdf_sp, weibull_cdf_dp
   end interface weibull_cdf
 
+  ! ------------------------------------------------------------------
+  !
+  !     NAME
+  !         gamma_pdf
+  !
+  !     PURPOSE
+  !>        \details calculates gamma probability density function. Division by zero occurs
+  !>                 if scale parameter s = 0.
+  !>                 \f[ gamma_pdf = \frac{y^{c-1} exp(-y)}{\Gamma (c)} \f]
+  !>                 where
+  !>                 \f[ y = (x - l) / s]
+  !
+  !     INTENT(IN)
+  !>        \param[in] "real(sp/dp)                          :: x"    evaluation points
+  !>        \param[in] "real(sp/dp)                          :: c"    shape parameters
+  !>        \param[in] "real(sp/dp)                          :: l"    location parameter
+  !>        \param[in] "real(sp/dp)                          :: s"    scale parameters
+  !
+  !     INTENT(INOUT)
+  !         None
+  !
+  !     INTENT(OUT)
+  !         None
+  !
+  !     INTENT(IN), OPTIONAL
+  !         None
+  !
+  !     INTENT(INOUT), OPTIONAL
+  !         None
+  !
+  !     INTENT(OUT), OPTIONAL
+  !         None
+  !
+  !     RETURNS
+  !>       \return     real(sp/dp)[, dimension(npoints)] :: gamma_pdf &mdash; result of gamma probability density function
+  !
+  !     RESTRICTIONS
+  !         None
+  !
+  !     EXAMPLE
+  !         -> There is no TEST for this one.
+  !
+  !     LITERATURE
+  !         https://en.wikipedia.org/wiki/Gamma_distribution
+  !         standardized form used here is also used in Scipy
+  !         https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gamma.html
+  !
+  !     HISTORY
+  !>        \author Stephan Thober
+  !>        \date Aug 2020
+  !         Modified
+  interface gamma_pdf
+     module procedure gamma_pdf_sp, gamma_pdf_dp
+  end interface gamma_pdf
 CONTAINS
 
   ! ------------------------------------------------------------------
@@ -2801,66 +2959,101 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  elemental pure function weibull_pdf_sp(x, nu, xi)
+  elemental pure function weibull_pdf_sp(x, c, l, s)
 
     use mo_kind, only: sp
 
-    real(sp), intent(in) :: x, nu, xi
+    real(sp), intent(in) :: x, c, l, s
+    real(sp)             :: y
     real(sp)             :: weibull_pdf_sp
 
     if (x .lt. 0._sp) then
        weibull_pdf_sp = 0._sp
     else
-       weibull_pdf_sp = xi / nu (x / nu)**(xi - 1._sp) exp(-((x / nu)**k))
+       y = (x - l) / s
+       weibull_pdf_sp = c / s * (y)**(c - 1._sp) * exp(-y**c)
     end if
 
-  end function weibull_sp
+  end function weibull_pdf_sp
 
-  elemental pure function weibull_pdf_dp(x, nu, xi)
+  elemental pure function weibull_pdf_dp(x, c, l, s)
 
     use mo_kind, only: dp
 
-    real(dp), intent(in) :: x, nu, xi
+    real(dp), intent(in) :: x, c, l, s
+    real(dp)             :: y
     real(dp)             :: weibull_pdf_dp
 
     if (x .lt. 0._dp) then
        weibull_pdf_dp = 0._dp
     else
-       weibull_pdf_dp = xi / nu (x / nu)**(xi - 1._dp) exp(-((x / nu)**k))
+       y = (x - l) / s
+       weibull_pdf_dp = c / s * (y)**(c - 1._dp) * exp(-y**c)
     end if
 
   end function weibull_pdf_dp
 
   ! ------------------------------------------------------------------
 
-  elemental pure function weibull_cdf_sp(x, nu, xi)
+  elemental pure function weibull_cdf_sp(x, c, l, s)
 
     use mo_kind, only: sp
 
-    real(sp), intent(in) :: x, nu, xi
+    real(sp), intent(in) :: x, c, l, s
     real(sp)             :: weibull_cdf_sp
 
     if (x .lt. 0._sp) then
        weibull_cdf_sp = 0._sp
     else
-       weibull_cdf_sp = 1._sp - exp(-((x / nu)**xi)
+       weibull_cdf_sp = 1._sp - exp(-((x - l) / s)**c)
     end if
 
   end function weibull_cdf_sp
 
-  elemental pure function weibull_cdf_dp(x, nu, xi)
+  elemental pure function weibull_cdf_dp(x, c, l, s)
 
     use mo_kind, only: dp
 
-    real(dp), intent(in) :: x, nu, xi
+    real(dp), intent(in) :: x, c, l, s
     real(dp)             :: weibull_cdf_dp
 
     if (x .lt. 0._dp) then
        weibull_cdf_dp = 0._dp
     else
-       weibull_cdf_dp = 1._dp - exp(-((x / nu)**xi)
+       weibull_cdf_dp = 1._dp - exp(-((x - l) / s)**c)
     end if
 
   end function weibull_cdf_dp
 
+  ! ------------------------------------------------------------------
+
+  elemental pure function gamma_pdf_sp(x, c, l, s)
+
+    use mo_kind,      only: sp
+    use mo_functions, only: gamm
+
+    real(sp), intent(in) :: x, c, l, s
+    real(sp)             :: y
+    real(sp)             :: gamma_pdf_sp
+
+    y = (x - l) / s
+    gamma_pdf_sp = y**(c - 1._sp) * exp(-y)/gamm(c)/s
+
+  end function gamma_pdf_sp
+
+  elemental pure function gamma_pdf_dp(x, c, l, s)
+
+    use mo_kind,      only: dp
+    use mo_functions, only: gamm
+
+    real(dp), intent(in) :: x, c, l, s
+    real(dp)             :: y
+    real(dp)             :: gamma_pdf_dp
+
+    y = (x - l) / s
+    gamma_pdf_dp = y**(c - 1._dp) * exp(-y)/gamm(c)/s
+
+  end function gamma_pdf_dp
+
+  ! ------------------------------------------------------------------
 end module mo_distributions

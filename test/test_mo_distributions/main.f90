@@ -5,7 +5,8 @@ PROGRAM main
   USE mo_distributions, ONLY: laplace, laplace01, normal, normal01
   USE mo_distributions, ONLY: ep, ep01, sep, sep01
   USE mo_distributions, ONLY: st, st01, t, t01
-  USE mo_distributions, ONLY: beta_den
+  USE mo_distributions, ONLY: beta_den, gamma_pdf, weibull_pdf, weibull_cdf
+  USE mo_functions,     ONLY: gamm
   use mo_ansi_colors, only: color, c_red, c_green
 
   IMPLICIT NONE
@@ -13,17 +14,17 @@ PROGRAM main
   ! data
   INTEGER(i4), PARAMETER  :: nn = 10000
 
-  REAL(dp)                :: out0, iloc, isig, ddat, ddat_beta
-  REAL(dp), DIMENSION(nn) :: dat, dat_beta, out
+  REAL(dp)                :: out0, iloc, isig, ddat, ddat_beta, ddat_gamma, ddat_weibull
+  REAL(dp), DIMENSION(nn) :: dat, dat_beta, dat_gamma, dat_weibull, out
   REAL(dp)                :: loc, sca, sig, xi, beta, nu
   REAL(dp)                :: dmean, dvar, dstd
 
-  REAL(sp)                :: isloc, issig, dsat, dsat_beta
-  REAL(sp), DIMENSION(nn) :: sat, sat_beta, sout
+  REAL(sp)                :: isloc, issig, dsat, dsat_beta, dsat_gamma, dsat_weibull
+  REAL(sp), DIMENSION(nn) :: sat, sat_beta, sat_gamma, sat_weibull, sout
   REAL(sp)                :: sloc, ssca, ssig, sxi, sbeta, snu
   REAL(dp)                :: smean, svar, sstd
 
-  INTEGER(i4) :: i
+  INTEGER(i4) :: i, j
   LOGICAL     :: isgood, allgood
 
   Write(*,*) ''
@@ -36,6 +37,10 @@ PROGRAM main
   ddat = dat(2)-dat(1)
   forall(i=1:nn) dat_beta(i) = real(i,dp)/real(nn,dp)
   ddat_beta = dat_beta(2)-dat_beta(1)
+  forall(i=1:nn) dat_gamma(i) = real(i,dp)/real(nn,dp) * 20._dp
+  ddat_gamma = dat_gamma(2)-dat_gamma(1)
+  forall(i=1:nn) dat_weibull(i) = real(i,dp)/real(nn,dp) * 5._dp
+  ddat_weibull = dat_weibull(2)-dat_weibull(1)
 
   loc  = 1.1_dp
   sca  = 2.2_dp
@@ -45,7 +50,7 @@ PROGRAM main
   nu   = 4.4_dp
 
   ! integral
-  do i=1, 13
+  do i=1, 15
      isgood = .true.
      select case(i)
      case(1) ! Exponential Power
@@ -100,13 +105,27 @@ PROGRAM main
         iloc = 0.5_dp
         isig = 0.1507556722888821_dp
         out = beta_den(dat_beta, nu=5._dp, xi=5._dp)
+     case(14) ! gamma distribution
+        iloc = 0.75_dp * 2._dp
+        isig = sqrt(0.75_dp * 2._dp**2._dp)
+        out = gamma_pdf(dat_gamma, c=0.75_dp, l=0._dp, s=2._dp)
+     case(15) ! weibull distribution
+        iloc = 1._dp * gamm(1._dp + 1._dp / 5._dp)
+        isig = 1._dp * sqrt(gamm(1._dp + 2._dp / 5._dp) - gamm(1._dp + 1._dp / 5._dp)**2._dp )
+        out = weibull_pdf(dat_weibull, c=5._dp, l=0._dp, s=1._dp)
      case default
         continue
      end select
      if (i .eq. 13) then
         dmean = sum(dat_beta * out * ddat_beta)
         dvar  = sum((dat_beta-dmean)**2 * out * ddat_beta)
-     else
+     else if (i .eq. 14) then
+        dmean = sum(dat_gamma * out * ddat_gamma)
+        dvar  = sum((dat_gamma-dmean)**2 * out * ddat_gamma)
+     else if (i .eq. 15) then
+        dmean = sum(dat_weibull * out * ddat_weibull)
+        dvar  = sum((dat_weibull-dmean)**2 * out * ddat_weibull)
+     else 
         dmean = sum(dat * out * ddat)
         dvar  = sum((dat-dmean)**2 * out * ddat)
      end if
@@ -243,6 +262,10 @@ PROGRAM main
   dsat = sat(2)-sat(1)
   forall(i=1:nn) sat_beta(i) = real(i,sp)/real(nn,sp)
   dsat_beta = sat_beta(2)-sat_beta(1)
+  forall(i=1:nn) sat_gamma(i) = real(i,sp)/real(nn,sp) * 20._sp
+  dsat_gamma = sat_gamma(2)-sat_gamma(1)
+  forall(i=1:nn) sat_weibull(i) = real(i,sp)/real(nn,sp) * 5._sp
+  dsat_weibull = sat_weibull(2)-sat_weibull(1)
   
   sloc  = 1.1_sp
   ssca  = 2.2_sp
@@ -252,7 +275,7 @@ PROGRAM main
   snu   = 4.4_sp
 
   ! integral
-  do i=1, 13
+  do i=1, 14
      isgood = .true.
      select case(i)
      case(1) ! Exponential Power
@@ -307,12 +330,26 @@ PROGRAM main
         isloc = 0.5_sp
         issig = 0.1507556722888821_sp
         sout = beta_den(sat_beta, nu=5._sp, xi=5._sp)
+     case(14) ! gamma distribution
+        isloc = 0.75_sp * 2._sp
+        issig = sqrt(0.75_sp * 2._sp**2._sp)
+        sout = gamma_pdf(sat_gamma, c=0.75_sp, l=0._sp, s=2._sp)
+     case(15) ! weibull distribution
+        isloc = 1._sp * gamm(1._sp + 1._sp / 5._sp)
+        issig = 1._sp * sqrt(gamm(1._sp + 2._sp / 5._sp) - gamm(1._sp + 1._sp / 5._sp)**2._sp )
+        sout = weibull_pdf(sat_weibull, c=5._sp, l=0._sp, s=1._sp)
      case default
         continue
      end select
-     if (i .eq. 13) then
+     if (i .eq. 15) then
+        smean = sum(sat_weibull * sout * dsat_weibull)
+        svar  = sum((sat_weibull-smean)**2 * sout * dsat_weibull)
+     else if (i .eq. 14) then
+        smean = sum(sat_gamma * sout * dsat_gamma)
+        svar  = sum((sat_gamma-smean)**2 * sout * dsat_gamma)
+     else if (i .eq. 13) then
         smean = sum(sat_beta * sout * dsat_beta)
-        svar  = sum((sat_beta-dmean)**2 * sout * dsat_beta)
+        svar  = sum((sat_beta-smean)**2 * sout * dsat_beta)
      else
         smean = sum(sat * sout * dsat)
         svar  = sum((sat-smean)**2 * sout * dsat)
