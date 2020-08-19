@@ -275,7 +275,7 @@ PROGRAM main
   snu   = 4.4_sp
 
   ! integral
-  do i=1, 14
+  do i=1, 15
      isgood = .true.
      select case(i)
      case(1) ! Exponential Power
