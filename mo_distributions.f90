@@ -3002,7 +3002,7 @@ CONTAINS
     real(sp), intent(in) :: x, c, l, s
     real(sp)             :: weibull_cdf_sp
 
-    if (x .lt. 0._sp) then
+    if ((x - l) .lt. 0._sp) then
        weibull_cdf_sp = 0._sp
     else
        weibull_cdf_sp = 1._sp - exp(-((x - l) / s)**c)
@@ -3031,7 +3031,6 @@ CONTAINS
 
     use mo_kind,      only: sp
     use mo_functions, only: gamm
-
     real(sp), intent(in) :: x, c, l, s
     real(sp)             :: y
     real(sp)             :: gamma_pdf_sp
