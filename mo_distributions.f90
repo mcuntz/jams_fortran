@@ -2933,27 +2933,31 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  elemental pure function beta_den_sp(x, nu, xi)
+  elemental pure function beta_den_sp(x, a, b, l, s)
 
     use mo_kind, only: sp
     use mo_functions, only: beta
 
-    real(sp), intent(in) :: x, nu, xi
+    real(sp), intent(in) :: x, a, b, l, s
+    real(sp)             :: y
     real(sp)             :: beta_den_sp
 
-    beta_den_sp = 1._sp / beta(nu, xi) * x**(nu - 1._sp) * (1._sp - x)**(xi - 1._sp)
+    y = (x - l) / s
+    beta_den_sp = (1._sp / beta(a, b)) * y**(a - 1._sp) * (1._sp - y)**(b - 1._sp) / s
 
   end function beta_den_sp
 
-  elemental pure function beta_den_dp(x, nu, xi)
+  elemental pure function beta_den_dp(x, a, b, l, s)
 
     use mo_kind, only: dp
     use mo_functions, only: beta
 
-    real(dp), intent(in) :: x, nu, xi
+    real(dp), intent(in) :: x, a, b, l, s
+    real(dp)             :: y
     real(dp)             :: beta_den_dp
 
-    beta_den_dp = (1._dp / beta(nu, xi)) * x**(nu - 1._dp) * (1._dp - x)**(xi - 1._dp)
+    y = (x - l) / s
+    beta_den_dp = (1._dp / beta(a, b)) * y**(a - 1._dp) * (1._dp - y)**(b - 1._dp) / s
 
   end function beta_den_dp
 

@@ -104,7 +104,7 @@ PROGRAM main
      case(13) ! beta distribution
         iloc = 0.5_dp
         isig = 0.1507556722888821_dp
-        out = beta_den(dat_beta, nu=5._dp, xi=5._dp)
+        out = beta_den(dat_beta, a=5._dp, b=5._dp, l=0._dp, s=1._dp)
      case(14) ! gamma distribution
         iloc = 0.75_dp * 2._dp
         isig = sqrt(0.75_dp * 2._dp**2._dp)
@@ -329,7 +329,7 @@ PROGRAM main
      case(13) ! beta distribution
         isloc = 0.5_sp
         issig = 0.1507556722888821_sp
-        sout = beta_den(sat_beta, nu=5._sp, xi=5._sp)
+        sout = beta_den(sat_beta, a=5._sp, b=5._sp, l=0._sp, s=1._sp)
      case(14) ! gamma distribution
         isloc = 0.75_sp * 2._sp
         issig = sqrt(0.75_sp * 2._sp**2._sp)
