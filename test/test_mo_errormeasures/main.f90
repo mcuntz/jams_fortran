@@ -1,6 +1,6 @@
 program test
 
-  ! use mo_moment   
+  ! use mo_moment
   USE mo_kind         , ONLY: i4, sp, dp
   USE mo_errorMeasures, ONLY: BIAS, KGE, LNNSE, MAE, MSE, NSE, RMSE, SAE, SSE
   use mo_ansi_colors, only: color, c_red, c_green
@@ -13,6 +13,8 @@ program test
   LOGICAL,  DIMENSION(54)     :: maskvec
   LOGICAL,  DIMENSION(9,6,8)  :: mask
   LOGICAL                     :: isgood
+  real(dp)                    :: stmp
+  real(dp)                    :: dtmp
 
   write(*,*) ''
   write(*,*) 'Test mo_errormeasures.f90'
@@ -46,79 +48,126 @@ program test
   !
   ! Test masked arrays (sp / dp, 1D / 2D / 3D)
   ! BIAS
-  isgood = isgood .and. (nint(10000._sp*BIAS(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. 14353)
-  isgood = isgood .and. (nint(10000._dp*BIAS(vec1, vec2, mask=maskvec)) .EQ. 14353)
-  isgood = isgood .and. (nint(10000._sp*BIAS(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. &
-           20813)
-  isgood = isgood .and. (nint(10000._dp*BIAS(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. 20813)
-  isgood = isgood .and. (nint(10000._sp*BIAS(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 9097) 
-  isgood = isgood .and. (nint(10000._dp*BIAS(arr1, arr2, mask=mask)) .EQ. 9097)
+  stmp = BIAS(real(vec1, sp), real(vec2, sp), mask=maskvec)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 14353)
+  dtmp = BIAS(vec1, vec2, mask=maskvec)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 14353)
+  stmp = BIAS(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 20813)
+  dtmp = BIAS(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 20813)
+  stmp = BIAS(real(arr1, sp), real(arr2, sp), mask=mask)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 9097)
+  dtmp = BIAS(arr1, arr2, mask=mask)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 9097)
   ! KGE
-  isgood = isgood .and. (nint(10000._sp*KGE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. 1783)
-  isgood = isgood .and. (nint(10000._dp*KGE(vec1, vec2, mask=maskvec)) .EQ. 1783)
-  isgood = isgood .and. (nint(10000._sp*KGE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. -4730)
-  isgood = isgood .and. (nint(10000._dp*KGE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. -4730)
-  isgood = isgood .and. (nint(10000._sp*KGE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 7631) 
-  isgood = isgood .and. (nint(10000._dp*KGE(arr1, arr2, mask=mask)) .EQ. 7631)
+  stmp = KGE(real(vec1, sp), real(vec2, sp), mask=maskvec)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 1783)
+  dtmp = KGE(vec1, vec2, mask=maskvec)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 1783)
+  stmp = KGE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. -4730)
+  dtmp = KGE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. -4730)
+  stmp = KGE(real(arr1, sp), real(arr2, sp), mask=mask)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 7631)
+  dtmp = KGE(arr1, arr2, mask=mask)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 7631)
   ! MAE
-  isgood = isgood .and. (nint(10000._sp*MAE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. 16123)
-  isgood = isgood .and. (nint(10000._dp*MAE(vec1, vec2, mask=maskvec)) .EQ. 16123)
-  isgood = isgood .and. (nint(10000._sp*MAE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. &
+  stmp = MAE(real(vec1, sp), real(vec2, sp), mask=maskvec)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 16123)
+  dtmp = MAE(vec1, vec2, mask=maskvec)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 16123)
+  stmp = MAE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. &
            21134)
-  isgood = isgood .and. (nint(10000._dp*MAE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. 21134)
-  isgood = isgood .and. (nint(10000._sp*MAE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 9097) 
-  isgood = isgood .and. (nint(10000._dp*MAE(arr1, arr2, mask=mask)) .EQ. 9097)
+  dtmp = MAE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 21134)
+  stmp = MAE(real(arr1, sp), real(arr2, sp), mask=mask)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 9097)
+  dtmp = MAE(arr1, arr2, mask=mask)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 9097)
   ! MSE
-  isgood = isgood .and. (nint(10000._sp*MSE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. 42183)
-  isgood = isgood .and. (nint(10000._dp*MSE(vec1, vec2, mask=maskvec)) .EQ. 42183)
-  isgood = isgood .and. (nint(10000._sp*MSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. &
-           56920)
-  isgood = isgood .and. (nint(10000._dp*MSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. 56920)
-  isgood = isgood .and. (nint(10000._sp*MSE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 10287) 
-  isgood = isgood .and. (nint(10000._dp*MSE(arr1, arr2, mask=mask)) .EQ. 10287)
+  stmp = MSE(real(vec1, sp), real(vec2, sp), mask=maskvec)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 42183)
+  dtmp = MSE(vec1, vec2, mask=maskvec)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 42183)
+  stmp = MSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 56920)
+  dtmp = MSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 56920)
+  stmp = MSE(real(arr1, sp), real(arr2, sp), mask=mask)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 10287)
+  dtmp = MSE(arr1, arr2, mask=mask)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 10287)
   ! NSE
-  isgood = isgood .and. (nint(10000._sp*NSE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. -23368)
-  isgood = isgood .and. (nint(10000._dp*NSE(vec1, vec2, mask=maskvec)) .EQ. -23368)
-  isgood = isgood .and. (nint(10000._sp*NSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. &
-           -35026)
-  isgood = isgood .and. (nint(10000._dp*NSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. -35026)
-  isgood = isgood .and. (nint(10000._sp*NSE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 8164) 
-  isgood = isgood .and. (nint(10000._dp*NSE(arr1, arr2, mask=mask)) .EQ. 8164)
+  stmp = NSE(real(vec1, sp), real(vec2, sp), mask=maskvec)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. -23368)
+  dtmp = NSE(vec1, vec2, mask=maskvec)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. -23368)
+  stmp = NSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. -35026)
+  dtmp = NSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. -35026)
+  stmp = NSE(real(arr1, sp), real(arr2, sp), mask=mask)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 8164)
+  dtmp = NSE(arr1, arr2, mask=mask)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 8164)
   ! SAE
-  isgood = isgood .and. (nint(10000._sp*SAE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. 403063)
-  isgood = isgood .and. (nint(10000._dp*SAE(vec1, vec2, mask=maskvec)) .EQ. 403063)
-  isgood = isgood .and. (nint(10000._sp*SAE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. &
-           528359)
-  isgood = isgood .and. (nint(10000._dp*SAE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. 528359)
-  isgood = isgood .and. (nint(10000._sp*SAE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 2055999) 
-  isgood = isgood .and. (nint(10000._dp*SAE(arr1, arr2, mask=mask)) .EQ. 2056000)
+  stmp = SAE(real(vec1, sp), real(vec2, sp), mask=maskvec)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 403063)
+  dtmp = SAE(vec1, vec2, mask=maskvec)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 403063)
+  stmp = SAE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 528359)
+  dtmp = SAE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 528359)
+  stmp = SAE(real(arr1, sp), real(arr2, sp), mask=mask)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 2055999)
+  dtmp = SAE(arr1, arr2, mask=mask)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 2056000)
   ! SSE
-  isgood = isgood .and. (nint(10000._sp*SSE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. 1054575)
-  isgood = isgood .and. (nint(10000._dp*SSE(vec1, vec2, mask=maskvec)) .EQ. 1054575)
-  isgood = isgood .and. (nint(10000._sp*SSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. &
-           1423003)
-  isgood = isgood .and. (nint(10000._dp*SSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. 1423003)
-  isgood = isgood .and. (nint(10000._sp*SSE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 2324799) 
-  isgood = isgood .and. (nint(10000._dp*SSE(arr1, arr2, mask=mask)) .EQ. 2324800)
+  stmp = SSE(real(vec1, sp), real(vec2, sp), mask=maskvec)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 1054575)
+  dtmp = SSE(vec1, vec2, mask=maskvec)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 1054575)
+  stmp = SSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 1423003)
+  dtmp = SSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 1423003)
+  stmp = SSE(real(arr1, sp), real(arr2, sp), mask=mask)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 2324799)
+  dtmp = SSE(arr1, arr2, mask=mask)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 2324800)
   ! RMSE
-  isgood = isgood .and. (nint(10000._sp*RMSE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. 20538)
-  isgood = isgood .and. (nint(10000._dp*RMSE(vec1, vec2, mask=maskvec)) .EQ. 20538)
-  isgood = isgood .and. (nint(10000._sp*RMSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. &
-           23858)
-  isgood = isgood .and. (nint(10000._dp*RMSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. 23858)
-  isgood = isgood .and. (nint(10000._sp*RMSE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 10142) 
-  isgood = isgood .and. (nint(10000._dp*RMSE(arr1, arr2, mask=mask)) .EQ. 10142)
+  stmp = RMSE(real(vec1, sp), real(vec2, sp), mask=maskvec)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 20538)
+  dtmp = RMSE(vec1, vec2, mask=maskvec)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 20538)
+  stmp = RMSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 23858)
+  dtmp = RMSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 23858)
+  stmp = RMSE(real(arr1, sp), real(arr2, sp), mask=mask)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 10142)
+  dtmp = RMSE(arr1, arr2, mask=mask)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 10142)
   !
   ! LNNSE
   ! Attention masks might have changed since inout
   !
-  isgood = isgood .and. (nint(10000._sp*LNNSE(real(vec1, sp), real(vec2, sp), mask=maskvec)) .EQ. -8993)
-  isgood = isgood .and. (nint(10000._dp*LNNSE(vec1, vec2, mask=maskvec)) .EQ. -8993)
-  isgood = isgood .and. (nint(10000._sp*LNNSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))) .EQ. &
-           -21656)
-  isgood = isgood .and. (nint(10000._dp*LNNSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))) .EQ. -21656)
-  isgood = isgood .and. (nint(10000._sp*LNNSE(real(arr1, sp), real(arr2, sp), mask=mask)) .EQ. 8915) 
-  isgood = isgood .and. (nint(10000._dp*LNNSE(arr1, arr2, mask=mask)) .EQ. 8915)
+  stmp = LNNSE(real(vec1, sp), real(vec2, sp), mask=maskvec)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. -8993)
+  dtmp = LNNSE(vec1, vec2, mask=maskvec)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. -8993)
+  stmp = LNNSE(real(arr1(:,:,1), sp), real(arr2(:,:,4), sp), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. -21656)
+  dtmp = LNNSE(arr1(:,:,1), arr2(:,:,4), mask=mask(:,:,1))
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. -21656)
+  stmp = LNNSE(real(arr1, sp), real(arr2, sp), mask=mask)
+  isgood = isgood .and. (nint(10000._sp*stmp) .EQ. 8915)
+  dtmp = LNNSE(arr1, arr2, mask=mask)
+  isgood = isgood .and. (nint(10000._dp*dtmp) .EQ. 8915)
   !
   if (isgood) then
      write(*,*) 'mo_errormeasures ', color('o.k.', c_green)

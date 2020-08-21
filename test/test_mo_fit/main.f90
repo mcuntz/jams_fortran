@@ -1,14 +1,14 @@
 PROGRAM main
-  
+
   USE mo_kind, ONLY: dp, sp
   USE mo_fit,  ONLY: fitfun, fpoly_dp, fpoly_sp, polyfit, svdfit
   USE mo_fit,  ONLY: polyval
   use mo_ansi_colors, only: color, c_red, c_green
 
   IMPLICIT NONE
-  
+
   LOGICAL                                :: isgood
-  
+
   integer, parameter                     :: degree = 2
   integer                                :: i
 

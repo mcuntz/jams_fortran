@@ -18,12 +18,14 @@ module mo_eq_lv
 
     private
 
-    public :: LV_eqn, LV_eqn_sp, LV_eqn_dp, LV_eqn_para, LV_eqn_para_sp, LV_eqn_para_dp,&
-              deriv_testRB_dp, jacobn_testRB_dp,&
-              deriv2_testRB_sp, jacobn2_testRB_sp,&
-              deriv2_testRB_dp, jacobn2_testRB_dp,&
-              deriv2_testRB_para_sp, jacobn2_testRB_para_sp,&
-              deriv2_testRB_para_dp, jacobn2_testRB_para_dp
+    public :: LV_eqn, LV_eqn_sp, LV_eqn_dp, &
+         LV_eqn_para, LV_eqn_para_sp, LV_eqn_para_dp, &
+         deriv_testRB_sp, jacobn_testRB_sp, &
+         deriv_testRB_dp, jacobn_testRB_dp, &
+         deriv2_testRB_sp, jacobn2_testRB_sp, &
+         deriv2_testRB_dp, jacobn2_testRB_dp, &
+         deriv2_testRB_para_sp, jacobn2_testRB_para_sp, &
+         deriv2_testRB_para_dp, jacobn2_testRB_para_dp
 
 
     ! Interfaces for single and double precision routines
@@ -193,6 +195,9 @@ contains
         real(sp), dimension(:), intent(in) :: y         ! unknowns of the equations
         real(sp), dimension(:), intent(out) :: dydx     ! derivatives of y
 
+        real(sp) :: xtmp
+
+        xtmp = x
 
         dydx(1) = 998.0_sp*y(1) + 1998.0_sp*y(2)
         dydx(2) = -999.0_sp*y(1)- 1999.0_sp*y(2)
@@ -210,6 +215,11 @@ contains
         real(sp), dimension(:),     intent(out) :: dfdx     ! derivatives of f for x
         real(sp), dimension(:,:),   intent(out) :: dfdy     ! derivatives of f for y
 
+        real(sp) :: xtmp
+        real(sp), dimension(size(y,1)) :: ytmp
+
+        xtmp = x
+        ytmp = y
 
         dfdx(1)     = 0.0_sp
         dfdx(2)     = 0.0_sp
@@ -231,6 +241,9 @@ contains
         real(sp), dimension(:), intent(in) :: y         ! unknowns of the equations
         real(sp), dimension(:), intent(out) :: dydx     ! derivatives of y
 
+        real(sp) :: xtmp
+
+        xtmp = x
 
         dydx(1) = (-0.013_sp-1000.0_sp*y(3))*y(1)
         dydx(2) = -2500.0_sp*y(3)*y(2)
@@ -249,6 +262,11 @@ contains
         real(sp), dimension(:),     intent(out) :: dfdx     ! derivatives of f for x
         real(sp), dimension(:,:),   intent(out) :: dfdy     ! derivatives of f for y
 
+        real(sp) :: xtmp
+        real(sp), dimension(size(y,1)) :: ytmp
+
+        xtmp = x
+        ytmp = y
 
         dfdx(1)     = 0.0_sp
         dfdx(2)     = 0.0_sp
@@ -278,6 +296,10 @@ contains
 
         real(sp), dimension(:), intent(in) :: para      ! parameter
 
+        real(sp) :: xtmp
+
+        xtmp = x
+
 
         dydx(1) = (-0.013_sp-para(1)*y(3))*y(1)
         dydx(2) = -2500.0_sp*y(3)*y(2)
@@ -298,6 +320,11 @@ contains
 
         real(sp), dimension(:),     intent(in)  :: para      ! parameter
 
+        real(sp) :: xtmp
+        real(sp), dimension(size(y,1)) :: ytmp
+
+        xtmp = x
+        ytmp = y
 
         dfdx(1)     = 0.0_sp
         dfdx(2)     = 0.0_sp
@@ -326,6 +353,9 @@ contains
         real(dp), dimension(:), intent(in) :: y         ! unknowns of the equations
         real(dp), dimension(:), intent(out) :: dydx     ! derivatives of y
 
+        real(dp) :: xtmp
+
+        xtmp = x
 
         dydx(1) = 998.0_dp*y(1) + 1998.0_dp*y(2)
         dydx(2) = -999.0_dp*y(1)- 1999.0_dp*y(2)
@@ -343,6 +373,11 @@ contains
         real(dp), dimension(:),     intent(out) :: dfdx     ! derivatives of f for x
         real(dp), dimension(:,:),   intent(out) :: dfdy     ! derivatives of f for y
 
+        real(dp) :: xtmp
+        real(dp), dimension(size(y,1)) :: ytmp
+
+        xtmp = x
+        ytmp = y
 
         dfdx(1)     = 0.0_dp
         dfdx(2)     = 0.0_dp
@@ -364,6 +399,9 @@ contains
         real(dp), dimension(:), intent(in) :: y         ! unknowns of the equations
         real(dp), dimension(:), intent(out) :: dydx     ! derivatives of y
 
+        real(dp) :: xtmp
+
+        xtmp = x
 
         dydx(1) = (-0.013_dp-1000.0_dp*y(3))*y(1)
         dydx(2) = -2500.0_dp*y(3)*y(2)
@@ -382,6 +420,11 @@ contains
         real(dp), dimension(:),     intent(out) :: dfdx     ! derivatives of f for x
         real(dp), dimension(:,:),   intent(out) :: dfdy     ! derivatives of f for y
 
+        real(dp) :: xtmp
+        real(dp), dimension(size(y,1)) :: ytmp
+
+        xtmp = x
+        ytmp = y
 
         dfdx(1)     = 0.0_dp
         dfdx(2)     = 0.0_dp
@@ -411,6 +454,9 @@ contains
 
         real(dp), dimension(:), intent(in) :: para      ! parameter
 
+        real(dp) :: xtmp
+
+        xtmp = x
 
         dydx(1) = (-0.013_dp-para(1)*y(3))*y(1)
         dydx(2) = -2500.0_dp*y(3)*y(2)
@@ -431,6 +477,11 @@ contains
 
         real(dp), dimension(:),     intent(in)  :: para      ! parameter
 
+        real(dp) :: xtmp
+        real(dp), dimension(size(y,1)) :: ytmp
+
+        xtmp = x
+        ytmp = y
 
         dfdx(1)     = 0.0_dp
         dfdx(2)     = 0.0_dp

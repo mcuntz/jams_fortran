@@ -2,7 +2,7 @@
 
 !> \brief Selects elements of distance matrix with most largest distance to each other
 
-!> \details Selects from a distance matrix (symmetric and positive) a specified 
+!> \details Selects from a distance matrix (symmetric and positive) a specified
 !>          number (N) of elements which have large distances to each other.
 
 !> \authors Juliane Mai
@@ -51,10 +51,10 @@ module mo_select_distant_entries
   !         select_distant_entries
 
   !     PURPOSE
-  !         Selects from a distance matrix (symmetric and positive) a specified 
+  !         Selects from a distance matrix (symmetric and positive) a specified
   !         number (N) of elements which have large distances to each other.
   !
-  !         Indexes are chosen iteratively. Therefore, it might be possible to 
+  !         Indexes are chosen iteratively. Therefore, it might be possible to
   !         find selections which have an overall larger distance. This is only
   !         a good GUESS of such a selection.
   !
@@ -71,7 +71,7 @@ module mo_select_distant_entries
 
   !     INTENT(IN)
   !         real(sp/dp) :: distance_matrix   2D array of distances between element i and j
-  !         integer(i4) :: n_elements        number of elements to return 
+  !         integer(i4) :: n_elements        number of elements to return
 
   !     INTENT(INOUT)
   !         None
@@ -81,12 +81,12 @@ module mo_select_distant_entries
 
   !     INTENT(IN), OPTIONAL
   !         integer(i4) :: first             method how first pair is chosen
-  !                                          0 : first pair is the one with the overall 
+  !                                          0 : first pair is the one with the overall
   !                                              largest distance,
   !                                              i.e. result is deterministic
   !                                          1 : first pair is randomly chosen,
   !                                              i.e. result is random
-  !                                          DEFAULT: 0 
+  !                                          DEFAULT: 0
   !         integer(i4) :: seed              seed used for random number generator
   !                                          (only considered if first=1)
   !                                          DEFAULT: timeseed
@@ -121,18 +121,18 @@ module mo_select_distant_entries
 contains
 
   function select_distant_entries_dp( distance_matrix, n_elements, first, seed )
-    
+
     implicit none
 
-    real(dp), dimension(:,:), intent(in) :: distance_matrix           ! square matrix with distance between element i and j 
-    integer(i4),              intent(in) :: n_elements                ! number of elements to return 
+    real(dp), dimension(:,:), intent(in) :: distance_matrix           ! square matrix with distance between element i and j
+    integer(i4),              intent(in) :: n_elements                ! number of elements to return
     integer(i4),    optional, intent(in) :: first                     ! method how first pair is chosen
-    !                                                                 !    0 : first pair is the one with the overall 
+    !                                                                 !    0 : first pair is the one with the overall
     !                                                                 !        largest distance,
     !                                                                 !        i.e. result is deterministic
     !                                                                 !    1 : first pair is randomly chosen,
     !                                                                 !        i.e. result is random
-    !                                                                 ! DEFAULT: 0 
+    !                                                                 ! DEFAULT: 0
     integer(i4),    optional, intent(in) :: seed                      ! seed used for random number generator
     !                                                                 ! (only considered if first=1)
     !                                                                 ! DEFAULT: timeseed
@@ -193,9 +193,9 @@ contains
        ! select rows and columns
        do jj = 1, ii-1
           ! select row
-          mask(select_distant_entries_dp(jj),:) = .true. 
+          mask(select_distant_entries_dp(jj),:) = .true.
           ! select column
-          mask(:,select_distant_entries_dp(jj)) = .true. 
+          mask(:,select_distant_entries_dp(jj)) = .true.
           ! de-select diagonal elements and already chosen pairs
           do kk = 1, jj
              mask(select_distant_entries_dp(jj),select_distant_entries_dp(kk)) = .false.
@@ -215,22 +215,22 @@ contains
     end do
 
     call sort(select_distant_entries_dp)
-    
+
   end function select_distant_entries_dp
 
   function select_distant_entries_sp( distance_matrix, n_elements, first, seed )
-    
+
     implicit none
 
-    real(sp), dimension(:,:), intent(in) :: distance_matrix           ! square matrix with distance between element i and j 
-    integer(i4),              intent(in) :: n_elements                ! number of elements to return 
+    real(sp), dimension(:,:), intent(in) :: distance_matrix           ! square matrix with distance between element i and j
+    integer(i4),              intent(in) :: n_elements                ! number of elements to return
     integer(i4),    optional, intent(in) :: first                     ! method how first pair is chosen
-    !                                                                 !    0 : first pair is the one with the overall 
+    !                                                                 !    0 : first pair is the one with the overall
     !                                                                 !        largest distance,
     !                                                                 !        i.e. result is deterministic
     !                                                                 !    1 : first pair is randomly chosen,
     !                                                                 !        i.e. result is random
-    !                                                                 ! DEFAULT: 0 
+    !                                                                 ! DEFAULT: 0
     integer(i4),    optional, intent(in) :: seed                      ! seed used for random number generator
     !                                                                 ! (only considered if first=1)
     !                                                                 ! DEFAULT: timeseed
@@ -291,9 +291,9 @@ contains
        ! select rows and columns
        do jj = 1, ii-1
           ! select row
-          mask(select_distant_entries_sp(jj),:) = .true. 
+          mask(select_distant_entries_sp(jj),:) = .true.
           ! select column
-          mask(:,select_distant_entries_sp(jj)) = .true. 
+          mask(:,select_distant_entries_sp(jj)) = .true.
           ! de-select diagonal elements and already chosen pairs
           do kk = 1, jj
              mask(select_distant_entries_sp(jj),select_distant_entries_sp(kk)) = .false.
@@ -313,7 +313,7 @@ contains
     end do
 
     call sort(select_distant_entries_sp)
-    
+
   end function select_distant_entries_sp
 
 end module mo_select_distant_entries

@@ -85,7 +85,7 @@ MODULE mo_fit
 
   USE mo_kind, ONLY: i4, sp, dp
 
-  Implicit NONE
+  implicit NONE
 
   PUBLIC :: fitfun  ! Wrapper of svdfit and svdvar
   PUBLIC :: fpoly   ! Routine to fit polynomial with fitfun or svdfit
@@ -93,6 +93,8 @@ MODULE mo_fit
   PUBLIC :: polyval ! Calculates polynomial-values for an vectorial input
   PUBLIC :: svdfit  ! Parameter fitting with singular value decomposition
   PUBLIC :: svdvar  ! Variance of fitted parameters with svdfit
+
+  public :: fpoly_sp, fpoly_dp ! individual routines for fpoly to pass to fitting functions
 
   ! Public interfaces
   ! ------------------------------------------------------------------

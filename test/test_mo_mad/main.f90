@@ -1,17 +1,17 @@
 PROGRAM main
-  
+
   USE mo_kind, ONLY: dp, sp
   use mo_ansi_colors, only: color, c_red, c_green
   USE mo_mad,  ONLY: mad
-  
+
   IMPLICIT NONE
-  
+
   REAL(dp), DIMENSION(26) :: dat
   REAL(sp), DIMENSION(26) :: sat
-  LOGICAL,  DIMENSION(26) :: mask, sollmask
+  LOGICAL,  DIMENSION(26) :: mask, sollmask, mask2
 
   LOGICAL :: isgood
-  
+
   Write(*,*) ''
   Write(*,*) 'Test mo_mad.f90'
 
@@ -40,7 +40,8 @@ PROGRAM main
   sollmask(26) = .false.
   mask(:)      = .true.
   mask(1)      = .false.
-  mask         = mask .and. mad(dat,z=3._dp)
+  mask2        = mad(dat,z=3._dp)
+  mask         = mask .and. mask2
   if (any(mask .neqv. sollmask)) isgood = .false.
 
   if (isgood) then
@@ -74,7 +75,8 @@ PROGRAM main
   sollmask(26) = .false.
   mask(:)      = .true.
   mask(1)      = .false.
-  mask         = mask .and. mad(sat,z=3._sp)
+  mask2        = mad(sat, z=3._sp)
+  mask         = mask .and. mask2
   if (.not. all(mask .eqv. sollmask)) isgood = .false.
 
   if (isgood) then

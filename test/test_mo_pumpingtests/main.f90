@@ -1,21 +1,22 @@
 program test
 
-  !---------------------------------------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   ! MODULS AND VARIABLS
-  !---------------------------------------------------------------------------------------------------
+  !----------------------------------------------------------------------------
 
-
-  USE mo_kind,            ONLY: sp, dp, i4
-  use mo_ansi_colors, only: color, c_red, c_green
-  USE mo_pumpingtests,    ONLY: thiem, theis, ext_thiem2d, ext_thiem3d, ext_theis2d, ext_theis3d
-  use mo_utils,           ONLY: eq
+  USE mo_kind,         ONLY: sp, dp, i4
+  use mo_ansi_colors,  only: color, c_red, c_green
+  USE mo_pumpingtests, ONLY: thiem, theis, ext_thiem2d, ext_thiem3d, ext_theis2d, ext_theis3d
+  use mo_utils,        ONLY: eq
 
   Implicit none
 
-  REAL(sp)            :: Reftest, hreftest, Qwtest, Ktest, Ltest, Stest, TGtest, vartest, corrtest, anisotest!, proptest
-  REAL(dp)            :: Reftestd, hreftestd, Qwtestd, Ktestd, Ltestd, Stestd, TGtestd, vartestd, corrtestd, anisotestd
+  REAL(sp) :: Reftest, hreftest, Qwtest, Ktest, Ltest, Stest, TGtest, &
+       vartest, corrtest, anisotest!, proptest
+  REAL(dp) :: Reftestd, hreftestd, Qwtestd, Ktestd, Ltestd, Stestd, &
+       TGtestd, vartestd, corrtestd, anisotestd
   !, proptestd
-  LOGICAL             :: isgood
+  LOGICAL  :: isgood
 
   real(dp), dimension(3,3)   :: fpoints_dp, fpoints2_dp, fpoints3_dp
   real(sp), dimension(3,3)   :: fpoints_sp, fpoints2_sp, fpoints3_sp
@@ -23,11 +24,14 @@ program test
   real(dp), dimension(9,2)   :: grid_dp
   real(sp), dimension(9,2)   :: grid_sp
 
-  integer(i4)         :: m,n
+  integer(i4) :: m,n
 
-  !---------------------------------------------------------------------------------------------------
+  real(sp) :: stmp
+  real(dp) :: dtmp
+
+  !----------------------------------------------------------------------------
   ! test-parameters
-  !---------------------------------------------------------------------------------------------------
+  !----------------------------------------------------------------------------
 
   Reftest         = 1.0_sp
   hreftest        = 0.0_sp
@@ -69,9 +73,9 @@ program test
 
   isgood          = .TRUE.
 
-  !---------------------------------------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   ! tests
-  !---------------------------------------------------------------------------------------------------
+  !----------------------------------------------------------------------------
 
   write (*,*) ''
   write (*,*) 'Test mo_pumpingtests.f90'
@@ -85,16 +89,20 @@ program test
   ! Thiemdp(0.2)         =  -2.5614999936338809
   ! Thiemdp(0.3)         =  -1.9161822315668402
 
-  isgood = isgood .and. (nint(thiem(0.2_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))*1000)       .EQ. -2562)
-  isgood = isgood .and. (nint(thiem(0.3_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))*1000)       .EQ. -1916)
-  isgood = isgood .and. (nint(thiem(0.2_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))*1000000)    .EQ. -2561500)
-  isgood = isgood .and. (nint(thiem(0.3_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))*1000000)    .EQ. -1916182)
+  stmp = thiem(0.2_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))
+  isgood = isgood .and. (nint(stmp*1000)       .EQ. -2562)
+  stmp = thiem(0.3_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))
+  isgood = isgood .and. (nint(stmp*1000)       .EQ. -1916)
+  dtmp = thiem(0.2_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))
+  isgood = isgood .and. (nint(dtmp*1000000)    .EQ. -2561500)
+  dtmp = thiem(0.3_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))
+  isgood = isgood .and. (nint(dtmp*1000000)    .EQ. -1916182)
   !sp
-  write (*,*) 'Thiemsp(0.2)           =', thiem(0.2_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))
-  write (*,*) 'Thiemsp(0.3)           =', thiem(0.3_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))
+  write (*,*) 'Thiemsp(0.2) =', thiem(0.2_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))
+  write (*,*) 'Thiemsp(0.3) =', thiem(0.3_sp, (/Ktest /), (/Reftest , hreftest , Qwtest , Ltest /))
   !dp
-  write (*,*) 'Thiemdp(0.2)           =', thiem(0.2_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))
-  write (*,*) 'Thiemdp(0.3)           =', thiem(0.3_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))
+  write (*,*) 'Thiemdp(0.2) =', thiem(0.2_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))
+  write (*,*) 'Thiemdp(0.3) =', thiem(0.3_dp, (/Ktestd/), (/Reftestd, hreftestd, Qwtestd, Ltestd/))
 
   write (*,*) ' '
 
@@ -110,50 +118,54 @@ program test
   ! ext_Thiem3d_dp(0.2)  =  -1.5541790860603071   optional
   ! ext_Thiem3d_dp(0.3)  =  -1.1627453616249193   optional
 
-  isgood = isgood .and. (nint(ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest/),&
-       & (/Reftest , hreftest , Qwtest , Ltest  /))*1000)          .EQ. -4195)
-  isgood = isgood .and. (nint(ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest/),&
-       & (/Reftest , hreftest , Qwtest , Ltest  /))*1000)          .EQ. -3132)
-  isgood = isgood .and. (nint(ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest/),&
-       & (/Reftest , hreftest , Qwtest , Ltest  /),&
-       & .false., 1.0_sp)*1000)                            .EQ. -1554)
-  isgood = isgood .and. (nint(ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest/),&
-       & (/Reftest , hreftest , Qwtest , Ltest  /),&
-       & .false., 1.0_sp)*1000)                            .EQ. -1163)
-  isgood = isgood .and. (nint(ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
-       & (/Reftestd, hreftestd, Qwtestd, Ltestd/))*1000000).EQ. -4194527)
-  isgood = isgood .and. (nint(ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
-       & (/Reftestd, hreftestd, Qwtestd, Ltestd/))*1000000).EQ. -3132098)
-  isgood = isgood .and. (nint(ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
-       & (/Reftestd, hreftestd, Qwtestd, Ltestd/),&
-       & .false., 1.0_dp)*1000000)                         .EQ. -1554179)
-  isgood = isgood .and. (nint(ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
-       & (/Reftestd, hreftestd, Qwtestd, Ltestd/),&
-       & .false., 1.0_dp)*1000000)                         .EQ. -1162745)
+  stmp = ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest/), &
+       (/Reftest , hreftest , Qwtest , Ltest  /))
+  isgood = isgood .and. (nint(stmp*1000)          .EQ. -4195)
+  stmp = ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest/), &
+       (/Reftest , hreftest , Qwtest , Ltest  /))
+  isgood = isgood .and. (nint(stmp*1000)          .EQ. -3132)
+  stmp = ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest/), &
+       (/Reftest , hreftest , Qwtest , Ltest  /), .false., 1.0_sp)
+  isgood = isgood .and. (nint(stmp*1000)                            .EQ. -1554)
+  stmp = ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest/), &
+       (/Reftest , hreftest , Qwtest , Ltest  /), .false., 1.0_sp)
+  isgood = isgood .and. (nint(stmp*1000)                            .EQ. -1163)
+  dtmp = ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/), &
+       (/Reftestd, hreftestd, Qwtestd, Ltestd/))
+  isgood = isgood .and. (nint(dtmp*1000000).EQ. -4194527)
+  dtmp = ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/), &
+       (/Reftestd, hreftestd, Qwtestd, Ltestd/))
+  isgood = isgood .and. (nint(dtmp*1000000).EQ. -3132098)
+  dtmp = ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/), &
+       (/Reftestd, hreftestd, Qwtestd, Ltestd/), .false., 1.0_dp)
+  isgood = isgood .and. (nint(dtmp*1000000)                         .EQ. -1554179)
+  dtmp = ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/), &
+       (/Reftestd, hreftestd, Qwtestd, Ltestd/), .false., 1.0_dp)
+  isgood = isgood .and. (nint(dtmp*1000000)                         .EQ. -1162745)
   !sp
-  write (*,*) 'ext_Thiem3d_sp(0.2)_std=', ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest /),&
-       & (/Reftest , hreftest , Qwtest , Ltest /))
-  write (*,*) 'ext_Thiem3d_sp(0.3)_std=', ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest /),&
-       & (/Reftest , hreftest , Qwtest , Ltest /))
+  write (*,*) 'ext_Thiem3d_sp(0.2)_std=', ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest /), &
+       (/Reftest , hreftest , Qwtest , Ltest /))
+  write (*,*) 'ext_Thiem3d_sp(0.3)_std=', ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest /), &
+       (/Reftest , hreftest , Qwtest , Ltest /))
   !with optional inputs
-  write (*,*) 'ext_Thiem3d_sp(0.2)_opt=', ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest /),&
-       & (/Reftest , hreftest , Qwtest , Ltest /),&
-       & .false., 1.0_sp)
-  write (*,*) 'ext_Thiem3d_sp(0.3)_opt=', ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest /),&
-       & (/Reftest , hreftest , Qwtest , Ltest /),&
-       & .false., 1.0_sp)
+  write (*,*) 'ext_Thiem3d_sp(0.2)_opt=', ext_thiem3d(0.2_sp, (/Ktest , vartest , corrtest , anisotest /), &
+       (/Reftest , hreftest , Qwtest , Ltest /), &
+       .false., 1.0_sp)
+  write (*,*) 'ext_Thiem3d_sp(0.3)_opt=', ext_thiem3d(0.3_sp, (/Ktest , vartest , corrtest , anisotest /), &
+       (/Reftest , hreftest , Qwtest , Ltest /), &
+       .false., 1.0_sp)
   !dp
-  write (*,*) 'ext_Thiem3d_dp(0.2)_std=', ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
-       & (/Reftestd, hreftestd, Qwtestd, Ltestd/))
-  write (*,*) 'ext_Thiem3d_dp(0.3)_std=', ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
-       & (/Reftestd, hreftestd, Qwtestd, Ltestd/))
+  write (*,*) 'ext_Thiem3d_dp(0.2)_std=', ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/), &
+       (/Reftestd, hreftestd, Qwtestd, Ltestd/))
+  write (*,*) 'ext_Thiem3d_dp(0.3)_std=', ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/), &
+       (/Reftestd, hreftestd, Qwtestd, Ltestd/))
   !with optional inputs
-  write (*,*) 'ext_Thiem3d_dp(0.2)_opt=', ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
-       & (/Reftestd, hreftestd, Qwtestd, Ltestd/),&
-       & .false., 1.0_dp)
-  write (*,*) 'ext_Thiem3d_dp(0.3)_opt=', ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/),&
-       & (/Reftestd, hreftestd, Qwtestd, Ltestd/),&
-       & .false., 1.0_dp)
+  write (*,*) 'ext_Thiem3d_dp(0.2)_opt=', ext_thiem3d(0.2_dp, (/Ktestd, vartestd, corrtestd, anisotestd/), &
+       (/Reftestd, hreftestd, Qwtestd, Ltestd/), &
+       .false., 1.0_dp)
+  write (*,*) 'ext_Thiem3d_dp(0.3)_opt=', ext_thiem3d(0.3_dp, (/Ktestd, vartestd, corrtestd, anisotestd/), &
+       (/Reftestd, hreftestd, Qwtestd, Ltestd/), &
+       .false., 1.0_dp)
 
   write (*,*) ' '
 
@@ -169,34 +181,42 @@ program test
   ! ext_Thiem2d_dp(0.2)  =  -2.5653048154494607   optional
   ! ext_Thiem2d_dp(0.3)  =  -1.9197882246039830   optional
 
-  isgood = isgood .and. (nint(ext_thiem2d(0.2_sp, (/TGtest , vartest , corrtest /),&
-       &(/Reftest , hreftest , Qwtest /))*1000)                    .EQ. -2577)
-  isgood = isgood .and. (nint(ext_thiem2d(0.3_sp, (/TGtest , vartest , corrtest /),&
-       &(/Reftest , hreftest , Qwtest /))*1000)                    .EQ. -1930)
-  isgood = isgood .and. (nint(ext_thiem2d(0.2_sp, (/TGtest , vartest , corrtest /),&
-       &(/Reftest , hreftest , Qwtest /),1.0_sp)*1000)             .EQ. -2565)
-  isgood = isgood .and. (nint(ext_thiem2d(0.3_sp, (/TGtest , vartest , corrtest /),&
-       &(/Reftest , hreftest , Qwtest /),1.0_sp)*1000)             .EQ. -1920)
-  isgood = isgood .and. (nint(ext_thiem2d(0.2_dp, (/TGtestd, vartestd, corrtestd/),&
-       &(/Reftestd, hreftestd, Qwtestd/))*1000000)                 .EQ. -2576545)
-  isgood = isgood .and. (nint(ext_thiem2d(0.3_dp, (/TGtestd, vartestd, corrtestd/),&
-       &(/Reftestd, hreftestd, Qwtestd/))*1000000)                 .EQ. -1930433)
-  isgood = isgood .and. (nint(ext_thiem2d(0.2_dp, (/TGtestd,vartestd,corrtestd/),&
-       &(/Reftestd,hreftestd,Qwtestd/),1.0_dp)*1000000)            .EQ. -2565305)
-  isgood = isgood .and. (nint(ext_thiem2d(0.3_dp, (/TGtestd,vartestd,corrtestd/),&
-       &(/Reftestd,hreftestd,Qwtestd/),1.0_dp)*1000000)            .EQ. -1919788)
+  stmp = ext_thiem2d(0.2_sp, (/TGtest , vartest , corrtest /), (/Reftest , hreftest , Qwtest /))
+  isgood = isgood .and. (nint(stmp*1000)                    .EQ. -2577)
+  stmp = ext_thiem2d(0.3_sp, (/TGtest , vartest , corrtest /), (/Reftest , hreftest , Qwtest /))
+  isgood = isgood .and. (nint(stmp*1000)                    .EQ. -1930)
+  stmp = ext_thiem2d(0.2_sp, (/TGtest , vartest , corrtest /), (/Reftest , hreftest , Qwtest /),1.0_sp)
+  isgood = isgood .and. (nint(stmp*1000)             .EQ. -2565)
+  stmp = ext_thiem2d(0.3_sp, (/TGtest , vartest , corrtest /), (/Reftest , hreftest , Qwtest /),1.0_sp)
+  isgood = isgood .and. (nint(stmp*1000)             .EQ. -1920)
+  dtmp = ext_thiem2d(0.2_dp, (/TGtestd, vartestd, corrtestd/), (/Reftestd, hreftestd, Qwtestd/))
+  isgood = isgood .and. (nint(dtmp*1000000)                 .EQ. -2576545)
+  dtmp = ext_thiem2d(0.3_dp, (/TGtestd, vartestd, corrtestd/), (/Reftestd, hreftestd, Qwtestd/))
+  isgood = isgood .and. (nint(dtmp*1000000)                 .EQ. -1930433)
+  dtmp = ext_thiem2d(0.2_dp, (/TGtestd,vartestd,corrtestd/), (/Reftestd,hreftestd,Qwtestd/),1.0_dp)
+  isgood = isgood .and. (nint(dtmp*1000000)            .EQ. -2565305)
+  dtmp = ext_thiem2d(0.3_dp, (/TGtestd,vartestd,corrtestd/), (/Reftestd,hreftestd,Qwtestd/),1.0_dp)
+  isgood = isgood .and. (nint(dtmp*1000000)            .EQ. -1919788)
   !sp
-  write (*,*) 'ext_Thiem2d_sp(0.2)_std=', ext_thiem2d(0.2_sp, (/TGtest , vartest , corrtest /), (/Reftest , hreftest , Qwtest /))
-  write (*,*) 'ext_Thiem2d_sp(0.3)_std=', ext_thiem2d(0.3_sp, (/TGtest , vartest , corrtest /), (/Reftest , hreftest , Qwtest /))
+  write (*,*) 'ext_Thiem2d_sp(0.2)_std=', ext_thiem2d(0.2_sp, (/TGtest , vartest , corrtest /), &
+       (/Reftest , hreftest , Qwtest /))
+  write (*,*) 'ext_Thiem2d_sp(0.3)_std=', ext_thiem2d(0.3_sp, (/TGtest , vartest , corrtest /), &
+       (/Reftest , hreftest , Qwtest /))
   !with optional inputs
-  write (*,*) 'ext_Thiem2d_sp(0.2)_opt=', ext_thiem2d(0.2_sp,(/TGtest ,vartest ,corrtest /),(/Reftest ,hreftest ,Qwtest /),1.0_sp)
-  write (*,*) 'ext_Thiem2d_sp(0.3)_opt=', ext_thiem2d(0.3_sp,(/TGtest ,vartest ,corrtest /),(/Reftest ,hreftest ,Qwtest /),1.0_sp)
+  write (*,*) 'ext_Thiem2d_sp(0.2)_opt=', ext_thiem2d(0.2_sp,(/TGtest ,vartest ,corrtest /), &
+       (/Reftest ,hreftest ,Qwtest /),1.0_sp)
+  write (*,*) 'ext_Thiem2d_sp(0.3)_opt=', ext_thiem2d(0.3_sp,(/TGtest ,vartest ,corrtest /), &
+       (/Reftest ,hreftest ,Qwtest /),1.0_sp)
   !dp
-  write (*,*) 'ext_Thiem2d_dp(0.2)_std=', ext_thiem2d(0.2_dp, (/TGtestd, vartestd, corrtestd/), (/Reftestd, hreftestd, Qwtestd/))
-  write (*,*) 'ext_Thiem2d_dp(0.3)_std=', ext_thiem2d(0.3_dp, (/TGtestd, vartestd, corrtestd/), (/Reftestd, hreftestd, Qwtestd/))
+  write (*,*) 'ext_Thiem2d_dp(0.2)_std=', ext_thiem2d(0.2_dp, (/TGtestd, vartestd, corrtestd/), &
+       (/Reftestd, hreftestd, Qwtestd/))
+  write (*,*) 'ext_Thiem2d_dp(0.3)_std=', ext_thiem2d(0.3_dp, (/TGtestd, vartestd, corrtestd/), &
+       (/Reftestd, hreftestd, Qwtestd/))
   !with optional inputs
-  write (*,*) 'ext_Thiem2d_dp(0.2)_opt=', ext_thiem2d(0.2_dp,(/TGtestd,vartestd,corrtestd/),(/Reftestd,hreftestd,Qwtestd/),1.0_dp)
-  write (*,*) 'ext_Thiem2d_dp(0.3)_opt=', ext_thiem2d(0.3_dp,(/TGtestd,vartestd,corrtestd/),(/Reftestd,hreftestd,Qwtestd/),1.0_dp)
+  write (*,*) 'ext_Thiem2d_dp(0.2)_opt=', ext_thiem2d(0.2_dp,(/TGtestd,vartestd,corrtestd/), &
+       (/Reftestd,hreftestd,Qwtestd/),1.0_dp)
+  write (*,*) 'ext_Thiem2d_dp(0.3)_opt=', ext_thiem2d(0.3_dp,(/TGtestd,vartestd,corrtestd/), &
+       (/Reftestd,hreftestd,Qwtestd/),1.0_dp)
 
   write (*,*) ' '
 
@@ -212,14 +232,22 @@ program test
   ! Theisdp(r=.3,t=.2)   = -0.14212753460648780
   ! Theisdp(r=.3,t=.3)   = -0.27083461355368116
 
-  isgood = isgood .and. (nint(theis(0.2_sp, 0.0_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )*1000)         .EQ. 0)
-  isgood = isgood .and. (nint(theis(0.2_sp, 0.1_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )*1000)         .EQ. -175)
-  isgood = isgood .and. (nint(theis(0.3_sp, 0.2_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )*1000)         .EQ. -142)
-  isgood = isgood .and. (nint(theis(0.3_sp, 0.3_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )*1000)         .EQ. -271)
-  isgood = isgood .and. (nint(theis(0.2_dp, 0.0_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )*1000000)      .EQ. 0)
-  isgood = isgood .and. (nint(theis(0.2_dp, 0.1_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )*1000000)      .EQ. -174580)
-  isgood = isgood .and. (nint(theis(0.3_dp, 0.2_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )*1000000)      .EQ. -142128)
-  isgood = isgood .and. (nint(theis(0.3_dp, 0.3_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )*1000000)      .EQ. -270835)
+  stmp = theis(0.2_sp, 0.0_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )
+  isgood = isgood .and. (nint(stmp*1000)         .EQ. 0)
+  stmp = theis(0.2_sp, 0.1_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )
+  isgood = isgood .and. (nint(stmp*1000)         .EQ. -175)
+  stmp = theis(0.3_sp, 0.2_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )
+  isgood = isgood .and. (nint(stmp*1000)         .EQ. -142)
+  stmp = theis(0.3_sp, 0.3_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )
+  isgood = isgood .and. (nint(stmp*1000)         .EQ. -271)
+  dtmp = theis(0.2_dp, 0.0_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )
+  isgood = isgood .and. (nint(dtmp*1000000)      .EQ. 0)
+  dtmp = theis(0.2_dp, 0.1_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )
+  isgood = isgood .and. (nint(dtmp*1000000)      .EQ. -174580)
+  dtmp = theis(0.3_dp, 0.2_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )
+  isgood = isgood .and. (nint(dtmp*1000000)      .EQ. -142128)
+  dtmp = theis(0.3_dp, 0.3_dp, (/Stestd, Ktestd/),   (/Qwtestd, Ltestd/) )
+  isgood = isgood .and. (nint(dtmp*1000000)      .EQ. -270835)
   !sp
   write (*,*) 'Theissp(r=.2,t=.0)     =', theis(0.2_sp, 0.0_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )
   write (*,*) 'Theissp(r=.2,t=.1)     =', theis(0.2_sp, 0.1_sp, (/Stest , Ktest /),   (/Qwtest , Ltest /) )
@@ -276,15 +304,24 @@ program test
      end do
   end do
 
-  isgood = isgood .and. (nint(fpoints_dp(1,1)*1000000) .eq. -2672468)
-  isgood = isgood .and. (nint(fpoints_dp(1,2)*1000000) .eq. -3440928)
-  isgood = isgood .and. (nint(fpoints_dp(1,3)*1000000) .eq. -5738408)
-  isgood = isgood .and. (nint(fpoints_dp(2,1)*1000000) .eq. -1225088)
-  isgood = isgood .and. (nint(fpoints_dp(2,2)*1000000) .eq. -1842369)
-  isgood = isgood .and. (nint(fpoints_dp(2,3)*1000000) .eq. -4001209)
-  isgood = isgood .and. (nint(fpoints_dp(3,1)*1000000) .eq. -605065)
-  isgood = isgood .and. (nint(fpoints_dp(3,2)*1000000) .eq. -1095054)
-  isgood = isgood .and. (nint(fpoints_dp(3,3)*1000000) .eq. -3054578)
+  dtmp = fpoints_dp(1,1)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -2672468)
+  dtmp = fpoints_dp(1,2)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -3440928)
+  dtmp = fpoints_dp(1,3)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -5738408)
+  dtmp = fpoints_dp(2,1)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -1225088)
+  dtmp = fpoints_dp(2,2)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -1842369)
+  dtmp = fpoints_dp(2,3)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -4001209)
+  dtmp = fpoints_dp(3,1)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -605065)
+  dtmp = fpoints_dp(3,2)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -1095054)
+  dtmp = fpoints_dp(3,3)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -3054578)
 
   do m=1_i4,3_i4
      do n=1_i4,3_i4
@@ -334,15 +371,24 @@ program test
      end do
   end do
 
-  isgood = isgood .and. (nint(fpoints_sp(1,1)*1000) .eq. -2672)
-  isgood = isgood .and. (nint(fpoints_sp(1,2)*1000) .eq. -3441)
-  isgood = isgood .and. (nint(fpoints_sp(1,3)*1000) .eq. -5738)
-  isgood = isgood .and. (nint(fpoints_sp(2,1)*1000) .eq. -1225)
-  isgood = isgood .and. (nint(fpoints_sp(2,2)*1000) .eq. -1842)
-  isgood = isgood .and. (nint(fpoints_sp(2,3)*1000) .eq. -4001)
-  isgood = isgood .and. (nint(fpoints_sp(3,1)*1000) .eq. - 605)
-  isgood = isgood .and. (nint(fpoints_sp(3,2)*1000) .eq. -1095)
-  isgood = isgood .and. (nint(fpoints_sp(3,3)*1000) .eq. -3055)
+  stmp = fpoints_sp(1,1)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -2672)
+  stmp = fpoints_sp(1,2)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -3441)
+  stmp = fpoints_sp(1,3)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -5738)
+  stmp = fpoints_sp(2,1)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -1225)
+  stmp = fpoints_sp(2,2)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -1842)
+  stmp = fpoints_sp(2,3)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -4001)
+  stmp = fpoints_sp(3,1)
+  isgood = isgood .and. (nint(stmp*1000) .eq. - 605)
+  stmp = fpoints_sp(3,2)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -1095)
+  stmp = fpoints_sp(3,3)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -3055)
 
   do m=1_i4,3_i4
      do n=1_i4,3_i4
@@ -397,15 +443,24 @@ program test
      end do
   end do
 
-  isgood = isgood .and. (nint(fpoints_dp(1,1)*1000000) .eq. -2671974)
-  isgood = isgood .and. (nint(fpoints_dp(1,2)*1000000) .eq. -3411480)
-  isgood = isgood .and. (nint(fpoints_dp(1,3)*1000000) .eq. -5464167)
-  isgood = isgood .and. (nint(fpoints_dp(2,1)*1000000) .eq. -1245267)
-  isgood = isgood .and. (nint(fpoints_dp(2,2)*1000000) .eq. -1829371)
-  isgood = isgood .and. (nint(fpoints_dp(2,3)*1000000) .eq. -3745808)
-  isgood = isgood .and. (nint(fpoints_dp(3,1)*1000000) .eq. -643539)
-  isgood = isgood .and. (nint(fpoints_dp(3,2)*1000000) .eq. -1106907)
-  isgood = isgood .and. (nint(fpoints_dp(3,3)*1000000) .eq. -2826860)
+  dtmp = fpoints_dp(1,1)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -2671974)
+  dtmp = fpoints_dp(1,2)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -3411480)
+  dtmp = fpoints_dp(1,3)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -5464167)
+  dtmp = fpoints_dp(2,1)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -1245267)
+  dtmp = fpoints_dp(2,2)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -1829371)
+  dtmp = fpoints_dp(2,3)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -3745808)
+  dtmp = fpoints_dp(3,1)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -643539)
+  dtmp = fpoints_dp(3,2)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -1106907)
+  dtmp = fpoints_dp(3,3)
+  isgood = isgood .and. (nint(dtmp*1000000) .eq. -2826860)
 
   do m=1_i4,3_i4
      do n=1_i4,3_i4
@@ -454,15 +509,24 @@ program test
      end do
   end do
 
-  isgood = isgood .and. (nint(fpoints_sp(1,1)*1000) .eq. -2672)
-  isgood = isgood .and. (nint(fpoints_sp(1,2)*1000) .eq. -3411)
-  isgood = isgood .and. (nint(fpoints_sp(1,3)*1000) .eq. -5464)
-  isgood = isgood .and. (nint(fpoints_sp(2,1)*1000) .eq. -1245)
-  isgood = isgood .and. (nint(fpoints_sp(2,2)*1000) .eq. -1829)
-  isgood = isgood .and. (nint(fpoints_sp(2,3)*1000) .eq. -3746)
-  isgood = isgood .and. (nint(fpoints_sp(3,1)*1000) .eq. -644)
-  isgood = isgood .and. (nint(fpoints_sp(3,2)*1000) .eq. -1107)
-  isgood = isgood .and. (nint(fpoints_sp(3,3)*1000) .eq. -2827)
+  stmp = fpoints_sp(1,1)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -2672)
+  stmp = fpoints_sp(1,2)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -3411)
+  stmp = fpoints_sp(1,3)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -5464)
+  stmp = fpoints_sp(2,1)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -1245)
+  stmp = fpoints_sp(2,2)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -1829)
+  stmp = fpoints_sp(2,3)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -3746)
+  stmp = fpoints_sp(3,1)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -644)
+  stmp = fpoints_sp(3,2)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -1107)
+  stmp = fpoints_sp(3,3)
+  isgood = isgood .and. (nint(stmp*1000) .eq. -2827)
 
   do m=1_i4,3_i4
      do n=1_i4,3_i4

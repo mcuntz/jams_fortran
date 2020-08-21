@@ -9,7 +9,7 @@ program pi_index_test
   implicit none
 
   integer(i4), parameter                 :: npara = 4                    ! number of parameter
-  integer(i4), parameter                 :: nsets = 400                  ! number of parametersets 
+  integer(i4), parameter                 :: nsets = 400                  ! number of parametersets
   integer(i4), parameter                 :: nx = 10                      ! number of variable values
   real(dp),    parameter                 :: delta = 0.01_dp              ! delta used for derivative approximation
   integer(i8)                            :: skip = 30000_i8              ! used for generating parameter sets via sobol sequences
@@ -20,14 +20,14 @@ program pi_index_test
 
   ! PI index
   real(dp),    dimension(npara)          :: sample, sample_delta         ! parameter sets: nominal and 1% changed set
-  real(dp),    dimension(nx)             :: output_ref, output_delta     ! model output (time series) 
+  real(dp),    dimension(nx)             :: output_ref, output_delta     ! model output (time series)
   !                                                                      ! for nominal and 1% changed parameter set
   real(dp),    dimension(nsets*nx,npara) :: s_matrix                     ! sensitivity matrix S
-  real(dp),    dimension(npara)          :: pi                           ! Parameter importance index 
+  real(dp),    dimension(npara)          :: pi                           ! Parameter importance index
   real(dp),    dimension(:), allocatable :: bi                           ! B index
-  integer(i4), dimension(:), allocatable :: counter_pi                   ! number of valid entries in ith column of matrix S 
+  integer(i4), dimension(:), allocatable :: counter_pi                   ! number of valid entries in ith column of matrix S
   integer(i8)                            :: seed                         ! seed sobol sequence
- 
+
   ! Dummy variables
   integer(i4)                            :: set, para, i
   logical                                :: isgood = .true.
@@ -50,7 +50,7 @@ program pi_index_test
      ! sobol sequence
      call sobol(int(npara,i8), skip, sample)
      ! scaling
-     sample(:)  = ParaRange(:,1) + sample(:) * (ParaRange(:,2) - ParaRange(:,1)) 
+     sample(:)  = ParaRange(:,1) + sample(:) * (ParaRange(:,2) - ParaRange(:,1))
      output_ref = model(sample,x)
      do para=1,npara
         sample_delta(:)    = sample(:)
@@ -64,7 +64,7 @@ program pi_index_test
   ! Calculate Parameter Importance (PI) index
   ! ------------------------------------------------------------------
   call pi_index(pi, s=s_matrix, norm=1_i4, domad=.true., counter=counter_pi, b_index=bi)
-  
+
   ! ------------------------------------------------------------------
   ! Printing and checking
   ! ------------------------------------------------------------------

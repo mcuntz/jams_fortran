@@ -1,6 +1,6 @@
 program test_mcmc
 
-  use mo_kind,       only: dp,i4, i8
+  use mo_kind,       only: dp, i4, i8
   use mo_ansi_colors, only: color, c_red, c_green
   use mo_likelihood, only: setmeas, loglikelihood_dp, loglikelihood_stddev_dp
   use mo_mcmc,       only: mcmc, mcmc_stddev
@@ -18,6 +18,7 @@ program test_mcmc
   integer(i8)                           :: seed
   ! for result handling
   integer(i4)                           :: i, samples
+  real(dp)                              :: dtmp1, dtmp2, dtmp3
 
   ! loading the data points observed
   call setmeas()
@@ -32,7 +33,7 @@ program test_mcmc
   write(*,*) '---------------------------------------------------------------------------------------------'
   p = loglikelihood_dp(parabest)
   write(*,*) 'log-likelihood = ',p
-  
+
   ! initializing the ranges of parameters
   rangePar(:,1) = -10.0_dp
   rangePar(:,2) =  10.0_dp
@@ -43,9 +44,9 @@ program test_mcmc
   ! fixing seeds for test case:
   seed = 62001519_i8
 
-  ! starting MCMC: 
+  ! starting MCMC:
   !     (1) Burn-in will be performed to optimize settings for MCMC
-  !     (2) posterior distribution of the parameters at the minimum (best parameterset) 
+  !     (2) posterior distribution of the parameters at the minimum (best parameterset)
   !         will be sampled by MCMC
   call mcmc(loglikelihood_dp, parabest, rangePar, mcmc_paras, burnin_paras, &
        ParaSelectMode_in=2_i4,tmp_file='A_make_check_test_file',              &
@@ -59,7 +60,7 @@ program test_mcmc
   write(*,*) ''
   write(*,*) 'Number of parameter sets sampled'
   ! number of samples per chain x number of chains
-  samples = size(mcmc_paras,1) 
+  samples = size(mcmc_paras,1)
   write(*,*) samples
 
   write(*,*) ''
@@ -76,9 +77,12 @@ program test_mcmc
   ! para # 3  =    2.8306538403277148 +/-   0.1384711293432960
   write(*,*) ''
   write(*,*) '-----------------------------------'
-  if ( (nint(stddev(mcmc_paras(:,1), ddof=1)*10000000,i4) .eq. 583_i4)   .and. &
-       (nint(stddev(mcmc_paras(:,2), ddof=1)*10000000,i4) .eq. 60238_i4) .and. &
-       (nint(stddev(mcmc_paras(:,3), ddof=1)*10000000,i4) .eq. 1384711_i4) ) then
+  dtmp1 = stddev(mcmc_paras(:,1), ddof=1)
+  dtmp2 = stddev(mcmc_paras(:,2), ddof=1)
+  dtmp3 = stddev(mcmc_paras(:,3), ddof=1)
+  if ( (nint(dtmp1*10000000,i4) .eq. 583_i4)   .and. &
+       (nint(dtmp2*10000000,i4) .eq. 60238_i4) .and. &
+       (nint(dtmp3*10000000,i4) .eq. 1384711_i4) ) then
      write(*,*) 'mo_mcmc: mcmc ', color('o.k.', c_green)
   else
      write(*,*) 'mo_mcmc: mcmc ', color('failed', c_red)
@@ -89,7 +93,7 @@ program test_mcmc
   write(*,*) ' (A2) "real" likelihood  (sigma is an error model or given) --> e.g. loglikelihood of mo_likelihood'
   write(*,*) '      RESTART '
   write(*,*) '---------------------------------------------------------------------------------------------'
-  ! starting MCMC: 
+  ! starting MCMC:
   !     (1) starting from restart file
   call mcmc(loglikelihood_dp, parabest, rangePar, mcmc_paras, burnin_paras, &
        ParaSelectMode_in=2_i4,tmp_file='A_make_check_test_file',              &
@@ -103,7 +107,7 @@ program test_mcmc
   write(*,*) ''
   write(*,*) 'Number of parameter sets sampled'
   ! number of samples per chain x number of chains
-  samples = size(mcmc_paras,1) 
+  samples = size(mcmc_paras,1)
   write(*,*) samples
 
   write(*,*) ''
@@ -120,9 +124,12 @@ program test_mcmc
   ! para # 3  =    2.8306538403277148 +/-   0.1384711293432960
   write(*,*) ''
   write(*,*) '-----------------------------------'
-  if ( (nint(stddev(mcmc_paras(:,1), ddof=1)*10000000,i4) .eq. 583_i4)   .and. &
-       (nint(stddev(mcmc_paras(:,2), ddof=1)*10000000,i4) .eq. 60238_i4) .and. &
-       (nint(stddev(mcmc_paras(:,3), ddof=1)*10000000,i4) .eq. 1384711_i4) ) then
+  dtmp1 = stddev(mcmc_paras(:,1), ddof=1)
+  dtmp2 = stddev(mcmc_paras(:,2), ddof=1)
+  dtmp3 = stddev(mcmc_paras(:,3), ddof=1)
+  if ( (nint(dtmp1*10000000,i4) .eq. 583_i4)   .and. &
+       (nint(dtmp2*10000000,i4) .eq. 60238_i4) .and. &
+       (nint(dtmp3*10000000,i4) .eq. 1384711_i4) ) then
      write(*,*) 'mo_mcmc: mcmc with restart ', color('o.k.', c_green)
   else
      write(*,*) 'mo_mcmc: mcmc with restart ', color('failed', c_red)
@@ -151,9 +158,9 @@ program test_mcmc
   ! fixing seeds for test case:
   seed = 62001519_i8
 
-  ! starting MCMC: 
+  ! starting MCMC:
   !     (1) Burn-in will be performed to optimize settings for MCMC
-  !     (2) posterior distribution of the parameters at the minimum (best parameterset) 
+  !     (2) posterior distribution of the parameters at the minimum (best parameterset)
   !         will be sampled by MCMC
   call mcmc_stddev(loglikelihood_stddev_dp, parabest, rangePar, mcmc_paras, burnin_paras, &
        ParaSelectMode_in=2_i4,tmp_file='B_make_check_test_file',              &
@@ -166,7 +173,7 @@ program test_mcmc
   write(*,*) ''
   write(*,*) 'Number of parameter sets sampled'
   ! number of samples per chain x number of chains
-  samples = size(mcmc_paras,1) 
+  samples = size(mcmc_paras,1)
   write(*,*) samples
 
   write(*,*) ''
@@ -183,9 +190,12 @@ program test_mcmc
   ! para # 3  =    2.8654065450088502 +/-   0.1498533843248984
   write(*,*) ''
   write(*,*) '-----------------------------------'
-  if ( (nint(stddev(mcmc_paras(:,1), ddof=1)*10000000,i4) .eq. 632_i4)   .and. &
-       (nint(stddev(mcmc_paras(:,2), ddof=1)*10000000,i4) .eq. 66281_i4) .and. &
-       (nint(stddev(mcmc_paras(:,3), ddof=1)*10000000,i4) .eq. 1498534_i4) ) then
+  dtmp1 = stddev(mcmc_paras(:,1), ddof=1)
+  dtmp2 = stddev(mcmc_paras(:,2), ddof=1)
+  dtmp3 = stddev(mcmc_paras(:,3), ddof=1)
+  if ( (nint(dtmp1*10000000,i4) .eq. 632_i4)   .and. &
+       (nint(dtmp2*10000000,i4) .eq. 66281_i4) .and. &
+       (nint(dtmp3*10000000,i4) .eq. 1498534_i4) ) then
      write(*,*) 'mo_mcmc: mcmc_stddev ', color('o.k.', c_green)
   else
      write(*,*) 'mo_mcmc: mcmc_stddev ', color('failed', c_red)

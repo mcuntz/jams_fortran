@@ -2,7 +2,7 @@
 
 !> \brief Quicksort array or indices
 
-!> \details This module contains a sorting routines from numerical recipes
+!> \details This module contains sorting routines from numerical recipes
 !> 1. quicksort one array
 !> 2. return indeces that would sort the array
 
@@ -11,7 +11,7 @@
 
 MODULE mo_sort
 
-  ! This module contains a sorting routines from numerical recipes:
+  ! This module contains sorting routines from numerical recipes:
   ! 1. quicksort one array
   ! 2. return indeces that would sort the array
 

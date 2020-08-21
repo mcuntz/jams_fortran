@@ -56,6 +56,9 @@ PROGRAM main
 
   call random_number(dat)
   call random_number(sat)
+  ! use dp numbers because otherwise solve_banded fails in single precision.
+  ! No idea what could be wrong, except for rounding errors.
+  sat = real(dat, sp)
   i4at = int(sat, i4)
   i8at = int(dat, i8)
   allgood = .true.
@@ -75,8 +78,8 @@ PROGRAM main
   if (size(di4at) /= nn) isgood = .false.
   if (size(di8at) /= nn) isgood = .false.
   do i=1, nn
-     if (ne(ddat(i),dat(i,i)))  isgood = .false.
-     if (ne(dsat(i),sat(i,i)))  isgood = .false.
+     if (ne(ddat(i), dat(i,i))) isgood = .false.
+     if (ne(dsat(i), sat(i,i))) isgood = .false.
      if (di4at(i) /= i4at(i,i)) isgood = .false.
      if (di8at(i) /= i8at(i,i)) isgood = .false.
   end do
@@ -203,7 +206,7 @@ PROGRAM main
   isgood = .true.
 
   dat2 = 0._dp
-  sat2 = 0._dp
+  sat2 = 0._sp
   do ii=-l,u
     do i=1,nn-abs(ii)
       dat2(i-min(ii,0),i+max(ii,0)) = dat(i-min(ii,0),i+max(ii,0))

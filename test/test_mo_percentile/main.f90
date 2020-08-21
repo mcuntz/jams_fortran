@@ -13,8 +13,25 @@ PROGRAM main
   REAL(sp), DIMENSION(10) :: sat
   REAL(sp), DIMENSION(2)  :: squa
 
+  real(sp) :: stmp
+  real(dp) :: dtmp
+
 #ifndef __ABSOFT__
+#ifdef __GFORTRAN__
+  ! If arrays re too big, the flag -frecursive gives either
+  !   Illegal instruction: 4
+  ! or
+  !   Segmentation fault: 11
+  ! The large numbers work with gfortran if not -frecursive. Then it states
+  ! Warning: Array 'big' at (1) is larger than limit set by '-fmax-stack-var-size=',
+  ! moved from stack to static storage. This makes the procedure unsafe when called
+  ! recursively, or concurrently from multiple threads. Consider using '-frecursive',
+  ! or increase the -fmax-stack-var-size=' limit, or change the code to use an
+  ! ALLOCATABLE array. [-Wsurprising]
+  integer,  parameter :: nele = 100000
+#else
   integer,  parameter :: nele = 10000000
+#endif
   real(dp), dimension(nele) :: big, buf
   real(dp) :: med
   integer  :: i, istart, istop
@@ -22,29 +39,33 @@ PROGRAM main
 
   LOGICAL :: isgood
 
-  Write(*,*) ''
-  Write(*,*) 'Test mo_percentile.f90'
+  write(*,*) ''
+  write(*,*) 'Test mo_percentile.f90'
 
   ! Double precision
   isgood = .true.
   dat = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
-  isgood = isgood .and. eq(median(dat),5.5_dp)
-  isgood = isgood .and. eq(median(dat,mask=ne(dat,10._dp)),5._dp)
-  isgood = isgood .and. eq(n_element(dat,4),4._dp)
-  isgood = isgood .and. eq(percentile(dat,95._dp),10._dp)
-  dqua = percentile(dat,(/50._dp,95._dp/))
-  isgood = isgood .and. eq(dqua(1),5._dp)
-  isgood = isgood .and. eq(dqua(2),10._dp)
-  dqua = percentile(dat,(/50._dp,75._dp/),mode_in=1_i4)
-  dqua = percentile(dat,(/50._dp,75._dp/),mode_in=3_i4)
-  dqua = percentile(dat,(/50._dp,75._dp/),mode_in=4_i4)
-  dqua = percentile(dat,(/50._dp,75._dp/),mode_in=5_i4)
-  dqua = percentile(dat,(/50._dp,75._dp/),mode_in=6_i4)
-  dqua = percentile(dat,(/50._dp,75._dp/),mode_in=7_i4)
-  dqua = percentile(dat,(/50._dp,75._dp/),mode_in=8_i4)
-  dqua = percentile(dat,(/50._dp,75._dp/),mode_in=2_i4)
-  isgood = isgood .and. eq(dqua(1),5._dp)
-  isgood = isgood .and. eq(dqua(2),7.5_dp)
+  dtmp = median(dat)
+  isgood = isgood .and. eq(dtmp, 5.5_dp)
+  dtmp = median(dat, mask=ne(dat, 10._dp))
+  isgood = isgood .and. eq(dtmp, 5._dp)
+  dtmp = n_element(dat, 4)
+  isgood = isgood .and. eq(dtmp, 4._dp)
+  dtmp = percentile(dat, 95._dp)
+  isgood = isgood .and. eq(dtmp, 10._dp)
+  dqua = percentile(dat, (/50._dp, 95._dp/))
+  isgood = isgood .and. eq(dqua(1), 5._dp)
+  isgood = isgood .and. eq(dqua(2), 10._dp)
+  dqua = percentile(dat,(/50._dp, 75._dp/), mode_in=1_i4)
+  dqua = percentile(dat,(/50._dp, 75._dp/), mode_in=3_i4)
+  dqua = percentile(dat,(/50._dp, 75._dp/), mode_in=4_i4)
+  dqua = percentile(dat,(/50._dp, 75._dp/), mode_in=5_i4)
+  dqua = percentile(dat,(/50._dp, 75._dp/), mode_in=6_i4)
+  dqua = percentile(dat,(/50._dp, 75._dp/), mode_in=7_i4)
+  dqua = percentile(dat,(/50._dp, 75._dp/), mode_in=8_i4)
+  dqua = percentile(dat,(/50._dp, 75._dp/), mode_in=2_i4)
+  isgood = isgood .and. eq(dqua(1), 5._dp)
+  isgood = isgood .and. eq(dqua(2), 7.5_dp)
 
   if (isgood) then
      write(*,*) 'mo_percentile double precision ', color('o.k.', c_green)
@@ -55,16 +76,20 @@ PROGRAM main
   ! Single precision
   isgood = .true.
   sat = (/ 1., 2., 3., 4., 5., 6., 7., 8., 9., 10. /)
-  isgood = isgood .and. eq(median(sat),5.5_sp)
-  isgood = isgood .and. eq(median(sat,mask=ne(sat,10._sp)),5._sp)
-  isgood = isgood .and. eq(n_element(sat,4),4._sp)
-  isgood = isgood .and. eq(percentile(sat,95._sp),10._sp)
-  squa = percentile(sat,(/50._sp,95._sp/))
-  isgood = isgood .and. eq(squa(1),5._sp)
-  isgood = isgood .and. eq(squa(2),10._sp)
-  squa = percentile(sat,(/50._sp,75._sp/),mode_in=2_i4)
-  isgood = isgood .and. eq(squa(1),5._sp)
-  isgood = isgood .and. eq(squa(2),7.5_sp)
+  stmp = median(sat)
+  isgood = isgood .and. eq(stmp, 5.5_sp)
+  stmp = median(sat, mask=ne(sat, 10._sp))
+  isgood = isgood .and. eq(stmp, 5._sp)
+  stmp = n_element(sat,4)
+  isgood = isgood .and. eq(stmp, 4._sp)
+  stmp = percentile(sat,95._sp)
+  isgood = isgood .and. eq(stmp, 10._sp)
+  squa = percentile(sat,(/50._sp, 95._sp/))
+  isgood = isgood .and. eq(squa(1), 5._sp)
+  isgood = isgood .and. eq(squa(2), 10._sp)
+  squa = percentile(sat,(/50._sp, 75._sp/), mode_in=2_i4)
+  isgood = isgood .and. eq(squa(1), 5._sp)
+  isgood = isgood .and. eq(squa(2), 7.5_sp)
 
   if (isgood) then
      write(*,*) 'mo_percentile single precision ', color('o.k.', c_green)

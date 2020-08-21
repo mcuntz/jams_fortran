@@ -795,15 +795,13 @@ contains
        if (idim /= ndim) stop "dump_netcdf_5d_sp: number of variable dimensions /= number of file variable dimensions."
 
        ! inquire dimensions
-       do i=1, ndim
+       do i=1, ndim-1
           call check(nf90_inquire_dimension(ncid, dimid(i), name, dims(i)))
-          if (i < ndim) then
-             if (trim(name) /= dnames(i)) stop "dump_netcdf_5d_sp: dimension name problem."
-             if (dims(i) /= size(arr,i)) stop "dump_netcdf_5d_sp: variable dimension /= file variable dimension."
-          else
-             if (trim(name) /= 'time') stop "dump_netcdf_5d_sp: time name problem."
-          endif
+          if (trim(name) /= dnames(i)) stop "dump_netcdf_5d_sp: dimension name problem."
+          if (dims(i) /= size(arr,i)) stop "dump_netcdf_5d_sp: variable dimension /= file variable dimension."
        enddo
+       call check(nf90_inquire_dimension(ncid, dimid(ndim), name, dims(ndim)))
+       if (trim(name) /= 'time') stop "dump_netcdf_5d_sp: time name problem."
 
        ! append
        start(:)      = 1
@@ -1573,15 +1571,13 @@ contains
        if (idim /= ndim) stop "dump_netcdf_5d_dp: number of variable dimensions /= number of file variable dimensions."
 
        ! inquire dimensions
-       do i=1, ndim
+       do i=1, ndim-1
           call check(nf90_inquire_dimension(ncid, dimid(i), name, dims(i)))
-          if (i < ndim) then
-             if (trim(name) /= dnames(i)) stop "dump_netcdf_5d_dp: dimension name problem."
-             if (dims(i) /= size(arr,i)) stop "dump_netcdf_5d_dp: variable dimension /= file variable dimension."
-          else
-             if (trim(name) /= 'time') stop "dump_netcdf_5d_dp: time name problem."
-          endif
+          if (trim(name) /= dnames(i)) stop "dump_netcdf_5d_dp: dimension name problem."
+          if (dims(i) /= size(arr,i)) stop "dump_netcdf_5d_dp: variable dimension /= file variable dimension."
        enddo
+       call check(nf90_inquire_dimension(ncid, dimid(ndim), name, dims(ndim)))
+       if (trim(name) /= 'time') stop "dump_netcdf_5d_dp: time name problem."
 
        ! append
        start(:)      = 1
@@ -2350,15 +2346,13 @@ contains
        if (idim /= ndim) stop "dump_netcdf_5d_i4: number of variable dimensions /= number of file variable dimensions."
 
        ! inquire dimensions
-       do i=1, ndim
+       do i=1, ndim-1
           call check(nf90_inquire_dimension(ncid, dimid(i), name, dims(i)))
-          if (i < ndim) then
-             if (trim(name) /= dnames(i)) stop "dump_netcdf_5d_i4: dimension name problem."
-             if (dims(i) /= size(arr,i)) stop "dump_netcdf_5d_i4: variable dimension /= file variable dimension."
-          else
-             if (trim(name) /= 'time') stop "dump_netcdf_5d_i4: time name problem."
-          endif
+          if (trim(name) /= dnames(i)) stop "dump_netcdf_5d_i4: dimension name problem."
+          if (dims(i) /= size(arr,i)) stop "dump_netcdf_5d_i4: variable dimension /= file variable dimension."
        enddo
+       call check(nf90_inquire_dimension(ncid, dimid(ndim), name, dims(ndim)))
+       if (trim(name) /= 'time') stop "dump_netcdf_5d_i4: time name problem."
 
        ! append
        start(:)      = 1
@@ -2442,7 +2436,7 @@ contains
 
   end subroutine dump_netcdf_5d_i4
 
-  
+
   ! -----------------------------------------------------------------------------
   ! PRIVATE PART
   !

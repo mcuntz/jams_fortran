@@ -24,7 +24,7 @@ PROGRAM main
   REAL(sp)                :: sloc, ssca, ssig, sxi, sbeta, snu
   REAL(dp)                :: smean, svar, sstd
 
-  INTEGER(i4) :: i, j
+  INTEGER(i4) :: i
   LOGICAL     :: isgood, allgood
 
   Write(*,*) ''

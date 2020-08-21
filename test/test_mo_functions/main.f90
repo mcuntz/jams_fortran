@@ -3,7 +3,6 @@ program main
   use mo_kind,      only: i4, i8, sp, dp
   use mo_functions, only: factorial, factln, gamm, gammln, beta
   use mo_ansi_colors, only: color, c_red, c_green
-  use mo_constants, only: pi_dp, pi_sp
   use mo_utils, only: ne
 
   implicit none

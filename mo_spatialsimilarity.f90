@@ -3,7 +3,7 @@
 !> \brief Routines for bias insensitive comparison of spatial patterns.
 
 !> \details These routines are based on the idea that spatial similarity can be assessed by comparing
-!>          the magnitude of neighboring pixels (e.g. is the neighboring pixel larger or smaller).             
+!>          the magnitude of neighboring pixels (e.g. is the neighboring pixel larger or smaller).
 
 !> \author Matthias Zink, Juliane Mai
 !> \date Mar 2013
@@ -58,18 +58,18 @@ MODULE mo_spatialsimilarity
   !>             dominating_neighbors(mat1) = comparison if pixel is larger than its neighbouring values
   !>
   !>            An array element value is compared with its 8 neighbouring cells to check if these cells are larger
-  !>            than the array element value. The result is a 3x3 matrix in which larger cells are indicated by a 
+  !>            than the array element value. The result is a 3x3 matrix in which larger cells are indicated by a
   !>            true value. For comparison this is done with both input arrays. The resulting array is the sum of
   !>            substraction of the 3x3 matrices for each of the both arrays. The resulting matrix is afterwards
-  !>            normalized to its available neighbors. 
+  !>            normalized to its available neighbors.
   !>            Furthermore an average over the entire field is calculated. The valid interval of
-  !>            the values for NNDV is [0..1]. In which 1 indicates full agreement and 0 full dismatching.  
+  !>            the values for NNDV is [0..1]. In which 1 indicates full agreement and 0 full dismatching.
   !>             <pre>
   !>            EXAMPLE:\n
-  !>            mat1 =  | 12 17  1 | , mat2 = |  7  9 12 | 
-  !>                    |  4 10 11 |          | 12 11 11 | 
-  !>                    | 15  2 20 |          |  5 13  7 | 
-  !>            booleans determined for every grid cell following fortran array scrolling 
+  !>            mat1 =  | 12 17  1 | , mat2 = |  7  9 12 |
+  !>                    |  4 10 11 |          | 12 11 11 |
+  !>                    | 15  2 20 |          |  5 13  7 |
+  !>            booleans determined for every grid cell following fortran array scrolling
   !>            i.e. (/col1_row1, col1_row2, col1_row3, col2_row1, .. ,col3_row3/),(/3,3/)
   !>
   !>            comp1 = | FFF FFF FTF, FFF FFF FFF, FTT FFT FFF |
@@ -87,8 +87,8 @@ MODULE mo_spatialsimilarity
   !>
   !>                                    DISSIMILAR / VALID NEIGH CELLS
   !>           NNDVMatrix / VALID NEIGH CELLS = | 2, 4, 3 | / | 3, 5, 3 |
-  !>                                            | 3, 2, 0 |   | 5, 8, 5 |   
-  !>                                            | 3, 5, 3 |   | 3, 5, 3 |   
+  !>                                            | 3, 2, 0 |   | 5, 8, 5 |
+  !>                                            | 3, 5, 3 |   | 3, 5, 3 |
   !>
   !>                                          = | 0.66, 0.80, 1.00 |
   !>                                            | 0.60, 0.25, 0.00 |
@@ -102,7 +102,7 @@ MODULE mo_spatialsimilarity
 
   !     CALLING SEQUENCE
   !         out = NNDV(mat1, mat2, mask=mask, valid=valid)
-  
+
   !     INDENT(IN)
   !>        \param[in] "real(sp/dp), dimension(:,:) :: mat1" 2D-array with input numbers
   !>        \param[in] "real(sp/dp), dimension(:,:) :: mat2" 2D-array with input numbers
@@ -124,10 +124,10 @@ MODULE mo_spatialsimilarity
   !>        \param[out] "logical              :: valid"   indicates if the function could determine a valid value
   !>                                                      result can be unvalid if entire mask is .false. for ex.
   !>                                                      in this case PatternDissim is set to 0 (worst case)
-  
+
   !     RETURN
   !>        \return real(sp/dp) :: NNDV &mdash; Number of neighboring dominating values
-  
+
   !     RESTRICTIONS
   !         Input values must be floating points.
 
@@ -136,7 +136,7 @@ MODULE mo_spatialsimilarity
   !         mat2 = reshape(/ 1., 2, 3., -999., 5., 6. /, (/3,3/))
   !         out  = NNDV(mat1, mat2, mask=(mat1 >= 0. .and. mat2 >= 0.))
   !         -> see also example in test directory
-  
+
   !     LITERATURE
   !>         \note routine based on algorithm by Luis Samaniego 2009
 
@@ -144,7 +144,7 @@ MODULE mo_spatialsimilarity
   !>         \author Matthias Zink
   !>         \date   Nov 2012
   !          update  May 2015 created documentation
-  INTERFACE NNDV                  
+  INTERFACE NNDV
      MODULE PROCEDURE NNDV_sp, NNDV_dp
   END INTERFACE NNDV
 
@@ -160,7 +160,7 @@ MODULE mo_spatialsimilarity
   !>             dissimilarity(mat1, mat2) = comparison if pixel is larger than its neighbouring values
   !>
   !>            An array element value is compared with its 8 neighbouring cells to check if these cells are larger
-  !>            than the array element value. The result is a 3x3 matrix in which larger cells are indicated by a 
+  !>            than the array element value. The result is a 3x3 matrix in which larger cells are indicated by a
   !>            true value. For comparison this is done with both input arrays. The resulting array is the sum of
   !>            xor values of the 3x3 matrices for each of the both arrays.  This means only neighbourhood comparisons
   !>            which are different in the 2 matrices are counted. This resulting matrix is afterwards normalized to its
@@ -169,11 +169,11 @@ MODULE mo_spatialsimilarity
   !>
   !>             <pre>
   !>            EXAMPLE:\n
-  !>            mat1 =  | 12 17  1 | , mat2 = |  7  9 12 | 
-  !>                    |  4 10 11 |          | 12 11 11 | 
+  !>            mat1 =  | 12 17  1 | , mat2 = |  7  9 12 |
+  !>                    |  4 10 11 |          | 12 11 11 |
   !>                    | 15  2 20 |          |  5 13  7 |
   !>
-  !>            booleans determined for every grid cell following fortran array scrolling 
+  !>            booleans determined for every grid cell following fortran array scrolling
   !>            i.e. (/col1_row1, col1_row2, col1_row3, col2_row1, .. ,col3_row3/),(/3,3/)
   !>
   !>            comp1 = | FFF FFF FTF, FFF FFF FFF, FTT FFT FFF |
@@ -187,13 +187,13 @@ MODULE mo_spatialsimilarity
   !>
   !>            xor=neq = | FFF FFT FFT, FFT FFT FTT, FTT FFT FFF |
   !>                      | FFF TFT TTT, TTT TFT TTT, TFT TFT FFF |
-  !>                      | FFF TFF TTF, TTF TFF TTF, TTF TFF FFF |               
-  !>  
+  !>                      | FFF TFF TTF, TTF TFF TTF, TTF TFF FFF |
+  !>
   !>                        DISSIMILAR / VALID NEIGH CELLS
   !>            PDMatrix = | 2, 4, 3 | / | 3, 5, 3 | = | 0.66, 0.80, 1.00 |
   !>                       | 5, 8, 4 |   | 5, 8, 5 |   | 1.00, 1.00, 0.80 |
   !>                       | 3, 5, 3 |   | 3, 5, 3 |   | 1.00, 1.00, 1.00 |
-  !>  
+  !>
   !>           PD = 1 - sum(PDMatrix) / count(mask) = 1 - (8.2666666 / 9) = 0.08148
   !>            </pre>
   !>
@@ -202,7 +202,7 @@ MODULE mo_spatialsimilarity
 
   !     CALLING SEQUENCE
   !         out = PD(mat1, mat2, mask=mask, valid=valid)
-  
+
   !     INDENT(IN)
   !>        \param[in] "real(sp/dp), dimension(:,:) :: mat1" 2D-array with input numbers
   !>        \param[in] "real(sp/dp), dimension(:,:) :: mat2" 2D-array with input numbers
@@ -226,8 +226,8 @@ MODULE mo_spatialsimilarity
   !>                                                      in this case PD is set to 0 (worst case)
 
   !     RETURN
-  !>        \return real(sp/dp) :: PD &mdash; pattern dissimilarity measure 
-  
+  !>        \return real(sp/dp) :: PD &mdash; pattern dissimilarity measure
+
   !     RESTRICTIONS
   !         Input values must be floating points.
 
@@ -238,19 +238,19 @@ MODULE mo_spatialsimilarity
   !         -> see also example in test directory
 
   !     LITERATURE
-  !          None         
+  !          None
 
   !     HISTORY
   !>         \author Matthias Zink and Juliane Mai
   !>         \date   Jan 2013
-  INTERFACE PD                  
+  INTERFACE PD
      MODULE PROCEDURE PD_sp, PD_dp
   END INTERFACE PD
 
   ! ------------------------------------------------------------------
 
 CONTAINS
-  
+
   FUNCTION NNDV_sp(mat1, mat2, mask, valid)
 
     IMPLICIT NONE
@@ -265,7 +265,7 @@ CONTAINS
     INTEGER(i4), DIMENSION(size(shape(mat1)) )                                          :: shapemask
     INTEGER(i4), DIMENSION(size(mat1, dim=1), size(mat1, dim=2))                        :: validcount
     REAL(sp),    DIMENSION(size(mat1, dim=1)+2_i4, size(mat1, dim=2)+2_i4)              :: bufferedMat1, bufferedMat2
-    REAL(sp)   , DIMENSION(size(mat1, dim=1), size(mat1, dim=2))                        :: NNDVMatrix              
+    REAL(sp)   , DIMENSION(size(mat1, dim=1), size(mat1, dim=2))                        :: NNDVMatrix
     LOGICAL,     DIMENSION(size(mat1, dim=1)+2_i4, size(mat1, dim=2)+2_i4)              :: maske
     LOGICAL,     DIMENSION(size(mat1, dim=1), size(mat1, dim=2))                        :: validmaske
 
@@ -294,7 +294,7 @@ CONTAINS
        maske(2:(size(maske,dim=1)-1_i4), 2:(size(maske,dim=2)-1_i4)) = .true.
     end if
     !
-    ! initialize bufferedMat1 & bufferedMat2 
+    ! initialize bufferedMat1 & bufferedMat2
     bufferedMat1 = 0.0_sp
     bufferedMat2 = 0.0_sp
     bufferedMat1(2:(size(maske,dim=1)-1), 2:(size(maske,dim=2)-1)) = mat1
@@ -351,7 +351,7 @@ CONTAINS
     INTEGER(i4), DIMENSION(size(shape(mat1)) )                                          :: shapemask
     INTEGER(i4), DIMENSION(size(mat1, dim=1), size(mat1, dim=2))                        :: validcount
     REAL(dp),    DIMENSION(size(mat1, dim=1)+2_i4, size(mat1, dim=2)+2_i4)              :: bufferedMat1, bufferedMat2
-    REAL(dp)   , DIMENSION(size(mat1, dim=1), size(mat1, dim=2))                        :: NNDVMatrix              
+    REAL(dp)   , DIMENSION(size(mat1, dim=1), size(mat1, dim=2))                        :: NNDVMatrix
     LOGICAL,     DIMENSION(size(mat1, dim=1)+2_i4, size(mat1, dim=2)+2_i4)              :: maske
     LOGICAL,     DIMENSION(size(mat1, dim=1), size(mat1, dim=2))                        :: validmaske
 
@@ -380,7 +380,7 @@ CONTAINS
        maske(2:(size(maske,dim=1)-1_i4), 2:(size(maske,dim=2)-1_i4)) = .true.
     end if
     !
-    ! initialize bufferedMat1 & bufferedMat2 
+    ! initialize bufferedMat1 & bufferedMat2
     bufferedMat1 = 0.0_dp
     bufferedMat2 = 0.0_dp
     bufferedMat1(2:(size(maske,dim=1)-1), 2:(size(maske,dim=2)-1)) = mat1
@@ -467,7 +467,7 @@ CONTAINS
        maske(2:(size(maske,dim=1)-1_i4), 2:(size(maske,dim=2)-1_i4)) = .true.
     end if
     !
-    ! initialize bufferedMat1 & bufferedMat2 
+    ! initialize bufferedMat1 & bufferedMat2
     bufferedMat1 = 0.0_sp
     bufferedMat2 = 0.0_sp
     bufferedMat1(2:(size(maske,dim=1)-1), 2:(size(maske,dim=2)-1)) = mat1
@@ -479,11 +479,11 @@ CONTAINS
        do iRo = 2_i4, size(bufferedMat1, dim=1)-1_i4
           ! no calculation at unmasked values
           if (.NOT. maske(iRo,iCo)) cycle
-          ! .NEQV. is the fortran standard for .XOR. 
+          ! .NEQV. is the fortran standard for .XOR.
           ! result is written to -1 column and row because of buffer
           PDMatrix(iRo-1_i4,iCo-1_i4) = &
-            real( &   
-              count( & 
+            real( &
+              count( &
                      ( &
                         ! determine higher neighbouring values in mat1
                         (bufferedMat1(iRo-1_i4:iRo+1_i4, iCo-1_i4:iCo+1_i4) -                         &
@@ -560,7 +560,7 @@ CONTAINS
        maske(2:(size(maske,dim=1)-1_i4), 2:(size(maske,dim=2)-1_i4)) = .true.
     end if
     !
-    ! initialize bufferedMat1 & bufferedMat2 
+    ! initialize bufferedMat1 & bufferedMat2
     bufferedMat1 = 0.0_dp
     bufferedMat2 = 0.0_dp
     bufferedMat1(2:(size(maske,dim=1)-1), 2:(size(maske,dim=2)-1)) = mat1
@@ -572,11 +572,11 @@ CONTAINS
        do iRo = 2_i4, size(bufferedMat1, dim=1)-1_i4
           ! no calculation at unmasked values
           if (.NOT. maske(iRo,iCo)) cycle
-          ! .NEQV. is the fortran standard for .XOR. 
+          ! .NEQV. is the fortran standard for .XOR.
           ! result is written to -1 column and row because of buffer
           PDMatrix(iRo-1_i4,iCo-1_i4) = &
-            real( &   
-              count( & 
+            real( &
+              count( &
                      ( &
                         ! determine higher neighbouring values in mat1
                         (bufferedMat1(iRo-1_i4:iRo+1_i4, iCo-1_i4:iCo+1_i4) -                         &
