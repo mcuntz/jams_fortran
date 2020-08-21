@@ -5,9 +5,9 @@ PROGRAM main
   USE mo_distributions, ONLY: laplace, laplace01, normal, normal01
   USE mo_distributions, ONLY: ep, ep01, sep, sep01
   USE mo_distributions, ONLY: st, st01, t, t01
-  USE mo_distributions, ONLY: beta_den, gamma_pdf, weibull_pdf, weibull_cdf
+  USE mo_distributions, ONLY: beta_den, gamma_pdf, weibull_pdf
   USE mo_functions,     ONLY: gamm
-  use mo_ansi_colors, only: color, c_red, c_green
+  use mo_ansi_colors,   only: color, c_red, c_green
 
   IMPLICIT NONE
 
