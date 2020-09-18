@@ -1,7 +1,7 @@
 MODULE mo_errormeasures
 
   ! This module contains routines for the masked calculation of
-  ! error measures like MSE, RMSE, BIAS, SSE, NSE, ...
+  ! error measures like MSE, RMSE, BIAS, SSE, NSE, KGE, ...
 
   ! Note: all except variance and standard deviation are population and not sample moments,
   !       i.e. they are normally divided by n and not (n-1)
