@@ -1,19 +1,30 @@
 This is netcdf v3.6.3, the final release of netcdf3.
+The configure script was slightly updated to #include <stdlib.h>
+in the checks for Fortran to C type correspondances.
 
 If the compilation fails, it might be because this version uses two files
 that are specific to the compilation system:
   config.h
   nfconfig.inc
+
 Get the versions for your system and copy them into this folder.
 For use with the JAMS makefile, append your system name to the files, e.g. config.h.mcinra
+
 To produce the system-specific files, do
-  tar xvzf netcdf-3.6.3.tar.gz
+  tar xvzf netcdf-3.6.3-corr.tar.gz
   cd netcdf-3.6.3
   FC=yourF90Compiler F77=yourF77Compiler ./configure --prefix=arbitraryPrefix --enable-shared --enable-f90
+In case of gfortran version >= 10, you have to prepend FCFLAGS="-fallow-argument-mismatch" and
+FFLAGS="-fallow-argument-mismatch" if you want to make and check the package, i.e.
+  FC=gfortran F77=gfortran FCFLAGS="-fallow-argument-mismatch" FFLAGS="-fallow-argument-mismatch" ./configure --prefix=arbitraryPrefix --enable-shared --enable-f90
+  make -j 8
+  make check
+
 The two files can then be found at
   ./config.h
   fortran/nfconfig.inc
-So
+
+For the JAMS makefile, this is
   cp ./config.h ../config.h.yoursystem
   cp ./fortran/nfconfig.inc ../nfconfig.inc.yoursystem
   cd ..
