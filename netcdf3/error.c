@@ -6,7 +6,7 @@
 
 /*LINTLIBRARY*/
 
-#include <config.h>
+#include "config.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -19,7 +19,7 @@
 #include <netcdf3.h>
 #include <nc3convert.h>
 #else
-#include <netcdf.h>
+#include "netcdf.h"
 #endif
 
 #ifdef HAVE_STRERROR
@@ -63,7 +63,7 @@ vms_strerror( int status )
 
 	msgbuf[0] = 0;
 	ret = SYS$GETMSG(status, &msglen, &message, 15, 0);
-	
+
 	if(ret != SS$_BUFFEROVF && ret != SS$_NORMAL) {
 		(void) strcpy(msgbuf, "EVMSERR");
 	}
@@ -79,11 +79,11 @@ const char *
 nc_strerror(int err)
 {
 
-#ifdef vms 
+#ifdef vms
 	if(err == EVMSERR)
 	{
 		return vms_strerror(err);
-	}	
+	}
 	/* else */
 #endif /* vms */
 

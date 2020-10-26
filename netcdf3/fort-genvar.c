@@ -9,7 +9,7 @@ the COPYRIGHT file for copying and redistribution conditions.
 $Id: fort-genvar.c,v 1.4 2008/02/19 21:47:05 ed Exp $
 */
 
-#include <config.h>
+#include "config.h"
 #include "netcdf.h"
 #include "ncfortran.h"
 #include "fort-lib.h"

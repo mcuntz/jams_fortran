@@ -9,7 +9,7 @@ the COPYRIGHT file for copying and redistribution conditions.
 $Id: fort-vario.c,v 1.15 2008/03/21 15:49:16 dmh Exp $
 */
 
-#include <config.h>
+#include "config.h"
 #include "netcdf.h"
 #include "nfconfig.inc"
 #include "ncfortran.h"

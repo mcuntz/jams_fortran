@@ -9,7 +9,7 @@ the COPYRIGHT file for copying and redistribution conditions.
 $Id: fort-lib.c,v 1.12 2008/03/20 21:03:47 dmh Exp $
 */
 
-#include <config.h>
+#include "config.h"
 #include <stddef.h>	/* for NULL */
 #include <errno.h>
 
@@ -216,7 +216,7 @@ nc_inq_dimids_f(int ncid, int *ndims, int *fdimids, int parent)
 
 /* Swap the dim sizes for fortran. */
 int
-nc_insert_array_compound_f(int ncid, int typeid, char *name, 
+nc_insert_array_compound_f(int ncid, int typeid, char *name,
 			 size_t offset, nc_type field_typeid,
 			 int ndims, int *dim_sizesp)
 {
@@ -235,7 +235,7 @@ nc_insert_array_compound_f(int ncid, int typeid, char *name,
       dim_sizes_f[i] = dim_sizesp[ndims - i - 1];
 
    /* Call with backwards list. */
-   ret = nc_insert_array_compound(ncid, typeid, name, offset, field_typeid, 
+   ret = nc_insert_array_compound(ncid, typeid, name, offset, field_typeid,
 				  ndims, dim_sizes_f);
 
    /* Clean up. */
@@ -244,20 +244,20 @@ nc_insert_array_compound_f(int ncid, int typeid, char *name,
 }
 
 int
-nc_inq_compound_field_f(int ncid, nc_type xtype, int fieldid, char *name, 
-			size_t *offsetp, nc_type *field_typeidp, int *ndimsp, 
+nc_inq_compound_field_f(int ncid, nc_type xtype, int fieldid, char *name,
+			size_t *offsetp, nc_type *field_typeidp, int *ndimsp,
 			int *dim_sizesp)
 {
    int ndims;
    int ret, i;
 
    /* Find out how many dims. */
-   if ((ret = nc_inq_compound_field(ncid, xtype, fieldid, NULL, NULL, 
+   if ((ret = nc_inq_compound_field(ncid, xtype, fieldid, NULL, NULL,
 				    NULL, &ndims, NULL)))
       return ret;
 
    /* Call the function. */
-   if ((ret = nc_inq_compound_field(ncid, xtype, fieldid, name, offsetp, 
+   if ((ret = nc_inq_compound_field(ncid, xtype, fieldid, name, offsetp,
 				    field_typeidp, ndimsp, dim_sizesp)))
       return ret;
 
@@ -271,7 +271,7 @@ nc_inq_compound_field_f(int ncid, nc_type xtype, int fieldid, char *name,
 	 *f = *b;
 	 *b = temp;
       }
-   }  
+   }
 
    return NC_NOERR;
 }

@@ -4,7 +4,7 @@
  */
 /* $Id: libvers.c,v 2.12 2008/04/04 18:47:58 dmh Exp $ */
 
-#include <config.h>
+#include "config.h"
 
 #if defined(USE_DAP)
 #include <netcdf3l.h>
@@ -13,7 +13,7 @@
 #include <netcdf3.h>
 #include <nc3convert.h>
 #else
-#include <netcdf.h>
+#include "netcdf.h"
 #endif
 
 /*

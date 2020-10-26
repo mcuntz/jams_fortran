@@ -1,4 +1,4 @@
-#include <config.h>
+#include "config.h"
 #include "netcdf.h"
 #include "ncfortran.h"
 
@@ -45,7 +45,7 @@ FCALLSCFUN3(NF_INT, nc_set_fill, NF_SET_FILL, nf_set_fill,
 /*
  * Set the fill mode of a netCDF dataset.
  */
-FCALLSCFUN2(NF_INT, nc_set_default_format, NF_SET_DEFAULT_FORMAT, 
+FCALLSCFUN2(NF_INT, nc_set_default_format, NF_SET_DEFAULT_FORMAT,
 	    nf_set_default_format, FINT2CINT, PCINT2FINT)
 
 

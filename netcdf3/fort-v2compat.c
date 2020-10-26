@@ -22,13 +22,13 @@
  * differing error handling mechanisms between version 2 and version 3.
  */
 
-#include <config.h>
+#include "config.h"
 
 #ifndef NO_NETCDF_2
 
 /* LINTLIBRARY */
 
-#include	<config.h>
+#include	"config.h"
 #include	<ctype.h>
 #include        <string.h>
 #include	<stdlib.h>
@@ -96,7 +96,7 @@ f2c_v2imap(int ncid, int varid, const int* fimap, ptrdiff_t* cimap)
     if (fimap[0] == 0)
     {
 	/*
-	 * Special Fortran version 2 semantics: use external netCDF variable 
+	 * Special Fortran version 2 semantics: use external netCDF variable
 	 * structure.
 	 */
 	int		dimids[NC_MAX_VAR_DIMS];
@@ -760,7 +760,7 @@ FCALLSCSUB5(c_ncvpt1,NCVPT1,ncvpt1,
     NCID,VARID,COORDS,PVOID,PRCODE)
 
 
-/* 
+/*
  * Put a single character into an open netCDF file.
  */
 static void
@@ -944,7 +944,7 @@ FCALLSCSUB7(c_ncvptc,NCVPTC,ncvptc,
 
 
 /*
- * Write a generalized hypercube of numeric values into a netCDF variable of 
+ * Write a generalized hypercube of numeric values into a netCDF variable of
  * an open netCDF file.
  */
 static void
@@ -1057,7 +1057,7 @@ FCALLSCSUB8(c_ncvptg,NCVPTG,ncvptg,
 
 
 /*
- * Write a generalized hypercube of character values into a netCDF variable of 
+ * Write a generalized hypercube of character values into a netCDF variable of
  * an open netCDF file.
  */
 static void
@@ -1391,7 +1391,7 @@ FCALLSCSUB7(c_ncvgtc,NCVGTC,ncvgtc,
 
 
 /*
- * Read a generalized hypercube of numeric values from a netCDF variable of an 
+ * Read a generalized hypercube of numeric values from a netCDF variable of an
  * open netCDF file.
  */
 static void
@@ -1503,7 +1503,7 @@ FCALLSCSUB8(c_ncvgtg,NCVGTG,ncvgtg,
 
 
 /*
- * Read a generalized hypercube of character values from a netCDF variable 
+ * Read a generalized hypercube of character values from a netCDF variable
  * of an open netCDF file.
  */
 static void
@@ -1749,55 +1749,55 @@ c_ncagt(
 	    break;
 	case NC_BYTE:
 #    	if NF_INT1_IS_C_SIGNED_CHAR
-		status = nc_get_att_schar(ncid, varid, attname, 
+		status = nc_get_att_schar(ncid, varid, attname,
 					   (signed char*)value);
 #    	elif NF_INT1_IS_C_SHORT
-		status = nc_get_att_short(ncid, varid, attname, 
+		status = nc_get_att_short(ncid, varid, attname,
 					   (short*)value);
 #    	elif NF_INT1_IS_C_INT
-		status = nc_get_att_int(ncid, varid, attname, 
+		status = nc_get_att_int(ncid, varid, attname,
 					   (int*)value);
 #    	elif NF_INT1_IS_C_LONG
-		status = nc_get_att_long(ncid, varid, attname, 
+		status = nc_get_att_long(ncid, varid, attname,
 					   (long*)value);
 #    	endif
 	    break;
 	case NC_SHORT:
 #    	if NF_INT2_IS_C_SHORT
-		status = nc_get_att_short(ncid, varid, attname, 
+		status = nc_get_att_short(ncid, varid, attname,
 					   (short*)value);
 #    	elif NF_INT2_IS_C_INT
-		status = nc_get_att_int(ncid, varid, attname, 
+		status = nc_get_att_int(ncid, varid, attname,
 					   (int*)value);
 #    	elif NF_INT2_IS_C_LONG
-		status = nc_get_att_long(ncid, varid, attname, 
+		status = nc_get_att_long(ncid, varid, attname,
 					   (long*)value);
 #    	endif
 	    break;
 	case NC_INT:
 #	    if NF_INT_IS_C_INT
-		status = nc_get_att_int(ncid, varid, attname, 
+		status = nc_get_att_int(ncid, varid, attname,
 					   (int*)value);
 #	    elif NF_INT_IS_C_LONG
-		status = nc_get_att_long(ncid, varid, attname, 
+		status = nc_get_att_long(ncid, varid, attname,
 					   (long*)value);
 #	    endif
 	    break;
 	case NC_FLOAT:
 #    	if NF_REAL_IS_C_FLOAT
-		status = nc_get_att_float(ncid, varid, attname, 
+		status = nc_get_att_float(ncid, varid, attname,
 					   (float*)value);
 #    	elif NF_REAL_IS_C_DOUBLE
-		status = nc_get_att_double(ncid, varid, attname, 
+		status = nc_get_att_double(ncid, varid, attname,
 					   (double*)value);
 #    	endif
 	    break;
 	case NC_DOUBLE:
 #    	if NF_DOUBLEPRECISION_IS_C_FLOAT
-		status = nc_get_att_float(ncid, varid, attname, 
+		status = nc_get_att_float(ncid, varid, attname,
 					   (float*)value);
 #    	elif NF_DOUBLEPRECISION_IS_C_DOUBLE
-		status = nc_get_att_double(ncid, varid, attname, 
+		status = nc_get_att_double(ncid, varid, attname,
 					   (double*)value);
 #    	endif
 	    break;
@@ -1850,7 +1850,7 @@ c_ncagtc(
 		    status = NC_ESTS;
 		else
 		{
-		    status = nc_get_att_text(ncid, varid, attname, 
+		    status = nc_get_att_text(ncid, varid, attname,
 					       value);
 		    if (status == 0)
 			(void) memset(value+len, ' ', attlen - len);

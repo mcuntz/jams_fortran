@@ -9,7 +9,7 @@ the COPYRIGHT file for copying and redistribution conditions.
 $Id: fort-genatt.c,v 1.4 2006/08/16 03:56:51 ed Exp $
 */
 
-#include <config.h>
+#include "config.h"
 #include "netcdf.h"
 #include "ncfortran.h"
 

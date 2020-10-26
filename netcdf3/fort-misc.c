@@ -9,7 +9,7 @@ the COPYRIGHT file for copying and redistribution conditions.
 $Id: fort-misc.c,v 1.8 2007/07/26 20:29:45 ed Exp $
 */
 
-#include <config.h>
+#include "config.h"
 #include "netcdf.h"
 #include "ncfortran.h"
 
@@ -24,8 +24,8 @@ FCALLSCFUN0(STRING, (char*)nc_inq_libvers, NF_INQ_LIBVERS, nf_inq_libvers)
  * Return the string associated with an error code.
  */
 #ifdef ABSOFT10_HACK
-extern void NF_STRERROR(char *AS, unsigned D0, const int *A1) 
-{ 
+extern void NF_STRERROR(char *AS, unsigned D0, const int *A1)
+{
    char *A0;
    A0= (char*)nc_strerror( (int)*A1 );
    memcpy(AS,A0, (D0<(A0==((void *)0)?0:strlen(A0))?D0:(A0==((void *)0)?0:strlen(A0))) );
@@ -33,7 +33,7 @@ extern void NF_STRERROR(char *AS, unsigned D0, const int *A1)
    return ;
 }
 #else
-FCALLSCFUN1(STRING, (char*)nc_strerror, NF_STRERROR, nf_strerror, 
+FCALLSCFUN1(STRING, (char*)nc_strerror, NF_STRERROR, nf_strerror,
 	    FINT2CINT)
 #endif
 

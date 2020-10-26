@@ -9,7 +9,7 @@
 /*
  *	netcdf library 'private' data structures, objects and interfaces
  */
-#include <config.h>
+#include "config.h"
 
 #if defined(USE_DAP)
 #include <netcdf3l.h>
@@ -18,7 +18,7 @@
 #include <netcdf3.h>
 #include <nc3convert.h>
 #else
-#include <netcdf.h>
+#include "netcdf.h"
 #endif
 
 #include	<stddef.h>	/* size_t */
@@ -298,7 +298,7 @@ struct NC {
 	fIsSet((ncp)->flags, NC_CREAT)
 
 #define NC_indef(ncp) \
-	(NC_IsNew(ncp) || fIsSet((ncp)->flags, NC_INDEF)) 
+	(NC_IsNew(ncp) || fIsSet((ncp)->flags, NC_INDEF))
 
 #define set_NC_ndirty(ncp) \
 	fSet((ncp)->flags, NC_NDIRTY)

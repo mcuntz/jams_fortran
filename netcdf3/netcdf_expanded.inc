@@ -46,12 +46,14 @@
  
      integer, dimension(nf90_max_var_dims) :: localIndex
      integer                               :: counter
+     integer :: ivalues
  
      ! Set local arguments to default values
      localIndex(:) = 1
      if(present(start)) localIndex(:size(start)) = start(:)
- 
-     nf90_put_var_FourByteInt = nf_put_var1_int(ncid, varid, localIndex, int(values))
+
+     ivalues = int(values)
+     nf90_put_var_FourByteInt = nf_put_var1_int(ncid, varid, localIndex, ivalues)
    end function nf90_put_var_FourByteInt
 
 
@@ -63,12 +65,14 @@
  
      integer, dimension(nf90_max_var_dims) :: localIndex
      integer                               :: counter
+     integer :: ivalues
  
      ! Set local arguments to default values
      localIndex(:) = 1
      if(present(start)) localIndex(:size(start)) = start(:)
  
-     nf90_put_var_EightByteInt = nf_put_var1_int(ncid, varid, localIndex, int(values))
+     ivalues = int(values)
+     nf90_put_var_EightByteInt = nf_put_var1_int(ncid, varid, localIndex, ivalues)
    end function nf90_put_var_EightByteInt
 
 
@@ -712,6 +716,7 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
+     integer, dimension(size(values,1)) :: ivalues
  
      ! Set local arguments to default values
      numDims                 = size(shape(values))
@@ -724,16 +729,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_1D_FourByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_1D_FourByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_1D_FourByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_1D_FourByteInt
 
@@ -747,6 +753,7 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
+     integer, dimension(size(values,1),size(values,2)) :: ivalues
  
      ! Set local arguments to default values
      numDims                 = size(shape(values))
@@ -759,16 +766,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_2D_FourByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_2D_FourByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_2D_FourByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_2D_FourByteInt
 
@@ -782,6 +790,7 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
+     integer, dimension(size(values,1),size(values,2),size(values,3)) :: ivalues
  
      ! Set local arguments to default values
      numDims                 = size(shape(values))
@@ -794,16 +803,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_3D_FourByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_3D_FourByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_3D_FourByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_3D_FourByteInt
 
@@ -817,7 +827,8 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
- 
+     integer, dimension(size(values,1),size(values,2),size(values,3),size(values,4)) :: ivalues
+
      ! Set local arguments to default values
      numDims                 = size(shape(values))
      localStart (:         ) = 1
@@ -829,16 +840,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_4D_FourByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_4D_FourByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_4D_FourByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_4D_FourByteInt
 
@@ -852,6 +864,7 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
+     integer, dimension(size(values,1),size(values,2),size(values,3),size(values,4),size(values,5)) :: ivalues
  
      ! Set local arguments to default values
      numDims                 = size(shape(values))
@@ -864,16 +877,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_5D_FourByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_5D_FourByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_5D_FourByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_5D_FourByteInt
 
@@ -887,6 +901,7 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
+     integer, dimension(size(values,1),size(values,2),size(values,3),size(values,4),size(values,5),size(values,6)) :: ivalues
  
      ! Set local arguments to default values
      numDims                 = size(shape(values))
@@ -899,16 +914,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_6D_FourByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_6D_FourByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_6D_FourByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_6D_FourByteInt
 
@@ -922,6 +938,8 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
+     integer, dimension(size(values,1),size(values,2),size(values,3), &
+          size(values,4),size(values,5),size(values,6),size(values,7)) :: ivalues
  
      ! Set local arguments to default values
      numDims                 = size(shape(values))
@@ -934,16 +952,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_7D_FourByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_7D_FourByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_7D_FourByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_7D_FourByteInt
 
@@ -957,6 +976,7 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
+     integer, dimension(size(values,1)) :: ivalues
  
      ! Set local arguments to default values
      numDims                 = size(shape(values))
@@ -969,16 +989,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_1D_EightByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_1D_EightByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_1D_EightByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_1D_EightByteInt
 
@@ -992,7 +1013,8 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
- 
+     integer, dimension(size(values,1),size(values,2)) :: ivalues
+
      ! Set local arguments to default values
      numDims                 = size(shape(values))
      localStart (:         ) = 1
@@ -1004,16 +1026,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_2D_EightByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_2D_EightByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_2D_EightByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_2D_EightByteInt
 
@@ -1027,6 +1050,7 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
+     integer, dimension(size(values,1),size(values,2),size(values,3)) :: ivalues
  
      ! Set local arguments to default values
      numDims                 = size(shape(values))
@@ -1039,16 +1063,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_3D_EightByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_3D_EightByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_3D_EightByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_3D_EightByteInt
 
@@ -1062,7 +1087,8 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
- 
+     integer, dimension(size(values,1),size(values,2),size(values,3),size(values,4)) :: ivalues
+
      ! Set local arguments to default values
      numDims                 = size(shape(values))
      localStart (:         ) = 1
@@ -1074,16 +1100,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_4D_EightByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_4D_EightByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_4D_EightByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_4D_EightByteInt
 
@@ -1097,6 +1124,7 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
+     integer, dimension(size(values,1),size(values,2),size(values,3),size(values,4),size(values,5)) :: ivalues
  
      ! Set local arguments to default values
      numDims                 = size(shape(values))
@@ -1109,16 +1137,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_5D_EightByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_5D_EightByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_5D_EightByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_5D_EightByteInt
 
@@ -1132,6 +1161,7 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
+     integer, dimension(size(values,1),size(values,2),size(values,3),size(values,4),size(values,5),size(values,6)) :: ivalues
  
      ! Set local arguments to default values
      numDims                 = size(shape(values))
@@ -1144,16 +1174,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_6D_EightByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_6D_EightByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_6D_EightByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_6D_EightByteInt
 
@@ -1167,6 +1198,8 @@
  
      integer, dimension(nf90_max_var_dims) :: localStart, localCount, localStride, localMap
      integer                               :: numDims, counter
+     integer, dimension(size(values,1),size(values,2),size(values,3), &
+          size(values,4),size(values,5),size(values,6),size(values,7)) :: ivalues
  
      ! Set local arguments to default values
      numDims                 = size(shape(values))
@@ -1179,16 +1212,17 @@
      if(present(start))  localStart (:size(start) )  = start(:)
      if(present(count))  localCount (:size(count) )  = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
+     ivalues = int(values)
      if(present(map))  then
        localMap   (:size(map))    = map(:)
        nf90_put_var_7D_EightByteInt = &
-          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, int(values))
+          nf_put_varm_int(ncid, varid, localStart, localCount, localStride, localMap, ivalues)
      else if(present(stride)) then
        nf90_put_var_7D_EightByteInt = &
-          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, int(values))
+          nf_put_vars_int(ncid, varid, localStart, localCount, localStride, ivalues)
      else
        nf90_put_var_7D_EightByteInt = &
-          nf_put_vara_int(ncid, varid, localStart, localCount, int(values))
+          nf_put_vara_int(ncid, varid, localStart, localCount, ivalues)
      end if
    end function nf90_put_var_7D_EightByteInt
 

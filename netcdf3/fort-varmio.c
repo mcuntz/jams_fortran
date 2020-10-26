@@ -9,7 +9,7 @@ the COPYRIGHT file for copying and redistribution conditions.
 $Id: fort-varmio.c,v 1.9 2006/08/16 03:55:12 ed Exp $
 */
 
-#include <config.h>
+#include "config.h"
 #include "netcdf.h"
 #include "nfconfig.inc"
 #include "ncfortran.h"
