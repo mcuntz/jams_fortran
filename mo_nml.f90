@@ -5,7 +5,7 @@
 !> \details This module provides routines to open, close and position namelist files.
 
 !> \authors Matthias Cuntz
-!> \date Jan 2011 
+!> \date Jan 2011
 
 MODULE mo_nml
 
@@ -86,7 +86,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         call open_nml(file, unit, quiet=quiet)
-  
+
   !     INTENT(IN)
   !>        \param[in] "character(len=*) :: file"   namelist filename
   !>        \param[in] "integer          :: unit"   namelist unit
@@ -143,7 +143,7 @@ CONTAINS
 
     IF (istat .ne. 0) THEN
        write(*,'(A,A)') 'OPEN_NML: Could not open namelist file ', trim(file)
-       stop
+       stop 1
     END IF
 
   END SUBROUTINE open_nml
@@ -158,7 +158,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         call close_nml(unit=unit)
-  
+
   !     INTENT(IN)
   !         None
 
@@ -197,20 +197,26 @@ CONTAINS
 
   SUBROUTINE close_nml(unit)
 
-    IMPLICIT NONE
+    implicit none
 
-    INTEGER, INTENT(IN), OPTIONAL :: unit
+    integer, intent(in), optional :: unit
 
-    INTEGER :: istat, nnml
+    integer :: istat, nnml
 
     nnml = nunitnml
     if (present(unit)) nnml = unit
-    
-    IF (nnml .lt. 0) stop 'CLOSE_NML: No namelist file opened.'
 
-    CLOSE(nnml, IOSTAT=istat)
+    if (nnml .lt. 0) then
+       write(*,*) 'close_nml: no namelist file opened.'
+       stop 1
+    endif
 
-    IF (istat .ne. 0) stop 'CLOSE_NML: Could not close namelist file.'
+    close(nnml, iostat=istat)
+
+    if (istat .ne. 0) then
+       write(*,*) 'close_nml: could not close namelist file.'
+       stop 1
+    endif
 
     if (.not. present(unit)) nunitnml = -1
 
@@ -230,7 +236,7 @@ CONTAINS
 
   !     CALLING SEQUENCE
   !         call position_nml(name, unit=unit, status=status, first=first)
-  
+
   !     INTENT(IN)
   !>        \param[in] "character(len=*) :: name"     namelist name (case independent)
 
@@ -270,7 +276,7 @@ CONTAINS
   !     HISTORY
   !>        \author Matthias Cuntz - modified from Echam5, (C) MPI-MET, Hamburg, Germany
   !>        \date Dec 2011
-  !         Modified, Matthias Cuntz, Jan 2013 - swap first and status in call list 
+  !         Modified, Matthias Cuntz, Jan 2013 - swap first and status in call list
 
   SUBROUTINE position_nml(name, unit, status, first)
 
@@ -296,7 +302,7 @@ CONTAINS
     lrew  = .TRUE.
     IF (PRESENT(first)) lrew  = first
     iunit =  nunitnml
-    IF (PRESENT(unit)) iunit = unit   
+    IF (PRESENT(unit)) iunit = unit
     stat  =  MISSING
     code  = 'MISSING'
 
@@ -346,7 +352,7 @@ CONTAINS
             ytest .eq. '_'                         .OR. &
             (LGE(ytest,'A') .AND. LLE(ytest,'Z'))) THEN
           CYCLE
-       ELSE 
+       ELSE
           stat = POSITIONED
           BACKSPACE(iunit)
           EXIT
@@ -363,7 +369,7 @@ CONTAINS
 
     ! Error if it reaches here
     write(*,'(A,A,A,A)') 'POSITION_NML: namelist /', trim(name), '/ ', trim(code)
-    stop 
+    stop 1
 
   END SUBROUTINE position_nml
 
