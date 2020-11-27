@@ -2,29 +2,29 @@
   >-------------------------------</a><a name="TOP">-</a>
 
    qhull_a.h
-   all header files for compiling qhull
+   all header files for compiling qhull with non-reentrant code
 
    see qh-qhull.htm
 
    see libqhull.h for user-level definitions
 
-   see user.h for user-defineable constants
+   see user.h for user-definable constants
 
    defines internal functions for libqhull.c global.c
 
-   Copyright (c) 1993-2012 The Geometry Center.
-   $Id: //main/2011/qhull/src/libqhull/qhull_a.h#3 $$Change: 1464 $
-   $DateTime: 2012/01/25 22:58:41 $$Author: bbarber $
+   Copyright (c) 1993-2020 The Geometry Center.
+   $Id: //main/2019/qhull/src/libqhull/qhull_a.h#2 $$Change: 2953 $
+   $DateTime: 2020/05/21 22:05:32 $$Author: bbarber $
 
    Notes:  grep for ((" and (" to catch fprintf("lkasdjf");
            full parens around (x?y:z)
-           use '#include qhull/qhull_a.h' to avoid name clashes
+           use '#include "libqhull/qhull_a.h"' to avoid name clashes
 */
 
 #ifndef qhDEFqhulla
 #define qhDEFqhulla 1
 
-#include "libqhull.h"  /* Defines data types */
+#include "libqhull.h"  /* Includes user.h and data types */
 
 #include "stat.h"
 #include "random.h"
@@ -94,15 +94,13 @@
 /*-<a                             href="qh-qhull.htm#TOC"
   >--------------------------------</a><a name="QHULL_UNUSED">-</a>
 
+  Define an unused variable to avoid compiler warnings
+
+  Derived from Qt's corelib/global/qglobal.h
+
 */
 
-/* See Qt's qglobal.h */
-#if !defined(SAG_COM) && (defined(WIN64) || defined(_WIN64) || defined(__WIN64__) || defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__))
-#   define QHULL_OS_WIN
-#elif defined(__MWERKS__) && defined(__INTEL__)
-#   define QHULL_OS_WIN
-#endif
-#if defined(__INTEL_COMPILER) && !defined(QHULL_OS_WIN)
+#if defined(__cplusplus) && defined(__INTEL_COMPILER) && !defined(QHULL_OS_WIN)
 template <typename T>
 inline void qhullUnused(T &x) { (void)x; }
 #  define QHULL_UNUSED(x) qhullUnused(x);
@@ -114,17 +112,20 @@ inline void qhullUnused(T &x) { (void)x; }
 
 void    qh_qhull(void);
 boolT   qh_addpoint(pointT *furthest, facetT *facet, boolT checkdist);
+void    qh_build_withrestart(void);
+vertexT *qh_buildcone(pointT *furthest, facetT *facet, int goodhorizon, facetT **retryfacet);
+boolT   qh_buildcone_mergepinched(vertexT *apex, facetT *facet, facetT **retryfacet);
+boolT   qh_buildcone_onlygood(vertexT *apex, int goodhorizon);
 void    qh_buildhull(void);
 void    qh_buildtracing(pointT *furthest, facetT *facet);
-void    qh_build_withrestart(void);
 void    qh_errexit2(int exitcode, facetT *facet, facetT *otherfacet);
 void    qh_findhorizon(pointT *point, facetT *facet, int *goodvisible,int *goodhorizon);
 pointT *qh_nextfurthest(facetT **visible);
 void    qh_partitionall(setT *vertices, pointT *points,int npoints);
-void    qh_partitioncoplanar(pointT *point, facetT *facet, realT *dist);
+void    qh_partitioncoplanar(pointT *point, facetT *facet, realT *dist, boolT allnew);
 void    qh_partitionpoint(pointT *point, facetT *facet);
 void    qh_partitionvisible(boolT allpoints, int *numpoints);
-void    qh_precision(const char *reason);
+void    qh_joggle_restart(const char *reason);
 void    qh_printsummary(FILE *fp);
 
 /***** -global.c internal prototypes (alphabetical) ***********************/
@@ -141,7 +142,7 @@ void    qh_allstatB(void);
 void    qh_allstatC(void);
 void    qh_allstatD(void);
 void    qh_allstatE(void);
-void    qh_allstatE2 (void);
+void    qh_allstatE2(void);
 void    qh_allstatF(void);
 void    qh_allstatG(void);
 void    qh_allstatH(void);
