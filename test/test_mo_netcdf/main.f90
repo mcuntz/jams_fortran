@@ -258,9 +258,9 @@ program test_mo_netcdf
   ! --------------------------------------------------------------------------------------
   ! The moment of truth ...
   if (correct) then
-     print*, 'mo_netcdf ', color('o.k.', c_green)
+     print*, 'mo_netcdf.3 ', color('o.k.', c_green)
   else
-     print*, 'mo_netcdf ', color('failed.', c_red)
+     print*, 'mo_netcdf.3 ', color('failed.', c_red)
   endif
 
 end program test_mo_netcdf
