@@ -14,7 +14,7 @@ program test_mo_netcdf
   use mo_ansi_colors, only: color, c_red, c_green
   use mo_netcdf, only: NcDataset, NcDimension, NcVariable
   use mo_utils , only: equal
-  
+
   implicit none
 
   logical                  :: correct
@@ -23,7 +23,7 @@ program test_mo_netcdf
   character(*), parameter  :: fname="netcdf_make_check_test_file"
   character(*), parameter  :: vname_time="time", vname_lat="lat", vname_lon="lon", vname_data="data"
   character(64)            :: wavalue, ravalue
-  
+
   type(NcDataset)          :: nc
   type(NcDimension)        :: dim_x, dim_y, dim_time
   type(NcVariable)         :: var_lon, var_lat, var_time, var_data
@@ -38,10 +38,10 @@ program test_mo_netcdf
   ! ------------------------------------------
   ! 0. Initialization ...
   ! ------------------------------------------
-  
+
   ! assume the program is correct up to this point ...
   correct = .true.
-  
+
   ! generate some dummy data
   wfvalue = -9999._dp
   wavalue = "David Schaefer"
@@ -51,7 +51,7 @@ program test_mo_netcdf
   end do
   do i=1, ny
      wlat(:,i) = real(i-0.5_sp,sp)
-  end do  
+  end do
   do i=1, ntime+nadd
      wdata(:,:,i) = (wlon + wlat) * i
   end do
@@ -59,7 +59,7 @@ program test_mo_netcdf
   ! --------------------------------------------
   ! 1. Create a file and dynamically append data
   ! --------------------------------------------
-  
+
   ! 1.1 create a file
   nc = NcDataset(fname, "w")
 
@@ -79,11 +79,11 @@ program test_mo_netcdf
 
   ! set fill value before any data is written
   call var_data%setFillValue(wfvalue)
-  
+
   ! write data of static variables
   call var_lat%putData(wlat)
   call var_lon%putData(wlon)
-    
+
   ! append data within a loop
   do i=1, ntime
      call var_time%putData(wtime(i),     start=(/i/))
@@ -101,7 +101,7 @@ program test_mo_netcdf
   ! close the file
   call nc%close()
 
-  
+
   ! 1.2. Read the written data
   ! --------------------------
 
@@ -110,13 +110,13 @@ program test_mo_netcdf
 
   ! check dimensions
   ndim = nc%getNoDimensions()
-  
+
   ! acces the variable
   var_time = nc%getVariable(vname_time)
   var_lat  = nc%getVariable(vname_lat)
   var_lon  = nc%getVariable(vname_lon)
   var_data = nc%getVariable(vname_data)
-  
+
   ! read the data
   call var_time%getData(rtime)
   call var_lat%getData(rlat)
@@ -164,7 +164,7 @@ program test_mo_netcdf
 
   ! close dataset
   call nc%close()
-  
+
   ! 2.2 Read the appended data
   ! ---------------------------
   !
@@ -186,8 +186,8 @@ program test_mo_netcdf
   ! ---------
   if (.not. all(rtime(1:nadd) == wtime(ntime+1:ntime+nadd)))              correct = .false.
   if (.not. all(equal(rdata(:,:,1:nadd), wdata(:,:,ntime+1:ntime+nadd)))) correct = .false.
-  
-  
+
+
   ! ----------------------------------
   ! 3. Dump some data - the short form
   ! ----------------------------------
@@ -204,14 +204,14 @@ program test_mo_netcdf
        nc%setDimension("y", size(wdata,2)),       &
        nc%setDimension("time", -1) /)             &
        )
-  
+
   ! write data
   call var_data%putData(wdata)
 
   ! close the file
   call nc%close()
 
-  
+
   ! Fast dump with additional time dimension
   ! open a file
   nc = NcDataset(fname, "w")
@@ -224,7 +224,7 @@ program test_mo_netcdf
        nc%setDimension("y", ny),              &
        dim_time /)      &
        )
-  
+
   ! write data
   call var_time%putData(wtime)
   call var_data%putData(wdata)
@@ -232,7 +232,7 @@ program test_mo_netcdf
   ! close the file
   call nc%close()
 
-  
+
   ! 3.2 Read the dumped data
   ! --------------------------
   ! open dataset
@@ -241,7 +241,7 @@ program test_mo_netcdf
   ! ! acces the variable
   var_time = nc%getVariable(vname_time)
   var_data = nc%getVariable(vname_data)
-  
+
   ! read the data
   call var_time%getData(rtime)
   call var_data%getData(rdata)
@@ -254,13 +254,13 @@ program test_mo_netcdf
   if (.not. all(rtime == wtime))      correct = .false.
   if (.not. all(equal(rdata, wdata))) correct = .false.
 
-  
+
   ! --------------------------------------------------------------------------------------
   ! The moment of truth ...
   if (correct) then
-     print*, 'mo_netcdf.3 ', color('o.k.', c_green)
+     print*, 'mo_netcdf ', color('o.k.', c_green)
   else
-     print*, 'mo_netcdf.3 ', color('failed.', c_red)
+     print*, 'mo_netcdf ', color('failed.', c_red)
   endif
 
 end program test_mo_netcdf
