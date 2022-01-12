@@ -20,7 +20,7 @@ program main
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license. 
+!    This code is distributed under the GNU LGPL license.
 !
 !  Modified:
 !
@@ -76,9 +76,9 @@ program main
   integer(i4):: hit_total
   integer(i4):: ierr
   real(dp) :: l = 1.0D+00
-  integer (kind = 4), parameter :: master = 0
+  integer (kind = i4), parameter :: master = 0
   real(dp) :: pdf_estimate
-  real(dp), parameter :: pi = 3.141592653589793238462643D+00
+  real(dp), parameter :: pi = 3.141592653589793238462643_dp
   real(dp) :: pi_error
   real(dp) :: pi_estimate
   integer(i4):: process_num
@@ -91,7 +91,7 @@ program main
 !
 !  Initialize MPI.
 !
-  
+
   call MPI_Init ( ierr )
 
   if ( ierr /= MPI_SUCCESS ) then
@@ -145,9 +145,9 @@ program main
 !
   seed = 123456789 + process_rank * 100
 !
-!  The process of setting the random number seed in FORTRAN90 is, 
+!  The process of setting the random number seed in FORTRAN90 is,
 !  at least, uniformly specified by the language,
-!  but lamentably Byzantine and cumbersome.  
+!  but lamentably Byzantine and cumbersome.
 !
 !  I put all this rigmarole in a subroutine.
 !
@@ -163,7 +163,7 @@ program main
 !  Each process now carries out TRIAL_NUM trials, and then
 !  sends the value back to the master process.
 !
-  hit_num = buffon_laplace_simulate ( a, b, l, trial_num ) 
+  hit_num = buffon_laplace_simulate ( a, b, l, trial_num )
 
   call MPI_Reduce ( hit_num, hit_total, n, MPI_INTEGER, MPI_SUM, master, &
     MPI_COMM_WORLD, ierr )
@@ -174,7 +174,7 @@ program main
 
     trial_total = trial_num * process_num
 
-    pdf_estimate = real ( hit_total, kind = 8 ) / real ( trial_total, kind = 8 )
+    pdf_estimate = real ( hit_total, kind = dp ) / real ( trial_total, kind = dp )
 
     if ( hit_total == 0 ) then
 
@@ -200,7 +200,7 @@ program main
     else
        write(*,*) 'mo_mpi_stubs ', color('failed!', c_red)
     endif
- 
+
   end if
 !
 !  Terminate MPI.
@@ -214,7 +214,7 @@ program main
     write ( *, '(a)' ) 'BUFFON_LAPLACE - Master process:'
     write ( *, '(a)' ) '  Normal end of execution.'
   end if
- 
+
 end program main
 
 
@@ -274,7 +274,7 @@ function buffon_laplace_simulate ( a, b, l, trial_num )
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license. 
+!    This code is distributed under the GNU LGPL license.
 !
 !  Modified:
 !
@@ -330,7 +330,7 @@ function buffon_laplace_simulate ( a, b, l, trial_num )
   integer(i4) :: hits
   real(dp) :: l
   integer(i4) :: n
-  real(dp), parameter :: pi = 3.141592653589793238462643D+00
+  real(dp), parameter :: pi = 3.141592653589793238462643_dp
   real(dp) :: x1(batch_size)
   real(dp) :: x2(batch_size)
   real(dp) :: y1(batch_size)
@@ -438,7 +438,7 @@ subroutine random_initialize ( seed_input )
 !
 !  Licensing:
 !
-!    This code is distributed under the GNU LGPL license. 
+!    This code is distributed under the GNU LGPL license.
 !
 !  Modified:
 !
