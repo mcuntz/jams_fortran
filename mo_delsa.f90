@@ -13,6 +13,8 @@ MODULE mo_delsa
   ! This module calculates first order parameter sensitivity using DELSA (Rakovec et al., 2014, WRR)
 
   ! Written  Oldrich Rakovec, May 2014
+  ! Modified Matthias Cuntz, Jan 2022 - corrected bug that used 2.0_i4 instead of 2_i4
+  !                                   - removed kind i4
 
   ! License
   ! -------
@@ -43,7 +45,7 @@ MODULE mo_delsa
   !     Evaluation of Local Sensitivity Analysis (DELSA), with application to hydrologic models,
   !     Water Resour. Res., 50, 1-18, doi:10.1002/2013WR014063.
 
-  USE mo_kind, ONLY: i4, sp, dp
+  USE mo_kind, ONLY: sp, dp
 
   IMPLICIT NONE
 
@@ -144,9 +146,9 @@ CONTAINS
     REAL(sp), DIMENSION(size(parbase,1),size(parbase,2)), INTENT(OUT) :: delsafirst   ! first-order DELSA results
 
     ! local variables
-    INTEGER(I4)                                                       :: Nsamp        ! sample size
-    INTEGER(I4)                                                       :: Kpar         ! number of model parameters
-    INTEGER(I4)                                                       :: rsamp,jpar   ! counter
+    INTEGER                                                           :: Nsamp        ! sample size
+    INTEGER                                                           :: Kpar         ! number of model parameters
+    INTEGER                                                           :: rsamp,jpar   ! counter
     REAL(sp), DIMENSION(size(parbase,1),size(parbase,2))              :: deriv        ! array of parameter derivatives (eq.10)
     !                                                                                 ! see nominator of eq. 13 in Rakovec et al 2014)
     REAL(sp), DIMENSION(size(parbase,1),size(parbase,2))              :: varfir       ! array of lcal first order variance,
@@ -169,7 +171,7 @@ CONTAINS
           deriv(rsamp,jpar) = (outpert(rsamp,jpar) -  outbase(rsamp)) / (parpert(rsamp,jpar) - parbase(rsamp,jpar))
 
           ! calculate local first order variance (see nominator of eq. 13 in Rakovec et al 2014)
-          varfir(rsamp,jpar) =  (deriv(rsamp,jpar)**2.0_i4)*(varprior(jpar))
+          varfir(rsamp,jpar) =  (deriv(rsamp,jpar)**2)*(varprior(jpar))
 
           ! calculate local equation total variance (see eq. 12 in Rakovec et al 2014)
           vartot(rsamp) = vartot(rsamp) + varfir(rsamp,jpar)
@@ -197,9 +199,9 @@ CONTAINS
     REAL(dp), DIMENSION(size(parbase,1),size(parbase,2)), INTENT(OUT) :: delsafirst   ! first-order DELSA results
 
     ! local variables
-    INTEGER(I4)                                                       :: Nsamp        ! sample size
-    INTEGER(I4)                                                       :: Kpar         ! number of model parameters
-    INTEGER(I4)                                                       :: rsamp,jpar   ! counter
+    INTEGER                                                           :: Nsamp        ! sample size
+    INTEGER                                                           :: Kpar         ! number of model parameters
+    INTEGER                                                           :: rsamp,jpar   ! counter
     REAL(dp), DIMENSION(size(parbase,1),size(parbase,2))              :: deriv        ! array of parameter derivatives (eq.10)
     !                                                                                 ! see nominator of eq. 13 in Rakovec et al 2014)
     REAL(dp), DIMENSION(size(parbase,1),size(parbase,2))              :: varfir       ! array of lcal first order variance,
@@ -222,7 +224,7 @@ CONTAINS
           deriv(rsamp,jpar) = (outpert(rsamp,jpar) -  outbase(rsamp)) / (parpert(rsamp,jpar) - parbase(rsamp,jpar))
 
           ! calculate local first order variance (see nominator of eq. 13 in Rakovec et al 2014)
-          varfir(rsamp,jpar) =  (deriv(rsamp,jpar)**2.0_i4)*(varprior(jpar))
+          varfir(rsamp,jpar) =  (deriv(rsamp,jpar)**2)*(varprior(jpar))
 
           ! calculate local equation total variance (see eq. 12 in Rakovec et al 2014)
           vartot(rsamp) = vartot(rsamp) + varfir(rsamp,jpar)
