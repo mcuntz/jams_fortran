@@ -114,7 +114,7 @@ PROGRAM main
         isig = 1._dp * sqrt(gamm(1._dp + 2._dp / 5._dp) - gamm(1._dp + 1._dp / 5._dp)**2._dp )
         out = weibull_pdf(dat_weibull, c=5._dp, l=0._dp, s=1._dp)
      case default
-        continue
+        out = 0.0_dp
      end select
      if (i .eq. 13) then
         dmean = sum(dat_beta * out * ddat_beta)
@@ -153,7 +153,7 @@ PROGRAM main
      case(6)
         out = t(dat, nu, sca=1.0_dp) - t01(dat, nu)
      case default
-        continue
+        out = 0.0_dp
      end select
      if (any(ne(out, 0.0_dp))) isgood = .false.
      allgood = allgood .and. isgood
@@ -177,7 +177,7 @@ PROGRAM main
      case(6)
         out = t(dat, nu, loc, sca) - t((dat-loc)/sca, nu)/sca
      case default
-        continue
+        out = 0.0_dp
      end select
      ! if (any(ne(out, 0.0_dp))) isgood = .false.
      if (any(abs(out) > 1.0e-15_dp)) isgood = .false.
@@ -202,7 +202,7 @@ PROGRAM main
      case(6)
         out0 = t(0.5_dp, nu, loc, sca) - t((0.5_dp-loc)/sca, nu)/sca
      case default
-        continue
+        out0 = 0.0_dp
      end select
      ! if (ne(out0, 0.0_dp)) isgood = .false.
      if (abs(out0) > 1.0e-15_dp) isgood = .false.
@@ -233,7 +233,7 @@ PROGRAM main
      case(9)
         out = sep(dat, 0.0_dp, sqrt(2.0_dp), 1.0_dp, 1.0_dp) - laplace(dat, 0.0_dp, 1.0_dp)
      case default
-        continue
+        out = 0.0_dp
      end select
      if (any(abs(out) > 1.0e-10)) isgood = .false.
      allgood = allgood .and. isgood
@@ -249,7 +249,7 @@ PROGRAM main
      case(2)
         out = st(dat, nu, loc, sca, 1.0_dp) - t(dat, nu, loc, sca)
      case default
-        continue
+        out = 0.0_dp
      end select
      if (any(abs(out) > 1.0e-10)) isgood = .false.
      allgood = allgood .and. isgood
@@ -339,7 +339,7 @@ PROGRAM main
         issig = 1._sp * sqrt(gamm(1._sp + 2._sp / 5._sp) - gamm(1._sp + 1._sp / 5._sp)**2._sp )
         sout = weibull_pdf(sat_weibull, c=5._sp, l=0._sp, s=1._sp)
      case default
-        continue
+        sout = 0.0_sp
      end select
      if (i .eq. 15) then
         smean = sum(sat_weibull * sout * dsat_weibull)

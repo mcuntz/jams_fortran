@@ -46,6 +46,7 @@ module mo_timer
 
   ! Modified, Matthias Cuntz, Aug. 2012 - adapted to JAMS library, called mo_timer.f90
   !           Matthias Cuntz, Jan. 2013 - clear one or all timers
+  !           Matthias Cuntz, Jan. 2022 - make all integer i8
 
   ! License
   ! -------
@@ -71,7 +72,7 @@ module mo_timer
   ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   ! SOFTWARE.
 
-  use mo_kind, only: i4, sp
+  use mo_kind, only: i8, sp
 
   implicit none
 
@@ -96,15 +97,15 @@ module mo_timer
 
   ! Save variables
   !> max number of timers allowed
-  integer(i4),      parameter                   :: max_timers = 99
+  integer(i8),      parameter                   :: max_timers = 99
   !> max value of clock allowed by system
-  integer(i4),                             save :: cycles_max
+  integer(i8),                             save :: cycles_max
   !> clock_rate in seconds for each cycle
   real(sp),                                save :: clock_rate
   !> cycle number at start for each timer
-  integer(i4),      dimension(max_timers), save :: cycles1
+  integer(i8),      dimension(max_timers), save :: cycles1
   !> cycle number at stop  for each timer
-  integer(i4),      dimension(max_timers), save :: cycles2
+  integer(i8),      dimension(max_timers), save :: cycles2
   !> accumulated cpu time in each timer
   real(sp),         dimension(max_timers), save :: cputime
   !>  timer status string
@@ -127,7 +128,7 @@ contains
   !>        from wrapping around max_cycles.
 
   !     INTENT(IN)
-  !>        \param[in] "integer(i4) :: timer"        timer number
+  !>        \param[in] "integer(i8) :: timer"        timer number
 
   !     INTENT(INOUT)
   !         None
@@ -161,7 +162,7 @@ contains
 
     implicit none
 
-    integer(i4), intent(in) :: timer            ! timer number
+    integer(i8), intent(in) :: timer            ! timer number
 
     if (status(timer) .eq. 'running') then
        call timer_stop (timer)
@@ -190,7 +191,7 @@ contains
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !>        \param[in] "integer(i4), optional :: timer"        timer number if given.\n
+  !>        \param[in] "integer(i8), optional :: timer"        timer number if given.\n
   !>                                                           If missing, all timers will be reset.
 
   !     INTENT(INOUT), OPTIONAL
@@ -217,7 +218,7 @@ contains
 
     implicit none
 
-    integer(i4), intent(in), optional :: timer            ! timer number
+    integer(i8), intent(in), optional :: timer            ! timer number
 
     if (present(timer)) then
        cputime(timer) = 0.0_sp ! clear the timer
@@ -240,7 +241,7 @@ contains
   !>        print it in desired format.
 
   !     INTENT(IN)
-  !>        \param[in] "integer(i4) :: timer"        timer number
+  !>        \param[in] "integer(i8) :: timer"        timer number
 
   !     INTENT(INOUT)
   !         None
@@ -274,7 +275,7 @@ contains
 
     implicit none
 
-    integer(i4), intent(in) :: timer            ! timer number
+    integer(i8), intent(in) :: timer            ! timer number
 
     real(sp) :: timer_get   ! accumulated cputime in given timer
 
@@ -299,7 +300,7 @@ contains
   !>        \details This routine prints the accumulated cpu time in given timer.
 
   !     INTENT(IN)
-  !>        \param[in] "integer(i4) :: timer"        timer number
+  !>        \param[in] "integer(i8) :: timer"        timer number
 
   !     INTENT(INOUT)
   !         None
@@ -333,7 +334,7 @@ contains
 
     implicit none
 
-    integer(i4), intent(in) :: timer            ! timer number
+    integer(i8), intent(in) :: timer            ! timer number
 
     !---
     !--- print the cputime accumulated for timer
@@ -363,7 +364,7 @@ contains
   !>        \details This routine starts a given timer.
 
   !     INTENT(IN)
-  !>        \param[in] "integer(i4) :: timer"        timer number
+  !>        \param[in] "integer(i8) :: timer"        timer number
 
   !     INTENT(INOUT)
   !         None
@@ -397,7 +398,7 @@ contains
 
     implicit none
 
-    integer(i4), intent(in) :: timer            ! timer number
+    integer(i8), intent(in) :: timer            ! timer number
 
     !---
     !--- Start the timer and change timer status.
@@ -421,7 +422,7 @@ contains
   !>        \details This routine stops a given timer.
 
   !     INTENT(IN)
-  !>        \param[in] "integer(i4) :: timer"        timer number
+  !>        \param[in] "integer(i8) :: timer"        timer number
 
   !     INTENT(INOUT)
   !         None
@@ -455,7 +456,7 @@ contains
 
     implicit none
 
-    integer(i4), intent(in) :: timer            ! timer number
+    integer(i8), intent(in) :: timer            ! timer number
 
     if (status(timer) .eq. 'running') then
 
@@ -538,7 +539,7 @@ contains
 
     implicit none
 
-    integer(i4) :: cycles ! count rate return by sys_clock
+    integer(i8) :: cycles ! count rate return by sys_clock
 
     !---
     !--- Initialize timer arrays and clock_rate.

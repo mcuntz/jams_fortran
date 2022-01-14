@@ -1,6 +1,6 @@
 PROGRAM main
 
-  USE mo_kind,        ONLY: dp, sp, i4
+  USE mo_kind,        ONLY: dp, sp, i4, i8
   use mo_ansi_colors, only: color, c_red, c_green
   USE mo_percentile,  ONLY: median, percentile, qmedian, n_element
   USE mo_orderpack,   ONLY: sort
@@ -34,7 +34,8 @@ PROGRAM main
 #endif
   real(dp), dimension(nele) :: big, buf
   real(dp) :: med
-  integer  :: i, istart, istop
+  integer  :: i
+  integer(i8) :: istart, istop
 #endif
 
   LOGICAL :: isgood

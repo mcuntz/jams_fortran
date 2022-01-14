@@ -454,13 +454,13 @@ subroutine random_initialize ( seed_input )
 !    However, if the input value is 0, the routine will come up with
 !    its own "suggestion", based on the system clock.
 !
-  use mo_kind, only: i4, dp
+  use mo_kind, only: i4, i8, dp
 
   implicit none
 
-  integer(i4) :: count
-  integer(i4) :: count_max
-  integer(i4) :: count_rate
+  integer(i8) :: count
+  integer(i8) :: count_max
+  integer(i8) :: count_rate
   logical, parameter :: debug = .false.
   integer(i4) :: i
   integer(i4) :: seed
@@ -501,7 +501,7 @@ subroutine random_initialize ( seed_input )
 
     call system_clock ( count, count_rate, count_max )
 
-    seed = count
+    seed = int(count, i4)
 
     if ( debug ) then
       write ( *, '(a)' ) ' '

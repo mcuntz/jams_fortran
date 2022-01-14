@@ -28,7 +28,7 @@ PROGRAM anneal_test
 
   runs = 4_i4
 
-  para(1) = 2.0_dp  
+  para(1) = 2.0_dp
   para(2) = 10.0_dp
   para(3) = 0.5_dp
   para(4) = 0.4_dp

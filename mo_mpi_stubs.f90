@@ -45,7 +45,7 @@ module mo_mpi_stubs
   ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   ! SOFTWARE.
 
-  use mo_kind, only: i4, sp, dp
+  use mo_kind, only: i4, i8, sp, dp
 
   implicit none
 
@@ -3185,9 +3185,9 @@ contains
     !
     implicit none
 
-    integer(i4) :: count
-    integer(i4) :: count_max
-    integer(i4) :: count_rate
+    integer(i8) :: count
+    integer(i8) :: count_max
+    integer(i8) :: count_rate
     real(dp) :: mpi_wtime
 
     call system_clock ( count, count_rate, count_max )

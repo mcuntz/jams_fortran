@@ -15,7 +15,6 @@ program main
   use mo_ncread, only: Get_NcVar, Get_NcDim, Get_ncVarAtt
   use mo_var2nc, only: var2nc
   use mo_utils,  only: notequal
-  ! use mo_timer,  only: max_timers, timers_init, timer_clear, timer_start, timer_stop, timer_get
 
   implicit none
 
@@ -73,7 +72,7 @@ program main
   Varname = 'time'
   call Get_NcVar(Filename, Varname, t)
 
-  
+
   ! --------------------------------------------------------------------
   ! var2nc file
   !
@@ -313,103 +312,4 @@ program main
      write(*,*) 'mo_var2nc ', color('failed!', c_red)
   endif
 
-  ! ! --------------------------------------------------------------------
-  ! ! Time var2nc
-  ! !
-
-  ! Filename = 'ncwrite_make_check_test_file'
-  ! dimname(1) = 'lat'
-  ! dimname(2) = 'lon'
-  ! dimname(3) = 'depth'
-  ! dimname(4) = 'tile'
-  ! dimname(5) = 'time'
-  ! tname(1)   = 'time'  ! tname must be array
-  ! if (allocated(attributes)) deallocate(attributes)
-  ! allocate(attributes(3,2))
-  ! attributes(1,1) = 'long_name'
-  ! attributes(1,2) = 'precipitation'
-  ! attributes(2,1) = 'units'
-  ! attributes(2,2) = '[mm/d]'
-  ! attributes(3,1) = 'missing_value'
-  ! attributes(3,2) = '-9999.'
-
-  ! n = 42
-  ! if (allocated(time1)) deallocate(time1)
-  ! allocate(time1(n))
-  ! if (allocated(ddata9)) deallocate(ddata9)
-  ! allocate(ddata9(90,180,3,5,n))
-
-  ! call timers_init
-  ! do i=1, max_timers
-  !    call timer_clear(i)
-  ! end do
-
-  ! forall(i=1:n) time1(i) = i
-  ! ! normal var2nc
-  ! call timer_start(1)
-  ! call var2nc(Filename, time1(1:1), dimname(5:5), 'time', dim_unlimited=1_i4, create=.true.)
-  ! do i=1, n
-  !    ddata9 = real(i, dp)
-  !    if (i /= 1) call var2nc(Filename, time1(i:i), dimname(5:5), 'time', dim_unlimited=1_i4)
-  !    call var2nc(Filename, ddata9(:,:,:,:,i), dimname(1:5), 'prec5', dim_unlimited=5_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp)
-  !    call var2nc(Filename, ddata9(1,:,:,:,i), dimname(2:5), 'prec4', dim_unlimited=4_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp)
-  !    call var2nc(Filename, ddata9(1,1,:,:,i), dimname(3:5), 'prec3', dim_unlimited=3_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp)
-  !    call var2nc(Filename, ddata9(1,1,1,:,i), dimname(4:5), 'prec2', dim_unlimited=2_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp)
-  !    call var2nc(Filename, ddata9(1,1,1,1,i:i), dimname(5:5), 'prec1', dim_unlimited=1_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp)
-  ! end do
-  ! call timer_stop(1)
-  ! write(*,*) 'var2nc without ncid [s]: ', timer_get(1)
-
-  ! ncid = -1_i4
-  ! ! var2nc leaving file open
-  ! call timer_start(2)
-  ! call var2nc(Filename, time1(1:1), dimname(5:5), 'time', dim_unlimited=1_i4, ncid=ncid, create=.true.)
-  ! do i=1, n
-  !    ddata9 = real(i, dp)
-  !    if (i /= 1) call var2nc(Filename, time1(i:i), dimname(5:5), 'time', dim_unlimited=1_i4, ncid=ncid)
-  !    call var2nc(Filename, ddata9(:,:,:,:,i), dimname(1:5), 'prec5', dim_unlimited=5_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp, ncid=ncid)
-  !    call var2nc(Filename, ddata9(1,:,:,:,i), dimname(2:5), 'prec4', dim_unlimited=4_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp, ncid=ncid)
-  !    call var2nc(Filename, ddata9(1,1,:,:,i), dimname(3:5), 'prec3', dim_unlimited=3_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp, ncid=ncid)
-  !    call var2nc(Filename, ddata9(1,1,1,:,i), dimname(4:5), 'prec2', dim_unlimited=2_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp, ncid=ncid)
-  !    call var2nc(Filename, ddata9(1,1,1,1,i:i), dimname(5:5), 'prec1', dim_unlimited=1_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp, ncid=ncid)
-  ! end do
-  ! call close_netcdf(ncid)
-  ! call timer_stop(2)
-  ! write(*,*) 'var2nc with ncid [s]: ', timer_get(2)
-
-  ! ncid = -1_i4
-  ! ! var2nc leaving file open and setting record directly
-  ! call timer_start(3)
-  ! call var2nc(Filename, time1(1:1), dimname(5:5), 'time', dim_unlimited=1_i4, ncid=ncid, create=.true.)
-  ! do i=1, n
-  !    ddata9 = real(i, dp)
-  !    if (i /= 1) call var2nc(Filename, time1(i:i), dimname(5:5), 'time', dim_unlimited=1_i4, ncid=ncid, nrec=i)
-  !    call var2nc(Filename, ddata9(:,:,:,:,i), dimname(1:5), 'prec5', dim_unlimited=5_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp, ncid=ncid, nrec=i)
-  !    call var2nc(Filename, ddata9(1,:,:,:,i), dimname(2:5), 'prec4', dim_unlimited=4_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp, ncid=ncid, nrec=i)
-  !    call var2nc(Filename, ddata9(1,1,:,:,i), dimname(3:5), 'prec3', dim_unlimited=3_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp, ncid=ncid, nrec=i)
-  !    call var2nc(Filename, ddata9(1,1,1,:,i), dimname(4:5), 'prec2', dim_unlimited=2_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp, ncid=ncid, nrec=i)
-  !    call var2nc(Filename, ddata9(1,1,1,1,i:i), dimname(5:5), 'prec1', dim_unlimited=1_i4, &
-  !         attributes=attributes(:3,:), missing_value=-9999._dp, ncid=ncid, nrec=i)
-  ! end do
-  ! call close_netcdf(ncid)
-  ! call timer_stop(3)
-  ! write(*,*) 'var2nc with ncid and nrec [s]: ', timer_get(3)
-
-  ! deallocate(attributes)
-  ! deallocate(ddata9)
-  
 end program main

@@ -10,7 +10,7 @@ program main
   !
   ! ------------------------------------------------------------------------------
 
-  use mo_kind,      only: i4, sp, dp
+  use mo_kind,      only: i4, i8, sp, dp
   use mo_ansi_colors, only: color, c_green
   use mo_timer,     only: max_timers, timers_init, timer_clear, timer_start, timer_stop, timer_get
   use mo_readdata,  only: readdata
@@ -31,36 +31,36 @@ program main
   ! Ini timers
   call timers_init
   do i=1, max_timers
-     call timer_clear(i)
+     call timer_clear(int(i, i8))
   end do
 
   !
   ! Read data
-  call timer_start(1)
+  call timer_start(1_i8)
   call readdata
-  call timer_stop(1)
+  call timer_stop(1_i8)
   write(*,*) 'readdata...OK'
 
   !
   ! Prepare output
-  call timer_start(3)
+  call timer_start(3_i8)
   call setnc
-  call timer_stop(3)
+  call timer_stop(3_i8)
   write(*,*) 'setnc...OK'
 
-  call timer_start(4)
+  call timer_start(4_i8)
   call create_netcdf(trim(outfile), hnc)
-  call timer_stop(4)
+  call timer_stop(4_i8)
   write(*,*) 'create_netcdf...OK'
 
-  call timer_start(5)
+  call timer_start(5_i8)
   call write_static_netcdf(hnc)
-  call timer_stop(5)
+  call timer_stop(5_i8)
   write(*,*) 'write_static_netcdf...OK'
 
   !
   ! Remap
-  call timer_start(2)
+  call timer_start(2_i8)
   allocate(src_1d(size(src_data,1)*size(src_data,2)))
   allocate(dst_1d(size(dst_data,1)*size(dst_data,2)))
   do i=1, size(src_data,3)
@@ -70,30 +70,30 @@ program main
   end do
   deallocate(src_1d)
   deallocate(dst_1d)
-  call timer_stop(2)
+  call timer_stop(2_i8)
   write(*,*) 'remap_con...OK'
 
   !
   ! Write out results
-  call timer_start(6)
+  call timer_start(6_i8)
   do i=1, size(src_data,3)
      V(3)%G0_d => time(i)
      V(4)%G2_f => dst_data(:,:,i)
      call write_dynamic_netcdf(hnc,i)
   enddo
-  call timer_stop(6)
+  call timer_stop(6_i8)
   write(*,*) 'write_dynamic_netcdf...OK'
 
   call close_netcdf(hnc)
 
   write(*,*) ''
   write(*,*) 'Timings [s]'
-  write(*,*) 'Read data:    ', timer_get(1)
-  write(*,*) 'Remap:        ', timer_get(2)
-  write(*,*) 'SetNC:        ', timer_get(3)
-  write(*,*) 'CreateNC:     ', timer_get(4)
-  write(*,*) 'WriteStatic:  ', timer_get(5)
-  write(*,*) 'WriteDynamic: ', timer_get(6)
+  write(*,*) 'Read data:    ', timer_get(1_i8)
+  write(*,*) 'Remap:        ', timer_get(2_i8)
+  write(*,*) 'SetNC:        ', timer_get(3_i8)
+  write(*,*) 'CreateNC:     ', timer_get(4_i8)
+  write(*,*) 'WriteStatic:  ', timer_get(5_i8)
+  write(*,*) 'WriteDynamic: ', timer_get(6_i8)
 
   write(*,*) ''
   write(*,*) 'Done!'
