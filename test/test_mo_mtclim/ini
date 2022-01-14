@@ -1,6 +1,6 @@
  &io_ini
- in_meteo = '../fortran/test/test_mo_mtclim/miss84.mtcin' !Name of input meteorological data file
- outprefix = '../fortran/test/test_mo_mtclim/miss84'      !Prefix for output meteorological data file
+ in_meteo = 'miss84.mtcin' !Name of input meteorological data file
+ outprefix = 'miss84'      !Prefix for output meteorological data file
  /
  &control_ini
  nhead = 0              !(int) Number of header lines in input file
