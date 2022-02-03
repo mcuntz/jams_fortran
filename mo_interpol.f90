@@ -6,7 +6,7 @@
 !>          and one routine for interpolation with cubic B splines.
 
 !> \authors Matthias Cuntz
-!> \date 2011-2014
+!> \date 2011-2022
 MODULE mo_interpol
 
   ! This module provides a linear interpolation routine for irregular grids
@@ -23,12 +23,15 @@ MODULE mo_interpol
   ! Written  Mar 2011, Matthias Cuntz - only linear interpolation
   ! Modified Jul 2013, Matthias Cuntz - added cubic B splines
   !          May 2014, Matthias Cuntz - removed numerical recipes
+  !          Mar 2021, Matthias Cuntz - removed i4 from integer constants
+  !                                   - option extrapol in function interpol
+  !          Feb 2022, Matthias Cuntz - bug in extrapol, need to check if option present
 
   ! License
   ! -------
   ! This file is part of the JAMS Fortran package, distributed under the MIT License.
   !
-  ! Copyright (c) 2011-2014 Matthias Cuntz - mc (at) macu (dot) de
+  ! Copyright (c) 2011-2022 Matthias Cuntz - mc (at) macu (dot) de
   !
   ! Permission is hereby granted, free of charge, to any person obtaining a copy
   ! of this software and associated documentation files (the "Software"), to deal
@@ -48,7 +51,7 @@ MODULE mo_interpol
   ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   ! SOFTWARE.
 
-  USE mo_kind,  ONLY: i4, sp, dp
+  USE mo_kind,  ONLY: sp, dp
   USE mo_utils, only: locate
 
   Implicit NONE
@@ -84,7 +87,9 @@ MODULE mo_interpol
   !         None
 
   !     INTENT(IN), OPTIONAL
-  !         None
+  !>        \param[in] "logical :: extrapol"   .true.:  extrapolate if `xout` outside range of `xin` (default)
+  !>                                           .false.: take bounds yin(1) and yin(size(yin)) if `xout` outside
+  !>                                                    range of `xin`
 
   !     INTENT(INOUT), OPTIONAL
   !         None
@@ -205,7 +210,7 @@ CONTAINS
   !  Parameters:
   !    Input, real(dp) X(N), an array sorted into ascending order.
   !    Input, real(dp) XVAL(M), values to be bracketed.
-  !    Output, integer(i4) LEFT(M), RIGHT(M), the results of the search.
+  !    Output, integer LEFT(M), RIGHT(M), the results of the search.
   !    Either:
   !      XVAL < X(1), when LEFT = 1, RIGHT = 2;
   !      X(N) < XVAL, when LEFT = N-1, RIGHT = N;
@@ -221,11 +226,11 @@ CONTAINS
 
     real(dp), dimension(:), intent(in) :: x
     real(dp), dimension(:), intent(in) :: xval
-    integer(i4), dimension(size(xval)), intent(out) :: left
-    integer(i4), dimension(size(xval)), intent(out) :: right
+    integer, dimension(size(xval)), intent(out) :: left
+    integer, dimension(size(xval)), intent(out) :: right
 
-    integer(i4) :: n, m
-    integer(i4) :: i, j
+    integer :: n, m
+    integer :: i, j
     logical :: istheend
 
     n = size(x)
@@ -257,11 +262,11 @@ CONTAINS
 
     real(sp), dimension(:), intent(in) :: x
     real(sp), dimension(:), intent(in) :: xval
-    integer(i4), dimension(size(xval)), intent(out) :: left
-    integer(i4), dimension(size(xval)), intent(out) :: right
+    integer, dimension(size(xval)), intent(out) :: left
+    integer, dimension(size(xval)), intent(out) :: right
 
-    integer(i4) :: n, m
-    integer(i4) :: i, j
+    integer :: n, m
+    integer :: i, j
     logical :: istheend
 
     n = size(x)
@@ -288,88 +293,114 @@ CONTAINS
 
   ! ------------------------------------------------------------------
 
-  FUNCTION interpol_dp(v, x, u)
+  function interpol_dp(yin, xin, xout, extrapol)
 
-    IMPLICIT NONE
+    implicit none
 
-    REAL(dp),    DIMENSION(:), INTENT(IN) :: v
-    REAL(dp),    DIMENSION(:), INTENT(IN) :: x
-    REAL(dp),    DIMENSION(:), INTENT(IN) :: u
-    REAL(dp),    DIMENSION(size(u))       :: interpol_dp
+    real(dp), dimension(:), intent(in) :: yin
+    real(dp), dimension(:), intent(in) :: xin
+    real(dp), dimension(:), intent(in) :: xout
+    logical,                intent(in), optional :: extrapol
+    real(dp), dimension(size(xout, 1)) :: interpol_dp
 
-    INTEGER(i4), DIMENSION(size(u)) :: s
+    integer, dimension(size(xout, 1))  :: s
 #ifdef __ABSOFT__
-    REAL(dp)                        :: ums
+    real(dp)                           :: ums
 #else
-    REAL(dp),    DIMENSION(size(u)) :: ums
+    real(dp), dimension(size(xout, 1)) :: ums
 #endif
-    INTEGER(i4) :: m
+    integer :: m
 #ifdef __ABSOFT__
-    INTEGER(i4) :: n
-    INTEGER(i4) :: i
+    integer :: n
+    integer :: i
 #endif
+    logical :: iextrapol
 
-    m = size(v)
-    if (size(x) /= m) stop 'Error interpol_dp: size(v) /= size(x)'
+    m = size(yin)
+    if (size(xin) /= m) stop 'Error interpol_dp: size(yin) /= size(xin)'
 
-    s = min(max(locate(x, u), 1_i4), m-1_i4)  ! Subscript intervals
+    iextrapol = .true.
+    if (present(extrapol)) iextrapol = extrapol
+
+    s = min(max(locate(xin, xout), 1), m-1)  ! Subscript intervals
 
 #ifdef __ABSOFT__
-    n = size(u)
+    n = size(xout)
     do i=1, n
-       ums = u(i) - x(s(i))
+       ums = xout(i) - xin(s(i))
        if (abs(ums) < epsilon(1.0_dp)) ums = 0.0_dp
-       interpol_dp(i) = v(s(i)) + ums*(v(s(i)+1)-v(s(i)))/(x(s(i)+1)-x(s(i)))
+       interpol_dp(i) = yin(s(i)) + ums*(yin(s(i)+1)-yin(s(i)))/(xin(s(i)+1)-xin(s(i)))
     end do
 #else
-    ums = (u-x(s)) ! distance from point before
+    ums = (xout-xin(s)) ! distance from point before
     where (abs(ums) < epsilon(1.0_dp)) ums = 0.0_dp ! for numerical stability
-    interpol_dp = v(s) + ums*(v(s+1)-v(s))/(x(s+1)-x(s))
+    interpol_dp(:) = yin(s) + ums*(yin(s+1)-yin(s))/(xin(s+1)-xin(s))
 #endif
 
-  END FUNCTION interpol_dp
+    ! take first or last value of input if not extrapolating
+    if (present(extrapol)) then
+       if (.not. extrapol) then
+          where (xout < xin(1)) interpol_dp = yin(1)
+          where (xout > xin(m)) interpol_dp = yin(m)
+       endif
+    endif
+
+  end function interpol_dp
 
 
-  FUNCTION interpol_sp(v, x, u)
+  function interpol_sp(yin, xin, xout, extrapol)
 
-    IMPLICIT NONE
+    implicit none
 
-    REAL(sp),    DIMENSION(:), INTENT(IN) :: v
-    REAL(sp),    DIMENSION(:), INTENT(IN) :: x
-    REAL(sp),    DIMENSION(:), INTENT(IN) :: u
-    REAL(sp),    DIMENSION(size(u))       :: interpol_sp
+    real(sp), dimension(:), intent(in) :: yin
+    real(sp), dimension(:), intent(in) :: xin
+    real(sp), dimension(:), intent(in) :: xout
+    logical,                intent(in), optional :: extrapol
+    real(sp), dimension(size(xout))    :: interpol_sp
 
-    INTEGER(i4), DIMENSION(size(u)) :: s
+    integer, dimension(size(xout))  :: s
 #ifdef __ABSOFT__
-    REAL(sp)                        :: ums
+    real(sp)                        :: ums
 #else
-    REAL(sp),    DIMENSION(size(u)) :: ums
+    real(sp), dimension(size(xout)) :: ums
 #endif
-    INTEGER(i4) :: m
+    integer :: m
 #ifdef __ABSOFT__
-    INTEGER(i4) :: n
-    INTEGER(i4) :: i
+    integer :: n
+    integer :: i
 #endif
+    logical :: iextrapol
 
-    m = size(v)
-    if (size(x) /= m) stop 'Error interpol_sp: size(v) /= size(x)'
+    m = size(yin)
+    if (size(xin) /= m) stop 'Error interpol_sp: size(yin) /= size(xin)'
 
-    s = min(max(locate(x, u), 1_i4), m-1_i4)  ! Subscript intervals
+    iextrapol = .true.
+    if (present(extrapol)) iextrapol = extrapol
+
+    s = min(max(locate(xin, xout), 1), m-1)  ! Subscript intervals
 
 #ifdef __ABSOFT__
-    n = size(u)
+    n = size(xout)
     do i=1, n
-       ums = u(i) - x(s(i))
+       ums = xout(i) - xin(s(i))
        if (abs(ums) < epsilon(1.0_sp)) ums = 0.0_sp
-       interpol_sp(i) = v(s(i)) + ums*(v(s(i)+1)-v(s(i)))/(x(s(i)+1)-x(s(i)))
+       interpol_sp(i) = yin(s(i)) + ums*(yin(s(i)+1)-yin(s(i)))/(xin(s(i)+1)-xin(s(i)))
     end do
 #else
-    ums = (u-x(s)) ! distance from point before
+    ums = (xout-xin(s)) ! distance from point before
     where (abs(ums) < epsilon(1.0_sp)) ums = 0.0_sp ! for numerical stability
-    interpol_sp = v(s) + ums*(v(s+1)-v(s))/(x(s+1)-x(s))
+    interpol_sp = yin(s) + ums*(yin(s+1)-yin(s))/(xin(s+1)-xin(s))
 #endif
 
-  END FUNCTION interpol_sp
+    ! take first or last value of input if not extrapolating
+    if (present(extrapol)) then
+       if (.not. extrapol) then
+          where (xout < xin(1)) interpol_sp = yin(1)
+          where (xout > xin(m)) interpol_sp = yin(m)
+       endif
+    endif
+
+  end function interpol_sp
 
   ! ------------------------------------------------------------------
 
@@ -386,11 +417,11 @@ CONTAINS
     real(dp), dimension(:), intent(in) :: tdata
     real(dp), dimension(:), intent(in) :: tval
     real(dp), dimension(size(tval))    :: spline_b_dp
-    
-    integer(i4) :: ndata
+
+    integer :: ndata
     real(dp),    dimension(size(tval)) :: bval
-    integer(i4), dimension(size(tval)) :: left
-    integer(i4), dimension(size(tval)) :: right
+    integer, dimension(size(tval)) :: left
+    integer, dimension(size(tval)) :: right
     real(dp),    dimension(size(tval)) :: u
 
     ndata = size(tdata)
@@ -463,11 +494,11 @@ CONTAINS
     real(sp), dimension(:), intent(in) :: tdata
     real(sp), dimension(:), intent(in) :: tval
     real(sp), dimension(size(tval))    :: spline_b_sp
-    
-    integer(i4) :: ndata
+
+    integer :: ndata
     real(sp),    dimension(size(tval)) :: bval
-    integer(i4), dimension(size(tval)) :: left
-    integer(i4), dimension(size(tval)) :: right
+    integer, dimension(size(tval)) :: left
+    integer, dimension(size(tval)) :: right
     real(sp),    dimension(size(tval)) :: u
 
     ndata = size(tdata)
