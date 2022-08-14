@@ -1,4 +1,4 @@
-/* cfortran.h  4.4 */
+/* cfortran.h  4.4.1 */
 /* http://www-zeus.desy.de/~burow/cfortran/                   */
 /* Burkhard Burow  burow@desy.de                 1990 - 2002. */
 
@@ -19,6 +19,12 @@
  * MR  = Martin Reinecke
  * WDP = William D Pence
  * -- Kevin McCarty, for Debian (19 Dec. 2005) */
+
+/* version 4.4.1 downloaded from
+   https://gitlab.astro.unige.ch/ferrigno/timingsuite
+   on 2022-08-01
+   MC = Matthias Cuntz
+*/
 
 /*******
    Modifications:
@@ -51,6 +57,8 @@
 		Add braces around do-nothing ";" in 3 empty while blocks to
 		get rid of compiler warnings.  Thanks to ROOT developers
 		Jacek Holeczek and Rene Brun for these suggestions. (KMCCARTY)
+      Dec 2008  Added typedef for LONGLONG to support Borland compiler (WDP)
+      Dec 2014  Added FreeBSD Added typedef for LONGLONG to support Borland compiler (WDP)
  *******/
 
 /*
@@ -74,6 +82,8 @@
     typedef long long LONGLONG;
 #endif
 
+#elif defined( __BORLANDC__)  /* (WDP) for the free Borland compiler, in particular */
+    typedef __int64 LONGLONG;
 #else
     typedef long long LONGLONG;
 #endif
@@ -141,6 +151,7 @@ only C calling FORTRAN subroutines will work using K&R style.*/
 
 /* 11/29/2003 (KMCCARTY): add *INTEL_COMPILER symbols here */
 /* 04/05/2006 (KMCCARTY): add gFortran symbol here */
+/* 05/2014 (MC): added symbols with double underscores for JAMS library */
 #if defined(CLIPPERFortran) || defined(pgiFortran) || defined(__INTEL_COMPILER) || defined(INTEL_COMPILER) || defined(gFortran) || defined(__gFortran__) || defined(__GFORTRAN__) || defined(__pgiFortran__) || defined(__PGIFORTAN__) || defined(__INTEL__)
 #define f2cFortran
 #endif
@@ -177,7 +188,7 @@ only C calling FORTRAN subroutines will work using K&R style.*/
 #if defined(__APPLE__)                         /* 11/2002 (CFITSIO) */
 #define f2cFortran
 #endif
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__)        /* 05/2014 Mac OSX == FreeBSD (MC) */
 #define	f2cFortran
 #endif
 #if defined(__hpux)             /* 921107: Use __hpux instead of __hp9000s300 */
@@ -613,6 +624,8 @@ typedef DSC$DESCRIPTOR_A(1) fstringvector;
 #define NUM_ELEMS(A)    A,_NUM_ELEMS
 #define NUM_ELEM_ARG(B) *_2(A,B),_NUM_ELEM_ARG
 #define TERM_CHARS(A,B) A,B
+/* 08/2022 (MC): next line and function __cfortran__notused_dummy deleted in 4.4.1
+                 keep it for easier understanding */
 static void __cfortran__notused_dummy();
 #ifndef __CF__KnR
 static int num_elem(char *strv, unsigned elem_len, int term_char, int num_term)
@@ -634,10 +647,21 @@ for (num=0; ; num++) {
   if (i==(unsigned)num_term) break;
   else strv += elem_len-i;
 }
+/* 08/2022 (MC): next block (if (0) {...}) is used in 4.4.1 and not the call
+                 to __cfortran__notused_dummy
+                 keep __cfortran__notused_dummy for easier understanding */
+/*
+if (0) { // to prevent not used warnings in gcc (added by ROOT)
+  c2fstrv(0, 0, 0, 0); f2cstrv(0, 0, 0, 0); kill_trailing(0, 0);
+  vkill_trailing(0, 0, 0, 0); num_elem(0, 0, 0, 0);
+}
+*/
 if (num==0) __cfortran__notused_dummy();
 return (int)num;
 }
 
+/* 08/2022 (MC): function __cfortran__notused_dummy deleted in 4.4.1
+                 keep it for easier understanding */
 static void __cfortran__notused_dummy()
 {
    /* to prevent not used warnings in gcc (added by ROOT) */
