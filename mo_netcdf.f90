@@ -1536,7 +1536,7 @@ contains
 
     if (dimid .eq. -1) then
        write(*,*) "Dataset has no unlimited dimension"
-       stop 1
+       stop 2
     end if
 
     getUnlimitedDimension = self%getDimension(dimid)
@@ -1584,7 +1584,7 @@ contains
        ! would be nice...
     else
        write(*,*) "Given data reading parameters do not match output variable rank!"
-       stop 1
+       stop 3
     end if
 
   end function getReadDataShape
@@ -1642,7 +1642,7 @@ contains
     class(NcDataset), intent(in) :: self
     character(*),     intent(in) :: name
     integer(i4),      intent(in) :: length
-    
+
     type(NcDimension) :: setDimension
     integer(i4)       :: id, dimlength
     integer(i4)       :: status
@@ -3380,7 +3380,7 @@ contains
        getDtypeFromString = NF90_INT
     case default
        write(*,*) "Datatype not understood: ", dtype
-       stop 1
+       stop 4
     end select
 
   end function getDtypeFromString
@@ -3429,7 +3429,7 @@ contains
        endif
     case default
        write(*,*) "Datatype not understood: ", dtype
-       stop 1
+       stop 5
     end select
 
   end function getDtypeFromInteger
@@ -3442,7 +3442,7 @@ contains
     if (status .ne. NF90_NOERR) then
        write(*,*) msg
        write(*,*) nf90_strerror(status)
-       stop 1
+       stop 6
     end if
 
   end subroutine check
