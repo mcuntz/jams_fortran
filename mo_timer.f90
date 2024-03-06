@@ -451,6 +451,9 @@ contains
   !     HISTORY
   !>        \author Matthias Cuntz
   !>        \date Aug 2012
+  !         Written Matthias Cuntz, Aug 2012
+  !         Modified Matthias Cuntz, Jan 2024
+  !             - assure correct conversion between integer and real
 
   subroutine timer_stop(timer)
 
@@ -471,11 +474,11 @@ contains
        !---
 
        if (cycles2(timer) .ge. cycles1(timer)) then
-          cputime(timer) = cputime(timer) + clock_rate*   &
-               (cycles2(timer) - cycles1(timer))
+          cputime(timer) = cputime(timer) + clock_rate * &
+               real(cycles2(timer) - cycles1(timer), sp)
        else
-          cputime(timer) = cputime(timer) + clock_rate*   &
-               (cycles2(timer) - cycles1(timer) + cycles_max)
+          cputime(timer) = cputime(timer) + clock_rate * &
+               real(cycles2(timer) - cycles1(timer) + cycles_max, sp)
        endif
 
        !---
