@@ -16,6 +16,8 @@ MODULE mo_utils
   !          Matthias Cuntz,              Jun 2016 - cumsum, arange, linspace, imaxloc/iminloc
   !          Matthias Cuntz,              Jun 2016 - copy toupper of mo_string_utils into module
   !          Matthias Cuntz,              Jan 2017 - isin, isinloc
+  !          Matthias Cuntz,              Jan 2025 - remove isnan. Use version of user hkvzjal at
+  !              https://fortran-lang.discourse.group/t/challenge-testing-inf-and-nan-with-gfortran-13-ofast/6481/30
 
   ! License
   ! -------
@@ -322,7 +324,7 @@ MODULE mo_utils
   !     EXAMPLE
   !         sca = 1.1
   !         vec = (/ 0.0, 1.1, 2.2, 3.3 /)
-  !         if (isin(sca, vec)) print*, 'It is in.'
+  !         if (isin(sca, vec)) write(*,*) 'It is in.'
   !         -> see also example in test directory
   !
   !     LITERATURE
@@ -1602,41 +1604,29 @@ CONTAINS
 
   ELEMENTAL PURE FUNCTION is_nan_dp(a)
 
-#ifndef __GFORTRAN__
-  use, intrinsic :: ieee_arithmetic, only: isnan => ieee_is_nan
-#endif
-
     IMPLICIT NONE
 
     REAL(dp), INTENT(IN) :: a
     LOGICAL              :: is_nan_dp
 
-    ! isnan introduced in gfortran rev 4.2
-#ifdef __GFORTRAN41__
-    is_nan_dp = a /= a
-#else
-    is_nan_dp = isnan(a)
-#endif
+    integer, parameter :: mp = selected_real_kind(precision(a)+1) ! a more precise kind
+    real(mp), parameter :: huge_mp = real(huge(a), mp)*2
+
+    is_nan_dp = .not. (abs(a) > huge_mp) .and. .not. (abs(a) < huge_mp)
 
   END FUNCTION is_nan_dp
 
   ELEMENTAL PURE FUNCTION is_nan_sp(a)
-
-#ifndef __GFORTRAN__
-  use, intrinsic :: ieee_arithmetic, only: isnan => ieee_is_nan
-#endif
 
     IMPLICIT NONE
 
     REAL(sp), INTENT(IN) :: a
     LOGICAL              :: is_nan_sp
 
-    ! isnan introduced in gfortran rev 4.2
-#ifdef __GFORTRAN41__
-    is_nan_sp = a /= a
-#else
-    is_nan_sp = isnan(a)
-#endif
+    integer, parameter :: mp = selected_real_kind(precision(a)+1) ! a more precise kind
+    real(mp), parameter :: huge_mp = real(huge(a), mp)*2
+
+    is_nan_sp = .not. (abs(a) > huge_mp) .and. .not. (abs(a) < huge_mp)
 
   END FUNCTION is_nan_sp
 
